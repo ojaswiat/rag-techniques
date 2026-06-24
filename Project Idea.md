@@ -56,9 +56,9 @@ Financial SEC 10-K filings present severe token, layout, and structural parsing 
 
 ---
 
-## 3. The 400-Query Benchmark Dataset: The Four Quadrants
+## 3. The 100-Query Benchmark Dataset: The Four Quadrants
 
-To expose the specific vulnerabilities and architectural strengths of each pipeline, evaluation is performed against a stratified test bed of **400 queries** (100 queries uniformly distributed across four distinct operational quadrants):
+To expose the specific vulnerabilities and architectural strengths of each pipeline, evaluation is performed against a stratified test bed of **100 queries** (25 queries uniformly distributed across four distinct operational quadrants). This count is deliberately scoped to a solo 8-week dissertation timeline: it is large enough to expose per-quadrant performance differences while keeping the total run matrix (see Section 9) within free-tier API rate limits and a near-zero budget.
 
 ```text
                            TEXT-HEAVY CONTEXT             TABLE-HEAVY CONTEXT
@@ -78,10 +78,10 @@ To expose the specific vulnerabilities and architectural strengths of each pipel
 
 ```
 
-* **Q1: Direct Text Queries (100 Queries)**: Evaluates fact-retrieval performance within dense, continuous prose (e.g., extracting specific, explicitly stated legal liabilities or corporate risk disclosures).
-* **Q2: Implicit Text Queries (100 Queries)**: Evaluates thematic understanding and synthesis across disparate narrative pages (e.g., identifying and cross-referencing management's overall multi-paragraph strategic outlook within the MD&A section).
-* **Q3: Direct Table Queries (100 Queries)**: Evaluates strict lookup and cellular extraction capabilities from tabular formats (e.g., pulling exact revenue figures, cash balance items, or capital expenditure rows from balance sheets).
-* **Q4: Implicit Table Queries (100 Queries)**: Evaluates advanced math-inference, comparative logic, and cell-to-footnote synthesis (e.g., verifying multi-year changes in segment revenue or recalculating values that require cross-referencing row calculations with appended textual footnotes).
+* **Q1: Direct Text Queries (25 Queries)**: Evaluates fact-retrieval performance within dense, continuous prose (e.g., extracting specific, explicitly stated legal liabilities or corporate risk disclosures).
+* **Q2: Implicit Text Queries (25 Queries)**: Evaluates thematic understanding and synthesis across disparate narrative pages (e.g., identifying and cross-referencing management's overall multi-paragraph strategic outlook within the MD&A section).
+* **Q3: Direct Table Queries (25 Queries)**: Evaluates strict lookup and cellular extraction capabilities from tabular formats (e.g., pulling exact revenue figures, cash balance items, or capital expenditure rows from balance sheets).
+* **Q4: Implicit Table Queries (25 Queries)**: Evaluates advanced math-inference, comparative logic, and cell-to-footnote synthesis (e.g., verifying multi-year changes in segment revenue or recalculating values that require cross-referencing row calculations with appended textual footnotes).
 
 ### Dataset Controls and Meta-Tagging
 
@@ -91,7 +91,7 @@ Every query generated within this system is stored as a deterministic JSON objec
 {
   "query_id": "Q4_087",
   "quadrant": "Implicit_Table",
-  "query_text": "Calculate the year-over-year percentage change in total operating expenses for FY2025, taking into account the restructuring asset impairment notes on page 74.",
+  "query_text": "Using the operating expense breakdown in the income statement (page 62), calculate the year-over-year percentage change in total operating expenses for FY2025, then adjust the result for the restructuring asset impairment disclosed in the footnotes on page 74.",
   "ground_truth_answer": "Operating expenses decreased by 4.2% YoY. Factoring in the $15M impairment, normalized expenses rose 1.1%.",
   "evidence_pages": [62, 74],
   "document_id": "SEC_10K_XYZ_CORP_2025"
@@ -101,26 +101,29 @@ Every query generated within this system is stored as a deterministic JSON objec
 
 ---
 
-## 4. Vertex AI Generation and Adversarial Verification Architecture
+## 4. Open-Model Generation and Adversarial Verification Architecture
 
-To eliminate the bottleneck of manually verifying 400 ground-truth queries while remaining academically rigorous, the system leverages **Google Vertex AI** capabilities utilizing **Gemini 1.5 Pro**. This capitalizes on an ultra-long context window (2 million tokens) to bypass human scaling limitations while programmatically breaking the "circular validation loop".
+To eliminate the bottleneck of manually verifying 100 ground-truth queries while remaining academically rigorous, the system leverages **open-source instruction models served on Groq's free tier** (no credit card; rate-limited rather than billed). Because open models cap at a ~128K-token context window — far short of an entire SEC 10-K — generation operates on a **per-section (chunked) basis** rather than ingesting the whole filing at once. Each section (e.g., *Item 1A*, *Item 7 MD&A*, *Item 8 Financial Statements*) is fed to the generator independently, with its source page range tracked, so the model always reasons over a context that fits comfortably in-window.
+
+Crucially, the Generator and Critic use **different model families** to break the circular-validation loop: agreement between two independent architectures is far stronger evidence of a query's soundness than agreement within one family.
 
 ```text
        +-------------------------------------------------------------+
-       |                 Vertex AI (Gemini 1.5 Pro)                  |
-       |                     Full 10-K Ingestion                     |
+       |        SEC 10-K SPLIT INTO PER-SECTION CHUNKS (<128K)        |
        +-------------------------------------------------------------+
                                       |
                                       v
                        +------------------------------+
-                       |       Generator Agent        |
-                       |  Creates: Query & Page GT    |
+                       |   Generator Agent            |
+                       |   (Llama 3.3 70B - Groq)     |
+                       |   Creates: Query & Page GT   |
                        +------------------------------+
                                       |
                                       | (Hide Answer & Pages From Critic)
                                       v
                        +------------------------------+
-                       |         Critic Agent         |
+                       |   Critic Agent               |
+                       |   (Qwen3 32B - Groq)         |
                        |   Independent Doc Search     |
                        +------------------------------+
                                       |
@@ -134,21 +137,22 @@ To eliminate the bottleneck of manually verifying 400 ground-truth queries while
                                 v            v
                 +-------------------+    +-------------------+
                 |   Auto-Verified   |    |      Discard      |
-                |  400-Query Pool   |    |   & Regenerate    |
+                |  100-Query Pool   |    |   & Regenerate    |
                 +-------------------+    +-------------------+
 
 ```
 
-### Step 1: Long-Context Ground-Truth Synthesis (The Generator Agent)
+### Step 1: Per-Section Ground-Truth Synthesis (The Generator Agent)
 
-Because Gemini 1.5 Pro can ingest the entire SEC 10-K document simultaneously, it has a holistic structural overview that a chunked RAG pipeline lacks.
+Because open models cannot ingest an entire 10-K at once, generation is scoped to one document section at a time, preserving each chunk's page range for ground-truth tracking.
 
-* A Python execution script targets the Vertex AI API using Gemini 1.5 Pro to ingest the entire un-chunked document text.
-* The model is prompted to output exactly 100 highly complex questions per quadrant, along with the exact `evidence_pages` and the detailed `ground_truth_answer` directly sourced from the material.
+* A Python execution script targets the Groq API using **Llama 3.3 70B** to read one parsed section at a time.
+* The model is prompted to output complex questions for the relevant quadrant(s) that section can support, along with the exact `evidence_pages` and the detailed `ground_truth_answer` directly sourced from the material.
+* Questions are accumulated across sections until each quadrant reaches its target of 25 verified queries.
 
 ### Step 2: Multi-Agent Adversarial Quality Control (The Critic Agent)
 
-To certify that these 400 generated questions are completely unambiguous and factually sound without manual human intervention, you pass the dataset through a decoupled, multi-agent adversarial loop within Vertex AI:
+To certify that these 100 generated questions are completely unambiguous and factually sound without manual human intervention, the dataset is passed through a decoupled, multi-agent adversarial loop. The Critic runs on **Qwen3 32B** — a deliberately different model family from the Llama-based Generator — so that agreement reflects cross-architecture consensus rather than a single model agreeing with itself:
 
 1. **The Blind Test**: A separate, decoupled "Critic Agent" prompt receives *only* the `query_text` generated in Step 1. The ground-truth page numbers and target answers are completely redacted and hidden from it.
 2. **Contextual Search Challenge**: The Critic Agent is given access to the raw parsed document text blocks. It must independently scan the text, locate the correct answer, and state the exact source page numbers based purely on the text.
@@ -166,12 +170,12 @@ To anchor this automated evaluation pipeline, a high-quality human verification 
 
 ```text
            +---------------------------------------------+
-           |        400 Auto-Verified Query Pool         |
+           |        100 Auto-Verified Query Pool         |
            +---------------------------------------------+
                                   |
-                                  v  (Extract 10 per Quadrant)
+                                  v  (Extract 3 per Quadrant)
            +---------------------------------------------+
-           |         Golden Subset (40 Queries)          |
+           |         Golden Subset (12 Queries)          |
            +---------------------------------------------+
                                   |
                                   v  (Manual Human Analysis)
@@ -182,18 +186,18 @@ To anchor this automated evaluation pipeline, a high-quality human verification 
            |  - Detailed Human Explanatory Reasoning     |
            +---------------------------------------------+
                                   |
-                                  v  (Inject as Static Few-Shot Data)
+                                  v  (Inject as Dynamic Few-Shot Data)
            +---------------------------------------------+
            |      Primary LLM-as-a-Judge System          |
            |  - Fixed Instruction Rubrics                |
-           |  - 40 In-Context Learning Examples (1-10)   |
+           |  - 3 In-Context Examples per Quadrant (1-10)|
            +---------------------------------------------+
 
 ```
 
 ### Step 1: Golden Subset Selection and Human Labeling
 
-Out of the 400 auto-verified queries, a subset of **40 queries** (exactly 10 per quadrant) is extracted to serve as the **Golden Subset**. The researcher manually reviews these 40 queries and their system outputs, providing expert labeling.
+Out of the 100 auto-verified queries, a subset of **12 queries** (exactly 3 per quadrant) is extracted to serve as the **Golden Subset**. The researcher manually reviews these 12 queries and their system outputs, providing expert labeling.
 
 ### Step 2: Meta-Prompt Construction
 
@@ -206,15 +210,13 @@ For each query in the Golden Subset, the researcher compiles an array containing
 
 ### Step 3: Few-Shot In-Context Learning Engine
 
-These 40 comprehensive human evaluations are embedded directly into the static system prompt of the primary LLM-as-a-Judge model as structured few-shot examples. This provides the Judge LLM with a clear understanding of the difference between an acceptable and an exceptional response. This approach bypasses the need for model fine-tuning, which risks introducing black-box evaluation biases.
+These 12 comprehensive human evaluations are embedded into the system prompt of the primary LLM-as-a-Judge model as structured few-shot examples (dynamically filtered by quadrant — see below). This provides the Judge LLM with a clear understanding of the difference between an acceptable and an exceptional response. This approach bypasses the need for model fine-tuning, which risks introducing black-box evaluation biases.
 
 ### Gold Standard Queries Usage and Dynamic Few-Shot Rerouting
 
-To prevent rapid exhaustion of the $300 Vertex AI credit allocation, the 40 human-verified "Gold Standard" queries are managed programmatically via relational database isolation and conditional in-context routing.
+The 12 human-verified "Gold Standard" queries are managed programmatically via relational database isolation and conditional in-context routing. Although the run volume is modest, dynamic filtering keeps each Judge prompt tightly relevant to the quadrant being graded and avoids diluting the context with mismatched examples.
 
-Inserting all 40 detailed human-labeled examples (each including the query, ground-truth text, pipeline output, 1–10 score, and qualitative reasoning) into a single static system prompt creates a massive token payload. Multiplying this large context block across 4,000 independent evaluation runs would generate millions of unnecessary input tokens, inflating costs and risking API rate-limiting crashes.
-
-Instead of a single static file, the system architecture implements a **Dynamic Few-Shot Rerouting** mechanism.
+Inserting all 12 detailed human-labeled examples (each including the query, ground-truth text, pipeline output, 1–10 score, and qualitative reasoning) into every prompt would mix table-grading and text-grading exemplars indiscriminately. Instead of a single static block, the system implements a **Dynamic Few-Shot Rerouting** mechanism that injects only the 3 examples matching the current query's quadrant.
 
 ```text
                       DYNAMIC FEW-SHOT REROUTING SYSTEM
@@ -222,8 +224,8 @@ Instead of a single static file, the system architecture implements a **Dynamic 
                        +--------------------------------+
                        |   Central SQLite Database      |
                        |   - Table: queries             |
-                       |   - 400 Verified Rows          |
-                       |   - 40 Tagged "is_golden = 1"  |
+                       |   - 100 Verified Rows          |
+                       |   - 12 Tagged "is_golden = 1"  |
                        +--------------------------------+
                                        |
                                        | (Pipeline Output Delivered)
@@ -241,32 +243,32 @@ Instead of a single static file, the system architecture implements a **Dynamic 
                        | is_golden=1 AND quadrant='Q4'  |
                        +--------------------------------+
                                        |
-                                       | (Extracts EXACTLY 10 Rows, Drops 30)
+                                       | (Extracts EXACTLY 3 Rows, Drops 9)
                                        v
                        +--------------------------------+
                        |   Dynamic Prompt Assembler     |
                        | - General Scoring Rubrics      |
-                       | - 10 Context-Relevant Examples |
+                       | - 3 Context-Relevant Examples  |
                        +--------------------------------+
                                        |
                                        v
                        +--------------------------------+
-                       |     Vertex AI Evaluation       |
-                       |  (Gemini 1.5 Flash Engine)     |
+                       |     LLM-as-a-Judge Engine      |
+                       |   (Llama 3.3 70B - Groq)       |
                        +--------------------------------+
 
 ```
 
 #### 1. Relational Database Seeding
 
-All 400 auto-verified queries are written directly to a local SQLite database table named `queries`. A dedicated Boolean column named `is_golden` is assigned to every row.
+All 100 auto-verified queries are written directly to a local SQLite database table named `queries`. A dedicated Boolean column named `is_golden` is assigned to every row.
 
-* The 360 unverified baseline testing queries are marked with `is_golden = 0`.
-* The 40 highly vetted, human-scored, and reasoned baseline queries are marked with `is_golden = 1`.
+* The 88 unverified baseline testing queries are marked with `is_golden = 0`.
+* The 12 highly vetted, human-scored, and reasoned baseline queries are marked with `is_golden = 1`.
 
 #### 2. Runtime Context Filtering
 
-During the evaluation phase, the loop execution script processes the 3,600 pipeline generation outputs row by row. Before sending an output text block to the Judge LLM (Gemini 1.5 Flash), the evaluation worker checks the target query's `quadrant` attribute (e.g., `Q1_Direct_Text`, `Q4_Implicit_Table`).
+During the evaluation phase, the loop execution script processes the 600 pipeline generation outputs row by row. Before sending an output text block to the Judge LLM (Llama 3.3 70B on Groq), the evaluation worker checks the target query's `quadrant` attribute (e.g., `Q1_Direct_Text`, `Q4_Implicit_Table`).
 
 The script executes a localized SQL query to retrieve *only* the golden subset rows matching that specific quadrant context:
 
@@ -279,32 +281,32 @@ WHERE is_golden = 1 AND quadrant = :current_pipeline_quadrant;
 
 #### 3. Token Payload Reduction and Cost Optimization
 
-By shifting from a static 40-example text prompt to this dynamic 10-example filter, the payload size is reduced by 75% per API call.
+By shifting from a static 12-example prompt to this dynamic 3-example filter, each Judge call carries only quadrant-relevant exemplars, reducing per-call payload by roughly 75% while improving grading relevance.
 
 ```text
 +-------------------------------------------------------------------------+
 |                          TOKEN PAYLOAD COMPARISON                       |
 +-------------------------------------------------------------------------+
 | [Static Payload Attempt]                                                |
-| 40 Examples x ~500 Tokens/Example = 20,000 Input Tokens                 |
-| 20,000 Tokens x 4,000 Evaluation Runs = 80,000,000 Total Tokens         |
+| 12 Examples x ~500 Tokens/Example = 6,000 Input Tokens                  |
+| 6,000 Tokens x 600 Evaluation Runs = 3,600,000 Total Tokens             |
 |                                                                         |
 | [Dynamic Rerouting Execution]                                           |
-| 10 Contextual Examples x ~500 Tokens = 5,000 Input Tokens               |
-| 5,000 Tokens x 4,000 Evaluation Runs = 20,000,000 Total Tokens          |
+| 3 Contextual Examples x ~500 Tokens = 1,500 Input Tokens                |
+| 1,500 Tokens x 600 Evaluation Runs = 900,000 Total Tokens               |
 +-------------------------------------------------------------------------+
-| TOTAL RESOURCE CONSERVATION = 60,000,000 TOKENS SAVED                   |
+| TOTAL RESOURCE CONSERVATION = 2,700,000 TOKENS SAVED                    |
 +-------------------------------------------------------------------------+
 
 ```
 
-This structural modification keeps token costs safely within the university budget while ensuring the Judge LLM receives highly relevant in-context training examples tailored to the specific text or tabular structure it is currently grading.
+This keeps token throughput well within Groq's free-tier per-day limits while ensuring the Judge LLM receives highly relevant in-context examples tailored to the specific text or tabular structure it is currently grading.
 
 ---
 
 ## 6. Multi-Pipeline Architectural Registry
 
-This project systematically analyzes and records performance metrics for **six pipelines**: four core production architectures are actively implemented, while two are structurally documented as excluded or reserved to protect research depth.
+This project focuses on **two core production architectures** (Pipelines 3 and 4), which form a clean, directly comparable head-to-head between optimized semantic retrieval and statistical keyword retrieval. Four further pipelines are documented as deprioritized, excluded, or reserved — each with an explicit engineering justification — to demonstrate deliberate scoping and preserve a clear future-work narrative.
 
 ```text
                   +---------------------------------------+
@@ -317,41 +319,45 @@ This project systematically analyzes and records performance metrics for **six p
 +---------------------------------------+         +---------------------------------------+
 |          ACTIVE CODESPACE             |         |         DEPRIORITIZED / SCOPE         |
 +---------------------------------------+         +---------------------------------------+
-| Pipeline 1: Brute-Force Context       |         | Pipeline 5: Vectorless Structural RAG |
-| Pipeline 2: Naive Vector RAG          |         |             (SummaryIndex)            |
-| Pipeline 3: Optimized Vector RAG      |         |             [EXCLUDED]                |
-| Pipeline 4: Vectorless Keyword RAG    |         |                                       |
-|             (BM25 Table Index)        |         | Pipeline 6: Hybrid RAG (Fusion Engine)|
-+---------------------------------------+         |             [RESERVED FUTURE WORK]    |
+| Pipeline 3: Optimized Vector RAG      |         | Pipeline 1: Brute-Force Context       |
+|             (Metadata + Re-ranker)    |         |             [DEPRIORITIZED]           |
+| Pipeline 4: Vectorless Keyword RAG    |         | Pipeline 2: Naive Vector RAG          |
+|             (True BM25 / rank_bm25)   |         |             [DEPRIORITIZED]           |
++---------------------------------------+         |                                       |
+                                                  | Pipeline 5: Vectorless Structural RAG |
+                                                  |             (SummaryIndex) [EXCLUDED] |
+                                                  |                                       |
+                                                  | Pipeline 6: Hybrid RAG (Fusion)       |
+                                                  |             [RESERVED FUTURE WORK]    |
                                                   +---------------------------------------+
 
 ```
 
 ### Active Pipelines
 
-* **Pipeline 1: Brute-Force Context (Baseline)**
-* *Architecture*: Zero retrieval layer. The entire parsed document is directly injected into the LLM context window alongside the prompt.
-* *Purpose*: Establishes the theoretical accuracy and semantic generation ceiling for the model.
-* *Constraint*: Strictly restricted to Micro and Small datasets (under 100 pages) due to physical context-window boundaries and processing degradation over massive sequences.
-
-
-* **Pipeline 2: Naive Vector RAG**
-* *Architecture*: Document text nodes are passed through a uniform embedding model (e.g., `text-embedding-3-small`) to construct a flat vector space. Retrieval is executed purely via top-$K$ cosine similarity search.
-* *Purpose*: Acts as the vector baseline control group, isolating how basic semantic similarity fares against dense table maps without any structural guidance.
-
-
 * **Pipeline 3: Optimized Vector RAG**
-* *Architecture*: Inherits the base architecture of Pipeline 2, but applies a two-layer optimization: (a) hard metadata pre-filtering using structural header parameters extracted during ingestion parsing, and (b) a downstream cross-encoder **Re-ranker** (e.g., `Cohere Rerank`) to critically re-order the top-$K$ documents before passing them to the generation engine.
-* *Purpose*: Measures whether standard semantic search can be salvaged for complex financial lookups by tuning context densities and applying re-ranking.
+* *Architecture*: A semantic retrieval pipeline with two-layer optimization: (a) hard metadata pre-filtering using structural header parameters extracted during ingestion parsing, and (b) a downstream cross-encoder **Re-ranker** (`BAAI/bge-reranker-base`, run locally on CPU at zero API cost) to re-order the top-$K$ candidates before passing them to the generation engine. Embeddings are generated locally with `BAAI/bge-small-en-v1.5`.
+* *Purpose*: Measures whether tuned semantic search — metadata-aware retrieval plus re-ranking — can be made competitive for complex financial lookups against dense tabular data.
 
 
-* **Pipeline 4: Vectorless Keyword RAG (BM25)**
-* *Architecture*: Implemented via LlamaIndex's `KeywordTableIndex`. It completely bypasses dense vector space creation and geometric calculations. Instead, it tokenizes the parsed document hierarchy into discrete keyword blocks, utilizing the statistical **BM25 algorithm** to match explicit query terms directly to structural node components.
-* *Purpose*: Serves as the primary alternative architecture, evaluating if strict, frequency-based statistical keyword indexing outperforms high-dimensional embeddings when seeking explicit numerical coordinates or narrow tabular data.
+* **Pipeline 4: Vectorless Keyword RAG (True BM25)**
+* *Architecture*: Implemented via the **`rank_bm25`** library, applying the statistical **Okapi BM25 algorithm** directly over tokenized document nodes. It completely bypasses dense vector space creation and geometric similarity. Retrieval is deterministic, reproducible, and requires no LLM call or API at the retrieval step.
+* *Purpose*: Serves as the primary alternative architecture, evaluating whether strict, frequency-based statistical keyword matching outperforms high-dimensional embeddings when seeking explicit numerical coordinates or narrow tabular data.
+* *Design note*: An earlier draft specified LlamaIndex's `KeywordTableIndex` for this role. That index was rejected because it uses an **LLM to extract keywords** at index/query time — it is neither statistical nor deterministic, adds per-node API cost and latency, and would not constitute a clean test of the BM25 paradigm the research question targets. `rank_bm25` is the correct instrument for a genuine semantic-vs-statistical comparison.
 
 
 
-### Excluded and Reserved Pipelines
+### Deprioritized, Excluded, and Reserved Pipelines
+
+* **Pipeline 1: Brute-Force Context (Baseline) — [DEPRIORITIZED]**
+* *Architecture*: Zero retrieval layer; the entire parsed document is injected directly into the LLM context window.
+* *Justification for Deprioritization*: With open models capped at ~128K tokens, full 10-K injection is infeasible for anything but the shortest filings, and it tests generation-ceiling behavior rather than the retrieval question at the heart of this study. **It can be pursued later if time allows** as a context-ceiling reference point on short filings.
+
+
+* **Pipeline 2: Naive Vector RAG — [DEPRIORITIZED]**
+* *Architecture*: Flat embedding space (`BAAI/bge-small-en-v1.5`) with top-$K$ cosine similarity and no metadata filtering or re-ranking.
+* *Justification for Deprioritization*: It is the un-optimized ablation of Pipeline 3. The core research question — semantic vs. statistical retrieval — is most sharply tested by comparing the *best* vector pipeline (3) against BM25 (4). **It can be pursued later if time allows**, as an ablation isolating how much the metadata + re-ranker layers in Pipeline 3 actually contribute.
+
 
 * **Pipeline 5: Vectorless Structural RAG (SummaryIndex) — [EXCLUDED]**
 * *Architecture*: Designed to execute retrieval by traversing an abstract, hierarchical tree structure built from parent summaries and child-node descriptions using LlamaIndex `SummaryIndex`.
@@ -368,7 +374,7 @@ This project systematically analyzes and records performance metrics for **six p
 
 ## 7. Tri-Pillar Evaluation and Benchmarking Framework
 
-Pipelines are comprehensively audited and compared across three independent variables to create a complete operational profile. To evaluate retrieval performance across different operational constraints, all active retrieval pipelines (Pipelines 2, 3, and 4) are tested using **three distinct values of $K$**:
+Pipelines are comprehensively audited and compared across three independent variables to create a complete operational profile. To evaluate retrieval performance across different operational constraints, both active retrieval pipelines (Pipelines 3 and 4) are tested using **three distinct values of $K$**:
 
 $$\mathbf{K \in \{3, 5, 10\}}$$
 
@@ -416,9 +422,9 @@ $$\text{Recall}@K = \frac{|\{\text{Retrieved Nodes up to } K\} \cap \{\text{Grou
 This pillar measures the semantic and lexical precision of the output generated by the downstream LLM:
 
 * **Lexical Metrics (Exact Match and Token F1-Score)**: Evaluates lexical overlap and string similarity between the generated response text and the ground-truth target text.
-* **Automated LLM-as-a-Judge Prompt Matrix**: Evaluates the text block across a **1-to-10 scoring rubric** embedded with the static few-shot examples from Section 5.
+* **Automated LLM-as-a-Judge Prompt Matrix**: Evaluates the text block across a **1-to-10 scoring rubric** embedded with the dynamically-filtered few-shot examples from Section 5.
 * **Citation Audit Layer**: The judge LLM cross-references the page numbers cited in the generated answer text against the true `evidence_pages` JSON metadata element. If a pipeline outputs a correct numeric answer but cites an incorrect source page, the system flags it as a *coincidental hallucination* and downgrades its score.
-* **The Agreement-Rate Guardrail**: To mathematically justify the automated evaluation of the 360 unverified queries, the system runs the Judge LLM against the 40 human-labeled Golden Subset queries and computes the **LLM-Judge Agreement Rate**:
+* **The Agreement-Rate Guardrail**: To mathematically justify the automated evaluation of the 88 non-golden queries, the system runs the Judge LLM against the 12 human-labeled Golden Subset queries and computes the **LLM-Judge Agreement Rate**:
 
 $$\text{Agreement Rate} = \frac{\text{Matches between Human Score and Judge Score}}{\text{Total Samples within Golden Subset}} \times 100\%$$
 
@@ -432,7 +438,7 @@ This pillar captures the production viability and engineering trade-offs of each
 
 * **Latency per Query**: Time elapsed (in seconds) from initial query submission to final token generation.
 * **Token Consumption & Financial Cost per Query**: Tracking input/output token volume per query to map the operational cost curve of each pipeline across document scales.
-* **One-Time Indexing Cost**: Benchmarking the computational overhead, time duration, and token cost required to build a standard vector embedding space vs. a structured index/KeywordTableIndex tree.
+* **One-Time Indexing Cost**: Benchmarking the computational overhead, time duration, and (where applicable) token cost required to build a local vector embedding space vs. a `rank_bm25` statistical index.
 
 ---
 
@@ -446,9 +452,9 @@ This pillar captures the production viability and engineering trade-offs of each
                                                         |
                                                         v
                                    +---------------------------------------+
-                                   |  2. DATASET SYNTHESIS (Vertex AI)     |
-                                   |  - async_generator.py (Gemini Pro)    |
-                                   |  - async_critic.py (Gemini Flash)     |
+                                   |  2. DATASET SYNTHESIS (Groq Open LLMs)|
+                                   |  - async_generator.py (Llama 3.3 70B) |
+                                   |  - async_critic.py    (Qwen3 32B)     |
                                    +---------------------------------------+
                                                         |
                                                         v
@@ -461,9 +467,9 @@ This pillar captures the production viability and engineering trade-offs of each
                                        v                             v
 +--------------------------------------------+         +--------------------------------------------+
 |         4A. VECTOR RETRIEVAL STACK         |         |        4B. KEYWORD RETRIEVAL STACK         |
-|  - naive_vector_pipeline.py                |         |  - bm25_keyword_pipeline.py                |
-|  - optimized_vector_pipeline.py            |         |    (LlamaIndex KeywordTableIndex)          |
-|    (Metadata filters + Cohere Re-ranker)   |         |                                            |
+|  - optimized_vector_pipeline.py            |         |  - bm25_keyword_pipeline.py                |
+|    (bge embeddings, local; metadata        |         |    (rank_bm25 - true statistical BM25)     |
+|     pre-filter + bge-reranker, local CPU)  |         |                                            |
 +--------------------------------------------+         +--------------------------------------------+
                                        \                             /
                                         \                           /
@@ -478,7 +484,7 @@ This pillar captures the production viability and engineering trade-offs of each
                                    +---------------------------------------+
                                    |         6. METRICS & JUDGE            |
                                    |  - code_metrics.py (P@K, R@K, Hit)    |
-                                   |  - async_judge.py                     |
+                                   |  - async_judge.py (Llama 3.3 70B)     |
                                    |    (Few-Shot Prompt + Citation Audit) |
                                    +---------------------------------------+
 ```
@@ -488,38 +494,37 @@ This pillar captures the production viability and engineering trade-offs of each
 
 ### Combinatorial Scale and Execution Overhead
 
-The architectural design introduces a massive execution matrix due to testing multiple variables. Evaluating 400 unique queries across different configuration layers results in an explosive scaling problem that requires careful script tracking.
+The architectural design introduces a bounded execution matrix. Evaluating 100 unique queries across two pipelines and three values of $K$ produces a run count that is large enough for meaningful per-quadrant analysis yet small enough to complete comfortably within free-tier rate limits.
 
 ```text
 +-----------------------------------------------------------------------+
 |                        COMBINATORIAL SCALE MATH                       |
 +-----------------------------------------------------------------------+
-|  400 Evaluation Queries (100 per Quadrant)                            |
+|  100 Evaluation Queries (25 per Quadrant)                             |
 |                                                                       |
-|  [Active Retrieval Pipelines]         [Baseline Stack]                |
-|  - Pipeline 2: Naive Vector           - Pipeline 1: Brute-Force       |
-|  - Pipeline 3: Optimized Vector       (Runs once per query)           |
-|  - Pipeline 4: BM25 Keyword                                           |
+|  [Active Retrieval Pipelines]                                         |
+|  - Pipeline 3: Optimized Vector                                       |
+|  - Pipeline 4: True BM25 Keyword                                      |
 |  (Each runs at K = 3, 5, 10)                                          |
 |                                                                       |
-|  3 Pipelines x 3 K-Values = 9         1 Pipeline x 1 Run = 1          |
-|  9 x 400 Queries = 3,600 runs         1 x 400 Queries = 400 runs      |
+|  2 Pipelines x 3 K-Values = 6                                         |
+|  6 x 100 Queries = 600 runs                                           |
 +-----------------------------------------------------------------------+
-|                 TOTAL PIPELINE GENERATIONS = 4,000 RUNS               |
-|                 TOTAL JUDGE EVALUATIONS    = 4,000 RUNS               |
+|                 TOTAL PIPELINE GENERATIONS = 600 RUNS                 |
+|                 TOTAL JUDGE EVALUATIONS    = 600 RUNS                 |
 +-----------------------------------------------------------------------+
 
 ```
 
-* **Query Count Baseline:** A total pool of 400 verified questions (100 items evenly distributed across the 4 core quadrants) is required to establish statistical significance. Small evaluation pools (e.g., 20–30 queries) fail to expose performance boundaries in structural vs. narrative text.
-* **Run Count Multiplier:** Running 3 variable retrieval pipelines across 3 independent values of $K$ ($K \in \{3, 5, 10\}$) produces 3,600 runs. Adding the 400 control baseline runs from the un-retrieved Brute-Force context layer locks the execution requirement at **4,000 total pipeline iterations**.
-* **Evaluation Volume:** Once those 4,000 answers are generated, they must each be checked individually by the evaluation system, creating an additional **4,000 evaluation engine runs**.
+* **Query Count Baseline:** A pool of 100 verified questions (25 evenly distributed across the 4 core quadrants) balances statistical signal against a solo 8-week timeline. Larger pools (e.g., 400) add little per-quadrant insight at this scope while multiplying API load.
+* **Run Count Multiplier:** Running 2 retrieval pipelines across 3 values of $K$ ($K \in \{3, 5, 10\}$) produces 600 generation runs.
+* **Evaluation Volume:** Each of the 600 generated answers is checked once by the Judge, creating an additional **600 evaluation runs**.
 
 ---
 
 ### The Necessity of Asynchronous Batch Processing
 
-Executing 4,000 sequential pipeline generation runs and 4,000 sequential evaluation steps using standard, single-threaded Python synchronous `for` loops is entirely unfeasible within an 8-week timeline.
+Executing 600 pipeline generation runs and 600 evaluation steps using standard, single-threaded Python synchronous `for` loops is slow and fragile — at ~2s of network wait per call, a single pipeline's loop can stall for long stretches and is prone to connection drops over a long run.
 
 ```text
 [Synchronous Process] (Fatal Timeout Risk)
@@ -527,7 +532,7 @@ Run 1 ----> Wait for API (2s) ----> Run 2 ----> Wait for API (2s) [Total: ~4+ Ho
 
 [Asynchronous Batch Processing] (Required Production Design)
 Run 1 ---\
-Run 2 -----+---> Async IO Loop Queue ---> Concurrent Vertex AI Engine [Total: Minutes per pipeline]
+Run 2 -----+---> Async IO Loop Queue ---> Concurrent Groq API Engine [Total: Minutes per pipeline]
 Run 3 ---/
 
 ```
@@ -537,12 +542,13 @@ Run 3 ---/
 
 ---
 
-### Vertex AI Rate Limits and Credit Constraints
+### Groq Free-Tier Rate Limits
 
-Operating heavily within a solo environment backed by a $300 Google Cloud credit budget exposes the architecture to two hard operational limits.
+Operating on Groq's free tier (no credit card; rate-limited rather than billed) exposes the architecture to throughput limits rather than a spend ceiling.
 
-* **HTTP 429 Rate Limiting:** Concurrent batching will quickly exhaust standard API token-per-minute (TPM) or requests-per-minute (RPM) quotas, triggering immediate HTTP 429 exceptions. The asynchronous framework must be configured with a strict resilience handler (e.g., the `tenacity` library) to apply **exponential backoff and jitter algorithms**, keeping the execution traffic smoothly within cloud bounds without crashing.
-* **Budget Exhaustion Trap:** Processing 2-million-token files repeatedly using high-tier models will drain the $300 allocation long before data collection finishes. To prevent this, model roles must be tiered: **Gemini 1.5 Pro** is used only for the initial, long-context Query Generation phase. The lightweight **Gemini 1.5 Flash** model must be used for bulk Critic lookups and Judge evaluations to significantly reduce token costs.
+* **Per-Model Daily Caps:** Free-tier limits are per-model and per-organization. As of mid-2026, `llama-3.3-70b-versatile` is published at roughly 30 RPM and ~1,000 requests/day, with smaller models (e.g. `llama-3.1-8b-instant`) allowing far more. The full project — 100 generation + 100 critique + 600 evaluation calls plus regeneration overhead — sits within a few days of free-tier headroom even without optimization, and caching reduces this further.
+* **HTTP 429 Rate Limiting:** Concurrent batching can exceed per-minute (RPM/TPM) quotas, triggering HTTP 429 exceptions. The asynchronous framework must wrap all calls in a resilience handler (e.g., the `tenacity` library) applying **exponential backoff and jitter**, so the script pauses and retries smoothly instead of crashing.
+* **No Budget-Exhaustion Risk:** Because retrieval (bge embeddings, bge reranker, BM25) runs locally on CPU at $0 and all LLM calls use the free tier, there is no per-token billing to exhaust. The binding constraint is daily request count, not dollars.
 
 ---
 
@@ -550,23 +556,23 @@ Operating heavily within a solo environment backed by a $300 Google Cloud credit
 
 Data framework orchestration tools (specifically LlamaIndex) undergo rapid development and frequent breaking syntax changes.
 
-* **Syntax Degradation:** Standard model coding tools often reference older, deprecated library models and methods. If code generation isn't strictly controlled, it can result in broken implementations of key structures like `KeywordTableIndex` or vector configurations.
-* **Mitigation Strategy:** Code requirements must pin exact version dependencies (e.g., `llama-index==0.10.x`). Current framework documentation snippets should be directly provided to your programming assistant to prevent it from inventing non-existent parameters.
+* **Syntax Degradation:** Standard model coding tools often reference older, deprecated library models and methods. If code generation isn't strictly controlled, it can result in broken implementations of key structures like vector index configurations or retriever interfaces.
+* **Mitigation Strategy:** Code requirements must pin exact version dependencies (e.g., `llama-index==0.10.x`, `rank-bm25` at a fixed version). Current framework documentation snippets should be directly provided to your programming assistant to prevent it from inventing non-existent parameters.
 
 ---
 
 ### Relational Data Management Overload
 
-Generating 4,000 distinct data points across multiple pipelines, tracking varying parameters of $K$, and recording latency, costs, and output text strings will quickly become unmanageable if stored in loose CSV or JSON flat files.
+Generating 600 distinct data points across two pipelines, tracking varying parameters of $K$, and recording latency, costs, and output text strings will quickly become unmanageable if stored in loose CSV or JSON flat files.
 
 * **File Corruption Vulnerability:** Appending raw strings to loose files mid-loop often breaks file structures during unexpected script crashes, corrupting previously harvested data.
-* **Relational Enforcement Layer:** A local **SQLite database schema** is required from day one. Pipelines must commit results immediately to strongly isolated tables (`nodes`, `queries`, `results`), ensuring that if a process crashes at run 2,500, the data from the first 2,499 runs remains safely preserved and queryable.
+* **Relational Enforcement Layer:** A local **SQLite database schema** is required from day one. Pipelines must commit results immediately to strongly isolated tables (`nodes`, `queries`, `results`), ensuring that if a process crashes partway through, the data from completed runs remains safely preserved and queryable, and the worker can resume from the last written row.
 
 ---
 
 ### Coincidental Correctness and Citation Blindspots
 
-A significant algorithmic vulnerability in RAG systems is "coincidental correctness," where an engine outputs a factually accurate answer by pulling data from an completely irrelevant page.
+A significant algorithmic vulnerability in RAG systems is "coincidental correctness," where an engine outputs a factually accurate answer by pulling data from a completely irrelevant page.
 
 ```text
                       COINCIDENTAL CORRECTNESS TRAP
@@ -591,6 +597,6 @@ A significant algorithmic vulnerability in RAG systems is "coincidental correctn
 
 To ensure this dissertation withstands rigorous academic evaluation, the following architectural principles are enforced:
 
-1. **Standardized Context Volumes**: To guarantee parity between Pipeline 2, Pipeline 3, and Pipeline 4, the total context mass (token volume passed to the generation LLM) is kept constant across evaluations.
+1. **Standardized Context Volumes**: To guarantee parity between Pipeline 3 and Pipeline 4, the total context mass (token volume passed to the generation LLM) is kept constant across evaluations at each value of $K$.
 2. **Explicit Citation Enforcement**: RAG prompt configurations explicitly mandate that the generating model provide source-page attributions. This allows the evaluation framework to flag instances of coincidental correctness, where the correct answer was generated from irrelevant or incorrect context.
-3. **Methodological Transparency**: The methodology chapter will document all six original architectural iterations. It will provide formal, engineering-based justifications for the exclusion of the SummaryIndex architecture and the reservation of the Hybrid model, establishing a clear narrative of deliberate project scoping.
+3. **Methodological Transparency**: The methodology chapter documents all six originally-scoped architectural iterations and gives formal, engineering-based justifications for deprioritizing the two baseline pipelines (1 and 2), excluding the SummaryIndex architecture (5), and reserving the Hybrid model (6) — establishing a clear narrative of deliberate project scoping around the core semantic-vs-statistical comparison.
