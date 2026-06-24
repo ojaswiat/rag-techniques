@@ -1,0 +1,22 @@
+%% Diagram 2 — Ingestion & Parsing Architecture. Maps to Project Idea Section 2.
+%% Render: paste into a Mermaid renderer, or in draw.io use Arrange > Insert > Advanced > Mermaid.
+%% Suggested: apply an ELK layered layout (this flow splits then merges).
+flowchart TD
+  A["fa:fa-file-code Raw SEC 10-K Filing<br/>HTML / PDF"] --> B["fa:fa-cogs LlamaParse Engine<br/>Atomic Table Extraction Mode"]
+  B --> C["fa:fa-align-left Narrative Prose Paragraphs<br/>Clean Markdown Strings"]
+  B --> D["fa:fa-table Tabular Data Blocks<br/>Clean Markdown Tables<br/>titles + descriptions in metadata"]
+  C --> E["fa:fa-tags TextNode Enrichment Layer<br/>node_id · document_id · node_type<br/>parent_item_header · source_page_num"]
+  D --> E
+  E --> F["fa:fa-clipboard-check Parsing Validation Guardrail<br/>Randomized 20-Section Audit<br/>truncation · bisection · rendering"]
+  classDef src fill:#C62828,stroke:#7F0000,color:#fff,stroke-width:2px;
+  classDef eng fill:#1565C0,stroke:#0D47A1,color:#fff,stroke-width:2px;
+  classDef prose fill:#00838F,stroke:#005662,color:#fff,stroke-width:2px;
+  classDef tbl fill:#6A1B9A,stroke:#38006B,color:#fff,stroke-width:2px;
+  classDef enr fill:#2E7D32,stroke:#1B5E20,color:#fff,stroke-width:2px;
+  classDef grd fill:#EF6C00,stroke:#B53D00,color:#fff,stroke-width:2px;
+  class A src;
+  class B eng;
+  class C prose;
+  class D tbl;
+  class E enr;
+  class F grd;

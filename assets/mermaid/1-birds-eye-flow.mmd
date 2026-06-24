@@ -1,0 +1,37 @@
+%% Diagram 1 — Bird's-Eye Flow (master overview). Maps to Project Idea Section 8.
+%% Render: paste into a Mermaid renderer, or in draw.io use Arrange > Insert > Advanced > Mermaid.
+%% Suggested: apply an ELK layered layout (this flow has branches and feedback edges).
+flowchart TD
+  RAW["fa:fa-file-code Raw 10-K Filings"] --> PARSE["fa:fa-cogs Parse + Chunk<br/>metadata + node_id"]
+  PARSE --> NODES["fa:fa-database Node Store"]
+  NODES --> SUM["fa:fa-stream P3 Summary Index Build<br/>llama-3.1-8b-instant · one-time"]
+  NODES --> GEN["fa:fa-robot Generate 140 Queries<br/>Generator: gpt-oss-120b"]
+  GEN --> CRIT["fa:fa-search Critic Verifies<br/>Qwen3-32b + search tool"]
+  CRIT --> POOL["fa:fa-check-double Verified Pool"]
+  POOL --> PQ["PQ · 100<br/>test set"]
+  POOL --> GQ["GQ · 20<br/>teaching set + HUMAN"]
+  POOL --> JEQ["JEQ · 20<br/>eval set"]
+  JEQ --> GATE{"fa:fa-balance-scale Judge Validation<br/>Agreement &gt; 80% ?"}
+  GQ -.->|few-shot| GATE
+  GATE -->|No| FIXJ["fa:fa-wrench Fix Judge<br/>rubric / model"]
+  FIXJ -.-> GATE
+  GATE -->|Yes| BENCH["fa:fa-flask Full Benchmark<br/>PQ × P1,P2,P3 × K = 3,5,10<br/>= 900 runs"]
+  PQ --> BENCH
+  SUM -.-> BENCH
+  BENCH --> RESULTS["fa:fa-chart-bar Results Store<br/>Analysis and Comparison"]
+  classDef src fill:#C62828,stroke:#7F0000,color:#fff,stroke-width:2px;
+  classDef proc fill:#1565C0,stroke:#0D47A1,color:#fff,stroke-width:2px;
+  classDef data fill:#455A64,stroke:#1C313A,color:#fff,stroke-width:2px;
+  classDef gen fill:#00838F,stroke:#005662,color:#fff,stroke-width:2px;
+  classDef set fill:#6A1B9A,stroke:#38006B,color:#fff,stroke-width:2px;
+  classDef gate fill:#F9A825,stroke:#C17900,color:#1A1A1A,stroke-width:2px;
+  classDef bench fill:#2E7D32,stroke:#1B5E20,color:#fff,stroke-width:2px;
+  classDef fix fill:#EF6C00,stroke:#B53D00,color:#fff,stroke-width:2px;
+  class RAW src;
+  class PARSE,SUM proc;
+  class NODES data;
+  class GEN,CRIT,POOL gen;
+  class PQ,GQ,JEQ set;
+  class GATE gate;
+  class FIXJ fix;
+  class BENCH,RESULTS bench;

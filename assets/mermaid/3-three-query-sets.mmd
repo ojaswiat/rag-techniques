@@ -1,0 +1,15 @@
+%% Diagram 3 — Three Disjoint Query Sets. Maps to Project Idea Section 3.
+%% Render: paste into a Mermaid renderer, or in draw.io use Arrange > Insert > Advanced > Mermaid.
+flowchart TD
+  P["fa:fa-database Verified Query Pool<br/>140 total"]
+  P --> PQ["fa:fa-vial PQ — Pipeline Queries<br/>100 · 25 per quadrant<br/><b>TEST SET</b><br/>benchmarks the pipelines<br/>table: queries"]
+  P --> GQ["fa:fa-graduation-cap GQ — Golden Queries<br/>20 · 5 per quadrant<br/><b>TEACHING SET</b><br/>teaches the judge + HUMAN why-good<br/>table: golden_queries"]
+  P --> JEQ["fa:fa-clipboard-check JEQ — Judge Eval Queries<br/>20 · 5 per quadrant<br/><b>VALIDATION SET</b><br/>tests the judge + HUMAN scores<br/>table: judge_validation"]
+  classDef pool fill:#455A64,stroke:#1C313A,color:#fff,stroke-width:2px;
+  classDef test fill:#1565C0,stroke:#0D47A1,color:#fff,stroke-width:2px;
+  classDef teach fill:#2E7D32,stroke:#1B5E20,color:#fff,stroke-width:2px;
+  classDef valid fill:#6A1B9A,stroke:#38006B,color:#fff,stroke-width:2px;
+  class P pool;
+  class PQ test;
+  class GQ teach;
+  class JEQ valid;

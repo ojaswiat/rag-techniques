@@ -1,0 +1,22 @@
+%% Diagram 5 — Adversarial Generation & Verification. Maps to Project Idea Section 4.
+%% Render: paste into a Mermaid renderer, or in draw.io use Arrange > Insert > Advanced > Mermaid.
+%% Suggested: apply an ELK layered layout (decision node + feedback edge).
+flowchart TD
+  S["fa:fa-scissors SEC 10-K Split into<br/>Per-Section Chunks &lt; 128K"] --> G["fa:fa-robot Generator Agent<br/>openai/gpt-oss-120b<br/>creates query · answer · node-ID citations"]
+  G -->|hide answer and citations| C["fa:fa-search Critic Agent<br/>Qwen3-32b + search tool<br/>independent search over ALL nodes"]
+  C --> X{"fa:fa-balance-scale Automated Cross-Check<br/>node-ID + value match ?"}
+  X -->|Yes| V["fa:fa-check-circle Auto-Verified<br/>140-Query Pool"]
+  X -->|No| D["fa:fa-times-circle Discard &amp; Regenerate"]
+  D -.-> G
+  classDef split fill:#455A64,stroke:#1C313A,color:#fff,stroke-width:2px;
+  classDef gen fill:#1565C0,stroke:#0D47A1,color:#fff,stroke-width:2px;
+  classDef crit fill:#6A1B9A,stroke:#38006B,color:#fff,stroke-width:2px;
+  classDef gate fill:#F9A825,stroke:#C17900,color:#1A1A1A,stroke-width:2px;
+  classDef ok fill:#2E7D32,stroke:#1B5E20,color:#fff,stroke-width:2px;
+  classDef no fill:#C62828,stroke:#7F0000,color:#fff,stroke-width:2px;
+  class S split;
+  class G gen;
+  class C crit;
+  class X gate;
+  class V ok;
+  class D no;

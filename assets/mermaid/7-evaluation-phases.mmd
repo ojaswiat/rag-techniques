@@ -1,0 +1,33 @@
+%% Diagram 7 — Evaluation Phases: Judge-Validation Gate + Full Benchmark. Maps to Project Idea Sections 7 & 8.
+%% Render: paste into a Mermaid renderer, or in draw.io use Arrange > Insert > Advanced > Mermaid.
+%% Note: uses subgraphs — keep Mermaid's native layout (do NOT apply ELK, it flattens the grouping).
+flowchart TD
+  subgraph P2["PHASE 2 · Judge Validation Gate — cheap, runs FIRST"]
+    direction TB
+    A["Run JEQ-20 on P1 / P2 / P3<br/>at single K = 5 → 60 outputs"]
+    A --> H["fa:fa-user Human scores 60<br/>by hand"]
+    A --> J["fa:fa-robot Judge scores 60<br/>Qwen3-32b · few-shot by GQ"]
+    H --> AG{"fa:fa-balance-scale Agreement<br/>&gt; 80% ?"}
+    J --> AG
+    AG -->|No| FIX["fa:fa-wrench Fix Judge<br/>rubric / model"]
+    FIX -.-> A
+  end
+  subgraph P3["PHASE 3 · Full Benchmark — only after the gate passes"]
+    direction TB
+    B["Run PQ-100 on P1 / P2 / P3<br/>× K = 3,5,10 → 900 runs"]
+    B --> M["fa:fa-cogs Trusted Judge + code metrics<br/>score every run"]
+    M --> RES["fa:fa-chart-bar Results Store<br/>Analysis and Comparison"]
+  end
+  AG -->|Yes| B
+  classDef run fill:#1565C0,stroke:#0D47A1,color:#fff,stroke-width:2px;
+  classDef human fill:#EF6C00,stroke:#B53D00,color:#fff,stroke-width:2px;
+  classDef judge fill:#00838F,stroke:#005662,color:#fff,stroke-width:2px;
+  classDef gate fill:#F9A825,stroke:#C17900,color:#1A1A1A,stroke-width:2px;
+  classDef fix fill:#C62828,stroke:#7F0000,color:#fff,stroke-width:2px;
+  classDef bench fill:#2E7D32,stroke:#1B5E20,color:#fff,stroke-width:2px;
+  class A,B run;
+  class H human;
+  class J,M judge;
+  class AG gate;
+  class FIX fix;
+  class RES bench;

@@ -100,6 +100,7 @@ Writing outputs to raw CSV or nested JSON is forbidden for long-running batches.
 * **Crash risk:** appending to an uncommitted flat file mid-run (e.g. run 700 of 900) can corrupt prior records.
 * **Mandatory schema:** a local SQLite configuration (`database_manager.py`) must isolate **five** tables: `nodes`, `queries` (100 PQ), `golden_queries` (20 GQ), `judge_validation` (20 JEQ), and `results` (the 900 runs).
 * **State commits:** commit after each independent run. On restart, the worker must check `results` for existing rows and **resume from the last written row** instead of re-running inputs and consuming extra free-tier requests/tokens.
+* * **WAL mode for concurrent writes:** SQLite serializes writes, so the bounded async worker pool (§5) can occasionally hit `database is locked`. Enable Write-Ahead Logging at startup (`PRAGMA journal_mode=WAL;`) so readers and the writer don't block each other, and let the `tenacity` wrapper retry the rare lock. With ≤ 5 workers each committing a single row, this fully removes lock contention — no need to switch to a client-server database (Postgres/MySQL), which would add a persistent server process for concurrency this project never requires.
 * **`judge_validation` is written in stages:** the question fields at generation time; the pipeline output after the Phase-2 run; the human score and the judge score after scoring — the agreement rate compares the last two columns.
 
 ---
