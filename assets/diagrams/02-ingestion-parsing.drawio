@@ -1,0 +1,46 @@
+<mxfile host="app.diagrams.net">
+  <diagram id="OKWV28LGxHaYcWhZth9l" name="Page-1">
+    <mxGraphModel dx="1181" dy="864" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="900" pageHeight="800" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="A" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#C62828;strokeColor=#7F0000;fontColor=#FFFFFF;fontSize=12;fontStyle=1;verticalAlign=middle;align=center;arcSize=6;" value="Raw SEC 10-K Filing&#xa;HTML / PDF" vertex="1">
+          <mxGeometry height="60" width="240" x="330" y="56" as="geometry" />
+        </mxCell>
+        <mxCell id="B" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1565C0;strokeColor=#0D47A1;fontColor=#FFFFFF;fontSize=12;verticalAlign=middle;align=center;arcSize=6;" value="LlamaParse Engine&#xa;Atomic Table Extraction Mode" vertex="1">
+          <mxGeometry height="60" width="240" x="330" y="166" as="geometry" />
+        </mxCell>
+        <mxCell id="C" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#00838F;strokeColor=#005662;fontColor=#FFFFFF;fontSize=12;verticalAlign=middle;align=center;arcSize=6;" value="Narrative Prose Paragraphs&#xa;Clean Markdown Strings" vertex="1">
+          <mxGeometry height="87" width="260" x="120" y="309" as="geometry" />
+        </mxCell>
+        <mxCell id="D" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#6A1B9A;strokeColor=#38006B;fontColor=#FFFFFF;fontSize=12;verticalAlign=middle;align=center;arcSize=6;" value="Tabular Data Blocks&#xa;Clean Markdown Tables&#xa;titles + descriptions in metadata" vertex="1">
+          <mxGeometry height="87" width="260" x="520" y="309" as="geometry" />
+        </mxCell>
+        <mxCell id="E" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2E7D32;strokeColor=#1B5E20;fontColor=#FFFFFF;fontSize=12;verticalAlign=middle;align=center;arcSize=6;" value="TextNode Enrichment Layer&#xa;node_id · document_id · node_type&#xa;parent_item_header · source_page_num" vertex="1">
+          <mxGeometry height="97" width="335" x="283" y="485" as="geometry" />
+        </mxCell>
+        <mxCell id="F" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EF6C00;strokeColor=#B53D00;fontColor=#FFFFFF;fontSize=12;verticalAlign=middle;align=center;arcSize=6;" value="Parsing Validation Guardrail&#xa;Randomized 20-Section Audit&#xa;truncation · bisection · rendering" vertex="1">
+          <mxGeometry height="100" width="292" x="304" y="632" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" edge="1" parent="1" source="A" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" target="B">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" edge="1" parent="1" source="B" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" target="C">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" edge="1" parent="1" source="B" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" target="D">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" edge="1" parent="1" source="C" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" target="E">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e5" edge="1" parent="1" source="D" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" target="E">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e6" edge="1" parent="1" source="E" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" target="F">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

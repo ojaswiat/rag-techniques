@@ -1,0 +1,35 @@
+<mxfile host="app.diagrams.net">
+  <diagram id="_ZR8XegDHnCgdlZ0YtQr" name="Page-1">
+    <mxGraphModel dx="1653" dy="1609" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="1000" pageHeight="600" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="P" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#455A64;strokeColor=#1C313A;fontColor=#FFFFFF;fontSize=13;fontStyle=1;verticalAlign=middle;align=center;arcSize=6;" value="Verified Query Pool&#xa;140 total" vertex="1">
+          <mxGeometry height="60" width="200" x="647" y="-53" as="geometry" />
+        </mxCell>
+        <mxCell id="PQ" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1565C0;strokeColor=#0D47A1;fontColor=#FFFFFF;fontSize=12;verticalAlign=middle;align=center;arcSize=6;contract=0;" value="PQ — Pipeline Queries&#xa;100 · 25 per quadrant&#xa;TEST SET&#xa;benchmarks the pipelines&#xa;table: queries" vertex="1">
+          <mxGeometry height="120" width="360" x="80" y="216" as="geometry" />
+        </mxCell>
+        <mxCell id="GQ" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2E7D32;strokeColor=#1B5E20;fontColor=#FFFFFF;fontSize=12;verticalAlign=middle;align=center;arcSize=6;contract=0;" value="GQ — Golden Queries&#xa;20 · 5 per quadrant&#xa;TEACHING SET&#xa;teaches the judge + HUMAN why-good&#xa;table: golden_queries" vertex="1">
+          <mxGeometry height="120" width="360" x="567" y="216" as="geometry" />
+        </mxCell>
+        <mxCell id="JEQ" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#6A1B9A;strokeColor=#38006B;fontColor=#FFFFFF;fontSize=12;verticalAlign=middle;align=center;arcSize=6;contract=0;" value="JEQ — Judge Eval Queries&#xa;20 · 5 per quadrant&#xa;VALIDATION SET&#xa;tests the judge + HUMAN scores&#xa;table: judge_validation" vertex="1">
+          <mxGeometry height="120" width="360" x="1054" y="216" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" edge="1" parent="1" source="P" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" target="PQ">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" edge="1" parent="1" source="P" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" target="GQ">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" edge="1" parent="1" source="P" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" target="JEQ">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1234" y="-23" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

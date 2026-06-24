@@ -1,0 +1,72 @@
+<mxfile host="app.diagrams.net">
+  <diagram id="Kd9c-skn4lO8TSUMCZfP" name="Page-1">
+    <mxGraphModel dx="2308" dy="1795" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="1100" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="P2" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#455A64;fontColor=#1A1A1A;fontSize=13;fontStyle=1;verticalAlign=top;align=center;dashed=1;" value="PHASE 2 · Judge Validation Gate — cheap, runs FIRST" vertex="1">
+          <mxGeometry height="820" width="820" x="-35" y="-87" as="geometry" />
+        </mxCell>
+        <mxCell id="44Ee-FX1Er5kFqS1pU3w-10" edge="1" parent="1" source="A" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="J">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="44Ee-FX1Er5kFqS1pU3w-11" edge="1" parent="1" source="A" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="H">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="A" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1565C0;strokeColor=#0D47A1;fontColor=#FFFFFF;fontSize=12;verticalAlign=middle;align=center;arcSize=6;" value="Run JEQ-20 on P1 / P2 / P3&#xa;at single K = 5 → 60 outputs" vertex="1">
+          <mxGeometry height="60" width="280" x="235" y="103" as="geometry" />
+        </mxCell>
+        <mxCell id="44Ee-FX1Er5kFqS1pU3w-4" edge="1" parent="1" source="J" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="AG">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="J" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#00838F;strokeColor=#005662;fontColor=#FFFFFF;fontSize=12;verticalAlign=middle;align=center;arcSize=6;" value="Judge scores 60&#xa;Qwen3-32b · few-shot by GQ" vertex="1">
+          <mxGeometry height="60" width="220" x="57" y="225" as="geometry" />
+        </mxCell>
+        <mxCell id="AG" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#F9A825;strokeColor=#C17900;fontColor=#1A1A1A;fontSize=12;fontStyle=1;verticalAlign=middle;align=center;" value="Agreement&#xa;&gt; 80% ?" vertex="1">
+          <mxGeometry height="100" width="180" x="285" y="409" as="geometry" />
+        </mxCell>
+        <mxCell id="44Ee-FX1Er5kFqS1pU3w-12" edge="1" parent="1" source="FIX" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="J">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="FIX" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#C62828;strokeColor=#7F0000;fontColor=#FFFFFF;fontSize=12;verticalAlign=middle;align=center;arcSize=6;" value="Fix Judge&#xa;rubric / model" vertex="1">
+          <mxGeometry height="60" width="200" x="275" y="582" as="geometry" />
+        </mxCell>
+        <mxCell id="P3" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#2E7D32;fontColor=#1A1A1A;fontSize=13;fontStyle=1;verticalAlign=top;align=center;dashed=1;" value="PHASE 3 · Full Benchmark — only after the gate passes" vertex="1">
+          <mxGeometry height="820" width="360" x="981" y="-87" as="geometry" />
+        </mxCell>
+        <mxCell id="B" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1565C0;strokeColor=#0D47A1;fontColor=#FFFFFF;fontSize=12;verticalAlign=middle;align=center;arcSize=6;" value="Run PQ-100 on P1 / P2 / P3&#xa;× K = 3,5,10 → 900 runs" vertex="1">
+          <mxGeometry height="60" width="280" x="1021" y="206" as="geometry" />
+        </mxCell>
+        <mxCell id="M" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#00838F;strokeColor=#005662;fontColor=#FFFFFF;fontSize=12;verticalAlign=middle;align=center;arcSize=6;" value="Trusted Judge + code metrics&#xa;score every run" vertex="1">
+          <mxGeometry height="60" width="280" x="1021" y="316" as="geometry" />
+        </mxCell>
+        <mxCell id="RES" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2E7D32;strokeColor=#1B5E20;fontColor=#FFFFFF;fontSize=12;verticalAlign=middle;align=center;arcSize=6;" value="Results Store&#xa;Analysis and Comparison" vertex="1">
+          <mxGeometry height="60" width="280" x="1021" y="426" as="geometry" />
+        </mxCell>
+        <mxCell id="e5" edge="1" parent="1" source="AG" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" target="FIX" value="No">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e8" edge="1" parent="1" source="B" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" target="M">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e9" edge="1" parent="1" source="M" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" target="RES">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="44Ee-FX1Er5kFqS1pU3w-7" edge="1" parent="1" source="H" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" target="AG">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="H" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EF6C00;strokeColor=#B53D00;fontColor=#FFFFFF;fontSize=12;verticalAlign=middle;align=center;arcSize=6;" value="Human scores 60&#xa;by hand" vertex="1">
+          <mxGeometry height="60" width="220" x="462" y="225" as="geometry" />
+        </mxCell>
+        <mxCell id="44Ee-FX1Er5kFqS1pU3w-13" edge="1" parent="1" source="AG" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.001;entryY=0.666;entryDx=0;entryDy=0;entryPerimeter=0;" target="P3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="44Ee-FX1Er5kFqS1pU3w-14" connectable="0" parent="44Ee-FX1Er5kFqS1pU3w-13" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="Yes" vertex="1">
+          <mxGeometry relative="1" x="-0.4785" y="-1" as="geometry">
+            <mxPoint x="-1" as="offset" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
