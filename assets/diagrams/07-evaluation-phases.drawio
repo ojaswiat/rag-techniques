@@ -4,7 +4,7 @@
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
-        <mxCell id="P2" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#455A64;fontColor=#1A1A1A;fontSize=13;fontStyle=1;verticalAlign=top;align=center;dashed=1;" value="PHASE 2 · Judge Validation Gate — cheap, runs FIRST" vertex="1">
+        <mxCell id="P2" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#455A64;fontColor=#1A1A1A;fontSize=13;fontStyle=1;verticalAlign=top;align=center;dashed=1;" value="PHASE 2 · Judge Validation Gate: cheap, runs FIRST" vertex="1">
           <mxGeometry height="820" width="820" x="-35" y="-87" as="geometry" />
         </mxCell>
         <mxCell id="44Ee-FX1Er5kFqS1pU3w-10" edge="1" parent="1" source="A" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="J">
@@ -31,7 +31,7 @@
         <mxCell id="FIX" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#C62828;strokeColor=#7F0000;fontColor=#FFFFFF;fontSize=12;verticalAlign=middle;align=center;arcSize=6;" value="Fix Judge&#xa;rubric / model" vertex="1">
           <mxGeometry height="60" width="200" x="275" y="582" as="geometry" />
         </mxCell>
-        <mxCell id="P3" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#2E7D32;fontColor=#1A1A1A;fontSize=13;fontStyle=1;verticalAlign=top;align=center;dashed=1;" value="PHASE 3 · Full Benchmark — only after the gate passes" vertex="1">
+        <mxCell id="P3" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#2E7D32;fontColor=#1A1A1A;fontSize=13;fontStyle=1;verticalAlign=top;align=center;dashed=1;" value="PHASE 3 · Full Benchmark, only after the gate passes" vertex="1">
           <mxGeometry height="820" width="360" x="981" y="-87" as="geometry" />
         </mxCell>
         <mxCell id="B" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1565C0;strokeColor=#0D47A1;fontColor=#FFFFFF;fontSize=12;verticalAlign=middle;align=center;arcSize=6;" value="Run PQ-100 on P1 / P2 / P3&#xa;× K = 3,5,10 → 900 runs" vertex="1">

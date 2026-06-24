@@ -37,13 +37,13 @@
         <mxCell id="FUT" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EF6C00;strokeColor=#B53D00;fontColor=#FFFFFF;fontSize=13;fontStyle=1;verticalAlign=middle;align=center;arcSize=6;" value="FUTURE SCOPE" vertex="1">
           <mxGeometry height="50" width="200" x="244" y="179" as="geometry" />
         </mxCell>
-        <mxCell id="P1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1565C0;strokeColor=#0D47A1;fontColor=#FFFFFF;fontSize=12;verticalAlign=middle;align=center;arcSize=6;" value="P1 · Vector RAG — meaning&#xa;bge embeddings + bge reranker" vertex="1">
+        <mxCell id="P1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1565C0;strokeColor=#0D47A1;fontColor=#FFFFFF;fontSize=12;verticalAlign=middle;align=center;arcSize=6;" value="P1 · Vector RAG, meaning&#xa;bge embeddings + bge reranker" vertex="1">
           <mxGeometry height="80" width="320" x="-187" y="270" as="geometry" />
         </mxCell>
-        <mxCell id="P2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1565C0;strokeColor=#0D47A1;fontColor=#FFFFFF;fontSize=12;verticalAlign=middle;align=center;arcSize=6;" value="P2 · Keyword RAG — exact words&#xa;rank_bm25 · true Okapi BM25" vertex="1">
+        <mxCell id="P2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1565C0;strokeColor=#0D47A1;fontColor=#FFFFFF;fontSize=12;verticalAlign=middle;align=center;arcSize=6;" value="P2 · Keyword RAG, exact words&#xa;rank_bm25 · true Okapi BM25" vertex="1">
           <mxGeometry height="80" width="320" x="-187" y="391" as="geometry" />
         </mxCell>
-        <mxCell id="P3" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1565C0;strokeColor=#0D47A1;fontColor=#FFFFFF;fontSize=12;verticalAlign=middle;align=center;arcSize=6;" value="P3 · Structural RAG — summary tree&#xa;SummaryIndex + one-time LLM build" vertex="1">
+        <mxCell id="P3" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1565C0;strokeColor=#0D47A1;fontColor=#FFFFFF;fontSize=12;verticalAlign=middle;align=center;arcSize=6;" value="P3 · Structural RAG, summary tree&#xa;SummaryIndex + one-time LLM build" vertex="1">
           <mxGeometry height="80" width="320" x="-187" y="512" as="geometry" />
         </mxCell>
         <mxCell id="P4" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#8D6E63;strokeColor=#4B2C20;fontColor=#FFFFFF;fontSize=12;verticalAlign=middle;align=center;arcSize=6;" value="P4 · Brute-Force Full-Context&#xa;no retrieval" vertex="1">
