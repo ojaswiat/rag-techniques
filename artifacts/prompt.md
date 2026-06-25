@@ -70,7 +70,7 @@ Your recommended flow:
 8. Bundle everything together linking references and the index page.
 
 
-1. Use the @PROPOSAL_GRADING_REPORT.md  file to polish the proposal file even further.
+1. Use the @reports/PROPOSAL_GRADING_REPORT.md file to polish the proposal file even further.
 2. Partition the sections such that they don't break between the pages - do the same with table. This is not a strict rule, just polishing if possible.
 3. If a section has 3 categories, methods, distinct philosophies, anything categorical, part them into sub sections, bullet points, or numbered lists.
 4. The tables have unnecessary lines in between the rows/cells. Fix it.
