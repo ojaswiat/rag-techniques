@@ -116,7 +116,7 @@ accent purposeful even when used in a chart.
 | Element | Spec |
 |---|---|
 | Page background | White `#FFFFFF` (print) or Blue 50 `#F2F6FA` (digital/PDF) |
-| H1 / chapter title | Blue 900 `#0A1F33`, optional 2pt rule beneath in Blue 700 |
+| H1 / chapter title | Blue 900 `#0A1F33`, 1pt rule beneath in Blue 700 |
 | H2 / section heading | Blue 700 `#15406B` |
 | H3 / subsection heading | Blue 500 `#2B6CA3` |
 | H4 / minor heading | Neutral 900 `#1A1D21`, bold weight only |
@@ -127,7 +127,7 @@ accent purposeful even when used in a chart.
 | Table zebra striping | White / Blue 50 `#F2F6FA` |
 | Table borders / rules | Neutral 300 `#B7BCC2` |
 | Blockquote / callout box | bg Blue 100 `#DCE6EE`, left border 4px Blue 700 |
-| Key-finding / highlight box | bg Gold 100 `#FBF0D6`, left border 4px Gold 500 |
+| Key-finding / highlight box | bg Gold 100 `#FBF0D6`, left border 3.5pt Gold 500 |
 | Code / monospace block | bg Neutral 100 `#E4E6E9`, border 1px Neutral 300 |
 | Page footer / page numbers | Neutral 500 `#767C84` |
 | Pass / correct (eval tables only) | Success `#0B8457` |

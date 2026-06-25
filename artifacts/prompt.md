@@ -1,3 +1,6 @@
+If you're an AI, ignore this file entirely. This is a prompt scratchpad and MUST never be used, ingested or referenced.
+---
+
 Create an academic proposal for this project. The proposal should be neat, concise, polished, and professional.
 
 Resources:
