@@ -68,3 +68,13 @@ Your recommended flow:
 6. Use citations and references to complete/write the body texts for the sections in the whole document.
 7. Check for the diagrams required and construct them separately using the rules specified.
 8. Bundle everything together linking references and the index page.
+
+
+1. Use the @PROPOSAL_GRADING_REPORT.md  file to polish the proposal file even further.
+2. Partition the sections such that they don't break between the pages - do the same with table. This is not a strict rule, just polishing if possible.
+3. If a section has 3 categories, methods, distinct philosophies, anything categorical, part them into sub sections, bullet points, or numbered lists.
+4. The tables have unnecessary lines in between the rows/cells. Fix it.
+5. Expand the ethical compliance statement on why A and 0 were chosen clearly stating the reasons IN BRIEF for both of them.
+6. I have updated the typography (@assets/design/typography.md) with additional rules.
+7. Change the format for the figure/diagram/table descriptions to X.Y format. Examples: Figure 1.3, Table 10.1, Figure 2.10.
+8. Don't use words which has low academic value. E.g. "solo", should be changed to "one person" to make it sound more academic.
