@@ -64,7 +64,7 @@ The two heavy phases are token-bound, not request-bound:
 * **Judging (`Qwen3-32b`).** ~960 calls. With the rubric + 5 quadrant-matched few-shot exemplars **prompt-cached** (a static prefix that does not count toward limits), the uncached payload per call is small (~1K tokens), but Qwen's ~6K **TPM** still paces throughput. Spread across days, it fits comfortably.
 * **Generation + critique.** ~180 calls each; minor relative to the above.
 
-So the honest position: **at strict $0, the full 900-run benchmark spans ~2–3 weeks of intermittent free-tier running** (well inside the 8-week timeline), gated by Llama 3.3 70B's TPD. It does **not** finish in 1–2 days for free.
+So the honest position: **at strict $0, the full 900-run benchmark spans ~2–3 weeks of intermittent free-tier running** (well inside the 10-week timeline), gated by Llama 3.3 70B's TPD. It does **not** finish in 1–2 days for free.
 
 ### Cost-control rules (in priority order)
 1. **Run the throttle first.** Per `Guardrails.md §4`, run the full pipeline end-to-end with `LOCAL_TEST_THROTTLE = True` (3 items) before any full run, to catch bugs before they burn quota.

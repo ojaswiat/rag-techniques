@@ -1,11 +1,11 @@
 # Phase Plan — COMP702 RAG Benchmark Build
 
-This plan covers the **technical build only** (not the CA1 proposal or the dissertation write-up). It is scoped to a **solo 8-week total budget**, with the final stretch reserved for the dissertation write-up — so the build must substantially wrap by the end of **Week 6**.
+This plan covers the **technical build only** (not the CA1 proposal or the dissertation write-up). It is scoped to a **solo 10-week total budget**, with the final stretch reserved for the dissertation write-up — so active build work (Phases 1–6) must substantially wrap by the end of **Week 7**. The schedule below reflects a multi-filing corpus (2–3 companies × 2–3 fiscal years, ≈6–9 SEC 10-Ks) rather than a single filing — see `Architecture.md` §0/§8 for the full rationale.
 
 It tracks the three in-scope pipelines (**P1 Vector**, **P2 BM25**, **P3 Structural**) and the phase structure in `Project_Idea.md §8`, with all constraints from `Guardrails.md` and `Budget.md` enforced.
 
 ## Scheduling notes (read before the phases)
-- **The full benchmark must start early.** On strict $0 the 900-run matrix is TPD-bound and spans ~2–3 weeks of intermittent running (`Budget.md §2`). It therefore kicks off the moment the judge gate passes (~Week 5) and runs *in the background* via the SQLite resume logic while later analysis work proceeds. Paid Developer tier (~1–2 days) is the documented fallback if the schedule slips.
+- **The full benchmark must start early.** On strict $0 the 900-run matrix is TPD-bound and spans ~2–3 weeks of intermittent running (`Budget.md §2`). It therefore kicks off the moment the judge gate passes (~Week 7) and runs *in the background* via the SQLite resume logic while later analysis work proceeds. Paid Developer tier (~1–2 days) is the documented fallback if the schedule slips.
 - **Two manual bottlenecks must be slotted in:** hand-labelling the 20 GQ exemplars (end of Phase 4) and hand-scoring the 60 gate outputs (Phase 6). Neither is parallelisable away.
 - **Run everything under `LOCAL_TEST_THROTTLE = True` (3 items) first** in every phase that calls an LLM, before releasing the full batch (`Guardrails.md §7`).
 
@@ -38,7 +38,7 @@ Stand up the repo, the SQLite state layer, and the rate-limit/throttle scaffoldi
 
 # Phase 2: Ingestion & Parsing Pipeline
 Turn raw SEC 10-K filings into a clean, metadata-rich node store. Every downstream metric keys off the `node_id` produced here, so correctness in this phase is load-bearing for the whole project.
-**Weeks 1–2**
+**Weeks 1–3** *(extended from 2 to 3 weeks: the corpus is now ~6–9 filings — 2–3 companies × 2–3 fiscal years — not one)*
 
 ## Goals
 1. Source the target 10-K filing(s) from SEC EDGAR.
@@ -60,8 +60,8 @@ Turn raw SEC 10-K filings into a clean, metadata-rich node store. Every downstre
 ---
 
 # Phase 3: P3 Summary-Index Build (one-time)
-Build the hierarchical summary tree that P3 retrieves over. This is the **only** index build permitted to use an LLM, and it must run once and be cached — never per query (`Guardrails.md §1`).
-**Week 2**
+Build the hierarchical summary tree that P3 retrieves over (one tree per filing). This is the **only** index build permitted to use an LLM, and it must run once and be cached — never per query (`Guardrails.md §1`).
+**Week 3**
 
 ## Goals
 1. Build a hierarchical `SummaryIndex` (parent summaries over child nodes) using **`llama-3.1-8b-instant`** on Groq's free tier (chosen for its high daily request ceiling so it does not touch the tighter 70B/gpt-oss caps).
@@ -82,7 +82,7 @@ Build the hierarchical summary tree that P3 retrieves over. This is the **only**
 
 # Phase 4: Dataset Generation & Adversarial Verification
 Produce the 140-query benchmark via cross-family generation and critique, then split it into three disjoint sets and human-label the teaching set.
-**Weeks 3–4**
+**Weeks 4–5**
 
 ## Goals
 1. **Generator (`openai/gpt-oss-120b`):** per-section (chunked, <128K) generation of quadrant-appropriate `query_text`, `ground_truth_answer`, and `gt_citations` (node IDs), accumulating to 35/quadrant (140 total).
@@ -107,7 +107,7 @@ Produce the 140-query benchmark via cross-family generation and critique, then s
 
 # Phase 5: Pipeline Implementation (P1 / P2 / P3)
 Implement all three retrieval paradigms and the single shared answerer, with leakage controls and standardised context mass so any score difference is attributable to retrieval, not generation.
-**Weeks 4–5**
+**Weeks 5–6**
 
 ## Goals
 1. **P1 — Vector:** local `bge-small-en-v1.5` embeddings + local `bge-reranker-base` cross-encoder over a local index (FAISS/Chroma). **No metadata pre-filter / section head-start.**
@@ -131,7 +131,7 @@ Implement all three retrieval paradigms and the single shared answerer, with lea
 
 # Phase 6: Judge Build & Validation Gate
 Build the LLM-as-a-Judge with dynamic few-shot routing and code-based citation auditing, then **prove it against the human standard before any full run**. This is a hard gate.
-**Weeks 5–6**
+**Weeks 6–7**
 
 ## Goals
 1. **`async_judge.py`:** for each output, read the target quadrant and inject **exactly the 5 GQ exemplars matching that quadrant** → four cacheable prompt prefixes (rubric + 5 exemplars). Cached tokens don't count toward limits.
@@ -154,7 +154,7 @@ Build the LLM-as-a-Judge with dynamic few-shot routing and code-based citation a
 
 # Phase 7: Full Benchmark Execution
 Run the 900-cell matrix and score every output. Kicks off the instant the gate passes and runs in the background, TPD-paced, at $0.
-**Weeks 5/6 onward (background, ~2–3 weeks)**
+**Weeks 7–9 onward (background, ~2–3 weeks)**
 
 ## Goals
 1. Execute **PQ (100) × {P1, P2, P3} × K∈{3, 5, 10} = 900 runs**, each once at `temperature = 0`.
@@ -175,7 +175,7 @@ Run the 900-cell matrix and score every output. Kicks off the instant the gate p
 
 # Phase 8: Results Consolidation & Analysis Scripts
 Turn the raw `results` table into the analysis artefacts the dissertation will draw on. This is the build-side of analysis; the written chapters sit in the reserved write-up tail.
-**Weeks 7+ (overlapping the write-up reservation)**
+**Weeks 8–10 (overlapping the write-up reservation)**
 
 ## Goals
 1. Aggregate `results` across the **tri-pillar** framework: retrieval (Precision/Recall/Hit Rate), answer quality (Judge 1–10 primary; F1/EM secondary), efficiency (latency, tokens, index-build cost).
@@ -190,4 +190,4 @@ Turn the raw `results` table into the analysis artefacts the dissertation will d
 ## Deliverables
 1. Analysis/aggregation scripts run against `results`.
 2. Final comparison tables and figures.
-3. A results summary feeding directly into the dissertation write-up (reserved for the remaining time within the 8 weeks).
+3. A results summary feeding directly into the dissertation write-up (reserved for the remaining time within the 10 weeks).

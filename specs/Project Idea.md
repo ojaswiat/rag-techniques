@@ -468,7 +468,7 @@ HUMAN-IN-THE-LOOP:
 +-----------------------------------------------------------------------+
 ```
 
-* **Query-count baseline:** 100 PQ (25/quadrant) balances per-quadrant signal against a solo 8-week timeline; larger pools add little insight at this scope while multiplying load.
+* **Query-count baseline:** 100 PQ (25/quadrant) balances per-quadrant signal against a solo 10-week timeline; larger pools add little insight at this scope while multiplying load.
 * **Run-count multiplier:** 3 pipelines × 3 K-values × 100 PQ = **900 generation runs**.
 * **Evaluation volume:** each of the 900 outputs is judged once → **900 judge runs**, plus the 60-output Phase-2 validation (hand-scored *and* judge-scored).
 * **Statistical honesty:** a single temperature-0 run per cell, with a single ~80% judge-validation pass on 60 samples, is a pragmatic reliability check appropriate to an M.Sc. — not a strong statistical proof of judge accuracy. The write-up should frame it as such.
