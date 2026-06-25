@@ -1,16 +1,70 @@
-Use the @docs/ProposalTemplate.pdf @docs/ProposalGuidelines.pdf and /docx skill to create a proposal document in the ./artifacts/Proposal.docx.
+Create an academic proposal for this project. The proposal should be neat, concise, polished, and professional.
 
-1. The proposal should be in the file artifacts/ProjectProposal.docx.
-2. DO NOT USE em dashes.
-3. Use British English.
-4. For diagrams, charts, flow charts, any types of visualisations, gantt chart, etc use the native "insert shape" feature of the ms word itself.
-5. Use the @assets/design/palette.md for diagram and chart colors.
-6. Keep the font of the file strictly to "Optima".
-7. First analyse the guidelines, then find the structure required, then map those structures to the project specifics, then check the diagrams, tables, data required, check all the requirements before starting to write the doc file.
-8.  Add an index page - clean, polished, premium, correct indentation.
-9. Add clear header and footer - page number in the right bottom.
-10. Make the proposal polished, clean, highly academic, and premium.
-11. Use clear and consistent paragraph spacings.
-12. For each section, sub section there should be three questions answered - what is the problem that the section talks about, what is being done to solve it, and why do you think it is a good idea - this is just a rough template to work with, not to be used strictly.
-13. Search on the web for relevant references (concepts such as LLMs, RAG, Vectorless DB, techniques involved, etc) and use Harvard style referencing in the document. Make sure to use the relevant information from the reference (referenced using Harvard style in the text body in a coherent manner, and not implied or interpreted).
-14. Create polished diagrams and visuals.
+Resources:
+First analyse these resources carefully and map/draw out instructions/important details/etc, then only proceed.
+1. @docs/ProposalTemplate.pdf: Template for the proposal.
+2. @docs/ProposalGuidelines.pdf: Guidelines for the proposal.
+3. @assets/design/palette.md: Color palette throughout the project.
+4. Files in the ./specs directory.
+
+Ouput:
+1. artifacts/Proposal_v1.0.0.docx
+
+Citation rules:
+1. Gather all the relevant papers before writing anything.
+2. Only reference high quality sources/papers that has high number of citations.
+3. Search for concepts, processes, terms, methods used, etc for the references.
+4. Use Harvard style referencing.
+5. The body text in the proposal should use the relevant text from the reference while being coherent with the other statements.
+
+Typography rules:
+1. Font "Optima" for body.
+2. Font "Consolas" for code - if required.
+3. Font "Calibri" inside table, diagrams, charts, any other visuals.
+4. Define the title, headings, sub headings, body, diagram descriptions, labels font-sizes before hand and store it in assets/design/typography.md.
+5. The typography will be same for powerpoint and final reports. Make sure you specify correct sizes using some pre-defined popular typography rule.
+6. Use pre-defined standard typography rules where there is not much, not too little variation between sizes.
+7. Use clear and consistent paragraph spacings.
+8. Use justify alignment wherever possible to give it a polished look.
+
+Diagram rules:
+1. Use colors from the @assets/design/palette.md for color guides.
+2. The diagrams, charts, tables, any visuals will follow monochrome, unless very necessary.
+3. Clean, polished and purpose driven diagrams.
+4. Clear Gantt chart where it is required.
+5. Create diagrams using native word shapes/options/features. External/created images should not be attached.
+6. Create charts using ms word features only.
+7. Create tables using ms word features only.
+8. Descibe the pipelines carefully using correct flow chart components wherever required.
+9. DON'T use shadows unless explicitly required.
+10. Use mostly light colored elements for the diagrams.
+11. Correctly label each diagram, table, chart, visualisation in the format: Figure/Table XX.YY where XX is the section number and YY is the table/figure number. Example: Figure 02.09: High Level Design.
+
+Page rules:
+1. Index page is a must - linked to the sections, sub sections etc.
+2. Header - paper title.
+3. Footer - page number on the right.
+
+Section rules:
+These rules are not strict but provides a basic template to begin with. Each sectiion, sub-section, sub-sub-section, ... has:
+1. Purpose - What is being done?
+2. Explanation - How it is being done?
+3. Reasoning - Why this is a better/best idea?
+These rule should not be followed strictly but the paragrpah and section structure is usually based on this template. Correct referencing from the cited source MUST be there, coherent to the meaning and style of the paragraph. Use Harvard style referencing.
+
+Tone rules:
+1. Academic tone.
+2. Technical words - not too much.
+3. Easy to understand.
+4. British English.
+5. NO em dashes: THIS IS A VERY STRICT RULE.
+
+Your recommended flow:
+1. Analyse the resources.
+2. Find relevant and high quality citations.
+3. Map out the sections, sub-sections, hierarchy.
+4. Map out the concepts to describe for each section, sub sections, etc.
+5. Construct the typography file and then use it in this flow.
+6. Use citations and references to complete/write the body texts for the sections in the whole document.
+7. Check for the diagrams required and construct them separately using the rules specified.
+8. Bundle everything together linking references and the index page.
