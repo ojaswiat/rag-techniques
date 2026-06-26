@@ -1,0 +1,63 @@
+<table style="border-collapse:collapse;width:100%">
+    <tr>
+        <td colspan="3" style="padding:2px 1pt;font-weight:700">
+            <div>Interest Rate</div>
+            <div>Sensitive Instrument</div>
+        </td>
+        <td colspan="3" style="padding:0 1pt" />
+        <td colspan="3" style="padding:2px 1pt;font-weight:700">
+            <div>Hypothetical Interest</div>
+            <div>Rate Increase</div>
+        </td>
+        <td colspan="3" style="padding:0 1pt" />
+        <td colspan="3" style="padding:2px 1pt;font-weight:700">
+            <div>Potential Impact</div>
+        </td>
+        <td colspan="3" style="padding:0 1pt" />
+        <td colspan="3" style="padding:2px 1pt;text-align:center;font-weight:700">2025</td>
+        <td colspan="3" style="padding:0 1pt" />
+        <td colspan="3" style="padding:2px 1pt;text-align:center;font-weight:700">2024</td>
+    </tr>
+    <tr>
+        <td colspan="3" style="border-top:1pt solid #000;padding:2px 1pt">
+            Investment portfolio
+        </td>
+        <td colspan="3" style="padding:0 1pt" />
+        <td colspan="3" style="border-top:1pt solid #000;padding:2px 1pt">
+            100 basis points, all tenors
+        </td>
+        <td colspan="3" style="padding:0 1pt" />
+        <td colspan="3" style="border-top:1pt solid #000;padding:2px 1pt">
+            <div>Decline in fair value</div>
+        </td>
+        <td colspan="3" style="padding:0 1pt" />
+        <td style="border-top:1pt solid #000;padding:2px 0 2px 1pt">$</td>
+        <td style="border-top:1pt solid #000;padding:2px 0;text-align:right">2,416</td>
+        <td style="border-top:1pt solid #000;padding:2px 1pt 2px 0" />
+        <td colspan="3" style="padding:0 1pt" />
+        <td style="border-top:1pt solid #000;padding:2px 0 2px 1pt">$</td>
+        <td style="border-top:1pt solid #000;padding:2px 0;text-align:right">2,755</td>
+        <td style="border-top:1pt solid #000;padding:2px 1pt 2px 0" />
+    </tr>
+    <tr style="background-color:#efefef">
+        <td colspan="3" style="padding:2px 1pt;padding-left:11pt">
+            Term debt
+        </td>
+        <td colspan="3" style="padding:0 1pt" />
+        <td colspan="3" style="padding:2px 1pt 2px 10pt">
+            100 basis points, all tenors
+        </td>
+        <td colspan="3" style="padding:0 1pt" />
+        <td colspan="3" style="padding:2px 1pt 2px 10pt">
+            Increase in annual interest expense
+        </td>
+        <td colspan="3" style="padding:0 1pt" />
+        <td style="padding:2px 0 2px 1pt">$</td>
+        <td style="padding:2px 0;text-align:right">129</td>
+        <td style="padding:2px 1pt 2px 0" />
+        <td colspan="3" style="padding:0 1pt" />
+        <td style="padding:2px 0 2px 1pt">$</td>
+        <td style="padding:2px 0;text-align:right">139</td>
+        <td style="padding:2px 1pt 2px 0" />
+    </tr>
+</table>

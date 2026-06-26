@@ -1,0 +1,17 @@
+<div style="margin-top:9pt;text-align:justify">
+    <span style="color:#000000;font-family:'Helvetica',sans-serif;font-size:8pt;font-weight:400;line-height:120%">
+        The aggregate market value of the voting and non-voting stock held by
+        non-affiliates of the Registrant, as of March&#160;28, 2025, the last business
+        day of the Registrant&#8217;s most recently completed second fiscal quarter,
+        was approximately $
+        <ix:nonFraction unitRef="usd" contextRef="c-10" decimals="-6" name="dei:EntityPublicFloat"
+        format="ixt:num-dot-decimal" scale="0" id="f-50">
+            3,253,431,000,000
+        </ix:nonFraction>
+        . Solely for purposes of this disclosure, shares of common stock held
+        by executive officers and directors of the Registrant as of such date have
+        been excluded because such persons may be deemed to be affiliates. This
+        determination of executive officers and directors as affiliates is not
+        necessarily a conclusive determination for any other purposes.
+    </span>
+</div>
