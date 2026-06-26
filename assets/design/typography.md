@@ -25,9 +25,9 @@ easy to scan against the prose.
 | Institution lines | Calibri | 11.5pt | Bold, all caps | Blue 900 `#0A1F33` |
 | H1 (numbered & unnumbered) | Calibri | 20pt | Bold | Blue 900 `#0A1F33`, 1pt Blue 700 bottom rule |
 | H2 / sub-section | Calibri | 15pt | Bold | Blue 700 `#15406B` |
-| Body text & bullet lists | Garamond | 11pt | Regular | Neutral 900 `#1A1D21` |
+| Body text & bullet lists | Garamond | 12pt | Regular | Neutral 900 `#1A1D21` |
 | Callout box | Garamond | 11.5pt | Regular, lead-in bold | Blue 900 on Gold 100 wash |
-| Reference list entries | Garamond | 11pt | Regular | Neutral 900, 0.18cm hanging indent |
+| Reference list entries | Garamond | 12pt | Regular | Neutral 900, 0.18cm hanging indent |
 | Table header row | Calibri | 10pt | Bold | White on Blue 700 |
 | Table body | Calibri | 9.5pt | Regular | Neutral 900 |
 | Diagram / flow-cell labels | Calibri | 9.5pt | Bold | White or Blue 900, per fill |
@@ -38,11 +38,11 @@ easy to scan against the prose.
 
 | Element | Font | Size | Weight |
 |---|---|---|---|
-| Title slide title | Calibri | 36pt | Bold |
-| Section divider title | Calibri | 28pt | Bold |
-| Slide title | Calibri | 24pt | Bold |
-| Slide body | Garamond | 16pt | Regular |
-| Chart/diagram label | Calibri | 11pt | Regular |
+| Title slide title | Garamond | 36pt | Bold |
+| Section divider title | Garamond | 28pt | Bold |
+| Slide title | Garamond | 24pt | Bold |
+| Slide body | Calibri | 16pt | Regular |
+| Chart/diagram label | Calibri | 12pt | Regular |
 | Footer / slide number | Calibri | 10pt | Regular |
 
 ## Paragraph and layout rules
