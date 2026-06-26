@@ -1,124 +1,93 @@
-# Strict Grading Report: Proposal_v1.0.0.docx
+# Strict Grading Report V2: Proposal_v1.0.0.docx
 
-**Graded against:** `docs/ProposalGuidelines.pdf` (official COMP702 CA1 brief) and `docs/ProposalTemplate.pdf` (official structure).
-**Method:** full text extracted programmatically from the actual `.docx` (not from memory of what was intended), checked clause-by-clause against the guidelines' own wording.
+**Graded against:** `docs/ProposalGuidelines.pdf` (official COMP702 CA1 brief, read in full, verbatim quotes below) and `docs/ProposalTemplate.pdf` (official structure/example).
+**Method:** full text extracted programmatically from the *current* `.docx` (post the fixes already applied since `reports/PROPOSAL_GRADING_REPORT.md` was written), checked clause-by-clause against the guidelines' own wording. This is a fresh, independent pass, not a re-statement of the v1 report.
 
-**Important caveat before the score:** the guidelines page links to a separate **"marking guidelines"** page on Canvas (authenticated, not accessible to me) and an **"ethical guidance"** page (also Canvas-authenticated) that defines what Data/Participant Category A0 actually means. I cannot read either page. The score below is my best strict-grader estimate against the *visible* brief and template; **the Data Category A0 self-assessment in Section 0 below is unverified against the authoritative source and you should confirm it yourself before submission.**
+**Status of the v1 report's five fixable issues:** all five have been resolved in the current document — BCS Section 8 now lists all six outcomes including "Critical self-evaluation of the process"; the Risks table now has a hardware/backup-loss row; Section 4 now states *why* Python/LlamaIndex and names workflow organisation; Section 1 now glosses semantic/statistical/structural in plain language; Section 9 now describes day-to-day researcher usage, not just the final results view. This report does not re-list those — it looks for what is *still* missing.
+
+**Same caveat as v1:** the brief links to an authenticated Canvas "marking guidelines" page and an "ethical guidance" page I cannot read. The Data Category **A0** self-assessment is internally consistent (public SEC filings, no participants) but unverified against the authoritative category table — confirm it yourself before submission.
 
 ---
 
-## Overall estimated score: 80-84 / 100
+## Overall estimated score: 91-94 / 100
 
-Strong document: correctly structured, well-cited with real high-citation papers, clean Harvard referencing, professional presentation, technically coherent. It loses marks for **three objective, literal gaps against the brief's own wording** (not style opinions) and a handful of moderate softness issues. All are fixable in under an hour of editing.
+This is now a strong, complete, professionally executed document. Every required section from the brief is present, in the right order, with a populated Table of Contents. What remains are smaller, literal-wording gaps against the brief's own checklist items — the kind a strict marker working through the brief line by line would still tick off, but none of them structural.
 
 | Rubric area (inferred from brief) | Estimate | Why |
 |---|---|---|
-| Structure & completeness | 9/10 | All required sections present, correct order, TOC included. Minor: BCS section incomplete (see Issue 1). |
-| Clarity for non-specialist reader | 6/10 | Section 1 leans on unexplained jargon (RAG, BM25, "summary-tree") the brief explicitly says must be readable by "anyone with general CS background." |
-| Depth/quality of literature engagement | 9/10 | 9 real, high-citation, correctly Harvard-cited papers, woven into argument rather than just listed. Best section in the document. |
-| Technical design clarity (dev/implementation summary) | 7/10 | Clear *what*; missing the explicit *why these tools* and *workflow organisation* the brief asks for by name. |
-| Planning & risk realism | 7/10 | Gantt is solid; risk table omits the literal example risk category the brief names ("hardware failure"). |
-| BCS criteria coverage | 6/10 | 5 of 6 official outcomes addressed; one is missing entirely (see Issue 1). |
-| Referencing mechanics | 10/10 | Every in-text citation has a matching reference and vice versa; no orphans; correct Harvard format throughout. |
-| Presentation/polish | 10/10 | Native Word diagrams/tables, consistent palette, no em dashes, British English, clean typography. |
+| Structure & completeness | 10/10 | All 12 required sections present, correct order, populated TOC, title page matches template fields exactly. |
+| Clarity for non-specialist reader | 9/10 | Section 1 now glosses semantic/statistical/structural retrieval in plain language; reads cleanly for a "general CS background" second marker. |
+| Depth/quality of literature engagement | 10/10 | 9 real, high-citation, correctly Harvard-cited papers, woven into the argument; every in-text citation has exactly one matching reference and vice versa. |
+| Technical design clarity (dev/implementation summary) | 9/10 | States *what*, *why these tools specifically*, and *how workflow is organised* — all three things the brief names. |
+| Data sources | 7/10 | Describes data and source well; doesn't explicitly state the *permission* basis the brief asks for in as many words (see Issue 1). |
+| Planning & risk realism | 8/10 | Gantt is detailed and phase-accurate; omits an explicit time allocation for "presenting the project" (see Issue 2); risks table doesn't name a generic "programming problems" bucket (see Issue 3). |
+| BCS criteria coverage | 10/10 | All six official outcomes addressed, each tied to a concrete project decision. |
+| Referencing mechanics | 10/10 | Correct Harvard format throughout; no orphaned citations either direction. |
+| Presentation/polish | 10/10 | Native Word diagrams/tables, consistent Oxford Ink palette, no em dashes, British English, no split tables or stranded headings. |
 
 ---
 
-## Issue 1 (CRITICAL, ~4-6 pts): BCS Project Criteria omits one of the six required outcomes
+## Issue 1 (MODERATE, ~2-3 pts): Data Sources section doesn't explicitly state the *permission* basis
 
-`docs/ProposalGuidelines.pdf` states verbatim: *"They require honours year projects to demonstrate the following six outcomes"* and lists six bullets. Section 8 of the proposal currently maps only **five**:
+`docs/ProposalGuidelines.pdf`, verbatim: *"You should describe the data you will be using, state how it will be obtained, **confirm you are using it with permission**, and explain how you will ensure confidentiality and anonymity of any personal information."*
 
-1. Systematic understanding -> addressed
-2. Comprehensive understanding of techniques -> addressed
-3. Originality in application of knowledge -> addressed
-4. Deal with complex issues / sound judgement -> addressed (partially; see Issue 4)
-5. Self-direction -> addressed
-6. **"Critical self-evaluation of the process" -> MISSING. Not mentioned anywhere in the document.**
+Section 5 currently states the data is public, contains no personal information, and is parsed via LlamaParse — but it never explicitly asserts the *permission* clause the brief asks for by name. For US SEC filings this permission is essentially automatic (they are public-domain government regulatory records), but the brief wants that confirmed in the document, not left implicit.
 
-A marker checking this section against the six bullet points in the official brief will find one entirely unaddressed. This is the single most mechanical, easy-to-lose mark in the document.
+**Fix:** add one sentence to Section 5, e.g.:
+> "SEC EDGAR filings are public-domain US federal regulatory records with no copyright restriction on access or reuse, so no licence, consent, or data-sharing agreement is required to use them in this project."
 
-**Fix:** add a sixth bullet to Section 8, e.g.:
-> "Critical self-evaluation: the Limitations framing already built into the methodology (a single temperature-0 run per cell, an ~80% judge-validation pass on only 60 samples) is treated explicitly as a pragmatic constraint rather than a strong statistical proof, and the dissertation write-up will revisit this self-assessment against the actual results obtained."
+(Section 5 already contains a near-identical sentence in the ethics statement on the title page — "requires no licence, consent, or data-sharing agreement" — this fix is simply pulling that same assurance into Section 5 itself, where the brief's checklist expects to find it.)
 
 ---
 
-## Issue 2 (CRITICAL, ~2-3 pts): Risks table omits the brief's own named example risk
+## Issue 2 (MODERATE, ~2-3 pts): Project Plan doesn't carve out time for "presenting the project"
 
-`docs/ProposalGuidelines.pdf`: *"Common risks for all projects include hardware failure, software failure, running out of time, and programming problems."* and explicitly flags backup loss as a textbook low-likelihood/high-impact example.
+`docs/ProposalGuidelines.pdf`, verbatim: *"Remember to include time for presenting the project and writing the dissertation."*
 
-The current Table 11.01 has six rows (Groq TPD limit, LlamaParse fragmentation, judge gate failure, LlamaIndex API drift, SQLite corruption, timeline slip) but **no row for hardware failure or data/backup loss** , the exact category the guidelines name first and use as their own worked example.
+Table 10.1's final phase is "8. Results Analysis & Write-up" — this covers the dissertation write-up half of that sentence but not the presentation half. There is no row, sub-task, or even a parenthetical for preparing/delivering the project presentation or viva.
 
-**Fix:** add a row, e.g.:
+**Fix:** either add a 9th phase row (e.g. "9. Presentation Preparation", overlapping the final week alongside write-up), or fold it explicitly into phase 8's label/description, e.g. "8. Results Analysis, Dissertation Write-up & Presentation Prep."
+
+---
+
+## Issue 3 (MINOR, ~1-2 pts): Risks table doesn't name a generic "programming problems" risk
+
+`docs/ProposalGuidelines.pdf` names four common-risk categories verbatim: *"hardware failure, software failure, running out of time, and programming problems."* Table 11.1 now covers hardware/backup failure, several specific software-failure modes (Groq limits, LlamaParse fragmentation, judge gate failure, API drift, SQLite corruption), and timeline slip — but every row is tied to a specific named tool or process. There is no row for the generic case the brief names explicitly: ordinary coding bugs/defects discovered during implementation that aren't tied to a third-party dependency or service.
+
+**Fix:** add a row such as:
 
 | Risk | Contingency | Likelihood | Impact |
 |---|---|---|---|
-| Local machine failure or loss of unsynced work (no backups) | Nightly off-machine backup of `benchmark.db`, parsed nodes, and code to a second location (e.g. git remote + cloud sync); SQLite WAL files committed per-run so loss window is minutes, not days | Low | High |
+| Implementation bugs found late in a pipeline (e.g. a retrieval or scoring logic error) | Each phase is run end-to-end under the three-item local throttle before release at full scale (Section 4), so defects are caught against a small sample before they can consume free-tier quota or corrupt a full run | Medium | Medium |
 
 ---
 
-## Issue 3 (MODERATE, ~2-3 pts): Development summary doesn't state *why* the tools were chosen, or workflow organisation
+## Issue 4 (MINOR, ~1 pt): Data Sources doesn't cross-reference that the project's own evaluation activity generates data
 
-`docs/ProposalGuidelines.pdf`, verbatim: *"Provide a brief overview of your proposed development environment and implementation language, **and the reasons why you chose them**... make sure this section covers the key question of how you will implement (realise) your project, **including how your workflow will be organised**."**
+`docs/ProposalGuidelines.pdf`, verbatim: *"Remember that requirements gathering and evaluation activities will generate data."* The two manual researcher-only steps (labelling 20 teaching exemplars, hand-scoring 60 judge-validation outputs) are described in Section 7 (Project Ethics) but Section 5 (Data Sources) never mentions that these evaluation activities themselves are also a data source, which is precisely the thing this sentence in the brief is flagging.
 
-Section 4 currently states *what* is used (Python, LlamaIndex, Groq, ChromaDB, SQLite, asyncio) but never says *why Python/LlamaIndex specifically* (vs. e.g. a hand-rolled retrieval stack, or LangChain), and workflow organisation is left entirely to Section 10's Gantt chart rather than addressed here as the brief asks.
-
-**Fix:** add 1-2 sentences such as:
-> "Python is the natural choice because the entire required ecosystem, LlamaIndex, the Groq SDK, `rank_bm25`, ChromaDB, and the HuggingFace BGE models, is Python-native; reimplementing any of this in another language would mean rebuilding mature retrieval and embedding infrastructure from scratch. LlamaIndex specifically is chosen over a lower-level alternative such as LangChain because its `TextNode`/`NodeWithScore` abstractions already match the project's own node-centric data model (Section 5), so the three pipelines can share one retriever interface without an adapter layer. Work is organised phase-by-phase as in Section 10, with each phase's code committed and tested under a three-item local throttle (Guardrails §7) before being released at full scale, so a failure in one phase never risks the free-tier quota consumed by an earlier one."
+**Fix:** add a one-line cross-reference at the end of Section 5, e.g.:
+> "The hand-labelled teaching exemplars and hand-scored judge-validation outputs produced during evaluation (Section 7) are also project-generated data, authored solely by the researcher rather than collected from others."
 
 ---
 
-## Issue 4 (MODERATE, ~2-3 pts): Project Description assumes specialist vocabulary the brief says it shouldn't
+## Minor polish notes (no/low point impact, listed for completeness)
 
-`docs/ProposalGuidelines.pdf`: *"the document should provide sufficient detail using non-specialist language, so anyone with a general computer science background would know what your project involves"* , and Project Description specifically is for *"a reader who isn't an expert in the topic area... most useful for the second marker, who might have no prior knowledge of the project."*
-
-Section 1 uses "RAG", "retriever", "dense vector retriever", "BM25", "hierarchical summary-tree retriever" with no gloss. A second marker outside NLP/IR would not necessarily know what BM25 is or why a "summary tree" is a retrieval mechanism at all.
-
-**Fix:** add brief in-line glosses, e.g. change:
-> "...a semantic (dense vector) retriever, a statistical (BM25) retriever, and a structural (hierarchical summary-tree) retriever..."
-
-to:
-
-> "...a semantic retriever (which finds evidence by meaning, using numeric representations of text), a statistical retriever (which finds evidence by matching exact words and their frequency, the decades-old BM25 algorithm), and a structural retriever (which navigates a tree of AI-generated summaries built once over each document)..."
-
-This costs almost nothing in word count and directly answers the brief's own accessibility test.
+- **Aims (Section 2.1)** are still phrased as method/action statements ("Design and implement...", "Construct...") rather than the brief's literal definition of aims as outcome statements ("what you expect to have achieved"). This was already flagged in v1 as a no-impact polish note; the content is complete and the meaning is clear, so this remains cosmetic only.
+- **BM25 acronym** in Section 1 is named but never expanded (Best Matching 25). Trivial; the surrounding gloss already explains the mechanism in plain words, so this costs nothing.
+- **Page count**: roughly 7 pages of body content (Sections 1-12) versus the brief's "aim for about 5" — explicitly not a hard limit ("not a fixed limit... no penalties for going over or under"), so no action required.
+- **Submission format**: Canvas accepts PDF only. `artifacts/Proposal_v1.0.0.pdf` already exists and was regenerated from the current `.docx` in this session — confirm it is the file actually uploaded, not the `.docx`.
+- **Ethics category code (A0)**: still unverified against the authenticated Canvas ethical-guidance page (Issue 6 in the v1 report, carried forward, cannot be resolved by me).
 
 ---
 
-## Issue 5 (MINOR, ~1-2 pts): UI/UX Mockup section is thin relative to what the brief asks for
+## Fix checklist to close the remaining gap
 
-`docs/ProposalGuidelines.pdf`: *"This section should answer the key question of what your project will look like... It just needs to be enough to show that you have thought about what the software will look like **and how it will be used**."*
+1. [ ] Add one sentence to Section 5 explicitly confirming the permission/licence-free basis for using SEC EDGAR data (Issue 1).
+2. [ ] Add an explicit time allocation for project presentation in the Gantt chart / Table 10.1 (Issue 2).
+3. [ ] Add a generic "implementation bugs / programming problems" row to the Risks table (Issue 3).
+4. [ ] Cross-reference in Section 5 that the evaluation activity itself generates project data (Issue 4).
+5. [ ] Personally verify the A0 ethics code against the authoritative Canvas ethical-guidance page (cannot be done by me).
+6. [ ] Confirm the file uploaded to Canvas is the PDF, not the docx.
 
-Section 9 is 57 words plus one results table. It correctly explains *why* there is no traditional UI, but never actually describes *how the researcher will use the system day to day* (e.g. running `run_benchmark.py`, reading `logs/index_build_costs.json`, querying `results` directly via SQLite), which is the "how it will be used" half of the brief's question.
-
-**Fix:** add 2-3 sentences before the wireframe table describing the actual researcher-facing surface, e.g. a CLI invocation and a log/results-file glance, in addition to the final comparison view.
-
----
-
-## Issue 6 (MINOR, process risk, not yet verified): Ethics category A0 is asserted, not verified against the authoritative source
-
-The "A0" classification (Data Category A: publicly available, non-personal; Participant Category 0: no participants) is *consistent* with everything else in the document (SEC EDGAR public filings, no human subjects), but I have not been able to read the University's actual ethical-guidance category table (it sits behind Canvas authentication), so I cannot independently confirm "A0" is the literal category code the module uses for "public non-personal data, no participants."
-
-**Fix (action item for you, not something I can resolve):** open the "ethical guidance" link referenced in `docs/ProposalGuidelines.pdf` on Canvas and confirm the A0 code against the actual category table before submitting. If it differs, the fix is a one-line change to the Statement of Ethical Compliance heading and body.
-
----
-
-## Minor polish notes (no point impact, but a strict marker may flag them in comments)
-
-- **Aims (Section 2.1)** read as method steps ("design and implement...", "construct...") rather than the brief's definition of aims as *"broad statements of intent... what you expect to have achieved after completing the work."* Consider rephrasing the verbs to outcome form, e.g. "A working, side-by-side comparison of three retrieval paradigms..." rather than "Design and implement three pipelines..." Cosmetic, not a content gap.
-- **Body word count** (prose only, excluding tables/diagrams/references) is **1,497 words**; including the reference list it is **1,795 words**. The brief's 1,500-2,000 target is explicitly "not a fixed limit," so this is compliant, just sitting at the low edge. No action required, noted for awareness only.
-- **Page count**: body content (Sections 1-12) runs to roughly 7 pages versus the brief's "aim for about 5"; again explicitly not a hard limit, but a strict marker valuing conciseness could comment on it. No action required unless you want to tighten Sections 3-4.
-- **Submission format**: Canvas "Note that only pdf file will be accepted." The current deliverable is `.docx`. Remember to export/print to PDF as the final step before uploading; this report does not re-check PDF fidelity after that export.
-
----
-
-## Fix checklist to reach 90+
-
-1. [ ] Add the missing 6th BCS outcome ("critical self-evaluation of the process") to Section 8 (Issue 1).
-2. [ ] Add a hardware-failure/backup-loss row to the Risks table (Issue 2).
-3. [ ] Add 2-3 sentences to Section 4 justifying Python/LlamaIndex specifically, and naming workflow organisation explicitly (Issue 3).
-4. [ ] Add brief in-line glosses for RAG/BM25/summary-tree in Section 1 (Issue 4).
-5. [ ] Add 2-3 sentences to Section 9 on day-to-day researcher usage, not just the final results view (Issue 5).
-6. [ ] Personally verify the A0 ethics code against the authoritative Canvas ethical-guidance page (Issue 6, cannot be done by me).
-7. [ ] Export the final `.docx` to PDF before Canvas submission.
-
-Items 1-5 are direct text edits inside the existing structure, no new sections or restructuring needed, and collectively should recover roughly 13-17 of the estimated points lost, putting the document at 93-97/100 on this rubric. Say the word and I will apply edits 1-5 directly to `Proposal_v1.0.0.docx`.
+Items 1-4 are short, additive text edits inside the existing structure — no restructuring needed — and collectively should recover roughly 7-9 of the estimated points still on the table, putting the document at approximately 98-100/100 on this rubric. Say the word and I will apply these edits directly to `Proposal_v1.0.0.docx`.
