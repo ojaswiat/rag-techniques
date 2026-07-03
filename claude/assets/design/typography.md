@@ -49,12 +49,12 @@ easy to scan against the prose.
 
 - **Spacing & Alignment:** Body paragraphs use 1.5 line spacing, justified alignment with document-wide auto-hyphenation enabled (to prevent white-space rivers), 9pt space-after, block spacing (no first-line indent). 
 - **Italics:** Strictly restricted to required academic conventions (e.g., book titles, *in vivo*, *et al.*). Do not use for general emphasis, headings, subheadings or captions.
-- **Punctuation:** Use en-dashes (–) strictly for number/date ranges (e.g., pp. 157–173). Reserve hyphens solely for compound words. No em-dashes.
+- **Punctuation:** Use em-dashes (–) strictly for number/date ranges (e.g., pp. 157–173). Reserve hyphens solely for compound words. **No em-dashes**.
 - **H1:** 22pt space-before, 11pt space-after, 1pt Blue 700 bottom-border rule. Keep-with-next enabled.
 - **H2:** 13pt space-before, 7pt space-after.
 - **Bullets:** 5.5pt space-after, 1.5 line spacing, 0.4cm hanging indent.
 - **Cover page:** 1.25pt Blue 700 rule beneath the title, 0.5pt Gold 500 rule above the institution block. Fit to a single A4 page.
 - **Callout boxes:** Gold 100 fill, 3.5pt Gold 500 left border, used sparingly for critical facts.
 - **Table of Contents:** Left `dirty` with `updateFields` enabled in `settings.xml` for auto-population.
-- **Language:** British English spelling throughout.
+- **Language:** British English spelling throughout. Spoken punctuations. NO COMPLICATED PUNCTUATION (unless required). Reserve the ";", ":" to use minimally.
 - **Paragraph Breaks**: DO NOT break the paragraphs/diagrams/tables/etc into two pages. Either reduce the paragraph size or expand the previous paragraphs to force the section to go on a new page. THIS RULE MUST BE STRICTLY FOLLOWED FOR DIAGRAMS/TABLES/FIGURES/CHARTS/ANY OTHER VISUAL ELEMENTS.
