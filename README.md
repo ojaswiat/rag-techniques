@@ -29,7 +29,7 @@ specs/           # (inside claude/) Architecture, guardrails, budget, phase plan
 artifacts/       # (inside claude/) Proposal deliverables
 README.md        # This file
 CLAUDE.md        # Instructions for the Claude Code agent
-todo.md          # Active task list
+TODO.md          # Active task list
 ```
 
 > Implementation source code (Python modules `ingest/`, `pipelines/`, `judge/`) has not been started yet. Phase 1 of the phase plan is the next milestone.
