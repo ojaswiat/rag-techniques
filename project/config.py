@@ -15,10 +15,10 @@ THROTTLE_LIMIT: int = 3
 # Guardrails.md §2 — fixed model routing matrix. Do not change without updating the spec.
 MODEL_ROUTING: dict[str, str] = {
     "generator": "openai/gpt-oss-120b",
-    "critic": "qwen/qwen3-32b",
+    "critic": "qwen/qwen3.6-27b",
     "p3_index_build": "llama-3.1-8b-instant",
     "answerer": "llama-3.3-70b-versatile",
-    "judge": "qwen/qwen3-32b",
+    "judge": "qwen/qwen3.6-27b",
     "debug": "llama-3.1-8b-instant",
 }
 
