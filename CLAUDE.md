@@ -124,6 +124,7 @@ Every loop script must include a hardcoded `LOCAL_TEST_THROTTLE` boolean (forces
 
 ---
 
+<!-- monitor:start -->
 ## monitor — operations log + reports
 
 This project has **monitor** installed: a local logging/reporting workflow.
@@ -157,6 +158,7 @@ when installed as a plugin) — read it before running any command below.
 - Never hand-edit `monitor/logs/operations.log` — always go through `logger.py` (via `/monitor:log` or `/monitor:record`); hand-edits desync the log from the rendered Logs page.
 - Reports are immutable snapshots — never rewrite an old report when the template changes; only new reports pick up new sections.
 - `monitor/profile.json` evolves additively only — `/monitor:update` adds detected fields, never removes or renames existing ones.
+<!-- monitor:end -->
 
 ---
 

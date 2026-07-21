@@ -5,9 +5,9 @@
     "semantic_hash": "bae6cd075fcfdf920d8f99d561d51dc7"
   },
   "CLAUDE.md": {
-    "mtime": 1784615742.9049904,
-    "ast_hash": "246060afffc331858b75bfb8c4887203",
-    "semantic_hash": "246060afffc331858b75bfb8c4887203"
+    "mtime": 1784627309.577955,
+    "ast_hash": "4246a54869e1c0bd603c85f7c627b0da",
+    "semantic_hash": ""
   },
   "README.md": {
     "mtime": 1783088180.6539276,
@@ -30,29 +30,29 @@
     "semantic_hash": "a06741f8c748c89fd86e6a1b4dd81807"
   },
   "resources/specs/Architecture.md": {
-    "mtime": 1782991142.887669,
-    "ast_hash": "d313b63994a0219dfdcc6e7f781e7fea",
-    "semantic_hash": "d313b63994a0219dfdcc6e7f781e7fea"
+    "mtime": 1784627309.590159,
+    "ast_hash": "b870ce4fe7cb5bb1e4f60029015fc5d6",
+    "semantic_hash": ""
   },
   "resources/specs/Budget.md": {
-    "mtime": 1782991142.8883398,
-    "ast_hash": "111fc22eca872d4984b79455bab9dbcf",
-    "semantic_hash": "111fc22eca872d4984b79455bab9dbcf"
+    "mtime": 1784627534.8160684,
+    "ast_hash": "f85f87300287bb9ce40a38bd11e94968",
+    "semantic_hash": ""
   },
   "resources/specs/Guardrails.md": {
-    "mtime": 1782991142.888966,
-    "ast_hash": "2838c0383862aa79d4a1b78f895c0ec2",
-    "semantic_hash": "2838c0383862aa79d4a1b78f895c0ec2"
+    "mtime": 1784627309.583329,
+    "ast_hash": "de86e65e466e70021885c3c5e553b2f9",
+    "semantic_hash": ""
   },
   "resources/specs/Phase Plan.md": {
-    "mtime": 1782991142.8895354,
-    "ast_hash": "9b563ac14cbd78b7a31f7b3296278c79",
-    "semantic_hash": "9b563ac14cbd78b7a31f7b3296278c79"
+    "mtime": 1784627309.6068442,
+    "ast_hash": "dd9ac4fa4f0bd6bff560ca7639e067bf",
+    "semantic_hash": ""
   },
   "resources/specs/Project Idea.md": {
-    "mtime": 1782991142.890019,
-    "ast_hash": "43f956eb083f371ae8748307c7657154",
-    "semantic_hash": "43f956eb083f371ae8748307c7657154"
+    "mtime": 1784627309.601254,
+    "ast_hash": "dbad3926ee5f5eb361f702cdb76c88d0",
+    "semantic_hash": ""
   },
   "resources/artifacts/ProjectProposal.pdf": {
     "mtime": 1782991142.8499885,
@@ -88,5 +88,215 @@
     "mtime": 1782991142.8654685,
     "ast_hash": "4da16745eac57c55ef0c304328c2ec3f",
     "semantic_hash": "4da16745eac57c55ef0c304328c2ec3f"
+  },
+  "monitor/logs/schema.json": {
+    "mtime": 1784618529.1180837,
+    "ast_hash": "826679fe080b1cb963e4f5c2052f3fd3",
+    "semantic_hash": ""
+  },
+  "monitor/profile.json": {
+    "mtime": 1784618526.0283148,
+    "ast_hash": "e4770b394b5ee724333c832f88073ad1",
+    "semantic_hash": ""
+  },
+  "monitor/reports/manifest.json": {
+    "mtime": 1784618529.1195788,
+    "ast_hash": "58e0494c51d30eb3494f7c9198986bb9",
+    "semantic_hash": ""
+  },
+  "monitor/scripts/clean.py": {
+    "mtime": 1784618526.0516353,
+    "ast_hash": "c78009469c8b83eb1e07e0e3ffb354a5",
+    "semantic_hash": ""
+  },
+  "monitor/scripts/logger.py": {
+    "mtime": 1784618526.052612,
+    "ast_hash": "104318f8cfa22a5d46af3dcc7829b01c",
+    "semantic_hash": ""
+  },
+  "monitor/scripts/monitor_lib.py": {
+    "mtime": 1784618526.053131,
+    "ast_hash": "2d3736843549e63f8dd495cc78182585",
+    "semantic_hash": ""
+  },
+  "monitor/scripts/profile.py": {
+    "mtime": 1784618526.0540562,
+    "ast_hash": "7b32385af54aff67421564e7d10c0f6f",
+    "semantic_hash": ""
+  },
+  "monitor/scripts/render_logs.py": {
+    "mtime": 1784618526.0546687,
+    "ast_hash": "87b99f885f3a6e0f2b22ed300979feb3",
+    "semantic_hash": ""
+  },
+  "monitor/scripts/render_report.py": {
+    "mtime": 1784618526.0552177,
+    "ast_hash": "2e20b873ece4531f3c4bfebe0dd46393",
+    "semantic_hash": ""
+  },
+  "openwiki/.last-update.json": {
+    "mtime": 1784617066.5662289,
+    "ast_hash": "ae6efd4652a6b2fb0f624eabaf166bda",
+    "semantic_hash": ""
+  },
+  "project/config.py": {
+    "mtime": 1784627309.618722,
+    "ast_hash": "f009e8aac709afcb9a26998b81293dd5",
+    "semantic_hash": ""
+  },
+  "project/database_manager.py": {
+    "mtime": 1784625932.1363497,
+    "ast_hash": "a97144d02ce38efeb1dfa8ee87fd8364",
+    "semantic_hash": ""
+  },
+  "project/groq_client.py": {
+    "mtime": 1784626154.9151542,
+    "ast_hash": "7d3d625c07375b4c7c170bc9e63bc802",
+    "semantic_hash": ""
+  },
+  "project/loop_template.py": {
+    "mtime": 1784626593.9274378,
+    "ast_hash": "5dbdbcffba24975fe252eedb29e1a8bc",
+    "semantic_hash": ""
+  },
+  "project/pyproject.toml": {
+    "mtime": 1784625350.0425234,
+    "ast_hash": "7858021aceac68a7d73fc2f8005829fd",
+    "semantic_hash": ""
+  },
+  "project/tests/__init__.py": {
+    "mtime": 1784624934.3815193,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "project/tests/test_config.py": {
+    "mtime": 1784624938.2311375,
+    "ast_hash": "cb5fb441e62d6fdd8f658df774afc516",
+    "semantic_hash": ""
+  },
+  "project/tests/test_database_manager.py": {
+    "mtime": 1784625951.5915654,
+    "ast_hash": "35a5081fe095850e56c138006457dc9e",
+    "semantic_hash": ""
+  },
+  "project/tests/test_groq_client_backoff.py": {
+    "mtime": 1784626187.4388008,
+    "ast_hash": "ad81f3070dbbaf78ed0408bd5e3ffa31",
+    "semantic_hash": ""
+  },
+  "project/tests/test_loop_template.py": {
+    "mtime": 1784626584.530832,
+    "ast_hash": "a0d07a1f69121ee87fb9f84690d0cb31",
+    "semantic_hash": ""
+  },
+  ".github/copilot-instructions.md": {
+    "mtime": 1784618213.2076313,
+    "ast_hash": "b1cdbe1b6654ab792a3744966034dcf7",
+    "semantic_hash": ""
+  },
+  ".opencode/AGENTS.md": {
+    "mtime": 1784618213.2080057,
+    "ast_hash": "b1cdbe1b6654ab792a3744966034dcf7",
+    "semantic_hash": ""
+  },
+  "AGENTS.md": {
+    "mtime": 1784618213.2082806,
+    "ast_hash": "b1cdbe1b6654ab792a3744966034dcf7",
+    "semantic_hash": ""
+  },
+  "docs/superpowers/plans/2026-07-21-phase1-environment-infra.md": {
+    "mtime": 1784627309.6135144,
+    "ast_hash": "51b10d6d6b939e33f65e06d8765afc28",
+    "semantic_hash": ""
+  },
+  "graphify-out/converted/Proposal_v1.0.0_8228ebe1.md": {
+    "mtime": 1784627563.058435,
+    "ast_hash": "dfa659146cf3d759007a194c6e88b0ba",
+    "semantic_hash": ""
+  },
+  "monitor/index.html": {
+    "mtime": 1784618529.120286,
+    "ast_hash": "44094a72cef82c71440a3aeec3d26882",
+    "semantic_hash": ""
+  },
+  "monitor/logs/index.html": {
+    "mtime": 1784618569.7951431,
+    "ast_hash": "fd0df145885cd07b909e1ec7ff3cab98",
+    "semantic_hash": ""
+  },
+  "monitor/reports/index.html": {
+    "mtime": 1784618529.1199307,
+    "ast_hash": "443faa10040e40e87bbf2ca60653f50d",
+    "semantic_hash": ""
+  },
+  "monitor/reports/template.html": {
+    "mtime": 1784618529.1186802,
+    "ast_hash": "d3dd4d9f1f4ebf9db4b727247c441a0e",
+    "semantic_hash": ""
+  },
+  "monitor/usage.md": {
+    "mtime": 1784618553.2312715,
+    "ast_hash": "42a64e090887fcf3eda5ce7865232b07",
+    "semantic_hash": ""
+  },
+  "openwiki/benchmark-design.md": {
+    "mtime": 1784627309.6237433,
+    "ast_hash": "2d502192abb56eff8180861fd423f14b",
+    "semantic_hash": ""
+  },
+  "openwiki/quickstart.md": {
+    "mtime": 1784616917.8896666,
+    "ast_hash": "c3c4fb044f231814fe39bc716863da8f",
+    "semantic_hash": ""
+  },
+  "openwiki/system-architecture.md": {
+    "mtime": 1784627309.6289482,
+    "ast_hash": "05b1ad16d5d2b04904bf684f5adec6af",
+    "semantic_hash": ""
+  },
+  "openwiki/working-in-this-repo.md": {
+    "mtime": 1784617051.880483,
+    "ast_hash": "ee18d31e784e50d872e61f031a75e3b0",
+    "semantic_hash": ""
+  },
+  "project/README.md": {
+    "mtime": 1784624803.1179857,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "project/groq_limits.md": {
+    "mtime": 1784627380.6675675,
+    "ast_hash": "5f67a9bba4aea4ad391124ef007f8164",
+    "semantic_hash": ""
+  },
+  "resources/artifacts/Changes.md": {
+    "mtime": 1784627346.2710485,
+    "ast_hash": "4a293d2508984b62fc01d297f9977ac8",
+    "semantic_hash": ""
+  },
+  "temp/directory-structure.md": {
+    "mtime": 1784627309.5722468,
+    "ast_hash": "a079b1c908a5fd81753920e21feb62c6",
+    "semantic_hash": ""
+  },
+  "temp/implementation-guide.html": {
+    "mtime": 1784620939.217692,
+    "ast_hash": "0b7e8eb270a88ba0ed49c242c48f0192",
+    "semantic_hash": ""
+  },
+  "temp/notes.md": {
+    "mtime": 1784620130.713304,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "temp/project-understanding-report.html": {
+    "mtime": 1784620014.5492873,
+    "ast_hash": "1343b37d4a07dcb14cd0cf99318e8e30",
+    "semantic_hash": ""
+  },
+  "temp/todo.md": {
+    "mtime": 1784624619.6699185,
+    "ast_hash": "bd096471924308251dfaf2e78e0038ae",
+    "semantic_hash": ""
   }
 }
