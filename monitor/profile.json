@@ -1,0 +1,100 @@
+{
+  "profileVersion": 1,
+  "project": {
+    "name": "rag-techniques",
+    "vcs": "git"
+  },
+  "commands": {},
+  "kpis": [
+    {
+      "key": "tests",
+      "label": "Tests",
+      "since": 1
+    },
+    {
+      "key": "commit",
+      "label": "Commit",
+      "since": 1
+    },
+    {
+      "key": "status",
+      "label": "Status",
+      "since": 1
+    }
+  ],
+  "logFields": [
+    {
+      "key": "timestamp",
+      "required": true,
+      "since": 1
+    },
+    {
+      "key": "level",
+      "required": true,
+      "since": 1,
+      "enum": [
+        "DEBUG",
+        "INFO",
+        "WARNING",
+        "ERROR"
+      ]
+    },
+    {
+      "key": "operation",
+      "required": true,
+      "since": 1
+    },
+    {
+      "key": "tool",
+      "required": true,
+      "since": 1
+    },
+    {
+      "key": "summary",
+      "required": true,
+      "since": 1
+    },
+    {
+      "key": "status",
+      "required": true,
+      "since": 1,
+      "enum": [
+        "success",
+        "partial",
+        "failure"
+      ]
+    },
+    {
+      "key": "details",
+      "required": false,
+      "since": 1
+    },
+    {
+      "key": "files",
+      "required": false,
+      "since": 1,
+      "type": "array"
+    },
+    {
+      "key": "task",
+      "required": false,
+      "since": 1
+    },
+    {
+      "key": "branch",
+      "required": false,
+      "since": 1
+    }
+  ],
+  "reportSections": [
+    "summary",
+    "asked",
+    "done",
+    "evidence",
+    "files",
+    "risks",
+    "followups",
+    "steps"
+  ],
+  "notes": {}
+}

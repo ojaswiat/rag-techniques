@@ -8,34 +8,39 @@ This file governs how the Claude Code agent operates within this repository. Rea
 
 This is the workspace for a **COMP702 M.Sc. Dissertation**: a comparative benchmark of three RAG retrieval paradigms (semantic vector, statistical BM25, structural summary-tree) evaluated against SEC 10-K financial filings.
 
-**Current state:** Planning and proposal phase. No implementation code exists yet. The technical build (Python, SQLite, `ingest/` / `pipelines/` / `judge/` modules) has not started. Phase 1 of `claude/specs/Phase Plan.md` is the next milestone.
+**Current state:** Planning and proposal phase. No implementation code exists yet. The technical build (Python, SQLite, `ingest/` / `pipelines/` / `judge/` modules) has not started. Phase 1 of `resources/specs/Phase Plan.md` is the next milestone.
 
----
-
-## 2. The `claude/` Folder — Agent Steering Layer
-
-The `claude/` directory is **not project source code**. It is the business and steering layer that drives the agent. Do not modify files inside `claude/` unless explicitly instructed. Always read from it; never write to it speculatively.
-
-### `claude/` Subdirectory Reference
+### Repository Layout
 
 | Folder | Purpose |
 |---|---|
-| `claude/specs/` | Authoritative design documents — architecture, guardrails, budget, phase plan, project idea |
-| `claude/artifacts/` | Deliverable files: proposals, papers, sheets, etc `.docx`, `.pdf`, `.xlsx`, `.csv`, `.md`, etc |
-| `claude/assets/` | Meta assets for agent use: design palette, typography, diagrams (`.drawio`), data samples |
-| `claude/docs/` | University brief and proposal template — read-only reference, never edit |
-| `claude/logs/` | Brief operational logs tracking agent history and context across sessions |
-| `claude/reports/` | Output folder for any report the agent is asked to generate |
+| `src/` | **All project code** — application and research code, pipelines, ingestion, judge, utilities, scripts, everything executable. New code goes here unless told otherwise. |
+| `resources/` | **User files and assets** — the steering and reference layer, not source code. See below. |
 
-### Reading Order for `claude/specs/`
+---
+
+## 2. The `resources/` Folder — User Files and Steering Layer
+
+The `resources/` directory is **not project source code**. It holds the user's files and assets: the business and steering layer that drives the agent. Do not modify files inside `resources/` unless explicitly instructed. Always read from it; never write to it speculatively.
+
+### `resources/` Subdirectory Reference
+
+| Folder | Purpose |
+|---|---|
+| `resources/specs/` | Authoritative design documents — architecture, guardrails, budget, phase plan, project idea |
+| `resources/artifacts/` | Deliverable files: proposals, papers, sheets, etc `.docx`, `.pdf`, `.xlsx`, `.csv`, `.md`, etc |
+| `resources/assets/` | Meta assets for agent use: design palette, typography, diagrams (`.drawio`), images, data samples |
+| `resources/docs/` | University brief and proposal template — read-only reference, never edit |
+
+### Reading Order for `resources/specs/`
 
 When context is needed, read specs in this order:
 
-1. `claude/specs/Project Idea.md` — research question, 140-query benchmark design, three pipelines, dataset and judge methodology
-2. `claude/specs/Architecture.md` — SQLite schema (full DDL), HLD/LLD, sequence diagrams, phase-by-phase module map, proposed repo layout
-3. `claude/specs/Phase Plan.md` — 10-week, 8-phase build schedule
-4. `claude/specs/Guardrails.md` — hard constraints for implementation (treat as binding, not advisory)
-5. `claude/specs/Budget.md` — $0/free-tier cost model and Groq throughput math
+1. `resources/specs/Project Idea.md` — research question, 140-query benchmark design, three pipelines, dataset and judge methodology
+2. `resources/specs/Architecture.md` — SQLite schema (full DDL), HLD/LLD, sequence diagrams, phase-by-phase module map, proposed repo layout
+3. `resources/specs/Phase Plan.md` — 10-week, 8-phase build schedule
+4. `resources/specs/Guardrails.md` — hard constraints for implementation (treat as binding, not advisory)
+5. `resources/specs/Budget.md` — $0/free-tier cost model and Groq throughput math
 
 ---
 
@@ -43,8 +48,8 @@ When context is needed, read specs in this order:
 
 All documents, slides, and Word files in this project follow the rules below. Pull from the source files rather than re-deriving values.
 
-- **Colours**: `claude/assets/design/palette.md` ("Oxford Ink" colour system)
-- **Typography**: `claude/assets/design/typography.md`
+- **Colours**: `resources/assets/design/palette.md` ("Oxford Ink" colour system)
+- **Typography**: `resources/assets/design/typography.md`
   - Body / references: **Garamond**
   - Headings / tables / diagrams / captions: **Calibri**
   - Code: **Consolas**
@@ -83,7 +88,7 @@ fitz.open(path)[i].get_pixmap(dpi=130).save(...)
 
 ## 4. Implementation Guardrails (Binding)
 
-When the project moves to the technical build, `claude/specs/Guardrails.md` is the binding constraint document. Key rules:
+When the project moves to the technical build, `resources/specs/Guardrails.md` is the binding constraint document. Key rules:
 
 ### Infrastructure
 - **No per-hour or scale-to-non-zero infrastructure, ever.**
@@ -113,18 +118,37 @@ The Judge must clear a **>80% human-agreement gate** (Phase 2, on 20 JEQ × 3 pi
 Every loop script must include a hardcoded `LOCAL_TEST_THROTTLE` boolean (forces `LIMIT 3`) and must be run clean end-to-end at throttle before release to the full batch.
 
 ### Storage
-- **SQLite (`aiosqlite`, WAL mode) is mandatory** — five tables per `claude/specs/Architecture.md` §3.2
+- **SQLite (`aiosqlite`, WAL mode) is mandatory** — five tables per `resources/specs/Architecture.md` §3.2
 - Resumable via `results.UNIQUE(source_set, query_id, pipeline, k_value)` — a crash never re-spends free-tier quota
 - All LLM calls at `temperature = 0`; each benchmark cell runs once (no repeated sampling)
 
 ---
 
-## 6. Logs
+## monitor
 
-After significant operations, write a brief log entry to `claude/logs/` summarising what was done, decisions made, and any open issues. This preserves context across sessions and prevents re-deriving decisions already settled.
+Monitoring, logging, and reporting rules live in the **monitor** skill (`SKILL.md`); per-project data is in `monitor/`.
 
 ---
 
-## 7. Reports
+## OpenWiki
 
-When asked to generate a report of any kind (grading, plagiarism check, analysis, evaluation, etc.), write the output to `claude/reports/`.
+This repository has documentation located in the /openwiki directory.
+
+Start here:
+- [OpenWiki quickstart](openwiki/quickstart.md)
+
+OpenWiki includes repository overview, architecture notes, workflows, domain concepts, operations, integrations, testing guidance, and source maps.
+
+When working in this repository, read the OpenWiki quickstart first, then follow its links to the relevant architecture, workflow, domain, operation, and testing notes.
+
+---
+
+## graphify
+
+This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.
+
+Rules:
+- For codebase questions, first run `graphify query "<question>"` when graphify-out/graph.json exists. Use `graphify path "<A>" "<B>"` for relationships and `graphify explain "<concept>"` for focused concepts. These return a scoped subgraph, usually much smaller than GRAPH_REPORT.md or raw grep output.
+- If graphify-out/wiki/index.md exists, use it for broad navigation instead of raw source browsing.
+- Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.
+- After modifying code, run `graphify update .` to keep the graph current (AST-only, no API cost).
