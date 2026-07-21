@@ -15,6 +15,11 @@ MANIFEST_PATH = "data/filings_manifest.json"
 
 
 async def ingest_one(entry: dict) -> int:
+    # Skips on ANY existing row count, so this assumes a prior run for a
+    # given document either completed fully or wasn't started -- a crash
+    # mid-document leaves a partial node set that this will silently treat
+    # as done. To force re-ingestion of a document, delete its rows from
+    # `nodes` first (there's no dedicated repair tool for this yet).
     existing = await dbm.get_nodes_by_document(DB_PATH, entry["document_id"])
     if existing:
         return len(existing)
