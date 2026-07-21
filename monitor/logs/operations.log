@@ -1,3 +1,9 @@
+2026-07-21 13:42:13,411 INFO [phase2-plan-authoring] (Claude Code (superpowers:writing-plans)) Wrote the Phase 2 (Ingestion & Parsing) implementation plan: 7 tasks covering filings manifest, SEC EDGAR fetch, LlamaParse, node_builder, and the 20-section audit -- success
+branch:  main
+task:    Phase 2: Ingestion & Parsing Pipeline (planning)
+files:   docs/superpowers/plans/2026-07-21-phase2-ingestion-parsing.md
+details: Read Phase Plan.md/Architecture.md/Project Idea.md/Budget.md/Guardrails.md Phase 2 sections plus §0/§11 open items. Key design decision: fetch_filings.py resolves real filing URLs at runtime from SEC EDGAR's public JSON APIs (company_tickers.json + submissions API) rather than hardcoding accession numbers, to avoid any risk of a fabricated URL. Flagged 2 Active and 3 Passive human-intervention points directly in the plan's Human Intervention Ledger: (1) confirming the exact filing corpus (Architecture.md §11 leaves this open, only gives an illustrative AAPL/MSFT/TSLA example), (2) a real LLAMA_CLOUD_API_KEY for the live parse smoke test, (3) SEC EDGAR User-Agent auto-filled passively, (4) audit-report eyeballing is inherently a human judgement call, (5) all three prerequisites converging at the Task 6 end-to-end run.
+================================================================================
 2026-07-21 13:08:32,711 INFO [code-tour-report] (Claude Code (graphify + ui-ux-pro-max + monitor)) Authored a beginner/non-technical HTML code tour explaining Phase 1's file layout, per-file responsibilities, and import relationships -- success
 branch:  phase1-environment-infra
 task:    Phase 1 documentation / onboarding

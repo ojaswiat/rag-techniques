@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Phase 2 Plan: Ingestion & Parsing — rag-techniques Report</title>
+<style>
+  :root {
+    --bg: #faf9f7; --surface: #ffffff; --text: #101418; --muted: #5a6472;
+    --accent: #16181a; --accent-ink: #ffffff; --border: #d6d3cd; --hairline: #eae7e1;
+    --code-bg: #f3f1ec; --pass: #15803d; --warn: #b45309; --fail: #b91c1c;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0b0d10; --surface: #0f1216; --text: #e9e7e2; --muted: #9aa3ad;
+      --accent: #f5c518; --accent-ink: #111111; --border: #2c333b; --hairline: #1d2229;
+      --code-bg: #14181e; --pass: #4ade80; --warn: #fbbf24; --fail: #f87171;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { transition: none !important; } }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 16px; line-height: 1.6; }
+  code, pre, .mono { font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px 80px; }
+  a { color: var(--accent); text-decoration: none; font-weight: 500; }
+  a:hover { text-decoration: underline; }
+  .masthead { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--border); font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+  .masthead .brand { color: var(--accent); font-weight: 700; }
+  .masthead .mh-right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: flex-end; }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+  .branchchip { display: inline-flex; align-items: center; gap: 5px; max-width: 34ch; border: 1px solid var(--border); background: var(--surface); padding: 2px 8px; font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; font-size: 0.72rem; font-weight: 500; color: var(--text); vertical-align: middle; }
+  .branchchip svg { width: 11px; height: 11px; flex: 0 0 auto; color: var(--accent); }
+  .back { display: inline-flex; align-items: center; gap: 6px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; }
+  .back svg { width: 13px; height: 13px; }
+  header.report { padding: 40px 0 20px; border-bottom: 3px solid var(--accent); }
+  header.report h1 { font-size: clamp(1.7rem, 4.5vw, 2.6rem); font-weight: 800; letter-spacing: -0.03em; line-height: 1.15; max-width: 30ch; }
+  header.report .subtitle { margin-top: 10px; color: var(--muted); font-size: 0.95rem; max-width: 70ch; }
+  .meta-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+  .chip { border: 1px solid var(--border); padding: 4px 10px; font-size: 0.74rem; color: var(--muted); }
+  .chip b { color: var(--accent); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-right: 6px; font-size: 0.68rem; }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin: 24px 0 8px; }
+  .kpi { border: 1px solid var(--border); padding: 14px 16px; background: var(--surface); }
+  .kpi.info { border-left: 3px solid var(--accent); }
+  .kpi.warn { border-left: 3px solid var(--warn); }
+  .kpi .label { font-size: 0.66rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent); }
+  .kpi.warn .label { color: var(--warn); }
+  .kpi .value { margin-top: 4px; font-size: 1.45rem; font-weight: 750; letter-spacing: -0.01em; }
+  .kpi .value.small { font-size: 1.0rem; }
+  section { margin-top: 32px; }
+  h2 { font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.12em; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 8px; margin-bottom: 14px; }
+  h3 { font-size: 0.95rem; font-weight: 700; margin: 16px 0 6px; }
+  p, li { font-size: 0.95rem; }
+  ul, ol { padding-left: 1.3em; margin-top: 6px; }
+  li { margin-top: 4px; }
+  .table-scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.9rem; margin-top: 6px; }
+  th { text-align: left; padding: 8px 12px; font-size: 0.64rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent); border-bottom: 2px solid var(--accent); }
+  td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--hairline); vertical-align: top; }
+  tbody tr:hover { background: var(--code-bg); }
+  .tag { display: inline-block; border: 1px solid currentColor; padding: 1px 8px; font-size: 0.66rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; font-family: "SF Mono", ui-monospace, Menlo, monospace; white-space: nowrap; }
+  .tag.pass { color: var(--pass); } .tag.warn { color: var(--warn); } .tag.info { color: var(--accent); }
+  pre { background: var(--code-bg); border: 1px solid var(--hairline); padding: 14px; overflow-x: auto; font-size: 0.82rem; }
+  .file { font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; font-size: 0.82rem; }
+  .note { border-left: 3px solid var(--warn); background: var(--code-bg); padding: 10px 14px; margin-top: 12px; font-size: 0.9rem; }
+  .note b { color: var(--warn); }
+  footer { margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; font-size: 0.78rem; color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="masthead" id="top">
+    <a class="back" href="index.html" aria-label="Back to reports"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>Back</a>
+    <span><span class="brand">rag-techniques</span> · Monitor · Report</span>
+    <span class="mh-right">
+      <span class="branchchip" title="Branch: main"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">main</span></span>
+      <span class="mono">2026-07-21</span>
+    </span>
+  </div>
+
+  <header class="report">
+    <h1>Phase 2 Plan: Ingestion &amp; Parsing Pipeline</h1>
+    <p class="subtitle">A 7-task implementation plan for turning raw SEC 10-K filings into the canonical <code>nodes</code> table, plus every point where a human needs to step in — before code is written.</p>
+    <div class="meta-chips">
+      <span class="chip"><b>Generated</b><span class="mono">2026-07-21</span></span>
+      <span class="chip"><b>Branch</b><span class="mono">main</span></span>
+      <span class="chip"><b>Status</b><span class="tag info">planning only — not yet executed</span></span>
+    </div>
+  </header>
+
+  <div class="kpis">
+    <div class="kpi info"><div class="label">Tasks</div><div class="value">7</div></div>
+    <div class="kpi warn"><div class="label">Active steps</div><div class="value">3</div></div>
+    <div class="kpi info"><div class="label">Passive steps</div><div class="value">3</div></div>
+  </div>
+
+  <section>
+    <h2>Summary</h2>
+    <p>This report covers plan authoring, not code execution — no implementation has started. The plan (<code>docs/superpowers/plans/2026-07-21-phase2-ingestion-parsing.md</code>) builds Phase 2 of <code>resources/specs/Phase Plan.md</code>: four scripts under <code>project/ingest/</code> that fetch, parse, chunk, and audit ~6–9 SEC 10-K filings into the <code>nodes</code> table Phase 1's <code>database_manager.py</code> already defines. Written using <code>superpowers:writing-plans</code>, following the same TDD-per-task structure as the approved Phase 1 plan.</p>
+  </section>
+
+  <section>
+    <h2>What Was Asked</h2>
+    <p>Write a good plan for Phase 2 and produce a monitor report covering active vs. passive human intervention required.</p>
+  </section>
+
+  <section>
+    <h2>What Was Done</h2>
+    <ol>
+      <li>Read <code>Phase Plan.md</code>, <code>Architecture.md</code> (§0, §6, §11), <code>Project Idea.md</code> §2, <code>Budget.md</code> §3, and <code>Guardrails.md</code> §1/§7 for Phase 2's exact goals, evaluations, deliverables, and binding constraints.</li>
+      <li>Designed the file structure: <code>project/data/filings_manifest.json</code>, <code>project/ingest/{fetch_filings,parse_filing,node_builder,parsing_audit,run_ingestion}.py</code>, each with a matching test file.</li>
+      <li>Key design call: <b>filing URLs are never hardcoded</b>. <code>fetch_filings.py</code> resolves the real SEC EDGAR accession number and document path at runtime via SEC's own public JSON APIs (<code>company_tickers.json</code> for ticker→CIK, <code>data.sec.gov/submissions/CIK…json</code> for the filing list) — a hand-typed or guessed accession number would be indistinguishable from a real one until it 404s, which this design avoids by construction.</li>
+      <li>Wrote 7 tasks, each with failing-test-first steps, exact code, exact commands and expected output — same rigor as the approved Phase 1 plan.</li>
+      <li>Identified and tagged every human-intervention point inline in the plan's own "Human Intervention Ledger" section (see below), rather than leaving it implicit.</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>Active vs. Passive Human Intervention</h2>
+    <p style="color:var(--muted); font-size:0.9rem; margin-top:-6px;">Active = the plan stops and waits; nothing later proceeds without a real answer. Passive = the plan proceeds with a sensible default and logs what the human may still want to change.</p>
+
+    <h3>Active — must stop and wait</h3>
+    <div class="table-scroll"><table><tbody>
+      <tr><th>Where</th><th>What's needed</th><th>Why it can't be defaulted</th></tr>
+      <tr>
+        <td class="file">Task 1, Step 1</td>
+        <td>Confirm the exact filing corpus (companies + fiscal years) in <code>data/filings_manifest.json</code>.</td>
+        <td><code>Architecture.md</code> §11 explicitly leaves this open — only an illustrative AAPL/MSFT/TSLA example exists. This becomes the permanent dissertation evaluation corpus; it's a research decision, not a technical default.</td>
+      </tr>
+      <tr>
+        <td class="file">Task 3, Step 5</td>
+        <td>A real <code>LLAMA_CLOUD_API_KEY</code> in <code>project/.env</code> before the live LlamaParse smoke test.</td>
+        <td>Mirrors Phase 1 Task 5's Groq key gate — no way to verify the parser actually works without a live call.</td>
+      </tr>
+      <tr>
+        <td class="file">Task 6, Step 1</td>
+        <td>Confirm all three prerequisites at once: final filing list, working LlamaParse key, and permission to make live SEC EDGAR + LlamaParse requests under the 3-item throttle.</td>
+        <td>This is the first point ingestion actually touches the real world end-to-end — a mistake here spends real (if free-tier) quota and writes real rows to <code>benchmark.db</code>.</td>
+      </tr>
+    </tbody></table></div>
+
+    <h3>Passive — proceeds with a logged default</h3>
+    <div class="table-scroll"><table><tbody>
+      <tr><th>Where</th><th>Default applied</th><th>What the human can still change</th></tr>
+      <tr>
+        <td class="file">Task 1, Step 7 / Task 2, Step 1</td>
+        <td><code>SEC_EDGAR_USER_AGENT</code> auto-filled as <code>"rag-techniques-benchmark ojaswiat@gmail.com"</code>.</td>
+        <td>SEC's fair-access policy only requires a descriptive contact string — no approval process. Change the email in <code>.env</code> if a different contact should be on file with SEC.</td>
+      </tr>
+      <tr>
+        <td class="file">Task 4</td>
+        <td><code>source_page_num</code> is always <code>NULL</code>.</td>
+        <td>Not really changeable — SEC filings are native HTML with no intrinsic page numbers (<code>Project Idea.md</code> §2); this is architecturally correct, not a shortcut.</td>
+      </tr>
+      <tr>
+        <td class="file">Task 6, Step 5</td>
+        <td>The 20-section parsing audit report is generated automatically.</td>
+        <td>The report only <em>surfaces</em> the sample — a human still needs to actually read a few sections and confirm no table looks truncated before Phase 4 builds queries on top of this corpus. Logged as a follow-up, not blocking.</td>
+      </tr>
+    </tbody></table></div>
+  </section>
+
+  <section>
+    <h2>Task List</h2>
+    <div class="table-scroll"><table><tbody>
+      <tr><th>#</th><th>Task</th><th>Produces</th></tr>
+      <tr><td>1</td><td>Filings manifest + Phase 2 dependencies</td><td><code>data/filings_manifest.json</code>, <code>llama-parse</code> + <code>requests</code> pinned</td></tr>
+      <tr><td>2</td><td><code>ingest/fetch_filings.py</code></td><td>SEC EDGAR download with runtime URL resolution + caching</td></tr>
+      <tr><td>3</td><td><code>ingest/parse_filing.py</code></td><td>LlamaParse atomic-table parse with 48h cache-freshness check</td></tr>
+      <tr><td>4</td><td><code>ingest/node_builder.py</code> + <code>run_ingestion.py</code></td><td>Atomic text/table node splitting; SQLite persistence orchestration</td></tr>
+      <tr><td>5</td><td><code>ingest/parsing_audit.py</code></td><td>20-section random sample + Markdown report</td></tr>
+      <tr><td>6</td><td>End-to-end verification</td><td>Real (throttled, 3-filing) run against live SEC EDGAR + LlamaParse</td></tr>
+      <tr><td>7</td><td>Human Action Report</td><td><code>temp/phase2-human-actions.md</code></td></tr>
+    </tbody></table></div>
+  </section>
+
+  <section>
+    <h2>Files Touched</h2>
+    <div class="table-scroll"><table><tbody>
+      <tr><td class="file">docs/superpowers/plans/2026-07-21-phase2-ingestion-parsing.md</td><td>New — the full plan (this report's subject)</td></tr>
+    </tbody></table></div>
+    <div class="note"><b>Note:</b> no <code>project/</code> code exists yet for Phase 2 — this report covers planning only. A follow-up report will cover the actual implementation once tasks are executed.</div>
+  </section>
+
+  <section>
+    <h2>Risks</h2>
+    <ul>
+      <li><b>Filing list is still provisional.</b> The plan seeds the manifest with the spec's illustrative AAPL/MSFT/TSLA example so the plan is runnable as written, but Task 1 Step 1 requires explicit human confirmation before Task 2 fetches anything for real.</li>
+      <li><b>SEC EDGAR API shape assumed from public documentation</b>, not verified against a live response in this session — Task 2's implementer should sanity-check the actual JSON shape (<code>filings.recent.form/reportDate/accessionNumber/primaryDocument</code> arrays) against a real API call during implementation, same spirit as Phase 1's "re-verify model IDs at implementation time" pattern.</li>
+      <li><b>LlamaParse SDK call shape</b> (<code>LlamaParse(...).aload_data(path)</code>) should be re-verified against whatever version <code>uv add llama-parse</code> resolves to, since LlamaIndex-adjacent packages move fast (per <code>Architecture.md</code> §10's version-drift warning).</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Next Steps</h2>
+    <p>Choose an execution approach: subagent-driven (fresh implementer + reviewer subagent per task, as used for Phase 1) or inline execution in this session. Task 1 Step 1 needs an answer before any task can run for real.</p>
+  </section>
+
+  <footer><span>Generated by the monitor workflow.</span><span><a href="index.html">← All reports</a> · <a href="#top">↑ Back to Top</a></span></footer>
+
+</div>
+</body>
+</html>
