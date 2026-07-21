@@ -18,5 +18,5 @@ Captured from live `x-ratelimit-*` response headers (per-request snapshot, not t
 
 Notes:
 - Limits apply **per organization**, not per key — extra keys do not raise the ceiling (`Guardrails.md` §5).
-- The Answerer (`Llama 3.3 70B`) is the tightest token-window model observed (12000); Phase 7's 900-run matrix should be paced around whichever model proves tightest on TPD once confirmed.
+- The Answerer (`Llama 3.3 70B`) has the largest TPM observed (12000) but is the TPD-pacing bottleneck for Phase 7's 900-run matrix (per `Budget.md`); pacing should be built around whichever model proves tightest on TPD once confirmed.
 - Re-check at https://console.groq.com/settings/limits before Phase 7 kicks off — free-tier limits are revised periodically.
