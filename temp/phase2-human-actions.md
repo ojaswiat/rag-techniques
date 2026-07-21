@@ -1,0 +1,73 @@
+# Phase 2 — Human Action Report
+
+## Active — needs your input before Phase 2 is fully closed out
+
+- [ ] **Eyeball the parsing audit report**: `project/parsing_audit_report.md` was
+  generated from the real throttled run (20 samples across the 3 AAPL filings)
+  but has NOT yet been read by a human. Please open it and check a handful of
+  sampled sections for table truncation, column misalignment, or garbled
+  markdown before Phase 4 starts generating queries against this corpus.
+  Two things you'll notice that are already known and explained below, not
+  new bugs to report: (1) a few nodes with content like `# FORM 10-K` (raw
+  markdown leaking from cover-page headings — cosmetic, see Passive section);
+  (2) most nodes carry a `parent_item_header` like "Item 1A. Risk Factors" —
+  this is working correctly.
+- [ ] **Decide on the `llama-parse` → `llama-cloud` migration**: the `llama-parse`
+  package used by `ingest/parse_filing.py` is itself deprecated (its own
+  warning claims a maintenance window ending 2026-05-01, already past).
+  It's still fully installable and functional (verified live, twice), so
+  nothing is broken today. But a real migration to the new `llama-cloud`
+  SDK (currently v2.11.0) is a non-trivial rewrite of `parse_filing.py`'s
+  interface — not a one-line swap. This wasn't done automatically since it's
+  outside Phase 2's scope and risks introducing bugs under time pressure.
+  Decide: migrate now (before Phase 3/5 also build on LlamaIndex-ecosystem
+  packages), or accept the risk and revisit later if the package actually
+  stops working. See `resources/artifacts/Changes.md` for the full history.
+
+## Passive — already handled, no action needed unless you want to change it
+
+- **Filing corpus confirmed**: AAPL, MSFT, TSLA × FY2023-2025 (9 filings) —
+  you confirmed the spec's own illustrative default. Real ingestion for the
+  throttled 3 (all AAPL) already ran successfully; the remaining 6 filings
+  (MSFT × 3, TSLA × 3) haven't been fetched yet — that happens when
+  `LOCAL_TEST_THROTTLE` is flipped to `false` and the full ingestion re-runs.
+- **LlamaParse API key**: `project/.env` already had a real, working
+  `LLAMA_CLOUD_API_KEY` — no setup needed from you this phase.
+- **SEC EDGAR User-Agent**: auto-filled as `rag-techniques-benchmark
+  ojaswiat@gmail.com` in `.env`/`.env.example` — change
+  `SEC_EDGAR_USER_AGENT` if a different contact address should be on file
+  with SEC.
+- **Filing URLs were verified before spending real requests**: before the
+  live run, all 9 manifest entries' CIKs and resolved 10-K URLs were printed
+  and checked against known public facts (correct CIKs for Apple/Microsoft/
+  Tesla, correct fiscal-year-end dates for each) — not just trusted blindly.
+- **Two real bugs found and fixed during the live run** (both logged in
+  `resources/artifacts/Changes.md` with full detail): (1) a deprecated
+  LlamaParse constructor parameter, corrected to preserve the tool's tuned
+  default parsing behaviour rather than silently degrading it; (2) a table
+  misclassification bug (an exhibit-index table with no blank line before
+  its rows was tagged `text` instead of `table`) — found via a real-data
+  spot-check the plan was amended to require, fixed immediately, and
+  covered by a new regression test. Neither ever bisected a table (the
+  project's one hard invariant here) — both were metadata-tagging bugs,
+  now fixed.
+- **A cosmetic issue was found and deliberately NOT fixed**: 174 of 682
+  AAPL_2025 nodes have a raw `#` character in their content (front-matter
+  headings like `# FORM 10-K`, `# Apple Inc.` that aren't real "Item N"
+  sections, so they're correctly left unattributed — but the markdown
+  syntax itself isn't stripped). This doesn't corrupt anything Phase 4/5
+  depend on (Item-header attribution, table integrity), so it was logged
+  rather than chased down mid-phase. Fine to leave as-is.
+- 48-hour parse caching is confirmed working — re-running ingestion for
+  the same 3 filings hit the cache and spent $0 in additional LlamaParse
+  credits.
+
+## Not yet needed (deferred to their own phase)
+
+- **P3 summary-index build** (Phase 3): needs the `nodes` table populated
+  (it is, for 3 of 9 filings so far), nothing else new from you.
+- **Full (unthrottled) ingestion of the remaining 6 filings**: needed
+  before Phase 4's dataset generation can draw from the complete corpus.
+  This is a routine re-run once you're ready (flip `LOCAL_TEST_THROTTLE` to
+  `false` and re-run `uv run python -m ingest.run_ingestion`), not something
+  requiring a new decision.
