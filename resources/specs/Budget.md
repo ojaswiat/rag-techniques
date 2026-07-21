@@ -39,7 +39,7 @@ All LLM calls run on Groq's free tier: open-source models on Groq's LPU hardware
 | Model | Role | RPM | RPD | TPM | TPD |
 |---|---|---|---|---|---|
 | `openai/gpt-oss-120b` | Generator | ~30 | ~1,000 | ~8,000 | ~200,000 |
-| `qwen/qwen3.6-27b` | Critic + Judge | ~60 | ~1,000 | ~6,000 | per Groq docs |
+| `qwen/qwen3.6-27b` | Critic + Judge | ~1,000 (per `project/groq_limits.md`, live-verified 2026-07-21) | unverified — needs console.groq.com/settings/limits | ~8,000 (per `project/groq_limits.md`, live-verified 2026-07-21) | unverified — needs console.groq.com/settings/limits |
 | `llama-3.3-70b-versatile` | Pipeline answerer | ~30 | ~1,000 | ~12,000 | ~100,000 |
 | `llama-3.1-8b-instant` | P3 index build / debug | ~30 | ~14,400 | higher | higher |
 
@@ -61,7 +61,7 @@ All LLM calls run on Groq's free tier: open-source models on Groq's LPU hardware
 The two heavy phases are token-bound, not request-bound:
 
 * **Answer generation (`Llama 3.3 70B`, ~100K TPD).** ~960 calls, each ~1–3K tokens (query + K retrieved nodes; larger at K=10), averaging ~2K → on the order of **~2M tokens**. Against ~100K TPD that is **roughly two-to-three weeks** of free-tier days, *not* 1–2. This is the project's true bottleneck.
-* **Judging (`Qwen3.6-27B`).** ~960 calls. With the rubric + 5 quadrant-matched few-shot exemplars **prompt-cached** (a static prefix that does not count toward limits), the uncached payload per call is small (~1K tokens), but Qwen's ~6K **TPM** still paces throughput. Spread across days, it fits comfortably.
+* **Judging (`Qwen3.6-27B`).** ~960 calls. With the rubric + 5 quadrant-matched few-shot exemplars **prompt-cached** (a static prefix that does not count toward limits), the uncached payload per call is small (~1K tokens), but Qwen's ~8K **TPM** (per `project/groq_limits.md`) still paces throughput. Spread across days, it fits comfortably.
 * **Generation + critique.** ~180 calls each; minor relative to the above.
 
 So the honest position: **at strict $0, the full 900-run benchmark spans ~2–3 weeks of intermittent free-tier running** (well inside the 10-week timeline), gated by Llama 3.3 70B's TPD. It does **not** finish in 1–2 days for free.
