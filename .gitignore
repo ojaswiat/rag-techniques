@@ -2,3 +2,4 @@
 .claude
 monitor/scripts/__pycache__/
 .venv
+.superpowers/
