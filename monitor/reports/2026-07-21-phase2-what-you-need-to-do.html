@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Phase 2: What You Need To Do — rag-techniques Report</title>
+<style>
+  :root {
+    --bg: #faf9f7; --surface: #ffffff; --text: #101418; --muted: #5a6472;
+    --accent: #16181a; --accent-ink: #ffffff; --border: #d6d3cd; --hairline: #eae7e1;
+    --code-bg: #f3f1ec; --pass: #15803d; --warn: #b45309; --fail: #b91c1c;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0b0d10; --surface: #0f1216; --text: #e9e7e2; --muted: #9aa3ad;
+      --accent: #f5c518; --accent-ink: #111111; --border: #2c333b; --hairline: #1d2229;
+      --code-bg: #14181e; --pass: #4ade80; --warn: #fbbf24; --fail: #f87171;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { transition: none !important; } }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 16px; line-height: 1.6; }
+  code, pre, .mono { font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px 80px; }
+  a { color: var(--accent); text-decoration: none; font-weight: 500; }
+  a:hover { text-decoration: underline; }
+  .masthead { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--border); font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+  .masthead .brand { color: var(--accent); font-weight: 700; }
+  .masthead .mh-right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: flex-end; }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+  .branchchip { display: inline-flex; align-items: center; gap: 5px; max-width: 34ch; border: 1px solid var(--border); background: var(--surface); padding: 2px 8px; font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; font-size: 0.72rem; font-weight: 500; color: var(--text); vertical-align: middle; }
+  .branchchip svg { width: 11px; height: 11px; flex: 0 0 auto; color: var(--accent); }
+  .back { display: inline-flex; align-items: center; gap: 6px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; }
+  .back svg { width: 13px; height: 13px; }
+  header.report { padding: 40px 0 20px; border-bottom: 3px solid var(--accent); }
+  header.report h1 { font-size: clamp(1.7rem, 4.5vw, 2.6rem); font-weight: 800; letter-spacing: -0.03em; line-height: 1.15; max-width: 30ch; }
+  header.report .subtitle { margin-top: 10px; color: var(--muted); font-size: 0.95rem; max-width: 70ch; }
+  .meta-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+  .chip { border: 1px solid var(--border); padding: 4px 10px; font-size: 0.74rem; color: var(--muted); }
+  .chip b { color: var(--accent); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-right: 6px; font-size: 0.68rem; }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin: 24px 0 8px; }
+  .kpi { border: 1px solid var(--border); padding: 14px 16px; background: var(--surface); }
+  .kpi.warn { border-left: 3px solid var(--warn); }
+  .kpi.pass { border-left: 3px solid var(--pass); }
+  .kpi .label { font-size: 0.66rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent); }
+  .kpi.warn .label { color: var(--warn); } .kpi.pass .label { color: var(--pass); }
+  .kpi .value { margin-top: 4px; font-size: 1.45rem; font-weight: 750; letter-spacing: -0.01em; }
+  section { margin-top: 32px; }
+  h2 { font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.12em; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 8px; margin-bottom: 14px; }
+  h3 { font-size: 0.95rem; font-weight: 700; margin: 16px 0 6px; }
+  p, li { font-size: 0.95rem; }
+  ul, ol { padding-left: 1.3em; margin-top: 6px; }
+  li { margin-top: 4px; }
+  .action-card { border: 1px solid var(--border); border-left: 3px solid var(--warn); background: var(--surface); padding: 16px 20px; margin-top: 14px; }
+  .action-card.done { border-left-color: var(--pass); }
+  .action-card h3 { margin-top: 0; display: flex; align-items: center; gap: 8px; }
+  .action-card p { color: var(--text); }
+  .table-scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.9rem; margin-top: 6px; }
+  th { text-align: left; padding: 8px 12px; font-size: 0.64rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent); border-bottom: 2px solid var(--accent); }
+  td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--hairline); vertical-align: top; }
+  .tag { display: inline-block; border: 1px solid currentColor; padding: 1px 8px; font-size: 0.66rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; font-family: "SF Mono", ui-monospace, Menlo, monospace; white-space: nowrap; }
+  .tag.warn { color: var(--warn); } .tag.pass { color: var(--pass); } .tag.info { color: var(--accent); }
+  pre { background: var(--code-bg); border: 1px solid var(--hairline); padding: 14px; overflow-x: auto; font-size: 0.82rem; }
+  .file { font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; font-size: 0.82rem; }
+  footer { margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; font-size: 0.78rem; color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="masthead" id="top">
+    <a class="back" href="index.html" aria-label="Back to reports"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>Back</a>
+    <span><span class="brand">rag-techniques</span> · Monitor · Report</span>
+    <span class="mh-right">
+      <span class="branchchip" title="Branch: phase2-ingestion-parsing"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">phase2-ingestion-parsing</span></span>
+      <span class="mono">2026-07-21</span>
+    </span>
+  </div>
+
+  <header class="report">
+    <h1>Phase 2: What You Need To Do</h1>
+    <p class="subtitle">2 real decisions need your input; everything else was handled automatically and is listed for transparency.</p>
+    <div class="meta-chips">
+      <span class="chip"><b>Generated</b><span class="mono">2026-07-21</span></span>
+      <span class="chip"><b>Branch</b><span class="mono">phase2-ingestion-parsing</span></span>
+      <span class="chip"><b>Source</b><span class="mono">temp/phase2-human-actions.md</span></span>
+    </div>
+  </header>
+
+  <div class="kpis">
+    <div class="kpi warn"><div class="label">Needs your input</div><div class="value">2</div></div>
+    <div class="kpi pass"><div class="label">Already handled</div><div class="value">6</div></div>
+  </div>
+
+  <section>
+    <h2>Needs Your Input</h2>
+
+    <div class="action-card">
+      <h3><span class="tag warn">Active</span> Eyeball the parsing audit report</h3>
+      <p><code>project/parsing_audit_report.md</code> was generated from the real throttled run (20 samples across the 3 AAPL filings) but hasn't been read by a human yet. Open it and check a handful of sections for table truncation, column misalignment, or garbled markdown before Phase 4 starts generating queries against this corpus.</p>
+      <p style="color:var(--muted); font-size:0.88rem;">Two things you'll see that are already known, not new bugs: (1) a few nodes with content like <code># FORM 10-K</code> (cosmetic markdown leak from cover-page headings); (2) most nodes carry a <code>parent_item_header</code> like "Item 1A. Risk Factors" — working correctly.</p>
+    </div>
+
+    <div class="action-card">
+      <h3><span class="tag warn">Active</span> Decide on the llama-parse → llama-cloud migration</h3>
+      <p>The <code>llama-parse</code> package used by <code>ingest/parse_filing.py</code> is itself deprecated — its own warning claims a maintenance window ending 2026-05-01, already past. It's still fully installable and functional (verified live, twice), nothing is broken today. A real migration to the new <code>llama-cloud</code> SDK (v2.11.0) is a non-trivial rewrite, not a one-line swap — deliberately not done mid-phase to avoid scope creep and bugs under time pressure.</p>
+      <p style="color:var(--muted); font-size:0.88rem;">Decide: migrate now (before Phase 3/5 build on more LlamaIndex-ecosystem packages), or accept the risk and revisit if the package actually breaks. Full history in <code>resources/artifacts/Changes.md</code>.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Already Handled — No Action Needed</h2>
+
+    <div class="table-scroll"><table><tbody>
+      <tr><th>Item</th><th>What happened</th></tr>
+      <tr><td>Filing corpus</td><td>You confirmed AAPL/MSFT/TSLA × FY2023-2025. The throttled 3 (all AAPL) are ingested; MSFT ×3 and TSLA ×3 aren't fetched yet — routine next step, see below.</td></tr>
+      <tr><td>LlamaParse API key</td><td>Already real and working in <code>project/.env</code> — no setup needed from you.</td></tr>
+      <tr><td>SEC EDGAR User-Agent</td><td>Auto-filled as <code>rag-techniques-benchmark ojaswiat@gmail.com</code>. Change <code>SEC_EDGAR_USER_AGENT</code> in <code>.env</code> if you want a different contact on file with SEC.</td></tr>
+      <tr><td>Filing URL correctness</td><td>Before spending any real requests, all 9 manifest entries' CIKs and resolved 10-K URLs were printed and checked against known public facts (correct CIKs for Apple/Microsoft/Tesla, correct fiscal-year-end dates) — not blindly trusted.</td></tr>
+      <tr><td>2 real bugs fixed during the live run</td><td>A deprecated LlamaParse parameter (corrected to preserve tuned default behaviour) and a table-misclassification bug (an exhibit-index table, found via a real-data check, fixed with a regression test). Neither ever bisected a table — both were metadata-tagging bugs, now fixed. Full detail in <code>resources/artifacts/Changes.md</code>.</td></tr>
+      <tr><td>Cosmetic finding, deliberately not fixed</td><td>174 of 682 AAPL_2025 nodes have a raw <code>#</code> in content from non-Item front-matter headings. Doesn't corrupt Item-attribution or table integrity — logged, not chased.</td></tr>
+      <tr><td>48h parse caching</td><td>Confirmed working — re-running ingestion for the same filings cost $0 in additional LlamaParse credits.</td></tr>
+    </tbody></table></div>
+  </section>
+
+  <section>
+    <h2>Not Yet Needed (Deferred to Their Own Phase)</h2>
+    <ul>
+      <li><b>P3 summary-index build</b> (Phase 3): needs the <code>nodes</code> table populated — it is, for 3 of 9 filings. Nothing new from you yet.</li>
+      <li><b>Full ingestion of the remaining 6 filings</b>: a routine re-run, not a new decision — flip <code>LOCAL_TEST_THROTTLE</code> to <code>false</code> in <code>project/.env</code> and re-run:
+        <pre>cd project && uv run python -m ingest.run_ingestion</pre>
+        The already-ingested 3 AAPL filings will be safely skipped (fixed during the final review); MSFT ×3 and TSLA ×3 will be fetched, parsed, and ingested fresh.
+      </li>
+    </ul>
+  </section>
+
+  <footer><span>Generated by the monitor workflow.</span><span><a href="index.html">← All reports</a> · <a href="#top">↑ Back to Top</a></span></footer>
+
+</div>
+</body>
+</html>

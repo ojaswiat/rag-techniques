@@ -1,6 +1,20 @@
 [
   {
     "date": "2026-07-21",
+    "file": "2026-07-21-phase2-what-you-need-to-do.html",
+    "title": "Phase 2: What You Need To Do",
+    "description": "2 real decisions needing your input (parsing audit eyeball, llama-cloud migration call), plus everything already handled for transparency.",
+    "branch": "phase2-ingestion-parsing"
+  },
+  {
+    "date": "2026-07-21",
+    "file": "2026-07-21-phase2-what-i-did.html",
+    "title": "Phase 2: What I Did",
+    "description": "Ingestion & Parsing Pipeline built via subagent-driven TDD; 3 real bugs found and fixed against live SEC EDGAR + LlamaParse data.",
+    "branch": "phase2-ingestion-parsing"
+  },
+  {
+    "date": "2026-07-21",
     "file": "2026-07-21-phase2-plan.html",
     "title": "Phase 2 Plan: Ingestion & Parsing Pipeline",
     "description": "The 7-task implementation plan for SEC 10-K ingestion/parsing, with Active vs Passive human-intervention points called out explicitly.",
