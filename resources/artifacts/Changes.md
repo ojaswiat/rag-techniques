@@ -50,3 +50,28 @@ Simple running list of changes made to the project after the proposal was submit
   explicitly print and eyeball a sample of real nodes for these two
   specific failure signs, rather than only checking node counts, so the
   gap the reviewer identified doesn't fall through unchecked.
+
+- 2026-07-21: Task 6's Step 3b ran against the real AAPL_2025 filing (682
+  nodes). Result: all 22 real "Item N." section headers were attributed
+  correctly (no false negatives observed) -- Concern #1 did not manifest on
+  this filing. Concern #2 DID manifest once: one exhibit-index table (a
+  caption line "Incorporated by Reference" directly above the table rows,
+  no blank line between them) was misclassified as node_type: text instead
+  of table. Per the plan's own Step 3b instruction (fix it immediately if
+  either failure mode shows up, since Task 5's audit and Phase 4 build on
+  top of this corpus), fixed ingest/node_builder.py's _is_table_block()
+  right away: it now checks for at least 2 pipe-led lines anywhere in the
+  block (a real table's header + at least one data row), not just the
+  block's first line. Added a regression test
+  (test_build_nodes_classifies_captioned_table_as_table) reproducing the
+  exact real-world shape found. Re-ran the throttled ingestion (hit the 48h
+  parse cache, no LlamaParse credits re-spent) and confirmed 0 remaining
+  misclassified nodes and the exhibit table now correctly tagged table.
+  Also observed (not fixed, logged as cosmetic): 174 of 682 nodes have a
+  raw # character leaked into content -- these are all front-matter/
+  cover-page headings (e.g. "# FORM 10-K", "# Apple Inc.") that the header
+  regex correctly does NOT treat as an Item-section header (they aren't
+  one), but the raw markdown syntax isn't stripped from the resulting text
+  node either. Does not corrupt Item-header attribution or table
+  atomicity -- the two things this check specifically guards -- so left as
+  a known cosmetic gap rather than an urgent fix.
