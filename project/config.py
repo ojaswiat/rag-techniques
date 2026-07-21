@@ -8,6 +8,7 @@ load_dotenv(Path(__file__).parent / ".env")
 
 GROQ_API_KEY: str | None = os.getenv("GROQ_API_KEY")
 LLAMA_CLOUD_API_KEY: str | None = os.getenv("LLAMA_CLOUD_API_KEY")
+SEC_EDGAR_USER_AGENT: str = os.getenv("SEC_EDGAR_USER_AGENT", "rag-techniques-benchmark unknown@example.com")
 
 LOCAL_TEST_THROTTLE: bool = os.getenv("LOCAL_TEST_THROTTLE", "true").lower() == "true"
 THROTTLE_LIMIT: int = 3
