@@ -1,5 +1,5 @@
 {
-  "profileVersion": 1,
+  "profileVersion": 2,
   "project": {
     "name": "rag-techniques",
     "vcs": "git"

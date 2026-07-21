@@ -1,1 +1,9 @@
-[]
+[
+  {
+    "date": "2026-07-21",
+    "file": "2026-07-21-phase1-environment-infra.html",
+    "title": "Phase 1: Environment, Infrastructure & Cost Guardrails",
+    "description": "Repo skeleton, five-table SQLite state layer, Groq client, and rate-limit scaffolding — built via subagent-driven TDD, gated by per-task and whole-branch review.",
+    "branch": "phase1-environment-infra"
+  }
+]
