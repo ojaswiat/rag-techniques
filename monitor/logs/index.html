@@ -105,8 +105,8 @@
   <div class="masthead" id="top">
     <span><span class="brand">rag-techniques</span> · Monitor · Logs</span>
     <span class="mh-right">
-      <span class="branchchip" title="Branch: phase1-environment-infra"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">phase1-environment-infra</span></span>
-      <span class="mono">2026-07-21 13:08</span>
+      <span class="branchchip" title="Branch: main"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">main</span></span>
+      <span class="mono">2026-07-21 13:42</span>
     </span>
   </div>
 
@@ -117,12 +117,12 @@
   </header>
 
   <div class="kpis">
-    <div class="kpi"><div class="label">Current branch</div><div class="value small mono">phase1-environment-infra</div></div>
-    <div class="kpi"><div class="label">Total ops</div><div class="value">6</div></div>
-    <div class="kpi pass"><div class="label">Success</div><div class="value">6</div></div>
+    <div class="kpi"><div class="label">Current branch</div><div class="value small mono">main</div></div>
+    <div class="kpi"><div class="label">Total ops</div><div class="value">7</div></div>
+    <div class="kpi pass"><div class="label">Success</div><div class="value">7</div></div>
     <div class="kpi warn"><div class="label">Partial</div><div class="value">0</div></div>
     <div class="kpi fail"><div class="label">Failure</div><div class="value">0</div></div>
-    <div class="kpi"><div class="label">Last activity</div><div class="value small mono">2026-07-21 13:08:32,711</div></div>
+    <div class="kpi"><div class="label">Last activity</div><div class="value small mono">2026-07-21 13:42:13,411</div></div>
   </div>
 
   <fieldset class="filter" aria-label="Filter by status">
@@ -136,6 +136,23 @@
   </fieldset>
 
   <div class="log">
+  <article class="logcard success">
+    <div class="row">
+      <time>2026-07-21 13:42:13,411</time>
+      <span class="op">phase2-plan-authoring</span>
+      <span class="toolchip">Claude Code (superpowers:writing-plans)</span>
+      <span class="branchchip" title="Branch: main"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">main</span></span>
+      <span class="spacer"></span>
+      <span class="tag pass">SUCCESS</span>
+    </div>
+    <p class="summary">Wrote the Phase 2 (Ingestion &amp; Parsing) implementation plan: 7 tasks covering filings manifest, SEC EDGAR fetch, LlamaParse, node_builder, and the 20-section audit</p>
+    <p class="task"><b>Task</b> Phase 2: Ingestion &amp; Parsing Pipeline (planning)</p>
+    <div class="files"><span class="file">docs/superpowers/plans/2026-07-21-phase2-ingestion-parsing.md</span></div>
+    <details>
+      <summary>Details</summary>
+      <p>Read Phase Plan.md/Architecture.md/Project Idea.md/Budget.md/Guardrails.md Phase 2 sections plus §0/§11 open items. Key design decision: fetch_filings.py resolves real filing URLs at runtime from SEC EDGAR&#x27;s public JSON APIs (company_tickers.json + submissions API) rather than hardcoding accession numbers, to avoid any risk of a fabricated URL. Flagged 2 Active and 3 Passive human-intervention points directly in the plan&#x27;s Human Intervention Ledger: (1) confirming the exact filing corpus (Architecture.md §11 leaves this open, only gives an illustrative AAPL/MSFT/TSLA example), (2) a real LLAMA_CLOUD_API_KEY for the live parse smoke test, (3) SEC EDGAR User-Agent auto-filled passively, (4) audit-report eyeballing is inherently a human judgement call, (5) all three prerequisites converging at the Task 6 end-to-end run.</p>
+    </details>
+  </article>
   <article class="logcard success">
     <div class="row">
       <time>2026-07-21 13:08:32,711</time>
@@ -240,7 +257,7 @@
   </article>
   </div>
 
-  <footer><span>Rendered from monitor/logs/operations.log · 6 entries.</span><span><a href="../index.html">← Dashboard</a> · <a href="#top">↑ Back to Top</a></span></footer>
+  <footer><span>Rendered from monitor/logs/operations.log · 7 entries.</span><span><a href="../index.html">← Dashboard</a> · <a href="#top">↑ Back to Top</a></span></footer>
 
 </div>
 </body>

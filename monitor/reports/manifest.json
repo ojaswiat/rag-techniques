@@ -1,6 +1,13 @@
 [
   {
     "date": "2026-07-21",
+    "file": "2026-07-21-phase2-plan.html",
+    "title": "Phase 2 Plan: Ingestion & Parsing Pipeline",
+    "description": "The 7-task implementation plan for SEC 10-K ingestion/parsing, with Active vs Passive human-intervention points called out explicitly.",
+    "branch": "main"
+  },
+  {
+    "date": "2026-07-21",
     "file": "2026-07-21-code-tour-for-beginners.html",
     "title": "Code Tour — Where Everything Lives",
     "description": "A plain-English, kid-friendly map of Phase 1's code: folder tree, what each file does, an import diagram, and where to start reading.",
