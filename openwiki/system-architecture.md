@@ -93,10 +93,10 @@ Fixed per stage (`Guardrails.md` §2). This table is not a suggestion; the famil
 | Stage | Model | Where |
 |---|---|---|
 | Dataset generation | `openai/gpt-oss-120b` | Groq free |
-| Dataset critique (with search tool) | `Qwen3-32b` | Groq free |
+| Dataset critique (with search tool) | `Qwen3.6-27B` | Groq free |
 | P3 summary-index build (one-time) | `llama-3.1-8b-instant` | Groq free |
 | Pipeline answers, all of P1/P2/P3 | `Llama 3.3 70B` (shared) | Groq free |
-| Judge / scoring (no search tool) | `Qwen3-32b` | Groq free |
+| Judge / scoring (no search tool) | `Qwen3.6-27B` | Groq free |
 | Embeddings (P1) | `bge-small-en-v1.5` | Local CPU, $0 |
 | Re-ranker (P1) | `bge-reranker-base` | Local CPU, $0 |
 | BM25 (P2) | `rank_bm25` | Local CPU, $0 |

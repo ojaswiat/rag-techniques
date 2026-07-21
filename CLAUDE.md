@@ -100,10 +100,10 @@ When the project moves to the technical build, `resources/specs/Guardrails.md` i
 | Role | Model |
 |---|---|
 | Generator | `openai/gpt-oss-120b` |
-| Critic | `Qwen3-32b` (with search tool; no search for Judge) |
+| Critic | `Qwen3.6-27B` (with search tool; no search for Judge) |
 | P3 index build | `llama-3.1-8b-instant` |
 | Pipeline Answerer | `Llama 3.3 70B` |
-| Judge | `Qwen3-32b` |
+| Judge | `Qwen3.6-27B` |
 
 Generator ≠ Critic family; Answerer ≠ Judge family — this is an anti-self-grading invariant.
 
@@ -124,9 +124,39 @@ Every loop script must include a hardcoded `LOCAL_TEST_THROTTLE` boolean (forces
 
 ---
 
-## monitor
+## monitor — operations log + reports
 
-Monitoring, logging, and reporting rules live in the **monitor** skill (`SKILL.md`); per-project data is in `monitor/`.
+This project has **monitor** installed: a local logging/reporting workflow.
+It keeps a project-local `monitor/` folder — a Dashboard linking a **Reports**
+page (one self-contained HTML report per task/change) and a **Logs** page
+(rendered from `monitor/logs/operations.log`). Rules for using it live in
+the skill at `SKILL.md` (or `$CLAUDE_PLUGIN_ROOT/skills/monitor/SKILL.md`
+when installed as a plugin) — read it before running any command below.
+
+**When to use it:**
+- After a state-changing operation (edit+build+commit can be one entry) —
+  run `/monitor:log` or `/monitor:record` (log **and** report in one step).
+- After code changes specifically — write a report with `/monitor:report`
+  (or via `/monitor:record`). Never report a discussion or doc-only tweak.
+- On failure, log it anyway with `status=failure` and the real error —
+  don't skip logging just because the operation didn't succeed.
+
+**Commands:**
+| Command | Does |
+|---|---|
+| `/monitor:init` | First-time setup (idempotent). Run once per project. |
+| `/monitor:log` | Append one operation entry to the log. |
+| `/monitor:report` | Author one HTML report + rebuild the Reports index. |
+| `/monitor:record` | Log, and if code changed, report — in one step. |
+| `/monitor:update` | Re-detect + additively reconcile the profile, refresh assets. |
+| `/monitor:clean-logs <N>` | Delete the newest N log entries; re-render Logs. |
+| `/monitor:clean-reports <N>` | Delete the newest N reports; re-render Reports + Dashboard. |
+
+**Rules:**
+- Every command except `/monitor:init` requires `monitor/profile.json` to exist — it fails fast otherwise. Run init first if it's missing.
+- Never hand-edit `monitor/logs/operations.log` — always go through `logger.py` (via `/monitor:log` or `/monitor:record`); hand-edits desync the log from the rendered Logs page.
+- Reports are immutable snapshots — never rewrite an old report when the template changes; only new reports pick up new sections.
+- `monitor/profile.json` evolves additively only — `/monitor:update` adds detected fields, never removes or renames existing ones.
 
 ---
 
