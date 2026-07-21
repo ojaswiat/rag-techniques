@@ -980,6 +980,31 @@ Run: `cd /Users/ojaswi/Projects/rag-techniques/project && uv run python -m inges
 
 Expected: prints 3 lines like `AAPL_2025: 47 nodes` (one per throttled filing, exact node counts will vary with real filing content) — confirms fetch → parse → node_builder → SQLite insert all work end-to-end against real data.
 
+- [ ] **Step 3b: [Added after Task 4 review] Spot-check header attribution and node_type classification against real output**
+
+Task 4's reviewer flagged two real (non-atomicity-violating) risks in `node_builder.py`'s header regex and table-detection heuristic: both assume a blank line separates a `# Item...` header (or a table's first row) from surrounding content, which may not match LlamaParse's actual output shape for real 10-Ks. This step is the first real chance to check.
+
+Run: `cd /Users/ojaswi/Projects/rag-techniques/project && uv run python -c "
+import asyncio
+import database_manager as dbm
+
+async def main():
+    nodes = await dbm.get_nodes_by_document('benchmark.db', 'AAPL_2025')
+    with_header = sum(1 for n in nodes if n['parent_item_header'])
+    tables = sum(1 for n in nodes if n['node_type'] == 'table')
+    print(f'{len(nodes)} nodes total, {with_header} with a parent_item_header, {tables} tagged table')
+    for n in nodes[:5]:
+        print('---')
+        print('type:', n['node_type'], '| header:', n['parent_item_header'])
+        print(n['content'][:200])
+
+asyncio.run(main())
+"`
+
+Expected: most nodes should carry a non-null `parent_item_header` (SEC 10-Ks are almost entirely inside numbered Item sections), and at least a few nodes should be tagged `table` if the throttled filing's early pages contain any tables. Eyeball the first 5 printed nodes: does `content` ever start with a raw `#` character (a sign the header regex missed and leaked markdown syntax into a text node)? Does anything that looks like a table (rows of `|`-separated values) show up tagged `node_type: text` instead of `table`?
+
+If either failure mode shows up: this is a real bug in `node_builder.py`, not just a theoretical risk — fix it before Task 5's audit and Phase 4's dataset generation build on top of a corpus with corrupted metadata. If it doesn't show up on this filing, note in the Task 6 report that it wasn't observed on this sample, but remains an unverified edge case for markdown shapes not present in this particular filing.
+
 - [ ] **Step 4: Run the parsing audit against the real throttled data**
 
 Run: `cd /Users/ojaswi/Projects/rag-techniques/project && uv run python -c "

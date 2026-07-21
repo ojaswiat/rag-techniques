@@ -36,3 +36,17 @@ Simple running list of changes made to the project after the proposal was submit
   scope for a mid-task fix. Flagged for a human decision in
   `temp/phase2-human-actions.md` rather than silently deferred or silently
   migrated.
+
+- 2026-07-21: Amended the Phase 2 plan's Task 6 (End-to-end verification) to
+  add a new **Step 3b**, inserted right after the throttled ingestion run.
+  Reason: Task 4's reviewer confirmed two real risks in
+  `ingest/node_builder.py` — the section-header regex and the table/text
+  classifier both assume a blank line separates a header (or a table's
+  first row) from surrounding content, an assumption never tested against
+  real LlamaParse output. Neither risk breaks the "a table is never
+  bisected" hard invariant, but both can silently corrupt
+  `parent_item_header` attribution or `node_type` tagging, which Task 5's
+  audit and Phase 4's dataset generation depend on. Step 3b makes Task 6
+  explicitly print and eyeball a sample of real nodes for these two
+  specific failure signs, rather than only checking node counts, so the
+  gap the reviewer identified doesn't fall through unchecked.
