@@ -17,7 +17,7 @@ from tenacity import (
 
 import config
 
-_client = AsyncGroq(api_key=config.GROQ_API_KEY)
+_client = AsyncGroq(api_key=config.GROQ_API_KEY or "placeholder-key-for-import-only")
 _semaphore = asyncio.Semaphore(config.GROQ_MAX_CONCURRENCY)
 
 
