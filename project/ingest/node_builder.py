@@ -17,7 +17,14 @@ def _is_table_block(block: str) -> bool:
     lines = [line for line in block.splitlines() if line.strip()]
     if not lines:
         return False
-    return lines[0].strip().startswith("|")
+    # Checking only the first line missed real tables preceded by a caption
+    # line with no blank line before the rows (e.g. an exhibit index),
+    # confirmed against real LlamaParse output in Phase 2 Task 6. Requiring
+    # at least 2 pipe-led lines anywhere in the block (a real table's header
+    # row + at least one data/separator row) avoids misclassifying prose
+    # that merely mentions a single "|" character.
+    table_lines = sum(1 for line in lines if line.strip().startswith("|"))
+    return table_lines >= 2
 
 
 def build_nodes(document_id: str, ticker: str, fiscal_year: int, markdown_text: str) -> list[dict]:
