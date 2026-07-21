@@ -120,10 +120,18 @@ async def upsert_result(db_path: str, row: dict) -> None:
         "latency_sec", "input_tokens", "output_tokens",
     )
     placeholders = ", ".join(f":{c}" for c in columns)
+
+    # Serialize JSON columns: retrieved_node_ids is always list[str],
+    # cited_node_ids is list[str] | None
+    params = {c: row.get(c) for c in columns}
+    params["retrieved_node_ids"] = _dumps(row["retrieved_node_ids"])
+    if row.get("cited_node_ids") is not None:
+        params["cited_node_ids"] = _dumps(row["cited_node_ids"])
+
     async with aiosqlite.connect(db_path) as conn:
         await conn.execute(
             f"INSERT INTO results ({', '.join(columns)}) VALUES ({placeholders})",
-            {c: row.get(c) for c in columns},
+            params,
         )
         await conn.commit()
 
