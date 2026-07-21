@@ -15,6 +15,10 @@ MANIFEST_PATH = "data/filings_manifest.json"
 
 
 async def ingest_one(entry: dict) -> int:
+    existing = await dbm.get_nodes_by_document(DB_PATH, entry["document_id"])
+    if existing:
+        return len(existing)
+
     raw_path = await fetch_filing(entry["ticker"], entry["fiscal_year"], entry["document_id"])
     parsed_path = await parse_filing(entry["document_id"], raw_path)
     with open(parsed_path) as f:
