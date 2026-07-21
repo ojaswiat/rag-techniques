@@ -154,7 +154,7 @@ The **Generator and Critic use different model families** to break the circular-
                                       v
                        +------------------------------+
                        |   Critic Agent               |
-                       |   (Qwen3-32b) + SEARCH TOOL  |
+                       |   (Qwen3.6-27B) + SEARCH TOOL  |
                        |   independent search over    |
                        |   ALL nodes of the filing    |
                        +------------------------------+
@@ -179,9 +179,9 @@ The **Generator and Critic use different model families** to break the circular-
 * For each section the model outputs quadrant-appropriate questions plus the exact `gt_citations` (node IDs) and a detailed `ground_truth_answer` sourced directly from the material.
 * Questions accumulate across sections until each quadrant reaches its target count (25 PQ + 5 GQ + 5 JEQ per quadrant = 35/quadrant; 140 total).
 
-### Step 2 — Multi-Agent Adversarial Quality Control (Critic: `Qwen3-32b` + search tool)
+### Step 2 — Multi-Agent Adversarial Quality Control (Critic: `Qwen3.6-27B` + search tool)
 
-The Critic runs on **`Qwen3-32b`** — a deliberately different family from the gpt-oss Generator — so agreement reflects cross-architecture consensus:
+The Critic runs on **`Qwen3.6-27B`** — a deliberately different family from the gpt-oss Generator — so agreement reflects cross-architecture consensus:
 
 1. **Blind test:** the Critic receives *only* `query_text`. The ground-truth answer and node citations are redacted.
 2. **Independent search:** the Critic is given a **search tool over all parsed nodes of the filing** (not just the section the Generator saw) and must independently locate the answer and cite the node(s) it relied on. Searching the whole filing — rather than the single source section — is what makes the verification genuinely independent.
@@ -223,7 +223,7 @@ Teaching is not the same as proving the teaching worked. To certify the automate
 3. The Judge scores the same outputs, blind to the human scores.
 4. The **LLM-Judge Agreement Rate** is computed across the JEQ outputs. The Judge must reach **>80% agreement** before it is permitted to grade the full benchmark. If it fails, the Judge's rubric or model is changed and the check repeats.
 
-> If `Qwen3-32b` cannot clear the >80% bar, there are 3 fallback options:
+> If `Qwen3.6-27B` cannot clear the >80% bar, there are 3 fallback options:
 > 1. Swap the Judge to `openai/gpt-oss-120b` — still a different family from the Llama answerer, so the no-self-judging rule holds.
 > 2. Tune the scoring rubrics.
 > 3. Both.
@@ -285,7 +285,7 @@ PHASE 2 — JUDGE VALIDATION GATE  (cheap; runs FIRST)
         |                                                  |
         v                                                  v
   HUMAN scores 60                                  JUDGE scores 60
-  (by hand)                                        (Qwen3-32b, few-shot by GQ)
+  (by hand)                                        (Qwen3.6-27B, few-shot by GQ)
         \                                                  /
          \------------------> Agreement > 80% ? <---------/
                                 |            |
@@ -324,7 +324,7 @@ $$\text{Recall}@K = \frac{|\{\text{distinct GT nodes appearing in top-}K\}|}{|\{
 
 ### Pillar 2 — Answer-Quality Metrics
 
-* **LLM-as-a-Judge (1–10) — PRIMARY.** The Judge (`Qwen3-32b`) scores each pipeline output against the stored `ground_truth_answer` using the fixed rubric plus the 5 quadrant-matched GQ exemplars. Because it scores semantic correctness against a reference, it handles the long, multi-phrased answers in Q2/Q4 that string metrics cannot.
+* **LLM-as-a-Judge (1–10) — PRIMARY.** The Judge (`Qwen3.6-27B`) scores each pipeline output against the stored `ground_truth_answer` using the fixed rubric plus the 5 quadrant-matched GQ exemplars. Because it scores semantic correctness against a reference, it handles the long, multi-phrased answers in Q2/Q4 that string metrics cannot.
 * **Token-level F1 — SECONDARY (lexical).** Overlap between output and ground-truth text. Reported throughout but never primary.
 * **Exact Match — Q1/Q3 ONLY.** EM requires an exact string match, which is meaningful only for short canonical answers (direct extraction). It is reported for Q1/Q3 with **numeric normalisation** (so `$394.3B` = `394,300 million`) and is **not** used for Q2/Q4. For numeric answers a tolerance check (parse and compare within ε) is preferred over raw string match.
 * **Citation Audit — deterministic, code-only.** A code layer checks whether the node IDs cited in the output are a subset of the query's `gt_citations`. A correct-looking answer with mismatched citations is flagged as **coincidental correctness** and its score downgraded. This check is computed in code (not asked of the Judge), because LLMs are unreliable at comparing ID strings.
@@ -380,7 +380,7 @@ PHASE 1 — DATASET GENERATION
             |
             v
    [ Critic verifies independently
-     Qwen3-32b + search tool over all nodes ]
+     Qwen3.6-27B + search tool over all nodes ]
             |
             v
    [ Verified pool ] --- split into 3 DISJOINT sets --->
@@ -401,7 +401,7 @@ PHASE 2 — JUDGE VALIDATION   (GATE: runs BEFORE the full benchmark)
             +----------------------+----------------------+
             v                                              v
    [ HUMAN scores 60 ]                          [ Judge scores 60 ]
-                                                (Qwen3-32b, few-shot by GQ)
+                                                (Qwen3.6-27B, few-shot by GQ)
             |                                              |
             +----------------------+----------------------+
                                    v
@@ -421,7 +421,7 @@ PHASE 3 — FULL BENCHMARK   (uses PQ + the trusted judge)
      Answerer (shared): Llama 3.3 70B
             |
             v
-   [ Trusted judge (Qwen3-32b) + code metrics score everything ]
+   [ Trusted judge (Qwen3.6-27B) + code metrics score everything ]
             |
             v
    [ Results Store  ->  Analysis & Comparison ]
@@ -430,10 +430,10 @@ PHASE 3 — FULL BENCHMARK   (uses PQ + the trusted judge)
 MODEL ROUTING (summary)
 ==================================================================
    Dataset generation ....... openai/gpt-oss-120b     (Groq, free)
-   Dataset critique ......... Qwen3-32b + search tool (Groq, free)
+   Dataset critique ......... Qwen3.6-27B + search tool (Groq, free)
    P3 summary-index build ... llama-3.1-8b-instant    (Groq, free)
    Pipeline answers (P1/P2/P3) Llama 3.3 70B          (Groq, free)
-   Judge .................... Qwen3-32b, no search    (Groq, free)
+   Judge .................... Qwen3.6-27B, no search    (Groq, free)
    Embeddings ............... bge-small-en-v1.5        (local CPU, $0)
    Reranker (P1) ............ bge-reranker-base        (local CPU, $0)
    BM25 (P2) ................ rank_bm25                (local CPU, $0)
@@ -479,7 +479,7 @@ Running 900 generations + 900 judgements via synchronous loops is slow and fragi
 
 ### Groq Free-Tier Rate Limits — the binding constraint is the **token-per-day (TPD)** ceiling, not request count
 
-Free-tier limits are per-model and **per-organization** (extra API keys do not raise the ceiling). As verified mid-2026, `llama-3.3-70b-versatile` is published at ~30 RPM, ~1,000 RPD, ~12K TPM, and ~100K TPD; `openai/gpt-oss-120b` at ~30 RPM, ~1,000 RPD, ~8K TPM, ~200K TPD; `qwen/qwen3-32b` at ~60 RPM / ~6K TPM (TPM is its tight axis); `llama-3.1-8b-instant` allows far higher daily request volume. **The answer-generation and judging phases are token-heavy, so TPD — not RPD — is what gates throughput.** See `Budget.md` for the full reconciliation and the prompt-caching lever (cached tokens do not count toward limits). HTTP 429s are handled with `tenacity` exponential backoff + jitter (Guardrails §5). There is no spend ceiling to exhaust — only daily token throughput.
+Free-tier limits are per-model and **per-organization** (extra API keys do not raise the ceiling). As verified mid-2026, `llama-3.3-70b-versatile` is published at ~30 RPM, ~1,000 RPD, ~12K TPM, and ~100K TPD; `openai/gpt-oss-120b` at ~30 RPM, ~1,000 RPD, ~8K TPM, ~200K TPD; `qwen/qwen3.6-27b` at ~60 RPM / ~8K TPM (per `project/groq_limits.md`, live-verified 2026-07-21; TPM is its tight axis); `llama-3.1-8b-instant` allows far higher daily request volume. **The answer-generation and judging phases are token-heavy, so TPD — not RPD — is what gates throughput.** See `Budget.md` for the full reconciliation and the prompt-caching lever (cached tokens do not count toward limits). HTTP 429s are handled with `tenacity` exponential backoff + jitter (Guardrails §5). There is no spend ceiling to exhaust — only daily token throughput.
 
 ### Software Stack Version Instability (LlamaIndex Drift)
 
@@ -511,7 +511,7 @@ LlamaIndex changes rapidly with breaking syntax. Code must pin exact versions (e
 
 1. **Standardised context volumes.** To keep P1, P2, and P3 comparable, the total context mass (token volume passed to the answerer) is held constant across pipelines at each value of K.
 2. **No leakage to the pipelines.** The pipelines receive *only* retrieved nodes + the query — never few-shot exemplars, never ground-truth answers or citations, and (per the dropped metadata pre-filter) no answer-location hints. This is what keeps the retrieval comparison honest.
-3. **Separation of model roles.** Generator (`gpt-oss-120b`) ≠ Critic (`Qwen3-32b`); Answerer (`Llama 3.3 70B`) ≠ Judge (`Qwen3-32b`). No model grades its own output, and dataset agreement reflects cross-architecture consensus.
+3. **Separation of model roles.** Generator (`gpt-oss-120b`) ≠ Critic (`Qwen3.6-27B`); Answerer (`Llama 3.3 70B`) ≠ Judge (`Qwen3.6-27B`). No model grades its own output, and dataset agreement reflects cross-architecture consensus.
 4. **Validated automated judging.** The automated Judge is trusted only after clearing the >80% human-agreement gate (Phase 2) on a held-out set (JEQ) that is disjoint from its teaching set (GQ).
 5. **Explicit citation enforcement.** RAG prompts mandate node-ID source attributions so the Citation Audit can flag coincidental correctness.
 6. **Methodological transparency.** The methodology chapter documents all six architectural iterations and gives engineering-based justifications for the in-scope three (P1/P2/P3) and the reserved three (P4/P5/P6), establishing a clear narrative of deliberate scoping around the core semantic-vs-statistical comparison, with structural RAG as a third paradigm.

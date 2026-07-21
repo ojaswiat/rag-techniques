@@ -105,8 +105,8 @@
   <div class="masthead" id="top">
     <span><span class="brand">rag-techniques</span> · Monitor · Logs</span>
     <span class="mh-right">
-      <span class="branchchip" title="Branch: main"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">main</span></span>
-      <span class="mono">2026-07-21 08:22</span>
+      <span class="branchchip" title="Branch: phase1-environment-infra"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">phase1-environment-infra</span></span>
+      <span class="mono">2026-07-21 13:08</span>
     </span>
   </div>
 
@@ -117,12 +117,12 @@
   </header>
 
   <div class="kpis">
-    <div class="kpi"><div class="label">Current branch</div><div class="value small mono">main</div></div>
-    <div class="kpi"><div class="label">Total ops</div><div class="value">1</div></div>
-    <div class="kpi pass"><div class="label">Success</div><div class="value">1</div></div>
+    <div class="kpi"><div class="label">Current branch</div><div class="value small mono">phase1-environment-infra</div></div>
+    <div class="kpi"><div class="label">Total ops</div><div class="value">6</div></div>
+    <div class="kpi pass"><div class="label">Success</div><div class="value">6</div></div>
     <div class="kpi warn"><div class="label">Partial</div><div class="value">0</div></div>
     <div class="kpi fail"><div class="label">Failure</div><div class="value">0</div></div>
-    <div class="kpi"><div class="label">Last activity</div><div class="value small mono">2026-07-21 08:22:49,760</div></div>
+    <div class="kpi"><div class="label">Last activity</div><div class="value small mono">2026-07-21 13:08:32,711</div></div>
   </div>
 
   <fieldset class="filter" aria-label="Filter by status">
@@ -136,6 +136,92 @@
   </fieldset>
 
   <div class="log">
+  <article class="logcard success">
+    <div class="row">
+      <time>2026-07-21 13:08:32,711</time>
+      <span class="op">code-tour-report</span>
+      <span class="toolchip">Claude Code (graphify + ui-ux-pro-max + monitor)</span>
+      <span class="branchchip" title="Branch: phase1-environment-infra"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">phase1-environment-infra</span></span>
+      <span class="spacer"></span>
+      <span class="tag pass">SUCCESS</span>
+    </div>
+    <p class="summary">Authored a beginner/non-technical HTML code tour explaining Phase 1&#x27;s file layout, per-file responsibilities, and import relationships</p>
+    <p class="task"><b>Task</b> Phase 1 documentation / onboarding</p>
+    <div class="files"><span class="file">monitor/reports/2026-07-21-code-tour-for-beginners.html</span></div>
+    <details>
+      <summary>Details</summary>
+      <p>Used graphify explain/query on the 4 project/ Python files to derive the accurate import + function-contains graph (config.py is imported by database_manager.py, groq_client.py, loop_template.py, and all 4 test files import their matching module; no sideways imports between the three consumer modules). Used ui-ux-pro-max --design-system to pick a Claymorphism style (playful, rounded, high-contrast, indigo/orange, Baloo 2 + Comic Neue) suited to a non-technical/child-friendly audience per the user&#x27;s explicit ask. Included the real &#x27;tree .&#x27; output as the folder map. Logged and reported per user&#x27;s explicit instruction to use graphify, ui-ux-pro-max, and monitor together.</p>
+    </details>
+  </article>
+  <article class="logcard success">
+    <div class="row">
+      <time>2026-07-21 12:39:12,597</time>
+      <span class="op">phase1-final-review-fixes</span>
+      <span class="toolchip">Claude Code (Opus whole-branch review + Sonnet fix)</span>
+      <span class="branchchip" title="Branch: phase1-environment-infra"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">phase1-environment-infra</span></span>
+      <span class="spacer"></span>
+      <span class="tag pass">SUCCESS</span>
+    </div>
+    <p class="summary">Whole-branch review found 2 Important cross-task issues invisible to per-task gates: groq_client.py failed to import with no API key (breaks fresh-clone test collection), and a stale ~6K Qwen TPM figure survived in 2 spec files after a partial earlier fix. Both fixed and re-reviewed clean.</p>
+    <p class="task"><b>Task</b> Phase 1 final whole-branch review</p>
+    <div class="files"><span class="file">project/groq_client.py</span><span class="file">resources/specs/Budget.md</span><span class="file">resources/specs/Project Idea.md</span><span class="file">project/groq_limits.md</span></div>
+    <details>
+      <summary>Details</summary>
+      <p>Fix 1: groq_client._client now falls back to a placeholder string via &#x27;config.GROQ_API_KEY or placeholder&#x27; when no key is set, so the module imports cleanly on a keyless fresh clone (Phase 2 onboarding requirement) while real-key behavior is unchanged. Fix 2: corrected remaining ~6K -&gt; ~8K Qwen TPM references in resources/specs/Budget.md prose note and resources/specs/Project Idea.md section 9, citing project/groq_limits.md&#x27;s live-verified figure. Also reworded a &#x27;tightest token-window&#x27; mislabel in groq_limits.md (12000 was actually the largest value, not tightest). Re-review: Ready to merge, no new issues.</p>
+    </details>
+  </article>
+  <article class="logcard success">
+    <div class="row">
+      <time>2026-07-21 12:39:12,422</time>
+      <span class="op">groq-model-availability-check</span>
+      <span class="toolchip">Claude Code (live Groq API + human decision)</span>
+      <span class="branchchip" title="Branch: phase1-environment-infra"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">phase1-environment-infra</span></span>
+      <span class="xchip">severity: notable</span>
+      <span class="spacer"></span>
+      <span class="tag pass">SUCCESS</span>
+    </div>
+    <p class="summary">Discovered Groq no longer hosts qwen/qwen3-32b (spec-mandated Critic/Judge model, 404 on all routes); human approved swap to qwen/qwen3.6-27b project-wide</p>
+    <p class="task"><b>Task</b> Phase 1 Task 5</p>
+    <div class="files"><span class="file">project/config.py</span><span class="file">resources/artifacts/Changes.md</span></div>
+    <details>
+      <summary>Details</summary>
+      <p>Task 5&#x27;s live smoke test (5 model routes) returned 404 model_not_found for qwen3-32b on both Critic and Judge routes; models.list() confirmed only qwen/qwen3.6-27b available on this Groq account. Asked human for direction rather than guessing. Human approved the swap AND asked for it to be applied everywhere in the project, not just project/config.py, plus a Changes.md changelog. Applied to: project/config.py, CLAUDE.md, resources/specs/{Guardrails,Architecture,Budget,Project Idea,Phase Plan}.md, openwiki/*.md, temp/directory-structure.md. Anti-self-grading invariant re-verified (qwen != openai != llama families) after the swap, live, via call_groq on all 5 routes -- all OK.</p>
+    </details>
+  </article>
+  <article class="logcard success">
+    <div class="row">
+      <time>2026-07-21 12:39:12,243</time>
+      <span class="op">json-boundary-fix</span>
+      <span class="toolchip">Claude Code (subagent fix)</span>
+      <span class="branchchip" title="Branch: phase1-environment-infra"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">phase1-environment-infra</span></span>
+      <span class="spacer"></span>
+      <span class="tag pass">SUCCESS</span>
+    </div>
+    <p class="summary">Fixed database_manager.upsert_result to serialize retrieved_node_ids/cited_node_ids internally, closing an Architecture.md §4.4 JSON-boundary gap flagged in Task 2 review</p>
+    <p class="task"><b>Task</b> Phase 1 Task 2</p>
+    <div class="files"><span class="file">project/database_manager.py</span><span class="file">project/tests/test_database_manager.py</span></div>
+    <details>
+      <summary>Details</summary>
+      <p>Reviewer found _dumps/_loads helpers existed but were dead code -- callers had to pre-serialize JSON themselves, violating the &#x27;database_manager.py is the only module that touches raw JSON&#x27; invariant. Asked human: fix now vs later. Human chose fix now. upsert_result now accepts list[str] and serializes internally; None stays NULL for nullable cited_node_ids.</p>
+    </details>
+  </article>
+  <article class="logcard success">
+    <div class="row">
+      <time>2026-07-21 12:39:12,063</time>
+      <span class="op">phase1-infra-build</span>
+      <span class="toolchip">Claude Code (subagent-driven-development)</span>
+      <span class="branchchip" title="Branch: phase1-environment-infra"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">phase1-environment-infra</span></span>
+      <span class="spacer"></span>
+      <span class="tag pass">SUCCESS</span>
+    </div>
+    <p class="summary">Built Phase 1 environment/infra: config.py, database_manager.py (5-table WAL SQLite), groq_client.py (backoff+semaphore), loop_template.py, all via fresh-subagent-per-task TDD with task review gates</p>
+    <p class="task"><b>Task</b> Phase 1: Environment, Infrastructure &amp; Cost Guardrails</p>
+    <div class="files"><span class="file">project/config.py</span><span class="file">project/database_manager.py</span><span class="file">project/groq_client.py</span><span class="file">project/loop_template.py</span></div>
+    <details>
+      <summary>Details</summary>
+      <p>Tasks 1-4 each: implementer subagent writes failing test first, implements, self-reviews, commits; separate reviewer subagent verifies spec compliance + quality per task before advancing. All 4 tasks approved on first or second pass. 15 tests passing across test_config.py, test_database_manager.py, test_groq_client_backoff.py, test_loop_template.py.</p>
+    </details>
+  </article>
   <article class="logcard success">
     <div class="row">
       <time>2026-07-21 08:22:49,760</time>
@@ -154,7 +240,7 @@
   </article>
   </div>
 
-  <footer><span>Rendered from monitor/logs/operations.log · 1 entries.</span><span><a href="../index.html">← Dashboard</a> · <a href="#top">↑ Back to Top</a></span></footer>
+  <footer><span>Rendered from monitor/logs/operations.log · 6 entries.</span><span><a href="../index.html">← Dashboard</a> · <a href="#top">↑ Back to Top</a></span></footer>
 
 </div>
 </body>

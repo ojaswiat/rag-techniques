@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Code Tour — Where Everything Lives — rag-techniques Report</title>
+<style>
+  :root {
+    --bg: #faf9f7; --surface: #ffffff; --text: #101418; --muted: #5a6472;
+    --accent: #16181a; --accent-ink: #ffffff; --border: #d6d3cd; --hairline: #eae7e1;
+    --code-bg: #f3f1ec; --pass: #15803d; --warn: #b45309; --fail: #b91c1c;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0b0d10; --surface: #0f1216; --text: #e9e7e2; --muted: #9aa3ad;
+      --accent: #f5c518; --accent-ink: #111111; --border: #2c333b; --hairline: #1d2229;
+      --code-bg: #14181e; --pass: #4ade80; --warn: #fbbf24; --fail: #f87171;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { transition: none !important; } }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 16px; line-height: 1.6; }
+  code, pre, .mono { font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px 80px; }
+  a { color: var(--accent); text-decoration: none; font-weight: 500; }
+  a:hover { text-decoration: underline; }
+  .masthead { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--border); font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+  .masthead .brand { color: var(--accent); font-weight: 700; }
+  .masthead .mh-right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: flex-end; }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+  .branchchip { display: inline-flex; align-items: center; gap: 5px; max-width: 34ch; border: 1px solid var(--border); background: var(--surface); padding: 2px 8px; font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; font-size: 0.72rem; font-weight: 500; color: var(--text); vertical-align: middle; }
+  .branchchip svg { width: 11px; height: 11px; flex: 0 0 auto; color: var(--accent); }
+  .back { display: inline-flex; align-items: center; gap: 6px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; }
+  .back svg { width: 13px; height: 13px; }
+  header.report { padding: 40px 0 20px; border-bottom: 3px solid var(--accent); }
+  header.report h1 { font-size: clamp(1.7rem, 4.5vw, 2.6rem); font-weight: 800; letter-spacing: -0.03em; line-height: 1.15; max-width: 30ch; }
+  header.report .subtitle { margin-top: 10px; color: var(--muted); font-size: 0.95rem; max-width: 70ch; }
+  .meta-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+  .chip { border: 1px solid var(--border); padding: 4px 10px; font-size: 0.74rem; color: var(--muted); }
+  .chip b { color: var(--accent); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-right: 6px; font-size: 0.68rem; }
+  .toc { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
+  .toc a { border: 1px solid var(--border); padding: 6px 14px; font-size: 0.74rem; font-weight: 700; letter-spacing: 0.04em; color: var(--muted); background: var(--surface); }
+  .toc a:hover { text-decoration: none; color: var(--text); border-color: var(--accent); }
+  section { margin-top: 36px; }
+  h2 { font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.12em; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 8px; margin-bottom: 14px; }
+  h3 { font-size: 0.95rem; font-weight: 700; margin: 18px 0 6px; }
+  p, li { font-size: 0.95rem; }
+  .lede { color: var(--muted); font-size: 0.92rem; margin-top: -4px; margin-bottom: 12px; }
+  ul, ol { padding-left: 1.3em; margin-top: 6px; }
+  li { margin-top: 4px; }
+
+  .note { border-left: 3px solid var(--warn); background: var(--code-bg); padding: 10px 14px; margin-top: 12px; font-size: 0.9rem; }
+  .note b { color: var(--warn); }
+
+  pre { background: var(--code-bg); border: 1px solid var(--hairline); padding: 14px; overflow-x: auto; font-size: 0.8rem; line-height: 1.6; }
+  code { background: var(--code-bg); padding: 1px 6px; font-size: 0.85em; }
+  pre code { background: none; padding: 0; }
+
+  .table-scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.9rem; margin-top: 6px; }
+  th { text-align: left; padding: 8px 12px; font-size: 0.64rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent); border-bottom: 2px solid var(--accent); }
+  td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--hairline); vertical-align: top; }
+  tbody tr:hover { background: var(--code-bg); }
+
+  .tag { display: inline-block; border: 1px solid currentColor; padding: 1px 8px; font-size: 0.66rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; font-family: "SF Mono", ui-monospace, Menlo, monospace; white-space: nowrap; }
+  .tag.pass { color: var(--pass); } .tag.warn { color: var(--warn); } .tag.info { color: var(--accent); }
+
+  .filecard { border: 1px solid var(--border); padding: 16px 18px; margin-top: 14px; background: var(--surface); }
+  .filecard .fname { font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; font-weight: 700; font-size: 0.95rem; }
+  .filecard .job { margin-top: 6px; color: var(--text); }
+  .funclist { list-style: none; padding: 0; margin: 10px 0 0; display: flex; flex-direction: column; gap: 6px; }
+  .funclist li { background: var(--code-bg); border-left: 2px solid var(--accent); padding: 8px 12px; font-size: 0.87rem; margin-top: 0; }
+  .funclist code { background: none; padding: 0; font-weight: 700; }
+
+  .diagram { border: 1px solid var(--border); background: var(--surface); padding: 24px; margin-top: 14px; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .box { border: 1px solid var(--border); padding: 8px 16px; background: var(--code-bg); font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; font-size: 0.85rem; font-weight: 700; text-align: center; }
+  .box.center { background: var(--accent); color: var(--accent-ink); }
+  .row { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; margin: 8px 0; }
+  .arrow { font-size: 1rem; color: var(--muted); }
+  .arrow-label { font-size: 0.72rem; color: var(--muted); font-style: italic; }
+
+  .folder-tree { background: var(--code-bg); border: 1px solid var(--hairline); padding: 18px 20px; overflow-x: auto; font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; font-size: 0.78rem; line-height: 1.6; }
+  .folder-tree .hl { color: var(--accent); font-weight: 700; }
+  .folder-tree .hl2 { color: var(--pass); font-weight: 700; }
+  .folder-tree .dim { color: var(--muted); }
+
+  footer { margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; font-size: 0.78rem; color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="masthead" id="top">
+    <a class="back" href="index.html" aria-label="Back to reports"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>Back</a>
+    <span><span class="brand">rag-techniques</span> · Monitor · Report</span>
+    <span class="mh-right">
+      <span class="branchchip" title="Branch: phase1-environment-infra"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">phase1-environment-infra</span></span>
+      <span class="mono">2026-07-21</span>
+    </span>
+  </div>
+
+  <header class="report">
+    <h1>Code Tour — Where Everything Lives</h1>
+    <p class="subtitle">An AI wrote Phase 1's code; this is your map for reading it cold — what each folder is for, what each file does, which files talk to which, and where to start.</p>
+    <div class="meta-chips">
+      <span class="chip"><b>Generated</b><span class="mono">2026-07-21</span></span>
+      <span class="chip"><b>Branch</b><span class="mono">phase1-environment-infra</span></span>
+      <span class="chip"><b>Status</b><span class="tag pass">15/15 tests passing</span></span>
+    </div>
+    <div class="toc">
+      <a href="#map">The big map</a>
+      <a href="#tree">Full tree</a>
+      <a href="#files">The 4 files</a>
+      <a href="#diagram">Who talks to who</a>
+      <a href="#tests">The tests</a>
+      <a href="#start">Where to start reading</a>
+    </div>
+  </header>
+
+  <section id="map">
+    <h2>1 · The Big Map</h2>
+    <p class="lede">Two top-level things matter. Everything else is support furniture.</p>
+    <div class="table-scroll"><table><tbody>
+      <tr><th>Folder</th><th>What it's for</th><th>Should you touch it?</th></tr>
+      <tr><td><code>project/</code></td><td>The actual program. All the Python code lives here. This is what Phase 1 built.</td><td><span class="tag pass">Yes — this is the code</span></td></tr>
+      <tr><td><code>resources/specs/</code></td><td>The instruction manual the AI followed — the rules for what to build and why.</td><td><span class="tag warn">Read only, rarely edit</span></td></tr>
+      <tr><td><code>resources/artifacts/</code></td><td>Finished documents: the proposal, and <code>Changes.md</code> (a running diary of things that changed from the original plan).</td><td><span class="tag warn">Read only</span></td></tr>
+      <tr><td><code>docs/superpowers/plans/</code></td><td>The step-by-step build plan the AI followed, task by task.</td><td><span class="tag warn">Reference</span></td></tr>
+      <tr><td><code>monitor/</code></td><td>An automatic diary + this very report. Every time work happens, an entry gets logged here.</td><td><span class="tag warn">Auto-generated</span></td></tr>
+      <tr><td><code>temp/</code></td><td>Scratch notes, including a plain-English report of "what does the human need to do."</td><td><span class="tag pass">Good starting reads</span></td></tr>
+      <tr><td><code>graphify-out/</code></td><td>A map of the whole project built automatically by graphify, so you can ask "where is X?" instead of reading everything.</td><td><span class="tag warn">Auto-generated</span></td></tr>
+    </tbody></table></div>
+    <div class="note"><b>In short:</b> <code>project/</code> is where the actual program lives. <code>resources/specs/</code> is the instruction manual it was built from. <code>monitor/</code> is the automatic activity log. <code>temp/</code> is the running to-do note for the human.</div>
+  </section>
+
+  <section id="tree">
+    <h2>2 · The Full Folder Tree</h2>
+    <p class="lede">This is the real output of running <code>tree .</code> in the project — every file that exists, for real.</p>
+    <div class="folder-tree">.
+├── .claude/                    <span class="dim">← Claude Code settings, not code</span>
+├── docs/superpowers/plans/
+│   └── 2026-07-21-phase1-environment-infra.md   <span class="dim">← the build plan</span>
+├── graphify-out/                <span class="dim">← auto-built map of everything</span>
+├── monitor/                      <span class="dim">← auto diary + reports (this page lives here)</span>
+│   ├── logs/operations.log
+│   └── reports/
+├── openwiki/                     <span class="dim">← auto-written wiki pages</span>
+├── <span class="hl">project/                       ← THE ACTUAL CODE (Phase 1 built this)</span>
+│   ├── .env                    <span class="dim">← secret keys, never shared/committed</span>
+│   ├── .env.example             <span class="dim">← template showing what keys are needed</span>
+│   ├── <span class="hl2">config.py                  ← settings: which AI model does what job</span>
+│   ├── <span class="hl2">database_manager.py         ← talks to the on-disk database</span>
+│   ├── <span class="hl2">groq_client.py              ← makes safe calls to the AI provider (Groq)</span>
+│   ├── <span class="hl2">loop_template.py            ← a safety switch used by every future script</span>
+│   ├── groq_limits.md            <span class="dim">← notes on how fast we're allowed to call the AI</span>
+│   ├── pyproject.toml             <span class="dim">← list of code libraries this project needs</span>
+│   ├── tests/                      <span class="hl2">← 15 automatic checks that prove the code works</span>
+│   │   ├── test_config.py
+│   │   ├── test_database_manager.py
+│   │   ├── test_groq_client_backoff.py
+│   │   └── test_loop_template.py
+│   └── uv.lock                      <span class="dim">← exact locked versions of every library</span>
+├── resources/
+│   ├── artifacts/
+│   │   └── Changes.md              <span class="dim">← diary of changes made after the original plan</span>
+│   └── specs/                       <span class="dim">← the instruction manual (Architecture, Guardrails, etc.)</span>
+├── temp/
+│   └── phase1-human-actions.md       <span class="dim">← "things a human still needs to do" list</span>
+└── TODO.md
+</div>
+  </section>
+
+  <section id="files">
+    <h2>3 · The 4 Files That Matter</h2>
+    <p class="lede">Everything else is scaffolding. These four Python files, inside <code>project/</code>, are Phase 1's actual work.</p>
+
+    <div class="filecard">
+      <div class="fname">project/config.py</div>
+      <div class="job">The settings sheet. It says which AI model handles which job, how many things can run at once, and a safety flag for "test mode."</div>
+      <ul class="funclist">
+        <li><code>MODEL_ROUTING</code> — a lookup table: "generator" uses one AI model, "judge" uses another, etc. Kept separate on purpose so no AI ever grades its own homework.</li>
+        <li><code>LOCAL_TEST_THROTTLE</code> — a true/false switch. When true, everything only processes 3 items at a time (for safe testing) instead of thousands.</li>
+        <li><code>GROQ_MAX_CONCURRENCY = 5</code> — never more than 5 things happening with the AI at once, so we don't get rate-limited.</li>
+      </ul>
+    </div>
+
+    <div class="filecard">
+      <div class="fname">project/database_manager.py</div>
+      <div class="job">The filing cabinet. Everything the project remembers — documents, questions, answers, scores — is stored in one file (a small database) that this module reads and writes.</div>
+      <ul class="funclist">
+        <li><code>init_db()</code> — builds the 5 empty drawers (tables) in the filing cabinet, if they don't exist yet.</li>
+        <li><code>insert_node()</code> — files away one chunk of a document.</li>
+        <li><code>get_nodes_by_document()</code> — fetches every chunk that belongs to one document.</li>
+        <li><code>upsert_result()</code> — records one experiment's result (which AI pipeline answered a question, how well it did).</li>
+        <li><code>get_completed_keys()</code> — checks "what have we already done?" so if the program crashes, it picks up where it left off instead of redoing work.</li>
+        <li><code>_dumps()</code> / <code>_loads()</code> — small helpers that convert lists into text (and back), because the filing cabinet can only store plain text.</li>
+      </ul>
+    </div>
+
+    <div class="filecard">
+      <div class="fname">project/groq_client.py</div>
+      <div class="job">The phone line to the AI. Every single call to the AI provider (Groq) goes through this one function, so retries and rate-limit rules apply everywhere consistently.</div>
+      <ul class="funclist">
+        <li><code>call_groq()</code> — "ask the AI this, using this model." If the AI says "slow down" (a 429 error), it automatically waits and tries again instead of crashing.</li>
+        <li><code>_is_rate_limit_error()</code> — a helper that recognizes the specific "slow down" error so it knows when to retry.</li>
+      </ul>
+    </div>
+
+    <div class="filecard">
+      <div class="fname">project/loop_template.py</div>
+      <div class="job">The training-wheels switch. Every future script that processes lots of items copies this exact pattern, so nobody accidentally runs a giant, expensive job by mistake while still debugging.</div>
+      <ul class="funclist">
+        <li><code>apply_throttle()</code> — if test mode is on, only keep the first 3 items from a list.</li>
+        <li><code>throttle_limit_clause()</code> — builds the text <code>"LIMIT 3"</code> for use in database queries.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="diagram">
+    <h2>4 · Who Talks to Who</h2>
+    <p class="lede">This picture comes straight from <code>graphify</code>, a tool that automatically reads the code and maps which file imports which. Arrows mean "needs / uses."</p>
+
+    <div class="diagram">
+      <div class="box center">config.py<br><span style="font-weight:400;font-size:0.8em;">(the settings sheet — everyone reads this)</span></div>
+      <div class="arrow">↑ ↑ ↑</div>
+      <div class="row">
+        <div class="box">database_manager.py</div>
+        <div class="box">groq_client.py</div>
+        <div class="box">loop_template.py</div>
+      </div>
+      <div class="arrow-label">all three of these import config.py to know their settings</div>
+      <div class="arrow">↑</div>
+      <div class="row">
+        <div class="box">tests/ (15 checks)</div>
+      </div>
+      <div class="arrow-label">the tests import all four files above to make sure they still work correctly</div>
+    </div>
+
+    <h3>Nobody imports anybody sideways</h3>
+    <p>Notice <code>database_manager.py</code>, <code>groq_client.py</code>, and <code>loop_template.py</code> don't talk to <em>each other</em> — they each only depend on <code>config.py</code>. That's on purpose: each file has exactly one job, so you can understand (or fix) one without needing to understand the others.</p>
+  </section>
+
+  <section id="tests">
+    <h2>5 · The Tests — Proof It Actually Works</h2>
+    <p class="lede">Every file above has a matching test file. Tests are little programs that check "does this really do what it's supposed to?" All 15 currently pass.</p>
+    <div class="table-scroll"><table><tbody>
+      <tr><th>Test file</th><th>Checks that&hellip;</th><th></th></tr>
+      <tr><td><code>test_config.py</code></td><td>the settings sheet has the right models, and no AI grades its own work</td><td><span class="tag pass">5/5 pass</span></td></tr>
+      <tr><td><code>test_database_manager.py</code></td><td>the filing cabinet builds correctly, saves and fetches data, and refuses duplicate entries</td><td><span class="tag pass">5/5 pass</span></td></tr>
+      <tr><td><code>test_groq_client_backoff.py</code></td><td>the AI phone line really does wait-and-retry on a "slow down" error, and never runs more than 5 at once</td><td><span class="tag pass">2/2 pass</span></td></tr>
+      <tr><td><code>test_loop_template.py</code></td><td>the training-wheels switch really does limit to 3 items when test mode is on</td><td><span class="tag pass">3/3 pass</span></td></tr>
+    </tbody></table></div>
+    <div class="note"><b>Why this matters for you:</b> you don't have to trust that the code works — you can run <code>cd project &amp;&amp; uv run pytest tests/ -v</code> yourself any time and watch all 15 pass, live, on your machine.</div>
+  </section>
+
+  <section id="start">
+    <h2>6 · Where to Start Reading (in order)</h2>
+    <ol>
+      <li><code>temp/phase1-human-actions.md</code> — plain-English list of what still needs your attention.</li>
+      <li><code>project/config.py</code> — shortest file, sets up everything else. Read this first.</li>
+      <li><code>project/database_manager.py</code> — the filing cabinet, a bit longer but each function is short and separate.</li>
+      <li><code>project/groq_client.py</code> — short, one real function (<code>call_groq</code>).</li>
+      <li><code>project/loop_template.py</code> — shortest of all, 2 tiny functions.</li>
+      <li><code>project/tests/</code> — each test file shows exactly how its matching code file is meant to be used, which often explains it better than the code itself.</li>
+      <li><code>resources/artifacts/Changes.md</code> — the one surprise so far: the AI model originally planned for two jobs (Critic, Judge) got discontinued by the provider mid-build, and was swapped for a replacement, with your approval.</li>
+    </ol>
+  </section>
+
+  <footer><span>Generated by the monitor workflow.</span><span><a href="index.html">← All reports</a> · <a href="#top">↑ Back to Top</a></span></footer>
+
+</div>
+</body>
+</html>

@@ -47,7 +47,7 @@ rag-techniques/                       # ROOT: assignment workspace — humans + 
     ├── dataset_gen/                  # Phase 4 — dataset generation & verification
     │   ├── async_generator.py        # Generator (gpt-oss-120b): per-section Q&A + citations
     │   ├── search_tool.py            # search-over-all-nodes tool for the Critic
-    │   ├── async_critic.py           # Critic (Qwen3-32b): blind independent verification
+    │   ├── async_critic.py           # Critic (Qwen3.6-27B): blind independent verification
     │   ├── cross_check.py            # deterministic node-ID + value cross-check
     │   ├── split_and_label.py        # split into PQ / GQ / JEQ (disjoint)
     │   └── label_gq.py               # human-labelling helper for the 20 GQ
@@ -67,7 +67,7 @@ rag-techniques/                       # ROOT: assignment workspace — humans + 
     ├── loop_executor.py              # shared async worker loop (throttle + resume)
     │
     ├── judge/                        # Phase 6 — judge build & validation gate
-    │   ├── async_judge.py            # Qwen3-32b, dynamic per-quadrant few-shot
+    │   ├── async_judge.py            # Qwen3.6-27B, dynamic per-quadrant few-shot
     │   ├── metrics.py                # Precision@K, Recall@K, Evidence Hit Rate, Citation Audit
     │   ├── numeric_normalizer.py     # numeric normalisation for Exact Match
     │   ├── score_gate_outputs.py     # scores the 60 JEQ gate outputs
