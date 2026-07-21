@@ -837,7 +837,9 @@ Expected: all tests from Tasks 1-4 pass (`config`, `database_manager`, `groq_cli
 
 - [ ] **Step 3: Confirm the disjoint-set constraint holds at the schema level**
 
-Run: `cd /Users/ojaswi/Projects/rag-techniques/project && uv run python -c "
+Run:
+```bash
+cd /Users/ojaswi/Projects/rag-techniques/project && uv run python -c "
 import asyncio, database_manager as dbm
 async def main():
     await dbm.init_db('smoke_test.db')
