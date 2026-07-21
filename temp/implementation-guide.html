@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>COMP702 Build Guide — Step-by-Step, AI/Human Labelled</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  :root{
+    --ink:#0A1F33; --p700:#15406B; --p600:#1C5485; --p500:#2B6CA3; --p400:#5089B8;
+    --p300:#82AAC9; --p200:#B4CBDE; --p100:#DCE6EE; --p50:#F2F6FA;
+    --n900:#1A1D21; --n700:#44494F; --n500:#767C84; --n300:#B7BCC2; --n100:#E4E6E9; --n50:#F7F8F9;
+    --gold700:#8C6D00; --gold500:#D4A017; --gold300:#E8C667; --gold100:#FBF0D6;
+    --ok:#0B8457; --err:#C73E35;
+  }
+  *{ box-sizing:border-box; }
+  html{ scroll-behavior:smooth; }
+  body{
+    margin:0; background:var(--p50); color:var(--n900);
+    font-family:Garamond, 'Times New Roman', serif; font-size:17px; line-height:1.6;
+  }
+  h1,h2,h3,h4,.sans{ font-family:Calibri, 'Segoe UI', Arial, sans-serif; }
+  a{ color:var(--p500); }
+  .wrap{ max-width:920px; margin:0 auto; padding:0 24px 90px; }
+  :focus-visible{ outline:3px solid var(--gold500); outline-offset:2px; }
+
+  /* Hero */
+  .hero{ background:linear-gradient(160deg, var(--ink) 0%, var(--p700) 100%); color:#fff; padding:56px 24px 40px; }
+  .hero .inner{ max-width:920px; margin:0 auto; }
+  .eyebrow{ font-family:Calibri, sans-serif; letter-spacing:.14em; text-transform:uppercase; font-size:12px; color:var(--p300); margin:0 0 14px; }
+  .hero h1{ font-size:30px; margin:0 0 12px; font-weight:700; max-width:760px; }
+  .hero p.sub{ color:var(--p200); font-family:Calibri,sans-serif; font-size:15px; max-width:680px; margin:0 0 24px; }
+
+  /* Legend */
+  .legend{ display:flex; gap:14px; flex-wrap:wrap; margin-top:8px; }
+  .legend-item{ display:flex; align-items:center; gap:8px; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.18);
+    border-radius:8px; padding:8px 14px; font-family:Calibri,sans-serif; font-size:13px; color:#fff; }
+  .legend-item .swatch{ width:14px; height:14px; border-radius:4px; flex-shrink:0; }
+  .swatch.ai{ background:var(--p300); }
+  .swatch.human{ background:var(--gold500); }
+
+  /* Overview stat bar */
+  .stat-bar{ display:flex; gap:16px; flex-wrap:wrap; margin:34px 0 10px; }
+  .stat{ flex:1; min-width:130px; background:#fff; border:1px solid var(--n300); border-radius:10px; padding:16px 18px; }
+  .stat .num{ font-family:Calibri,sans-serif; font-weight:700; font-size:26px; color:var(--p700); }
+  .stat .lbl{ font-family:Calibri,sans-serif; font-size:12px; color:var(--n500); text-transform:uppercase; letter-spacing:.05em; }
+
+  /* Table of contents */
+  nav.toc{ background:#fff; border:1px solid var(--n300); border-radius:10px; padding:20px 22px; margin:28px 0; }
+  nav.toc h2{ font-size:13px; letter-spacing:.1em; text-transform:uppercase; color:var(--p500); margin:0 0 12px; }
+  nav.toc ol{ margin:0; padding-left:20px; columns:2; column-gap:24px; font-family:Calibri,sans-serif; font-size:14px; }
+  nav.toc li{ margin-bottom:8px; break-inside:avoid; }
+  nav.toc a{ text-decoration:none; color:var(--n900); }
+  nav.toc a:hover{ color:var(--p700); text-decoration:underline; }
+  nav.toc .toc-badges{ font-size:11px; color:var(--n500); }
+
+  section.phase{ padding:44px 0; border-bottom:1px solid var(--n300); scroll-margin-top:16px; }
+  section.phase:last-of-type{ border-bottom:none; }
+  .phase-head{ display:flex; align-items:baseline; gap:14px; flex-wrap:wrap; margin-bottom:6px; }
+  .phase-num{ font-family:Calibri,sans-serif; font-weight:700; font-size:13px; color:#fff; background:var(--p700);
+    padding:4px 11px; border-radius:20px; }
+  h2.phase-title{ font-size:23px; color:var(--ink); margin:0; font-weight:700; }
+  .phase-week{ font-family:Calibri,sans-serif; font-size:13px; color:var(--n500); }
+  .phase-intro{ color:var(--n700); font-size:15.5px; max-width:800px; margin:10px 0 8px; }
+  .phase-split{ font-family:Calibri,sans-serif; font-size:12.5px; color:var(--n500); margin-bottom:22px; }
+  .phase-split b{ color:var(--p700); }
+
+  ol.steps{ list-style:none; margin:0; padding:0; counter-reset:step; }
+  ol.steps li{ counter-increment:step; position:relative; padding:14px 16px 14px 54px; margin-bottom:10px;
+    background:#fff; border:1px solid var(--n300); border-radius:9px; }
+  ol.steps li::before{ content:counter(step); position:absolute; left:14px; top:14px; width:26px; height:26px;
+    border-radius:50%; background:var(--p100); color:var(--p700); font-family:Calibri,sans-serif; font-weight:700;
+    font-size:13px; display:flex; align-items:center; justify-content:center; }
+  .step-text{ font-size:15px; color:var(--n900); display:block; margin-bottom:6px; }
+  .badge{ display:inline-flex; align-items:center; gap:5px; font-family:Calibri,sans-serif; font-size:11.5px;
+    font-weight:700; padding:3px 10px 3px 8px; border-radius:12px; letter-spacing:.02em; }
+  .badge.ai{ background:var(--p100); color:var(--p700); }
+  .badge.human{ background:var(--gold100); color:var(--gold700); }
+
+  .callout{ background:var(--gold100); border-left:3.5px solid var(--gold500); padding:14px 18px; border-radius:0 6px 6px 0;
+    font-size:14.5px; color:var(--n900); margin:16px 0; }
+  .callout b{ color:var(--gold700); }
+  .note{ background:var(--p100); border-left:4px solid var(--p700); padding:14px 18px; border-radius:0 6px 6px 0;
+    font-size:14.5px; color:var(--n900); margin:16px 0; }
+
+  code, .mono{ font-family:Consolas, 'SF Mono', monospace; font-size:.88em; background:var(--n100); padding:1px 5px; border-radius:3px; color:var(--ink); }
+
+  .back-top{ position:fixed; right:22px; bottom:22px; background:var(--p700); color:#fff; font-family:Calibri,sans-serif;
+    font-size:12px; padding:10px 14px; border-radius:24px; text-decoration:none; box-shadow:0 3px 10px rgba(0,0,0,.18); }
+  .back-top:hover{ background:var(--ink); }
+
+  footer{ padding:32px 24px; text-align:center; font-family:Calibri,sans-serif; font-size:12px; color:var(--n500); }
+
+  @media(max-width:640px){
+    nav.toc ol{ columns:1; }
+    .hero h1{ font-size:24px; }
+  }
+
+  @media (prefers-color-scheme: dark){
+    body{ background:#10151c; color:#dde3ea; }
+    section.phase{ border-bottom-color:#2a323d; }
+    .stat, nav.toc, ol.steps li{ background:#161c25; border-color:#2a323d; }
+    .phase-intro, .step-text{ color:#c2cad4; }
+    nav.toc a{ color:#dde3ea; }
+    ol.steps li::before{ background:#1d2836; color:var(--p300); }
+    code, .mono{ background:#232b36; color:#cfe0f0; }
+    .badge.ai{ background:#1d2836; color:var(--p300); }
+    .badge.human{ background:#2e2510; color:var(--gold300); }
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="inner">
+    <p class="eyebrow">COMP702 M.Sc. Dissertation — Build Guide</p>
+    <h1>How to build this RAG benchmark yourself, one step at a time</h1>
+    <p class="sub">Every phase broken into small, concrete steps. Each step is labelled so it's clear whether an AI agent can just do it, or whether it needs you — a real person, deciding or verifying something the whole study depends on. No code shown; every step is written so you could look up the tool yourself and do it by hand.</p>
+    <div class="legend">
+      <div class="legend-item"><span class="swatch ai"></span>🤖 AI-doable — an agent can complete this on its own</div>
+      <div class="legend-item"><span class="swatch human"></span>🙋 Human required — needs you specifically</div>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+<div class="stat-bar">
+  <div class="stat"><div class="num">99</div><div class="lbl">Total steps across 8 phases</div></div>
+  <div class="stat"><div class="num">77</div><div class="lbl">🤖 AI-doable steps (~78%)</div></div>
+  <div class="stat"><div class="num">22</div><div class="lbl">🙋 Human-required steps (~22%)</div></div>
+  <div class="stat"><div class="num">8</div><div class="lbl">Build phases, ~10 weeks</div></div>
+</div>
+
+<nav class="toc" aria-label="Table of contents">
+  <h2>Jump to a phase</h2>
+  <ol>
+    <li><a href="#phase1">Phase 1 — Environment &amp; Guardrails</a> <span class="toc-badges">(15 steps · 5 human)</span></li>
+    <li><a href="#phase2">Phase 2 — Ingestion &amp; Parsing</a> <span class="toc-badges">(14 steps · 3 human)</span></li>
+    <li><a href="#phase3">Phase 3 — P3 Summary-Index Build</a> <span class="toc-badges">(10 steps · 2 human)</span></li>
+    <li><a href="#phase4">Phase 4 — Dataset Generation &amp; Verification</a> <span class="toc-badges">(13 steps · 2 human)</span></li>
+    <li><a href="#phase5">Phase 5 — Pipeline Implementation</a> <span class="toc-badges">(13 steps · 1 human)</span></li>
+    <li><a href="#phase6">Phase 6 — Judge Build &amp; Validation Gate</a> <span class="toc-badges">(13 steps · 3 human)</span></li>
+    <li><a href="#phase7">Phase 7 — Full Benchmark Execution</a> <span class="toc-badges">(11 steps · 2 human)</span></li>
+    <li><a href="#phase8">Phase 8 — Results Consolidation &amp; Analysis</a> <span class="toc-badges">(10 steps · 4 human)</span></li>
+  </ol>
+</nav>
+
+<!-- PHASE 1 -->
+<section class="phase" id="phase1">
+  <div class="phase-head">
+    <span class="phase-num">Phase 1</span>
+    <h2 class="phase-title">Environment, Infrastructure &amp; Cost Guardrails</h2>
+    <span class="phase-week">Week 1</span>
+  </div>
+  <p class="phase-intro">Before touching any data, set up the accounts, the API keys, and the safety rails (rate-limit handling, a "test mode" switch, and the database) everything else will depend on. Nothing here calls an AI model for real — it just builds the plumbing.</p>
+  <p class="phase-split"><b>15 steps</b> · 10 🤖 AI · 5 🙋 Human</p>
+  <ol class="steps">
+    <li><span class="step-text">Create a free account at <span class="mono">console.groq.com</span> — this is the service that will run every AI model call in the project, for free, on a rate-limited (not billed) tier.</span><span class="badge human">🙋 Human required</span></li>
+    <li><span class="step-text">Generate a Groq API key from the account dashboard and copy it somewhere safe.</span><span class="badge human">🙋 Human required</span></li>
+    <li><span class="step-text">Create a free account at <span class="mono">cloud.llamaindex.ai</span> — this is LlamaParse, the tool that turns raw PDF/HTML filings into clean, structured text and tables.</span><span class="badge human">🙋 Human required</span></li>
+    <li><span class="step-text">Generate a LlamaParse API key and copy it somewhere safe.</span><span class="badge human">🙋 Human required</span></li>
+    <li><span class="step-text">Install Python (a recent version) and set up an isolated project environment so this project's libraries don't clash with anything else on the machine.</span><span class="badge ai">🤖 AI-doable</span></li>
+    <li><span class="step-text">Create a file named <span class="mono">.env</span> in the project folder with two empty placeholder entries: one for the Groq key, one for the LlamaParse key.</span><span class="badge ai">🤖 AI-doable</span></li>
+    <li><span class="step-text">Paste the two API keys from steps 2 and 4 into the <span class="mono">.env</span> file. This is the only place secrets are typed in by hand.</span><span class="badge human">🙋 Human required</span></li>
+    <li><span class="step-text">Write down the exact version number of every library the project depends on, so a future re-install can't silently break from an update.</span><span class="badge ai">🤖 AI-doable</span></li>
+    <li><span class="step-text">Install all the pinned libraries into the project environment.</span><span class="badge ai">🤖 AI-doable</span></li>
+    <li><span class="step-text">Design and create a small local database (SQLite) with five separate tables: one for parsed document chunks, one for the test questions, one for the "teaching" questions, one for the "judge validation" questions, and one for every result the project produces.</span><span class="badge ai">🤖 AI-doable</span></li>
+    <li><span class="step-text">Add a rule to the database layer that refuses to let the same question exist in more than one of the three question tables.</span><span class="badge ai">🤖 AI-doable</span></li>
+    <li><span class="step-text">Build a small wrapper around every AI-model call that automatically waits and retries if the service says "slow down" (a rate-limit error), instead of crashing.</span><span class="badge ai">🤖 AI-doable</span></li>
+    <li><span class="step-text">Limit the project to at most 5 AI-model calls happening at the same time, so the free tier is never overwhelmed.</span><span class="badge ai">🤖 AI-doable</span></li>
+    <li><span class="step-text">Add a simple on/off switch (a "test mode") to every script that calls an AI model, which — when on — limits it to processing just 3 items instead of the full batch.</span><span class="badge ai">🤖 AI-doable</span></li>
+    <li><span class="step-text">Look up Groq's current published rate limits (requests and tokens per day, per model) on their console and write them down with today's date, so later phases know what ceiling they're working under.</span><span class="badge ai">🤖 AI-doable</span></li>
+  </ol>
+</section>
+
+<!-- PHASE 2 -->
+<section class="phase" id="phase2">
+  <div class="phase-head">
+    <span class="phase-num">Phase 2</span>
+    <h2 class="phase-title">Ingestion &amp; Parsing Pipeline</h2>
+    <span class="phase-week">Weeks 1–3</span>
+  </div>
+  <p class="phase-intro">Turn a handful of raw SEC 10-K filings into a clean, well-organised store of text and table chunks. Every later measurement in the project traces back to a chunk created here, so getting this right matters more than any other single phase.</p>
+  <p class="phase-split"><b>14 steps</b> · 11 🤖 AI · 3 🙋 Human</p>
+  <ol class="steps">
+    <li><span class="step-text">Decide which 2–3 companies and which 2–3 fiscal years of their annual filings (10-Ks) to use as the study's dataset — this shapes the whole research narrative, so it's a judgment call, not a mechanical one.</span><span class="badge human">🙋 Human required</span></li>
+    <li><span class="step-text">Download the chosen 10-K filings from SEC EDGAR, the SEC's free public filings database.</span><span class="badge ai">🤖 AI-doable</span></li>
+    <li><span class="step-text">Configure LlamaParse to run in its "atomic table" mode, so tables come out as clean, intact Markdown instead of being cut into pieces.</span><span class="badge ai">🤖 AI-doable</span></li>
+    <li><span class="step-text">Run every filing through LlamaParse and collect the parsed narrative text and table blocks.</span><span class="badge ai">🤖 AI-doable</span></li>
+    <li><span class="step-text">Give every parsed chunk a permanent, unique ID (a "node ID") that will be used everywhere downstream instead of a page number.</span><span class="badge ai">🤖 AI-doable</span></li>
+    <li><span class="step-text">Tag every chunk with the section heading it belongs to (e.g. "Item 1A: Risk Factors"), so later steps know the surrounding context.</span><span class="badge ai">🤖 AI-doable</span></li>
+    <li><span class="step-text">Tag every chunk as either "text" or "table", since the project treats and measures the two differently.</span><span class="badge ai">🤖 AI-doable</span></li>
+    <li><span class="step-text">Keep the original page number as a separate, human-readable label only — never something a metric relies on, since PDF page numbers aren't reliable coordinates for HTML filings.</span><span class="badge ai">🤖 AI-doable</span></li>
+    <li><span class="step-text">Save every parsed and tagged chunk into the "nodes" table in the database.</span><span class="badge ai">🤖 AI-doable</span></li>
+    <li><span class="step-text">Cache every parsed filing to disk so it never has to be re-parsed (and re-billed against the free quota) if the process is re-run.</span><span class="badge ai">🤖 AI-doable</span></li>
+    <li><span class="step-text">Randomly pick 20 sections across the parsed filings to manually check for parsing problems.</span><span class="badge ai">🤖 AI-doable</span></li>
+    <li><span class="step-text">Actually read through those 20 sampled sections and check whether any table got cut in half, any column got truncated, or the Markdown looks broken.</span><span class="badge human">🙋 Human required</span></li>
+    <li><span class="step-text">Decide, for anything found broken, whether to re-parse it with adjusted settings or drop that filing from the dataset entirely.</span><span class="badge human">🙋 Human required</span></li>
+    <li><span class="step-text">Re-run parsing with any corrected settings and confirm the fixed sections now look clean.</span><span class="badge ai">🤖 AI-doable</span></li>
+  </ol>
+</section>
+
+<!-- PHASE 3 -->
+<section class="phase" id="phase3">
+  <div class="phase-head">
+    <span class="phase-num">Phase 3</span>
+    <h2 class="phase-title">P3 Summary-Index Build (one-time)</h2>
+    <span class="phase-week">Week 3</span>
+  </div>
+  <p class="phase-intro">Build the "summary tree" that the third retrieval strategy (structural search) will search over. This is the only index-building step allowed to use an AI model, and it only ever runs once per filing.</p>
+  <p class="phase-split"><b>10 steps</b> · 8 🤖 AI · 2 🙋 Human</p>
+  <ol class="steps">
+    <li><span class="step-text">Group the parsed chunks by section, so each group has a clear set of "child" chunks that will share one summary.</span><span class="badge ai">🤖 AI-doable</span></li>
+    <li><span class="step-text">Use a small, fast AI model to write one summary per group of child chunks.</span><span class="badge ai">🤖 AI-doable</span></li>
+    <li><span class="step-text">Stack those summaries into a tree structure, so broader summaries sit above more detailed ones.</span><span class="badge ai">🤖 AI-doable</span></li>
+    <li><span class="step-text">Save the finished tree to disk/database so it's never rebuilt from scratch again.</span><span class="badge ai">🤖 AI-doable</span></li>
+    <li><span class="step-text">Run the whole build once in "test mode" (only 3 items) to catch obvious bugs before spending real quota.</span><span class="badge ai">🤖 AI-doable</span></li>
+    <li><span class="step-text">Confirm the test-mode run finished cleanly with no errors before allowing the full build to proceed.</span><span class="badge human">🙋 Human required</span></li>
+    <li><span class="step-text">Release the test-mode limit and build the summary tree for every filing in full.</span><span class="badge ai">🤖 AI-doable</span></li>
+    <li><span class="step-text">Log how long the build took and how many AI tokens it used, since this feeds into the project's efficiency comparison later.</span><span class="badge ai">🤖 AI-doable</span></li>
+    <li><span class="step-text">Spot-check a few summaries from table-heavy sections to see whether important numbers or footnotes got dropped — this is an expected, documented weakness of this approach, and confirming it happens (rather than assuming) is the point.</span><span class="badge human">🙋 Human required</span></li>
+    <li><span class="step-text">Write a short note recording what was found in the spot-check, for later reference.</span><span class="badge ai">🤖 AI-doable</span></li>
+  </ol>
+</section>
+
+<!-- PHASE 4 -->
+<section class="phase" id="phase4">
+  <div class="phase-head">
+    <span class="phase-num">Phase 4</span>
+    <h2 class="phase-title">Dataset Generation &amp; Adversarial Verification</h2>
+    <span class="phase-week">Weeks 4–5</span>
+  </div>
+  <p class="phase-intro">Produce the 140 test questions the whole project will be graded on — using one AI model to write them and a completely different one to independently double-check them, so no single model's blind spots can bias the dataset.</p>
+  <p class="phase-split"><b>13 steps</b> · 11 🤖 AI · 2 🙋 Human</p>
+  <ol class="steps">
+    <li><span class="step-text">Split each filing into per-section pieces small enough to fit inside one AI model call.</span><span class="badge ai">🤖 AI-doable</span></li>
+    <li><span class="step-text">For each section, have the "Generator" AI model write candidate questions, their correct answers, and the exact node IDs that prove the answer.</span><span class="badge ai">🤖 AI-doable</span></li>
+    <li><span class="step-text">Hide the answer and the citation from a second, different "Critic" AI model — it only gets to see the question text.</span><span class="badge ai">🤖 AI-doable</span></li>
+    <li><span class="step-text">Give the Critic model a search tool that can look across every parsed chunk in the filing, not just the section the question came from.</span><span class="badge ai">🤖 AI-doable</span></li>
+    <li><span class="step-text">Let the Critic independently search for and cite its own answer to each question.</span><span class="badge ai">🤖 AI-doable</span></li>
+    <li><span class="step-text">Compare the Critic's independent answer and citations against the Generator's original ones, using a simple automated check (not another AI call).</span><span class="badge ai">🤖 AI-doable</span></li>
+    <li><span class="step-text">Keep questions where the two agree; throw out and regenerate any where they disagree.</span><span class="badge ai">🤖 AI-doable</span></li>
+    <li><span class="step-text">Repeat generation and verification until each of the four question types has 35 verified questions (140 total).</span><span class="badge ai">🤖 AI-doable</span></li>
+    <li><span class="step-text">Randomly split the 140 verified questions into three separate, non-overlapping groups: 100 for testing the pipelines, 20 for teaching the judge, and 20 for validating the judge.</span><span class="badge ai">🤖 AI-doable</span></li>
+    <li><span class="step-text">Run an automated check confirming none of the three groups share a single duplicate question.</span><span class="badge ai">🤖 AI-doable</span></li>
+    <li><span class="step-text">For each of the 20 "teaching" questions, read the question and its answer, then write a short note explaining why that answer deserves a good score.</span><span class="badge human">🙋 Human required</span></li>
+    <li><span class="step-text">Give each of those same 20 questions an example score from 1 to 10.</span><span class="badge human">🙋 Human required</span></li>
+    <li><span class="step-text">Save the human notes and scores into the database alongside their questions.</span><span class="badge ai">🤖 AI-doable</span></li>
+  </ol>
+</section>
+
+<!-- PHASE 5 -->
+<section class="phase" id="phase5">
+  <div class="phase-head">
+    <span class="phase-num">Phase 5</span>
+    <h2 class="phase-title">Pipeline Implementation (P1 / P2 / P3)</h2>
+    <span class="phase-week">Weeks 5–6</span>
+  </div>
+  <p class="phase-intro">Build the three retrieval strategies being compared, plus the single shared "answering" step they all use — so any difference in results comes from how each strategy finds evidence, not from how it writes the final answer.</p>
+  <p class="phase-split"><b>13 steps</b> · 12 🤖 AI · 1 🙋 Human</p>
+  <ol class="steps">
+    <li><span class="step-text">Build a local "meaning search" index (P1) using a small embedding model that runs on a normal computer, no paid API needed.</span><span class="badge ai">🤖 AI-doable</span></li>
+    <li><span class="step-text">Add a second local step that re-ranks P1's top candidates by relevance before they're used.</span><span class="badge ai">🤖 AI-doable</span></li>
+    <li><span class="step-text">Build a local "exact keyword" index (P2) using a pure statistical algorithm (no AI model involved at all).</span><span class="badge ai">🤖 AI-doable</span></li>
+    <li><span class="step-text">Write a custom text-splitting rule for P2 that keeps numbers, percentages, and currency symbols intact instead of breaking them apart.</span><span class="badge ai">🤖 AI-doable</span></li>
+    <li><span class="step-text">Confirm that same text-splitting rule behaves identically whether it's indexing documents or handling a live search query.</span><span class="badge ai">🤖 AI-doable</span></li>
+    <li><span class="step-text">Connect P3 to search over the summary tree built back in Phase 3.</span><span class="badge ai">🤖 AI-doable</span></li>
+    <li><span class="step-text">Write one shared prompt template that turns "a question plus some retrieved evidence" into a final answer, used identically by all three strategies.</span><span class="badge ai">🤖 AI-doable</span></li>
+    <li><span class="step-text">Set the shared answering model to the same, most-deterministic setting for every pipeline, so results aren't randomly different run to run.</span><span class="badge ai">🤖 AI-doable</span></li>
+    <li><span class="step-text">Make sure each pipeline only ever receives the question and its own retrieved evidence — never any hint about where the answer actually lives.</span><span class="badge ai">🤖 AI-doable</span></li>
+    <li><span class="step-text">Add a check confirming all three pipelines are given roughly the same total amount of evidence text at each retrieval depth, so the comparison stays fair.</span><span class="badge ai">🤖 AI-doable</span></li>
+    <li><span class="step-text">Run each of the three pipelines once in test mode to confirm they each produce a real answer.</span><span class="badge ai">🤖 AI-doable</span></li>
+    <li><span class="step-text">Read a handful of those test-mode answers and sanity-check that they actually look like reasonable responses to the questions.</span><span class="badge human">🙋 Human required</span></li>
+    <li><span class="step-text">Run an automated check confirming no pipeline is accidentally being given the ground-truth answer or citation.</span><span class="badge ai">🤖 AI-doable</span></li>
+  </ol>
+</section>
+
+<!-- PHASE 6 -->
+<section class="phase" id="phase6">
+  <div class="phase-head">
+    <span class="phase-num">Phase 6</span>
+    <h2 class="phase-title">Judge Build &amp; Validation Gate</h2>
+    <span class="phase-week">Weeks 6–7</span>
+  </div>
+  <p class="phase-intro">Build the automated grader (the "Judge") and then prove, against real human scoring, that it can be trusted before it's allowed to grade the full 900-run study. This gate is the single most important checkpoint in the whole project.</p>
+  <p class="phase-split"><b>13 steps</b> · 10 🤖 AI · 3 🙋 Human</p>
+  <ol class="steps">
+    <li><span class="step-text">Write a scoring rubric describing what makes an answer a 1 versus a 10.</span><span class="badge ai">🤖 AI-doable</span></li>
+    <li><span class="step-text">Build logic that, before grading any answer, only pulls in the 5 "teaching" examples matching that question's type — never all 20 at once.</span><span class="badge ai">🤖 AI-doable</span></li>
+    <li><span class="step-text">Cache the rubric plus those 5 examples so repeated grading calls reuse it for free instead of re-sending it every time.</span><span class="badge ai">🤖 AI-doable</span></li>
+    <li><span class="step-text">Build a plain-code check (no AI involved) confirming a pipeline's cited node IDs are actually a subset of the question's real evidence.</span><span class="badge ai">🤖 AI-doable</span></li>
+    <li><span class="step-text">Build a word-overlap scoring function as a secondary, lexical measure of answer quality.</span><span class="badge ai">🤖 AI-doable</span></li>
+    <li><span class="step-text">Build an exact-match scoring function (with numeric tolerance) for the two question types where a single correct value is expected.</span><span class="badge ai">🤖 AI-doable</span></li>
+    <li><span class="step-text">Run the 20 "validation" questions through all three pipelines to produce 60 real answers.</span><span class="badge ai">🤖 AI-doable</span></li>
+    <li><span class="step-text">Read all 60 of those answers yourself and score each one from 1 to 10 by hand.</span><span class="badge human">🙋 Human required</span></li>
+    <li><span class="step-text">Run the automated Judge over those same 60 answers, without letting it see the human scores.</span><span class="badge ai">🤖 AI-doable</span></li>
+    <li><span class="step-text">Calculate how often the Judge's score agrees with the human score across all 60.</span><span class="badge ai">🤖 AI-doable</span></li>
+    <li><span class="step-text">Decide whether that agreement rate is high enough (above 80%) to trust the Judge with the full study.</span><span class="badge human">🙋 Human required</span></li>
+    <li><span class="step-text">If it isn't high enough, decide whether to rewrite the rubric, switch the Judge to a different AI model, or both.</span><span class="badge human">🙋 Human required</span></li>
+    <li><span class="step-text">Re-run the 60-answer validation test after any change, until it clears the bar.</span><span class="badge ai">🤖 AI-doable</span></li>
+  </ol>
+</section>
+
+<!-- PHASE 7 -->
+<section class="phase" id="phase7">
+  <div class="phase-head">
+    <span class="phase-num">Phase 7</span>
+    <h2 class="phase-title">Full Benchmark Execution</h2>
+    <span class="phase-week">Weeks 7–9+ (runs in the background)</span>
+  </div>
+  <p class="phase-intro">Run the full 900-combination test matrix and score every single output. This is the most expensive phase in terms of time and free-tier quota, so it's paced carefully and built to survive interruptions.</p>
+  <p class="phase-split"><b>11 steps</b> · 9 🤖 AI · 2 🙋 Human</p>
+  <ol class="steps">
+    <li><span class="step-text">Confirm the Judge cleared its validation gate in Phase 6 before authorising this phase to begin — this is the one decision that unlocks the expensive run.</span><span class="badge human">🙋 Human required</span></li>
+    <li><span class="step-text">Build the full queue of all 900 combinations: 100 questions × 3 pipelines × 3 retrieval depths.</span><span class="badge ai">🤖 AI-doable</span></li>
+    <li><span class="step-text">Start working through the queue, with the concurrency limit and retry-on-rate-limit wrapper from Phase 1 active the whole time.</span><span class="badge ai">🤖 AI-doable</span></li>
+    <li><span class="step-text">Save each completed run to the database the moment it finishes, rather than waiting to save everything at the end.</span><span class="badge ai">🤖 AI-doable</span></li>
+    <li><span class="step-text">If the process crashes or is stopped, automatically pick back up from the last saved run instead of starting over.</span><span class="badge ai">🤖 AI-doable</span></li>
+    <li><span class="step-text">Track how many AI tokens have been used today against the free daily ceiling.</span><span class="badge ai">🤖 AI-doable</span></li>
+    <li><span class="step-text">Pause and spread the remaining work across additional days whenever the daily ceiling is reached.</span><span class="badge ai">🤖 AI-doable</span></li>
+    <li><span class="step-text">Score every completed run using the now-validated Judge.</span><span class="badge ai">🤖 AI-doable</span></li>
+    <li><span class="step-text">Run every completed run through the deterministic checks (citation match, word overlap, exact match, precision, recall) too.</span><span class="badge ai">🤖 AI-doable</span></li>
+    <li><span class="step-text">Flag any run whose cited evidence doesn't actually support its answer, so it isn't mistaken for a correct result.</span><span class="badge ai">🤖 AI-doable</span></li>
+    <li><span class="step-text">Every so often, check in on overall progress and skim a few freshly scored outputs to make sure nothing looks obviously wrong.</span><span class="badge human">🙋 Human required</span></li>
+  </ol>
+</section>
+
+<!-- PHASE 8 -->
+<section class="phase" id="phase8">
+  <div class="phase-head">
+    <span class="phase-num">Phase 8</span>
+    <h2 class="phase-title">Results Consolidation &amp; Analysis</h2>
+    <span class="phase-week">Weeks 8–10</span>
+  </div>
+  <p class="phase-intro">Turn the raw results table into the tables, charts, and written analysis the dissertation actually needs. The numbers can be produced automatically — the interpretation and academic argument can't.</p>
+  <p class="phase-split"><b>10 steps</b> · 6 🤖 AI · 4 🙋 Human</p>
+  <ol class="steps">
+    <li><span class="step-text">Pull every completed and scored run out of the database.</span><span class="badge ai">🤖 AI-doable</span></li>
+    <li><span class="step-text">Aggregate the scores by retrieval strategy (P1 vs P2 vs P3), so overall performance can be compared.</span><span class="badge ai">🤖 AI-doable</span></li>
+    <li><span class="step-text">Aggregate the scores by retrieval depth (top-3, top-5, top-10 results), to see whether "more evidence" actually helps.</span><span class="badge ai">🤖 AI-doable</span></li>
+    <li><span class="step-text">Break the results down by question type, to see exactly where each strategy wins and where it fails.</span><span class="badge ai">🤖 AI-doable</span></li>
+    <li><span class="step-text">Generate the comparison tables and charts the dissertation will reference.</span><span class="badge ai">🤖 AI-doable</span></li>
+    <li><span class="step-text">Run a check confirming whether the structural strategy (P3) actually did underperform on table-heavy questions, as predicted back in Phase 3.</span><span class="badge ai">🤖 AI-doable</span></li>
+    <li><span class="step-text">Review the generated tables and charts and flag anything that looks wrong, surprising, or worth digging into further.</span><span class="badge human">🙋 Human required</span></li>
+    <li><span class="step-text">Write the analysis narrative that explains, in your own words, what the results actually mean.</span><span class="badge human">🙋 Human required</span></li>
+    <li><span class="step-text">Write the discussion and conclusion sections that connect the findings back to the original research question.</span><span class="badge human">🙋 Human required</span></li>
+    <li><span class="step-text">Assemble and format the final dissertation document for submission.</span><span class="badge human">🙋 Human required</span></li>
+  </ol>
+</section>
+
+</div>
+
+<a href="#top" class="back-top" id="top">↑ Top</a>
+
+<footer>Generated from resources/specs/ (Project Idea, Architecture, Phase Plan, Guardrails, Budget) — COMP702 M.Sc. Dissertation, rag-techniques repository. No code shown by design — every step describes an action, not an implementation.</footer>
+
+</body>
+</html>
