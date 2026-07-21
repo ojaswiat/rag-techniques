@@ -18,7 +18,7 @@ _CACHE_FRESH_SECONDS = 48 * 3600
 _parser = LlamaParse(
     api_key=config.LLAMA_CLOUD_API_KEY or "placeholder-key-for-import-only",
     result_type="markdown",
-    parsing_instruction=(
+    system_prompt=(
         "This is a SEC 10-K filing. Extract all tables as clean, complete "
         "Markdown tables -- never split or truncate a table across multiple "
         "chunks. Preserve section headers (e.g. 'Item 1A. Risk Factors') as "
