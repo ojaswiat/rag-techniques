@@ -1,0 +1,92 @@
+{
+  "skills-lock.json": {
+    "mtime": 1782991142.8871312,
+    "ast_hash": "bae6cd075fcfdf920d8f99d561d51dc7",
+    "semantic_hash": "bae6cd075fcfdf920d8f99d561d51dc7"
+  },
+  "CLAUDE.md": {
+    "mtime": 1784615742.9049904,
+    "ast_hash": "246060afffc331858b75bfb8c4887203",
+    "semantic_hash": "246060afffc331858b75bfb8c4887203"
+  },
+  "README.md": {
+    "mtime": 1783088180.6539276,
+    "ast_hash": "c35ede9d1e0c202f97e40f745f53a427",
+    "semantic_hash": "c35ede9d1e0c202f97e40f745f53a427"
+  },
+  "TODO.md": {
+    "mtime": 1783087555.3149114,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "resources/assets/design/palette.md": {
+    "mtime": 1782991142.8596654,
+    "ast_hash": "f0fdb6aab4d5a05f89032b3027fce19d",
+    "semantic_hash": "f0fdb6aab4d5a05f89032b3027fce19d"
+  },
+  "resources/assets/design/typography.md": {
+    "mtime": 1783078286.5328345,
+    "ast_hash": "a06741f8c748c89fd86e6a1b4dd81807",
+    "semantic_hash": "a06741f8c748c89fd86e6a1b4dd81807"
+  },
+  "resources/specs/Architecture.md": {
+    "mtime": 1782991142.887669,
+    "ast_hash": "d313b63994a0219dfdcc6e7f781e7fea",
+    "semantic_hash": "d313b63994a0219dfdcc6e7f781e7fea"
+  },
+  "resources/specs/Budget.md": {
+    "mtime": 1782991142.8883398,
+    "ast_hash": "111fc22eca872d4984b79455bab9dbcf",
+    "semantic_hash": "111fc22eca872d4984b79455bab9dbcf"
+  },
+  "resources/specs/Guardrails.md": {
+    "mtime": 1782991142.888966,
+    "ast_hash": "2838c0383862aa79d4a1b78f895c0ec2",
+    "semantic_hash": "2838c0383862aa79d4a1b78f895c0ec2"
+  },
+  "resources/specs/Phase Plan.md": {
+    "mtime": 1782991142.8895354,
+    "ast_hash": "9b563ac14cbd78b7a31f7b3296278c79",
+    "semantic_hash": "9b563ac14cbd78b7a31f7b3296278c79"
+  },
+  "resources/specs/Project Idea.md": {
+    "mtime": 1782991142.890019,
+    "ast_hash": "43f956eb083f371ae8748307c7657154",
+    "semantic_hash": "43f956eb083f371ae8748307c7657154"
+  },
+  "resources/artifacts/ProjectProposal.pdf": {
+    "mtime": 1782991142.8499885,
+    "ast_hash": "6de27b24260022e51e6bc0f015c9b975",
+    "semantic_hash": "6de27b24260022e51e6bc0f015c9b975"
+  },
+  "resources/artifacts/Proposal_v1.0.0.pdf": {
+    "mtime": 1782991142.8579552,
+    "ast_hash": "10df1e1a76af608927b5d8b4f4ca32a3",
+    "semantic_hash": "10df1e1a76af608927b5d8b4f4ca32a3"
+  },
+  "resources/docs/ProposalGuidelines.pdf": {
+    "mtime": 1782991142.8666332,
+    "ast_hash": "534211ca13372c04da58220bd0a4c19a",
+    "semantic_hash": "534211ca13372c04da58220bd0a4c19a"
+  },
+  "resources/docs/ProposalTemplate.pdf": {
+    "mtime": 1782991142.8673987,
+    "ast_hash": "655f4acc3aa433754e6156b1b0b96090",
+    "semantic_hash": "655f4acc3aa433754e6156b1b0b96090"
+  },
+  "resources/assets/images/apple_paragraph_sample_code.png": {
+    "mtime": 1782991142.862848,
+    "ast_hash": "aca4c8b667dc8a93784390bad71a3018",
+    "semantic_hash": "aca4c8b667dc8a93784390bad71a3018"
+  },
+  "resources/assets/images/apple_table_sample_code.png": {
+    "mtime": 1782991142.8647585,
+    "ast_hash": "fa7e1e3eb1fc7b3cbf3ca4264bfe9414",
+    "semantic_hash": "fa7e1e3eb1fc7b3cbf3ca4264bfe9414"
+  },
+  "resources/assets/images/apple_table_sample_image.png": {
+    "mtime": 1782991142.8654685,
+    "ast_hash": "4da16745eac57c55ef0c304328c2ec3f",
+    "semantic_hash": "4da16745eac57c55ef0c304328c2ec3f"
+  }
+}

@@ -1,2 +1,3 @@
 .agents
 .claude
+monitor/scripts/__pycache__/

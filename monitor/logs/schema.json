@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "required": [
+    "timestamp",
+    "level",
+    "operation",
+    "tool",
+    "summary",
+    "status"
+  ],
+  "fields": {
+    "timestamp": {
+      "required": true
+    },
+    "level": {
+      "required": true,
+      "enum": [
+        "DEBUG",
+        "INFO",
+        "WARNING",
+        "ERROR"
+      ]
+    },
+    "operation": {
+      "required": true
+    },
+    "tool": {
+      "required": true
+    },
+    "summary": {
+      "required": true
+    },
+    "status": {
+      "required": true,
+      "enum": [
+        "success",
+        "partial",
+        "failure"
+      ]
+    },
+    "details": {
+      "required": false
+    },
+    "files": {
+      "required": false,
+      "type": "array"
+    },
+    "task": {
+      "required": false
+    },
+    "branch": {
+      "required": false
+    }
+  }
+}

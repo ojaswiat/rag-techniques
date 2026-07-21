@@ -1,0 +1,5 @@
+2026-07-21 08:22:49,760 INFO [monitor-init] (Bash) Initialised monitor for rag-techniques -- success
+branch:  main
+files:   monitor/profile.json, monitor/usage.md, .gitignore, CLAUDE.md
+details: Seeded profile.json (v1), copied engine to monitor/scripts/, generated schema + template + Dashboard/Reports/Logs pages, wrote usage.md
+================================================================================
