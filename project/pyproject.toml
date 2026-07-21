@@ -17,6 +17,9 @@ dev = [
     "pytest-asyncio>=1.4.0",
 ]
 
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+
 [tool.rag-benchmark]
 # Resolved Phase 1 versions (recorded 2026-07-21, uv pip list):
 # groq==1.5.0
