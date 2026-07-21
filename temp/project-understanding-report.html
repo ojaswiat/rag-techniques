@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>COMP702 Project Understanding — RAG Retrieval Benchmark</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  @font-face { font-family: 'Calibri'; src: local('Calibri'); }
+  :root{
+    --ink:#0A1F33; --p700:#15406B; --p600:#1C5485; --p500:#2B6CA3; --p400:#5089B8;
+    --p300:#82AAC9; --p200:#B4CBDE; --p100:#DCE6EE; --p50:#F2F6FA;
+    --n900:#1A1D21; --n700:#44494F; --n500:#767C84; --n300:#B7BCC2; --n100:#E4E6E9; --n50:#F7F8F9;
+    --gold700:#8C6D00; --gold500:#D4A017; --gold300:#E8C667; --gold100:#FBF0D6;
+    --ok:#0B8457; --err:#C73E35;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--p50); color:var(--n900);
+    font-family:Garamond, 'Times New Roman', serif; font-size:16px; line-height:1.6;
+  }
+  h1,h2,h3,h4,.sans{ font-family:Calibri, 'Segoe UI', Arial, sans-serif; }
+  .wrap{ max-width:1100px; margin:0 auto; padding:0 24px 80px; }
+
+  /* Hero */
+  .hero{
+    background:linear-gradient(160deg, var(--ink) 0%, var(--p700) 100%);
+    color:#fff; padding:64px 24px 56px;
+  }
+  .hero .inner{ max-width:1100px; margin:0 auto; }
+  .eyebrow{
+    font-family:Calibri, sans-serif; letter-spacing:.14em; text-transform:uppercase;
+    font-size:12px; color:var(--p300); margin:0 0 14px;
+  }
+  .hero h1{ font-size:34px; margin:0 0 12px; font-weight:700; max-width:820px; }
+  .hero p.sub{ color:var(--p200); font-family:Calibri,sans-serif; font-size:15px; max-width:680px; margin:0 0 26px; }
+  .status-row{ display:flex; gap:10px; flex-wrap:wrap; }
+  .pill{
+    font-family:Calibri,sans-serif; font-size:12px; font-weight:600; padding:6px 12px;
+    border-radius:20px; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.18); color:#fff;
+  }
+  .pill.gold{ background:var(--gold100); color:var(--gold700); border-color:var(--gold300); }
+
+  section{ padding:48px 0; border-bottom:1px solid var(--n300); }
+  section:last-of-type{ border-bottom:none; }
+  h2.section-title{
+    font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--p500);
+    margin:0 0 6px; font-weight:700;
+  }
+  h2.section-head{ font-size:24px; color:var(--ink); margin:0 0 22px; font-weight:700; }
+  p{ margin:0 0 14px; }
+  .lede{ color:var(--n700); font-size:16.5px; max-width:820px; }
+
+  /* Cards / grid */
+  .grid{ display:grid; gap:18px; }
+  .grid-3{ grid-template-columns:repeat(3,1fr); }
+  .grid-4{ grid-template-columns:repeat(4,1fr); }
+  @media(max-width:820px){ .grid-3,.grid-4{ grid-template-columns:1fr 1fr; } }
+  @media(max-width:560px){ .grid-3,.grid-4{ grid-template-columns:1fr; } }
+
+  .card{
+    background:#fff; border:1px solid var(--n300); border-radius:10px; padding:20px;
+  }
+  .card h3{ font-family:Calibri,sans-serif; font-size:15px; color:var(--p700); margin:0 0 8px; }
+  .card p{ font-size:14.5px; color:var(--n700); margin:0; }
+  .card .tag{ display:inline-block; font-family:Calibri,sans-serif; font-size:11px; font-weight:700;
+    color:#fff; background:var(--p500); padding:2px 8px; border-radius:4px; margin-bottom:10px; }
+
+  /* Quadrant grid */
+  .quad{
+    display:grid; grid-template-columns:1fr 1fr; gap:2px; background:var(--n300);
+    border:1px solid var(--n300); border-radius:10px; overflow:hidden; max-width:640px;
+  }
+  .quad .cell{ background:#fff; padding:18px; }
+  .quad .cell.q2, .quad .cell.q4{ background:var(--p50); }
+  .quad .cell .qid{ font-family:Calibri,sans-serif; font-weight:700; color:var(--p700); font-size:13px; }
+  .quad .cell .qname{ font-family:Calibri,sans-serif; font-weight:700; font-size:14px; margin:2px 0 4px; }
+  .quad .cell .qdesc{ font-size:13.5px; color:var(--n700); }
+  .quad-labels{ display:flex; justify-content:space-between; max-width:640px; font-family:Calibri,sans-serif;
+    font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--n500); margin-bottom:6px; padding:0 4px;}
+
+  /* Pipeline cards */
+  .pipe{
+    background:#fff; border:1px solid var(--n300); border-left:4px solid var(--p700); border-radius:8px;
+    padding:22px; margin-bottom:16px;
+  }
+  .pipe.p3{ border-left-color:var(--gold500); }
+  .pipe-head{ display:flex; align-items:baseline; gap:12px; margin-bottom:10px; flex-wrap:wrap; }
+  .pipe-head .pname{ font-family:Calibri,sans-serif; font-weight:700; font-size:17px; color:var(--ink); }
+  .pipe-head .pfull{ font-family:Calibri,sans-serif; font-size:13px; color:var(--p500); }
+  .pipe-body{ font-size:14.5px; color:var(--n700); }
+  .kv-row{ display:flex; gap:10px; flex-wrap:wrap; margin-top:12px; }
+  .kv{ font-family:Calibri,sans-serif; font-size:12px; background:var(--p50); border:1px solid var(--p200);
+    color:var(--p700); padding:4px 10px; border-radius:5px; }
+  .kv.warn{ background:var(--gold100); border-color:var(--gold300); color:var(--gold700); }
+
+  /* Timeline */
+  .timeline{ position:relative; padding-left:28px; }
+  .timeline::before{ content:''; position:absolute; left:8px; top:6px; bottom:6px; width:2px; background:var(--n300); }
+  .tstep{ position:relative; margin-bottom:22px; }
+  .tstep::before{
+    content:''; position:absolute; left:-28px; top:4px; width:14px; height:14px; border-radius:50%;
+    background:#fff; border:3px solid var(--p700);
+  }
+  .tstep.current::before{ border-color:var(--gold500); background:var(--gold500); }
+  .tstep .thead{ display:flex; gap:10px; align-items:baseline; flex-wrap:wrap; }
+  .tstep .phase{ font-family:Calibri,sans-serif; font-weight:700; color:var(--ink); font-size:15px; }
+  .tstep .week{ font-family:Calibri,sans-serif; font-size:12px; color:var(--n500); }
+  .tstep p{ font-size:14px; color:var(--n700); margin:4px 0 0; }
+
+  /* Flow diagram (Judge gate) */
+  .flow{ display:flex; align-items:center; gap:0; flex-wrap:wrap; font-family:Calibri,sans-serif; font-size:13px; }
+  .fbox{ background:#fff; border:1.5px solid var(--p700); color:var(--ink); border-radius:8px; padding:10px 14px;
+    text-align:center; min-width:130px; }
+  .fbox.gate{ border-color:var(--gold500); background:var(--gold100); color:var(--gold700); font-weight:700; }
+  .farrow{ color:var(--n500); padding:0 10px; font-size:16px; }
+
+  table{ width:100%; border-collapse:collapse; font-family:Calibri,sans-serif; font-size:13.5px; margin:14px 0; }
+  th{ background:var(--p700); color:#fff; text-align:left; padding:9px 12px; font-weight:700; }
+  td{ padding:9px 12px; border-bottom:1px solid var(--n300); color:var(--n900); }
+  tr:nth-child(even) td{ background:var(--p50); }
+
+  .callout{ background:var(--gold100); border-left:3.5px solid var(--gold500); padding:14px 18px; border-radius:0 6px 6px 0;
+    font-size:14.5px; color:var(--n900); margin:14px 0; }
+  .callout b{ color:var(--gold700); }
+
+  .note{ background:var(--p100); border-left:4px solid var(--p700); padding:14px 18px; border-radius:0 6px 6px 0;
+    font-size:14.5px; color:var(--n900); margin:14px 0; }
+
+  code, .mono{ font-family:Consolas, 'SF Mono', monospace; font-size:.9em; background:var(--n100); padding:1px 5px; border-radius:3px; color:var(--ink); }
+
+  .stat-row{ display:flex; gap:16px; flex-wrap:wrap; }
+  .stat{ flex:1; min-width:130px; background:#fff; border:1px solid var(--n300); border-radius:10px; padding:16px 18px; }
+  .stat .num{ font-family:Calibri,sans-serif; font-weight:700; font-size:26px; color:var(--p700); }
+  .stat .lbl{ font-family:Calibri,sans-serif; font-size:12px; color:var(--n500); text-transform:uppercase; letter-spacing:.05em; }
+
+  footer{ padding:32px 24px; text-align:center; font-family:Calibri,sans-serif; font-size:12px; color:var(--n500); }
+
+  /* Touchpoint table */
+  .touch-table{ width:100%; border-collapse:collapse; font-family:Calibri,sans-serif; font-size:13.5px; margin:6px 0 24px; }
+  .touch-table th{ background:var(--p700); color:#fff; text-align:left; padding:10px 12px; font-weight:700; font-size:12px; text-transform:uppercase; letter-spacing:.03em; }
+  .touch-table td{ padding:11px 12px; border-bottom:1px solid var(--n300); color:var(--n900); vertical-align:top; }
+  .touch-table tr:nth-child(even) td{ background:var(--p50); }
+  .badge{ display:inline-block; font-size:11px; font-weight:700; padding:3px 9px; border-radius:12px; white-space:nowrap; }
+  .badge.once{ background:var(--p100); color:var(--p700); }
+  .badge.fixed{ background:var(--gold100); color:var(--gold700); }
+  .badge.rec{ background:var(--n100); color:var(--n700); }
+  .badge.auto{ background:#e3f2ea; color:var(--ok); }
+  @media (prefers-color-scheme: dark){
+    .touch-table td{ border-bottom-color:#2a323d; color:#dde3ea; }
+    .touch-table tr:nth-child(even) td{ background:#1a2330; }
+    .badge.auto{ background:#123829; }
+  }
+
+  @media (prefers-color-scheme: dark){
+    body{ background:#10151c; color:#dde3ea; }
+    section{ border-bottom-color:#2a323d; }
+    .card, .pipe, .stat, .fbox{ background:#161c25; border-color:#2a323d; }
+    td{ border-bottom-color:#2a323d; color:#dde3ea; }
+    tr:nth-child(even) td{ background:#1a2330; }
+    .lede, .card p, .pipe-body, .tstep p{ color:#a9b3c1; }
+    .quad{ background:#2a323d; border-color:#2a323d; }
+    .quad .cell{ background:#161c25; }
+    .quad .cell.q2, .quad .cell.q4{ background:#1a2330; }
+    code, .mono{ background:#232b36; color:#cfe0f0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="inner">
+    <p class="eyebrow">COMP702 M.Sc. Dissertation — Project Briefing</p>
+    <h1>Semantic vs. Statistical vs. Structural: a three-paradigm RAG retrieval benchmark on SEC 10‑K filings</h1>
+    <p class="sub">A comparative study of Vector (P1), BM25 (P2), and Summary-Tree (P3) retrieval, run against real financial disclosures, scored by a validated LLM judge, at $0.00 expected spend.</p>
+    <div class="status-row">
+      <span class="pill">Stage: Planning &amp; Proposal</span>
+      <span class="pill">10-week build, 8 phases</span>
+      <span class="pill">900-run benchmark matrix</span>
+      <span class="pill gold">src/ — not yet started</span>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+<section>
+  <h2 class="section-title">01 · Research Question</h2>
+  <h2 class="section-head">Where does each retrieval paradigm win — and where does it break?</h2>
+  <p class="lede">The dissertation asks how three fundamentally different retrieval strategies perform on SEC 10‑K filings — documents that mix dense narrative prose with rigid, table-heavy financial data. The sharpest contrast is <b>semantic vs. statistical</b> (meaning vs. exact words); <b>structural</b> retrieval is included as a third paradigm, deliberately chosen to test whether summarisation can survive table fragmentation.</p>
+  <div class="grid grid-3">
+    <div class="card">
+      <span class="tag">P1</span>
+      <h3>Semantic (vector)</h3>
+      <p>Retrieval by meaning, via dense embeddings. Expected to shine on synthesis-style questions where wording varies from the source.</p>
+    </div>
+    <div class="card">
+      <span class="tag">P2</span>
+      <h3>Statistical (BM25)</h3>
+      <p>Retrieval by exact-word frequency. Expected to shine on direct fact and figure lookups where phrasing matches the source closely.</p>
+    </div>
+    <div class="card">
+      <span class="tag">P3</span>
+      <h3>Structural (summary tree)</h3>
+      <p>Retrieval by traversing an LLM-generated summary hierarchy. Known risk: summarisation drops cell values and footnotes on dense tables.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2 class="section-title">02 · Data &amp; Ingestion</h2>
+  <h2 class="section-head">Every fact traces back to a stable node_id, never a page number</h2>
+  <p class="lede">6–9 SEC 10‑K filings (2–3 companies × 2–3 fiscal years) are parsed with <b>LlamaParse</b> in atomic-table mode. Tables are never bisected — each is preserved as one indivisible <code>TextNode</code>. Because 10‑Ks are natively HTML and page numbers are render-dependent, <b>node_id is the canonical evidence anchor</b> for every metric, citation check, and ground-truth mapping in the entire project; <code>source_page_num</code> is kept only for human readability.</p>
+  <div class="note">
+    A randomised <b>20-section manual audit</b> checks for column truncation, table bisection, and markdown rendering errors before any downstream work trusts the node store.
+  </div>
+</section>
+
+<section>
+  <h2 class="section-title">03 · The 140-Query Benchmark</h2>
+  <h2 class="section-head">Three disjoint sets, so no data leaks between teaching, testing, and validating the judge</h2>
+  <p class="lede">Queries are generated by one model (<span class="mono">gpt-oss-120b</span>) and independently verified by another (<span class="mono">Qwen3-32b</span> with a search tool) — cross-architecture agreement, not self-confirmation. The verified pool splits into three sets that must never overlap:</p>
+  <div class="grid grid-3">
+    <div class="card"><span class="tag">PQ · 100</span><h3>Pipeline Queries</h3><p>The actual test set. 25 per quadrant. What P1/P2/P3 are benchmarked on. Table: <code>queries</code>.</p></div>
+    <div class="card"><span class="tag">GQ · 20</span><h3>Golden Queries</h3><p>The teaching set. 5 per quadrant, human-labelled with "why this is good". Injected into the Judge's prompt only. Table: <code>golden_queries</code>.</p></div>
+    <div class="card"><span class="tag">JEQ · 20</span><h3>Judge Eval Queries</h3><p>The validation set. 5 per quadrant, hand-scored by the researcher to certify the Judge before it grades anything else. Table: <code>judge_validation</code>.</p></div>
+  </div>
+
+  <p style="margin-top:26px; font-family:Calibri,sans-serif; font-weight:700; color:var(--ink); font-size:14px;">The four operational quadrants</p>
+  <div class="quad-labels"><span>Text-heavy context</span><span>Table-heavy context</span></div>
+  <div class="quad">
+    <div class="cell q1"><div class="qid">Q1 — DIRECT</div><div class="qname">Direct Text</div><div class="qdesc">Fact retrieval from continuous prose — e.g. an explicitly stated risk disclosure.</div></div>
+    <div class="cell q3"><div class="qid">Q3 — DIRECT</div><div class="qname">Direct Table</div><div class="qdesc">Strict cellular extraction — e.g. pulling an exact revenue figure.</div></div>
+    <div class="cell q2"><div class="qid">Q2 — IMPLICIT</div><div class="qname">Implicit Text</div><div class="qdesc">Multi-hop synthesis across pages — e.g. cross-referencing the MD&amp;A outlook.</div></div>
+    <div class="cell q4"><div class="qid">Q4 — IMPLICIT</div><div class="qname">Implicit Table</div><div class="qdesc">Cross-row / footnote calculation — e.g. YoY change adjusted for an impairment.</div></div>
+  </div>
+</section>
+
+<section>
+  <h2 class="section-title">04 · The Three Pipelines</h2>
+  <h2 class="section-head">One shared answerer, three different ways of finding the evidence</h2>
+  <p class="lede">All three pipelines answer with the <b>same</b> model at the <b>same</b> settings (<span class="mono">Llama 3.3 70B</span>, temperature 0) — so any score difference is attributable to retrieval, not generation. Pipelines see only the query and their own retrieved nodes; never exemplars, ground truth, or answer-location hints.</p>
+
+  <div class="pipe">
+    <div class="pipe-head"><span class="pname">P1 — Vector RAG</span><span class="pfull">retrieval by meaning</span></div>
+    <div class="pipe-body">Local embeddings (<span class="mono">bge-small-en-v1.5</span>) + a local cross-encoder re-ranker (<span class="mono">bge-reranker-base</span>) over a FAISS/Chroma index. No metadata pre-filter — an earlier design narrowed search to a target Item, but that was dropped: deciding the section at query time risks leaking the answer location, and BM25 has no equivalent shortcut.</div>
+    <div class="kv-row"><span class="kv">Local CPU · $0</span><span class="kv">Index: FAISS / ChromaDB</span><span class="kv">Re-ranked top-N</span></div>
+  </div>
+
+  <div class="pipe">
+    <div class="pipe-head"><span class="pname">P2 — Keyword RAG</span><span class="pfull">retrieval by exact words</span></div>
+    <div class="pipe-body">Pure <span class="mono">rank_bm25</span> (true Okapi BM25) over a custom regex tokenizer that preserves numbers, decimals, %, and currency tokens, strips table-markdown pipes while keeping cell values, and applies no stemming. Deterministic, reproducible, no LLM at retrieval time. LlamaIndex's <span class="mono">KeywordTableIndex</span> is explicitly rejected — it calls an LLM and would stop this being a clean statistical baseline.</div>
+    <div class="kv-row"><span class="kv">Local CPU · $0</span><span class="kv">No LLM at query time</span><span class="kv">Fully deterministic</span></div>
+  </div>
+
+  <div class="pipe p3">
+    <div class="pipe-head"><span class="pname">P3 — Structural RAG</span><span class="pfull">retrieval by summary-tree traversal</span></div>
+    <div class="pipe-body">A hierarchical <span class="mono">SummaryIndex</span> built once, offline, over parent summaries of child nodes, using <span class="mono">llama-3.1-8b-instant</span> (chosen for its high daily request ceiling). Built once, cached to disk, never rebuilt. Documented, not hidden, weakness: summarisation can drop cell values and footnotes, so P3 is expected to underperform on the table-heavy quadrants (Q3/Q4) — that degradation is itself part of what the study measures.</div>
+    <div class="kv-row"><span class="kv">One-time LLM build</span><span class="kv warn">Expected weak on Q3/Q4</span><span class="kv">Cached, never rebuilt</span></div>
+  </div>
+
+  <div class="callout"><b>Future scope, not built:</b> P4 (brute-force full-context), P5 (naive flat vector, no re-ranker), P6 (BM25→vector hybrid fusion) are documented as reserved extensions, ranked by increasing complexity — kept out of scope to protect the 10-week timeline.</div>
+</section>
+
+<section>
+  <h2 class="section-title">05 · Model Routing &amp; Role Separation</h2>
+  <h2 class="section-head">No model ever grades its own output</h2>
+  <table>
+    <tr><th>Stage</th><th>Model</th><th>Where</th></tr>
+    <tr><td>Dataset generation</td><td class="mono">openai/gpt-oss-120b</td><td>Groq free tier</td></tr>
+    <tr><td>Dataset critique (+ search)</td><td class="mono">Qwen3-32b</td><td>Groq free tier</td></tr>
+    <tr><td>P3 summary-index build (1×)</td><td class="mono">llama-3.1-8b-instant</td><td>Groq free tier</td></tr>
+    <tr><td>Pipeline answerer (P1/P2/P3, shared)</td><td class="mono">Llama 3.3 70B</td><td>Groq free tier</td></tr>
+    <tr><td>Judge / scoring (no search)</td><td class="mono">Qwen3-32b</td><td>Groq free tier</td></tr>
+    <tr><td>Embeddings (P1)</td><td class="mono">bge-small-en-v1.5</td><td>Local CPU · $0</td></tr>
+    <tr><td>Re-ranker (P1)</td><td class="mono">bge-reranker-base</td><td>Local CPU · $0</td></tr>
+  </table>
+  <p class="lede" style="font-size:14px;">Two hard invariants keep the results defensible: <b>Generator ≠ Critic</b> family (breaks circular dataset validation), and <b>Answerer ≠ Judge</b> family (no model grades its own output).</p>
+</section>
+
+<section>
+  <h2 class="section-title">06 · Evaluation &amp; the Judge-Validation Gate</h2>
+  <h2 class="section-head">A cheap 60-output gate must pass before the expensive 900-run matrix begins</h2>
+  <div class="grid grid-3" style="margin-bottom:22px;">
+    <div class="card"><h3>Pillar 1 — Retrieval</h3><p>Precision@K, Recall@K, Evidence Hit Rate — deterministic, code-only, keyed on node_id.</p></div>
+    <div class="card"><h3>Pillar 2 — Answer Quality</h3><p>LLM-Judge score 1–10 (primary), Token-F1 &amp; Exact Match (secondary), plus a code-only Citation Audit that catches "right answer, wrong evidence".</p></div>
+    <div class="card"><h3>Pillar 3 — Efficiency</h3><p>Latency, token consumption, and one-time index-build cost per pipeline.</p></div>
+  </div>
+
+  <div class="flow" style="margin-bottom:10px;">
+    <div class="fbox">JEQ (20) × P1/P2/P3<br>at K=5 → 60 outputs</div>
+    <div class="farrow">→</div>
+    <div class="fbox">Human scores 60<br>+ Judge scores 60</div>
+    <div class="farrow">→</div>
+    <div class="fbox gate">Agreement &gt; 80%?</div>
+    <div class="farrow">→</div>
+    <div class="fbox">Full 900-run<br>benchmark unlocked</div>
+  </div>
+  <p style="font-size:13.5px; color:var(--n500);">If the gate fails: swap the Judge to <span class="mono">gpt-oss-120b</span> (still ≠ the Llama answerer) and/or tune the rubric, then re-test. The full matrix never runs against an unvalidated judge.</p>
+
+  <div class="stat-row" style="margin-top:20px;">
+    <div class="stat"><div class="num">3 × 3 × 100</div><div class="lbl">Pipelines × K-values × PQ = 900 runs</div></div>
+    <div class="stat"><div class="num">K ∈ {3,5,10}</div><div class="lbl">Retrieval depth tested</div></div>
+    <div class="stat"><div class="num">&gt;80%</div><div class="lbl">Required human–judge agreement</div></div>
+    <div class="stat"><div class="num">Temp = 0</div><div class="lbl">Every cell run exactly once</div></div>
+  </div>
+</section>
+
+<section>
+  <h2 class="section-title">07 · Budget &amp; Guardrails</h2>
+  <h2 class="section-head">$0.00 expected spend — the real constraint is Groq's daily token ceiling, not money</h2>
+  <p class="lede">Every recurring component sits on a free tier or runs locally on CPU. There is no infrastructure that bills per hour or scales to non-zero. The binding constraint is <b>tokens-per-day (TPD)</b> on the heaviest workloads — answer generation and judging — not request count and not dollars.</p>
+  <div class="grid grid-4">
+    <div class="card"><h3>Answer generation</h3><p>~960 calls, ~2M tokens against Llama 3.3 70B's ~100K TPD → roughly 2–3 weeks of intermittent free-tier running. The project's real bottleneck.</p></div>
+    <div class="card"><h3>Judging</h3><p>~960 calls; rubric + 5 exemplars prompt-cached (free), so throughput is comfortable across days.</p></div>
+    <div class="card"><h3>Concurrency</h3><p><span class="mono">tenacity</span> backoff + jitter on 429s; <span class="mono">asyncio.Semaphore</span> capped at ≤5 parallel workers.</p></div>
+    <div class="card"><h3>Storage</h3><p>SQLite (WAL mode), 5 tables, results committed per row — a crash resumes instead of re-spending quota.</p></div>
+  </div>
+  <p style="margin-top:18px; font-size:13.5px; color:var(--n500);">Worst-case paid fallback (optional, never required): the entire LLM workload is on the order of ~4M tokens, landing around <b>$3–5</b> at paid rates if the free tier is skipped for speed.</p>
+</section>
+
+<section>
+  <h2 class="section-title">08 · 10-Week Phase Plan</h2>
+  <h2 class="section-head">Build (Phases 1–6) wraps by Week 7; the benchmark runs in the background from there</h2>
+  <div class="timeline">
+    <div class="tstep current">
+      <div class="thead"><span class="phase">Phase 1 — Environment &amp; Guardrails</span><span class="week">Week 1</span></div>
+      <p>Repo, pinned versions, 5-table SQLite schema, resilient Groq wrapper, throttle scaffolding. <b>Not yet started — <code>src/</code> is currently empty.</b></p>
+    </div>
+    <div class="tstep">
+      <div class="thead"><span class="phase">Phase 2 — Ingestion &amp; Parsing</span><span class="week">Weeks 1–3</span></div>
+      <p>LlamaParse atomic-table mode across 6–9 filings; node_id enrichment; 20-section validation audit.</p>
+    </div>
+    <div class="tstep">
+      <div class="thead"><span class="phase">Phase 3 — P3 Summary-Index Build</span><span class="week">Week 3</span></div>
+      <p>One-time hierarchical summary tree per filing, cached, never rebuilt.</p>
+    </div>
+    <div class="tstep">
+      <div class="thead"><span class="phase">Phase 4 — Dataset Generation &amp; Verification</span><span class="week">Weeks 4–5</span></div>
+      <p>Generator + Critic produce and adversarially verify 140 queries; split into PQ/GQ/JEQ; human-label the 20 GQ.</p>
+    </div>
+    <div class="tstep">
+      <div class="thead"><span class="phase">Phase 5 — Pipeline Implementation</span><span class="week">Weeks 5–6</span></div>
+      <p>Build P1, P2, P3 and the shared answerer with leakage controls and constant context mass.</p>
+    </div>
+    <div class="tstep">
+      <div class="thead"><span class="phase">Phase 6 — Judge Build &amp; Validation Gate</span><span class="week">Weeks 6–7</span></div>
+      <p>Dynamic few-shot judge, deterministic metrics, the 60-output human-vs-judge gate (hard prerequisite).</p>
+    </div>
+    <div class="tstep">
+      <div class="thead"><span class="phase">Phase 7 — Full Benchmark Execution</span><span class="week">Weeks 7–9+ (background)</span></div>
+      <p>900-run matrix, paced against TPD limits, resumable from the last committed SQLite row.</p>
+    </div>
+    <div class="tstep">
+      <div class="thead"><span class="phase">Phase 8 — Results Consolidation &amp; Analysis</span><span class="week">Weeks 8–10</span></div>
+      <p>Tri-pillar aggregation, per-quadrant breakdown, tables and figures feeding the write-up.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2 class="section-title">09 · Current Status</h2>
+  <h2 class="section-head">Planning and proposal phase — the build has not started</h2>
+  <div class="grid grid-3">
+    <div class="card"><h3>Done</h3><p>Research design, architecture (SQLite DDL), phase plan, guardrails, budget model, and proposal artefacts are all written and internally consistent.</p></div>
+    <div class="card"><h3>Not started</h3><p><code>src/</code> is empty — no ingestion, pipeline, or judge code exists yet. Phase 1 (repo + SQLite + rate-limit scaffolding) is the next milestone.</p></div>
+    <div class="card"><h3>Structure in place</h3><p><code>resources/</code> holds the steering layer (specs, artefacts, assets, docs); <code>src/</code> is reserved for all future executable code.</p></div>
+  </div>
+</section>
+
+<section>
+  <h2 class="section-title">10 · Outsourcing to an Agent Team</h2>
+  <h2 class="section-head">If AI agents wrote and ran everything: how much human input is actually required</h2>
+  <p class="lede">Most of this project is mechanical enough for a coding-agent team to build and execute end-to-end — ingestion, both index builds, dataset generation, all three pipelines, the 900-run matrix, and the analysis scripts. The touchpoints below are the ones that can't be handed to an agent, because the spec itself designs them as human checks (a judge validated by the same system it's scoring proves nothing). Everything else reduces to "paste keys in <code>.env</code>, watch it run."</p>
+
+  <div class="stat-row" style="margin-bottom:24px;">
+    <div class="stat"><div class="num">~1</div><div class="lbl">One-time setup session (keys + accounts)</div></div>
+    <div class="stat"><div class="num">~4–5 hrs</div><div class="lbl">Total irreducible hands-on time, spread over weeks 4–7</div></div>
+    <div class="stat"><div class="num">2</div><div class="lbl">Hard gate approvals (GQ set, judge agreement)</div></div>
+    <div class="stat"><div class="num">1</div><div class="lbl">Deliverable only you can produce: the written dissertation</div></div>
+  </div>
+
+  <table class="touch-table">
+    <tr><th style="width:26%">Touchpoint</th><th style="width:12%">Type</th><th style="width:16%">When</th><th style="width:14%">Effort</th><th>Why it can't be fully agent-delegated</th></tr>
+    <tr><td><b>API keys in <code>.env</code></b> (Groq, LlamaParse) + account/ToS acceptance</td><td><span class="badge once">One-time</span></td><td>Before Phase 1</td><td>~10 min</td><td>Account creation and ToS acceptance are legally tied to a person, not an agent.</td></tr>
+    <tr><td>Approve the target 10-K filings (2–3 companies × 2–3 years)</td><td><span class="badge rec">Recommended</span></td><td>Before Phase 2</td><td>~10 min</td><td>Agents can shortlist from SEC EDGAR; a one-line "yes, use these" keeps the corpus aligned to your research narrative. Not a hard requirement — agents could default-pick.</td></tr>
+    <tr><td>Spot-check the 20-section parsing audit</td><td><span class="badge rec">Recommended</span></td><td>End of Phase 2</td><td>~15 min</td><td>Spec calls this a "manual audit," but an agent can run the check and flag anomalies — you're reviewing a short report, not parsing tables by hand.</td></tr>
+    <tr><td><b>Label the 20 GQ</b> (write "why this answer is good" + score)</td><td><span class="badge fixed">Fixed / hard</span></td><td>End of Phase 4</td><td>~1–2 hrs</td><td>This <i>is</i> the human standard the Judge is taught to imitate. If an agent wrote it, the Judge would just be learning another agent's opinion — the whole few-shot teaching layer becomes circular.</td></tr>
+    <tr><td>Confirm <code>LOCAL_TEST_THROTTLE</code> clean run before full release</td><td><span class="badge rec">Recommended</span></td><td>End of each phase</td><td>~5 min ea.</td><td>A one-line "looks right, go full" gate before quota-spending runs. Agents can self-report pass/fail; you're approving, not debugging.</td></tr>
+    <tr><td><b>Hand-score the 60 JEQ gate outputs</b></td><td><span class="badge fixed">Fixed / hard</span></td><td>Phase 6</td><td>~2–3 hrs</td><td>This is the independent ground truth the &gt;80% agreement rate is measured against. An agent scoring its own gate defeats the gate's entire purpose.</td></tr>
+    <tr><td><b>Approve the judge-gate result</b> (pass, or authorise rubric/model swap and re-test)</td><td><span class="badge fixed">Fixed / hard</span></td><td>Phase 6</td><td>~5 min</td><td>A one-line decision, but it's the methodological checkpoint that authorises spending the 900-run budget — worth a deliberate human "go."</td></tr>
+    <tr><td><b>Write the dissertation</b> (analysis narrative, discussion, conclusions)</td><td><span class="badge fixed">Fixed / hard</span></td><td>Weeks 8–10</td><td>Ongoing</td><td>Academic integrity: COMP702 is submitted as your own scholarly work. Agents can draft summary tables/figures from <code>results</code>, but the argument and prose must be authored by you.</td></tr>
+  </table>
+
+  <div class="grid grid-3" style="margin-bottom:6px;">
+    <div class="card"><span class="tag" style="background:var(--ok);">Fully automatable</span><h3>Everything else</h3><p>Ingestion, P3 index build, dataset generation + critique, P1/P2/P3 implementation, the 900-run matrix with resume-on-crash, metrics aggregation, and chart generation — an agent team can run this unattended once the two fixed gates above are cleared per phase.</p></div>
+    <div class="card"><h3>What "minimal" looks like in practice</h3><p>Paste keys → agents build through Phase 3 unattended → you spend ~1–2 hrs labelling GQ → agents build Phase 5–6 → you spend ~2–3 hrs hand-scoring JEQ and approve the gate → agents run Phase 7 in the background over ~2–3 weeks (TPD-paced) → you write the dissertation from the agents' Phase 8 output.</p></div>
+    <div class="card"><h3>Not a technical bottleneck</h3><p>None of the fixed touchpoints are code review or debugging — they're the specific human judgments the study's validity is built on. Removing them wouldn't just add convenience, it would remove the evidence that the automated judge can be trusted at all.</p></div>
+  </div>
+</section>
+
+</div>
+
+<footer>Generated from resources/specs/ (Project Idea, Architecture, Phase Plan, Guardrails, Budget) — COMP702 M.Sc. Dissertation, rag-techniques repository.</footer>
+
+</body>
+</html>
