@@ -1,6 +1,13 @@
 [
   {
     "date": "2026-07-21",
+    "file": "2026-07-21-code-tour-for-beginners.html",
+    "title": "Code Tour — Where Everything Lives",
+    "description": "A plain-English, kid-friendly map of Phase 1's code: folder tree, what each file does, an import diagram, and where to start reading.",
+    "branch": "phase1-environment-infra"
+  },
+  {
+    "date": "2026-07-21",
     "file": "2026-07-21-phase1-environment-infra.html",
     "title": "Phase 1: Environment, Infrastructure & Cost Guardrails",
     "description": "Repo skeleton, five-table SQLite state layer, Groq client, and rate-limit scaffolding — built via subagent-driven TDD, gated by per-task and whole-branch review.",
