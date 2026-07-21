@@ -1,3 +1,83 @@
+2026-07-21 18:33:26,204 INFO [phase2-branch-ready] (Claude Code (subagent-driven-development)) Phase 2 branch re-reviewed and confirmed Ready to merge; added a caveat comment for the one Minor finding -- success
+branch:  phase2-ingestion-parsing
+task:    Phase 2 final whole-branch review
+files:   project/ingest/run_ingestion.py
+details: Re-review confirmed the get_nodes_by_document skip guard is a genuine side-effect-free short-circuit, correctly solves the original full-run crash, and the regression test targets the right mock surfaces. One Minor noted: skipping on any existing row count means a mid-document crash's partial node set is silently treated as complete on the next run (versus the old code's loud IntegrityError crash). Addressed with a one-line code comment documenting the limitation and the manual workaround (delete the document's rows to force re-ingest) rather than building a repair tool not yet needed at this project's scale. 39/39 tests passing.
+================================================================================
+2026-07-21 18:30:42,897 INFO [phase2-final-review-fix] (Claude Code (Opus whole-branch review + fix)) Whole-branch review found a real cross-task integration bug: full-corpus re-run would crash on already-ingested filings. Fixed with a resume-style skip. -- success
+branch:  phase2-ingestion-parsing
+task:    Phase 2 final whole-branch review
+files:   project/ingest/run_ingestion.py, project/tests/test_run_ingestion.py
+details: insert_node is a plain INSERT against a TEXT PRIMARY KEY, and the throttled Task 6 run already committed ~2081 AAPL nodes into benchmark.db. The documented completion path (flip LOCAL_TEST_THROTTLE to false, re-run to ingest the remaining 6 filings) would have raised IntegrityError on the first already-ingested filing and never reached MSFT/TSLA -- an integration defect no single task's scoped review could see, since Task 6 only ran the throttled 3-filing case once. Fixed ingest_one() to check get_nodes_by_document() first and skip re-fetch/re-parse/re-insert for a document that already has nodes, matching the project's existing resume/caching philosophy (results-table crash-resume, 48h parse cache) rather than adding upsert logic to Phase 1's schema layer. Added a regression test for the skip path (mocks fetch/parse/insert, asserts none are called when nodes already exist). Verified live: re-running ingestion against the already-populated benchmark.db now correctly skips all 3 AAPL filings, no crash, no re-spent LlamaParse credits. 39/39 tests passing.
+================================================================================
+2026-07-21 18:23:48,697 INFO [phase2-task7-complete] (Claude Code) All 7 Phase 2 tasks complete; human action report written covering the parsing-audit eyeball and llama-cloud migration decision -- success
+branch:  phase2-ingestion-parsing
+task:    Phase 2 Task 7
+================================================================================
+2026-07-21 18:23:17,063 INFO [phase2-task6-complete] (Claude Code (subagent-driven-development)) Task 6 approved: real ingestion verified end-to-end (2081 nodes, 3 filings), Step 3b's real-data check caught and fixed a genuine bug -- success
+branch:  phase2-ingestion-parsing
+task:    Phase 2 Task 6
+details: Reviewer confirmed the amended Task 6 (Step 3b) was a genuine investigation, not a formality -- it surfaced exactly the kind of real-world formatting risk the plan amendment was designed to catch, the fix correctly targets it without weakening table atomicity, and the regression test faithfully reproduces the real shape found. Phase 2's ingestion pipeline is now verified end-to-end against live SEC EDGAR + LlamaParse, not just mocked tests.
+================================================================================
+2026-07-21 18:20:27,520 INFO [phase2-task6-live-run-and-fix] (Claude Code (live ingestion + fix)) Ran real throttled ingestion (AAPL 2023/2024/2025, ~2081 nodes total); Task 6 Step 3b found and fixed the table-misclassification risk flagged in Task 4 review -- success
+branch:  phase2-ingestion-parsing
+task:    Phase 2 Task 6
+files:   project/ingest/node_builder.py, project/tests/test_node_builder.py, resources/artifacts/Changes.md
+details: Live run succeeded: 715/684/682 nodes for the 3 throttled filings. Step 3b's real-data check found Concern #1 (header attribution) did NOT manifest -- all 22 real Item-section headers attributed correctly. Concern #2 (table misclassification) DID manifest once: an exhibit-index table with a caption line and no blank line before the rows was tagged text instead of table. Per the plan's own instruction to fix immediately if observed (not defer further), changed _is_table_block to require 2+ pipe-led lines anywhere in the block rather than only checking the first line. Added a regression test reproducing the exact real-world shape. Re-ran ingestion (hit the 48h parse cache, zero additional LlamaParse spend) and confirmed 0 remaining misclassified nodes. Also observed but explicitly left unfixed: 174/682 nodes have raw # markdown leaked into content from front-matter headings that aren't Item sections -- doesn't corrupt either invariant this check guards (Item attribution, table atomicity), logged as cosmetic in Changes.md rather than chased.
+================================================================================
+2026-07-21 18:13:09,952 INFO [phase2-task6-active-gate-confirmed] (Claude Code (human decision)) Human confirmed Task 6's live ingestion run after verifying CIK/URL resolution for all 9 filings first -- success
+branch:  phase2-ingestion-parsing
+task:    Phase 2 Task 6
+details: Human's first response to the ACTIVE gate was a clarifying question (does the human need to manually download something), then a legitimate correctness concern (is the right data being fetched for all 3 companies). Rather than just re-asserting confidence, ran a read-only dry-run of resolve_cik + submissions lookup for all 9 manifest entries and showed the resolved CIK, reportDate, accession number, and URL for each -- confirmed against known public facts (Apple CIK 320193, Microsoft CIK 789019, Tesla CIK 1318605; fiscal year ends matching each company's real calendar: Apple ~Sept, Microsoft ~June, Tesla ~Dec). This gave the human concrete evidence rather than just a restated question, and they approved proceeding.
+================================================================================
+2026-07-21 18:10:42,197 INFO [phase2-task5-complete] (Claude Code (subagent-driven-development)) Task 5 approved: parsing_audit.py samples up to 20 nodes unbiased, handles missing parent_item_header gracefully -- success
+branch:  phase2-ingestion-parsing
+task:    Phase 2 Task 5
+details: Reviewer specifically verified random.sample is genuinely unbiased (not first-N) and None-header handling works, both flagged as review focus points given Task 4's known parent_item_header risk. No findings beyond minor defensive-coding polish inherited from the brief.
+================================================================================
+2026-07-21 18:07:39,954 INFO [phase2-task4-complete] (Claude Code (subagent-driven-development)) Task 4 approved with follow-up: node_builder.py + run_ingestion.py built; plan amended to make Task 6 explicitly stress-test 2 real formatting-fragility risks -- success
+branch:  phase2-ingestion-parsing
+task:    Phase 2 Task 4
+files:   project/ingest/node_builder.py, project/ingest/run_ingestion.py, docs/superpowers/plans/2026-07-21-phase2-ingestion-parsing.md
+details: Implementer self-reported 2 concerns (DONE_WITH_CONCERNS) about header/table detection assuming blank-line-separated markdown. Reviewer independently confirmed both are real but neither violates the project's specific hard invariant (table atomicity -- no table is ever split across two node dicts in either failure mode); they only risk metadata mislabeling (parent_item_header, node_type). Decision: don't block Task 4 on speculative fixes for markdown shapes not yet observed in real data -- instead amend Task 6 (the plan's own real-LlamaParse-output stress test) to explicitly check for these two failure signs by eyeballing real parsed nodes, not just counting them. This keeps the fix scoped to when real evidence exists, per the plan's own philosophy (LOCAL_TEST_THROTTLE-first, verify against reality before hardening). Amendment recorded in Changes.md and the plan file itself (new Step 3b).
+================================================================================
+2026-07-21 17:59:28,902 INFO [phase2-task3-complete] (Claude Code (subagent-driven-development)) Task 3 approved: parse_filing.py parses via LlamaParse, 48h cache, deprecation-safe prompt param, verified against real table content -- success
+branch:  phase2-ingestion-parsing
+task:    Phase 2 Task 3
+details: Two fix cycles: (1) parsing_instruction deprecation swapped to system_prompt_append after reviewer caught that the intermediate system_prompt choice would override LlamaParse's tuned default prompt and risk accuracy; (2) re-verified live against an actual 2-row financial table, confirming the table survived intact. Whole llama-parse package's own deprecation (superseded by llama-cloud SDK) intentionally not migrated mid-task -- flagged for human decision in the upcoming Phase 2 human-action report.
+================================================================================
+2026-07-21 17:58:37,873 INFO [llamaparse-prompt-param-correction] (Claude Code (task review + fix)) Task 3 reviewer caught that system_prompt fully overrides LlamaParse's tuned default prompt; corrected to system_prompt_append and re-verified against real table content -- success
+branch:  phase2-ingestion-parsing
+task:    Phase 2 Task 3
+files:   project/ingest/parse_filing.py, resources/artifacts/Changes.md
+details: First deprecation fix (parsing_instruction -> system_prompt) was mechanically valid but semantically wrong: system_prompt replaces LlamaParse's internal default prompt wholesale (library docs: may impact accuracy), whereas the original parsing_instruction was additive. system_prompt_append is the parameter that actually preserves that additive behavior. Caught by the task reviewer, not self-discovered -- exactly the kind of subtle parameter-swap risk a second set of eyes exists for. Fixed and re-verified with a live smoke test using an actual 2-row financial table (not just a trivial paragraph), confirming atomic table extraction -- this task's core guarantee -- still holds. Recorded in Changes.md with the corrected reasoning.
+================================================================================
+2026-07-21 17:55:15,316 INFO [llamaparse-deprecation-discovery] (Claude Code (live smoke test)) Live LlamaParse smoke test surfaced two deprecation warnings: a param-level one (fixed immediately) and a package-level one (flagged, not fixed) -- partial
+branch:  phase2-ingestion-parsing
+task:    Phase 2 Task 3
+files:   project/ingest/parse_filing.py, resources/artifacts/Changes.md
+details: Running Task 3's live smoke test (controller-run, real API key) printed a DeprecationWarning on the parsing_instruction constructor arg. Fixed immediately by swapping to system_prompt -- same effect, trivial, re-verified with tests + a second live smoke test. Deeper finding while investigating: the whole llama-parse PyPI package is deprecated in favour of a new 'llama-cloud' unified SDK; its own notice claims maintenance until 2026-05-01, which is already in the past relative to today (2026-07-21). Decision: do not migrate mid-task. Reasoning: (1) the package is still installable and fully functional, confirmed by two live smoke tests: (2) llama-cloud is a different client shape, not a drop-in replacement, so migrating is a real rewrite of parse_filing.py's interface, not a one-line swap; (3) doing that rewrite unprompted, mid-Task-3, would be scope creep the plan never asked for and risks introducing new bugs under time pressure. Logged in resources/artifacts/Changes.md per the user's rule (log any change from the plan) and flagged as a human decision point in the upcoming human-action report rather than silently deferred.
+================================================================================
+2026-07-21 17:48:08,521 INFO [phase2-task2-complete] (Claude Code (subagent-driven-development)) Task 2 approved: fetch_filings.py resolves real SEC filing URLs at runtime, never hardcodes accession numbers -- success
+branch:  phase2-ingestion-parsing
+task:    Phase 2 Task 2
+details: Implementer went beyond the brief's mocked tests and verified live against the real SEC EDGAR API (company_tickers.json and submissions/CIK...json field names, plus a real archive URL returning HTTP 200) before reporting DONE -- this confirms the plan's core design decision (runtime URL resolution instead of hardcoded accession numbers) was correct, not just internally consistent. Reviewer independently traced the User-Agent header, cache short-circuit, and CIK-format handling to specific lines rather than trusting the report. One design caveat logged but not blocking: fiscal-year matching uses the 10-K's reportDate calendar year, which works for the current AAPL/MSFT/TSLA manifest but would need revisiting if the ticker set changes to companies with unusual fiscal-year-end dates.
+================================================================================
+2026-07-21 17:40:49,515 INFO [phase2-task1-complete] (Claude Code (subagent-driven-development)) Task 1 approved: filings manifest (9 entries, AAPL/MSFT/TSLA x FY2023-2025) and llama-parse+requests dependencies added -- success
+branch:  phase2-ingestion-parsing
+task:    Phase 2 Task 1
+details: Implementer wrote manifest, test, dependencies, and .env.example update exactly per brief. Reviewer verified document_id format {ticker}_{fiscal_year} holds for all 9 entries, tests are non-trivial (3 distinct assertions), .env.example edit was additive only. No findings. Excluded uv.lock (50-package lockfile diff) from the review package since a resolver-generated lockfile isn't meaningful for a reviewer to read line-by-line -- same exclusion pattern used for graphify-out/ cache in Phase 1's final review.
+================================================================================
+2026-07-21 17:32:43,140 INFO [filing-corpus-decision] (Claude Code (human decision)) Human confirmed the Phase 2 filing corpus: AAPL/MSFT/TSLA x FY2023-2025 (9 filings), the spec's own illustrative default -- success
+branch:  phase2-ingestion-parsing
+task:    Phase 2 Task 1
+details: Task 1 Step 1 was an ACTIVE gate (Architecture.md §11 explicitly left this open). Asked via AskUserQuestion rather than defaulting silently, since this becomes the permanent dissertation evaluation corpus and changing it later means re-running ingestion, dataset generation, and the whole benchmark. Human picked the recommended default. Proceeding to write data/filings_manifest.json exactly as drafted in the plan.
+================================================================================
+2026-07-21 17:32:17,448 INFO [phase2-kickoff] (Claude Code (subagent-driven-development)) Started Phase 2 execution on new branch phase2-ingestion-parsing, following the approved 7-task plan -- success
+branch:  phase2-ingestion-parsing
+task:    Phase 2: Ingestion & Parsing Pipeline
+details: Chose a plain git branch (not a worktree) matching Phase 1's precedent and the user's explicit instruction to 'checkout a new branch like phase 1'. Reused the existing .superpowers/sdd/progress.md ledger (git-ignored scratch) rather than creating a new one, appending a Phase 2 section header so Phase 1's completed-task history stays intact for reference. Before dispatching Task 1's implementer, must resolve the plan's one ACTIVE gate at Task 1 Step 1 (confirm the real filing corpus) per the user's rule: active steps get a direct question in chat, not a silent default.
+================================================================================
 2026-07-21 13:42:13,411 INFO [phase2-plan-authoring] (Claude Code (superpowers:writing-plans)) Wrote the Phase 2 (Ingestion & Parsing) implementation plan: 7 tasks covering filings manifest, SEC EDGAR fetch, LlamaParse, node_builder, and the 20-section audit -- success
 branch:  main
 task:    Phase 2: Ingestion & Parsing Pipeline (planning)
