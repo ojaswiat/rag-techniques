@@ -86,7 +86,7 @@ Produce the 140-query benchmark via cross-family generation and critique, then s
 
 ## Goals
 1. **Generator (`openai/gpt-oss-120b`):** per-section (chunked, <128K) generation of quadrant-appropriate `query_text`, `ground_truth_answer`, and `gt_citations` (node IDs), accumulating to 35/quadrant (140 total).
-2. **Critic (`Qwen3-32b`) — a different family — with a search tool over *all* nodes of the filing:** blind verification (answer + citations redacted), independently locating and citing evidence.
+2. **Critic (`Qwen3.6-27B`) — a different family — with a search tool over *all* nodes of the filing:** blind verification (answer + citations redacted), independently locating and citing evidence.
 3. **Automated code cross-check:** compare Critic's cited nodes + value against the Generator's ground truth → Auto-Verify or discard-and-regenerate.
 4. Split the verified pool into three **disjoint** sets: **PQ 100 / GQ 20 / JEQ 20**, 25/5/5 per quadrant.
 5. **Human-label the 20 GQ** with "why this answer is good" notes and example 1–10 scores (the few-shot teaching material).

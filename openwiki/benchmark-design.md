@@ -51,7 +51,7 @@ The quadrant is not just a reporting dimension. It drives the judge's few-shot r
 Authoring 140 ground-truth queries by hand is not feasible solo, so they are generated — but with an adversarial check strong enough to be academically defensible (`Project Idea.md` §4):
 
 1. **Generator** (`openai/gpt-oss-120b`) reads one parsed section at a time, because open models cap at roughly 128K tokens and a full 10-K does not fit. It emits a query, a ground-truth answer, and `gt_citations` as node IDs.
-2. **Critic** (`Qwen3-32b`, a deliberately different model family) receives *only* the query text. The answer and citations are redacted. It is given a search tool over **all** nodes of the filing, not just the section the generator saw — searching the whole filing is what makes the verification independent.
+2. **Critic** (`Qwen3.6-27B`, a deliberately different model family) receives *only* the query text. The answer and citations are redacted. It is given a search tool over **all** nodes of the filing, not just the section the generator saw — searching the whole filing is what makes the verification independent.
 3. **Cross-check** is deterministic code, not an LLM judgement: compare the critic's cited nodes and value against the generator's ground truth. Agreement auto-verifies; mismatch discards and regenerates.
 
 Different families matter here. Agreement between two independent architectures is much stronger evidence than a model agreeing with itself.

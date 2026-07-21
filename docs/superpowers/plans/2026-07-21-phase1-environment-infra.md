@@ -149,10 +149,10 @@ THROTTLE_LIMIT: int = 3
 # Guardrails.md §2 — fixed model routing matrix. Do not change without updating the spec.
 MODEL_ROUTING: dict[str, str] = {
     "generator": "openai/gpt-oss-120b",
-    "critic": "qwen/qwen3-32b",
+    "critic": "qwen/qwen3.6-27b",
     "p3_index_build": "llama-3.1-8b-instant",
     "answerer": "llama-3.3-70b-versatile",
-    "judge": "qwen/qwen3-32b",
+    "judge": "qwen/qwen3.6-27b",
     "debug": "llama-3.1-8b-instant",
 }
 
@@ -786,10 +786,10 @@ Checked: 2026-07-21 (update this date whenever re-verified; limits are account-t
 | Stage | Model | RPM | RPD | TPM | TPD |
 |---|---|---|---|---|---|
 | Generator | openai/gpt-oss-120b | <paste> | <paste> | <paste> | <paste> |
-| Critic | qwen/qwen3-32b | <paste> | <paste> | <paste> | <paste> |
+| Critic | qwen/qwen3.6-27b | <paste> | <paste> | <paste> | <paste> |
 | P3 index build | llama-3.1-8b-instant | <paste> | <paste> | <paste> | <paste> |
 | Answerer | llama-3.3-70b-versatile | <paste> | <paste> | <paste> | <paste> |
-| Judge | qwen/qwen3-32b | <paste> | <paste> | <paste> | <paste> |
+| Judge | qwen/qwen3.6-27b | <paste> | <paste> | <paste> | <paste> |
 
 Notes:
 - Limits apply **per organization**, not per key — extra keys do not raise the ceiling (`Guardrails.md` §5).
@@ -837,7 +837,9 @@ Expected: all tests from Tasks 1-4 pass (`config`, `database_manager`, `groq_cli
 
 - [ ] **Step 3: Confirm the disjoint-set constraint holds at the schema level**
 
-Run: `cd /Users/ojaswi/Projects/rag-techniques/project && uv run python -c "
+Run:
+```bash
+cd /Users/ojaswi/Projects/rag-techniques/project && uv run python -c "
 import asyncio, database_manager as dbm
 async def main():
     await dbm.init_db('smoke_test.db')

@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Phase 1: Environment & Infrastructure — rag-techniques Report</title>
+<style>
+  :root {
+    --bg: #faf9f7; --surface: #ffffff; --text: #101418; --muted: #5a6472;
+    --accent: #16181a; --accent-ink: #ffffff; --border: #d6d3cd; --hairline: #eae7e1;
+    --code-bg: #f3f1ec; --pass: #15803d; --warn: #b45309; --fail: #b91c1c;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0b0d10; --surface: #0f1216; --text: #e9e7e2; --muted: #9aa3ad;
+      --accent: #f5c518; --accent-ink: #111111; --border: #2c333b; --hairline: #1d2229;
+      --code-bg: #14181e; --pass: #4ade80; --warn: #fbbf24; --fail: #f87171;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { transition: none !important; } }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 16px; line-height: 1.6; }
+  code, pre, .mono { font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px 80px; }
+  a { color: var(--accent); text-decoration: none; font-weight: 500; }
+  a:hover { text-decoration: underline; }
+  .masthead { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--border); font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+  .masthead .brand { color: var(--accent); font-weight: 700; }
+  .masthead .mh-right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: flex-end; }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+  .branchchip { display: inline-flex; align-items: center; gap: 5px; max-width: 34ch; border: 1px solid var(--border); background: var(--surface); padding: 2px 8px; font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; font-size: 0.72rem; font-weight: 500; color: var(--text); vertical-align: middle; }
+  .branchchip svg { width: 11px; height: 11px; flex: 0 0 auto; color: var(--accent); }
+  .back { display: inline-flex; align-items: center; gap: 6px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; }
+  .back svg { width: 13px; height: 13px; }
+  header.report { padding: 40px 0 20px; border-bottom: 3px solid var(--accent); }
+  header.report h1 { font-size: clamp(1.7rem, 4.5vw, 2.6rem); font-weight: 800; letter-spacing: -0.03em; line-height: 1.15; max-width: 30ch; }
+  header.report .subtitle { margin-top: 10px; color: var(--muted); font-size: 0.95rem; }
+  .meta-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+  .chip { border: 1px solid var(--border); padding: 4px 10px; font-size: 0.74rem; color: var(--muted); }
+  .chip b { color: var(--accent); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-right: 6px; font-size: 0.68rem; }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin: 24px 0 8px; }
+  .kpi { border: 1px solid var(--border); padding: 14px 16px; background: var(--surface); }
+  .kpi.pass { border-left: 3px solid var(--pass); }
+  .kpi .label { font-size: 0.66rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent); }
+  .kpi.pass .label { color: var(--pass); }
+  .kpi .value { margin-top: 4px; font-size: 1.45rem; font-weight: 750; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; word-break: break-word; }
+  .kpi .value.small { font-size: 1.0rem; }
+  section { margin-top: 32px; }
+  h2 { font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.12em; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 8px; margin-bottom: 14px; }
+  p, li { font-size: 0.95rem; }
+  ul, ol { padding-left: 1.3em; margin-top: 6px; }
+  li { margin-top: 4px; }
+  .table-scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+  th { text-align: left; padding: 8px 12px; font-size: 0.64rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent); border-bottom: 2px solid var(--accent); }
+  td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--hairline); vertical-align: top; }
+  .tag { display: inline-block; border: 1px solid currentColor; padding: 1px 8px; font-size: 0.66rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; font-family: "SF Mono", ui-monospace, Menlo, monospace; white-space: nowrap; }
+  .tag.pass { color: var(--pass); } .tag.warn { color: var(--warn); } .tag.info { color: var(--accent); }
+  pre { background: var(--code-bg); border: 1px solid var(--hairline); padding: 14px; overflow-x: auto; font-size: 0.82rem; }
+  .file { font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; font-size: 0.82rem; }
+  footer { margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; font-size: 0.78rem; color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="masthead" id="top">
+    <a class="back" href="index.html" aria-label="Back to reports"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>Back</a>
+    <span><span class="brand">rag-techniques</span> · Monitor · Report</span>
+    <span class="mh-right">
+      <span class="branchchip" title="Branch: phase1-environment-infra"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">phase1-environment-infra</span></span>
+      <span class="mono">2026-07-21</span>
+    </span>
+  </div>
+
+  <header class="report">
+    <h1>Phase 1: Environment, Infrastructure &amp; Cost Guardrails</h1>
+    <p class="subtitle">Repo skeleton, five-table SQLite state layer, and Groq rate-limit scaffolding — built via subagent-driven TDD, gated by per-task and whole-branch review.</p>
+    <div class="meta-chips">
+      <span class="chip"><b>Generated</b><span class="mono">2026-07-21</span></span>
+      <span class="chip"><b>Branch</b><span class="mono">phase1-environment-infra</span></span>
+      <span class="chip"><b>Commit</b><span class="mono">dec7484</span></span>
+      <span class="chip"><b>Status</b><span class="tag pass">verified</span></span>
+    </div>
+  </header>
+
+  <div class="kpis">
+    <div class="kpi pass"><div class="label">Tests</div><div class="value">15 / 15</div></div>
+    <div class="kpi pass"><div class="label">Commits</div><div class="value">16</div></div>
+    <div class="kpi pass"><div class="label">Review Gates</div><div class="value small">7 task + 1 branch</div></div>
+  </div>
+
+  <section>
+    <h2>Summary</h2>
+    <p>Phase 1 stands up the environment and infrastructure rails every later phase (2&ndash;8) of the COMP702 RAG benchmark build depends on: pinned dependencies, a five-table WAL-mode SQLite schema, a resilient Groq client, a reusable throttle template, and a verified rate-limit reference. Executed via <code>superpowers:subagent-driven-development</code> &mdash; a fresh implementer subagent per task, followed by an independent reviewer subagent, with fix cycles for any Important/Critical finding. All 7 tasks passed review; a final whole-branch review caught 2 cross-task issues invisible to per-task gates, both fixed and re-verified clean.</p>
+  </section>
+
+  <section>
+    <h2>What Was Asked</h2>
+    <p>Write and execute an implementation plan for Phase 1 of <code>resources/specs/Phase Plan.md</code>, distinguishing active human-intervention steps (must stop and wait) from passive ones (proceed with a logged placeholder), and produce a human action report covering what still needs doing on the human side. Execution was to use subagent-driven development with TDD, dispatching parallel agents where independent work justified it, on a separate branch.</p>
+  </section>
+
+  <section>
+    <h2>What Was Done</h2>
+    <ol>
+      <li><b>Task 1 &ndash; Repo skeleton:</b> pinned <code>groq</code>, <code>tenacity</code>, <code>aiosqlite</code>, <code>python-dotenv</code>, <code>pytest</code>, <code>pytest-asyncio</code> via <code>uv</code>; <code>config.py</code> with model routing, throttle flag, env loading; <code>.env.example</code> with setup instructions.</li>
+      <li><b>Task 2 &ndash; <code>database_manager.py</code>:</b> five-table WAL-mode SQLite schema exactly per <code>Architecture.md</code> §3.2. Review found <code>upsert_result</code>'s JSON (de)serialization helpers were dead code, breaking the "database_manager.py is the only module that touches raw JSON" invariant &mdash; fixed on request.</li>
+      <li><b>Task 3 &ndash; <code>groq_client.py</code>:</b> tenacity-backed async wrapper, exponential backoff with jitter on HTTP 429, <code>asyncio.Semaphore(5)</code>. Approved clean.</li>
+      <li><b>Task 4 &ndash; <code>loop_template.py</code>:</b> reusable <code>LOCAL_TEST_THROTTLE</code> pattern for the five future loop scripts. Approved clean.</li>
+      <li><b>Task 5 &ndash; <code>groq_limits.md</code>:</b> live smoke test across all 5 model routes discovered Groq no longer hosts <code>qwen/qwen3-32b</code> (404 on Critic and Judge). Escalated to the human, who approved swapping to <code>qwen/qwen3.6-27b</code> project-wide (not just <code>project/</code>) and asked for a changelog &mdash; <code>resources/artifacts/Changes.md</code> was created. Rate limits captured live from response headers; RPD/TPD split flagged as needing a human console visit.</li>
+      <li><b>Task 6 &ndash; End-to-end verification:</b> fresh <code>uv sync</code> + full suite, clean.</li>
+      <li><b>Task 7 &ndash; Human action report:</b> <code>temp/phase1-human-actions.md</code>, reflecting actual outcomes (key was fixed mid-build, model swap applied, RPD/TPD still open).</li>
+      <li><b>Final whole-branch review (Opus):</b> found 2 Important cross-task issues &mdash; <code>groq_client.py</code> failed to import with no API key (breaks fresh-clone test collection), and a stale ~6K Qwen TPM figure survived in 2 spec files after an earlier partial fix. Both fixed by a single follow-up subagent and re-reviewed: <em>Ready to merge</em>.</li>
+    </ol>
+    <p><b>Note on parallel dispatch:</b> <code>superpowers:dispatching-parallel-agents</code> was checked but not used &mdash; all 7 tasks share state sequentially (each task's config/schema/client is a dependency of the next), and the subagent-driven-development skill explicitly prohibits parallel implementers over shared files. Tasks were dispatched sequentially instead.</p>
+  </section>
+
+  <section>
+    <h2>Evidence</h2>
+    <pre>$ uv run pytest tests/ -v
+tests/test_config.py::test_model_routing_has_all_stages PASSED
+tests/test_config.py::test_generator_and_critic_are_different_families PASSED
+tests/test_config.py::test_answerer_and_judge_are_different_families PASSED
+tests/test_config.py::test_throttle_limit_is_three PASSED
+tests/test_config.py::test_concurrency_cap_is_five PASSED
+tests/test_database_manager.py::test_init_db_creates_five_tables PASSED
+tests/test_database_manager.py::test_wal_mode_enabled PASSED
+tests/test_database_manager.py::test_insert_and_get_node PASSED
+tests/test_database_manager.py::test_upsert_result_and_get_completed_keys PASSED
+tests/test_database_manager.py::test_results_unique_constraint_blocks_duplicate PASSED
+tests/test_groq_client_backoff.py::test_call_groq_retries_on_429_then_succeeds PASSED
+tests/test_groq_client_backoff.py::test_call_groq_respects_semaphore_bound PASSED
+tests/test_loop_template.py::test_throttle_limit_clause_matches_config PASSED
+tests/test_loop_template.py::test_apply_throttle_caps_at_three_when_enabled PASSED
+tests/test_loop_template.py::test_apply_throttle_passthrough_when_disabled PASSED
+
+15 passed in 0.68s</pre>
+    <pre>$ uv run python -c "call_groq for all 5 MODEL_ROUTING stages"
+generator      openai/gpt-oss-120b       OK
+critic         qwen/qwen3.6-27b          OK
+p3_index_build llama-3.1-8b-instant      OK
+answerer       llama-3.3-70b-versatile   OK
+judge          qwen/qwen3.6-27b          OK</pre>
+  </section>
+
+  <section>
+    <h2>Files Touched</h2>
+    <div class="table-scroll"><table><tbody>
+      <tr><td class="file">project/config.py</td><td>Model routing, throttle flag, env loading; swapped Critic/Judge to qwen3.6-27b</td></tr>
+      <tr><td class="file">project/database_manager.py</td><td>Five-table WAL-mode SQLite schema + async CRUD helpers</td></tr>
+      <tr><td class="file">project/groq_client.py</td><td>Tenacity-backed wrapper, 5-worker semaphore; keyless-import fallback added post-review</td></tr>
+      <tr><td class="file">project/loop_template.py</td><td>Reusable LOCAL_TEST_THROTTLE pattern</td></tr>
+      <tr><td class="file">project/groq_limits.md</td><td>Live-verified per-model rate-limit reference</td></tr>
+      <tr><td class="file">project/tests/*.py</td><td>15 tests across 4 files, all passing</td></tr>
+      <tr><td class="file">resources/artifacts/Changes.md</td><td>New &mdash; changelog for the Qwen model substitution</td></tr>
+      <tr><td class="file">resources/specs/*.md, CLAUDE.md, openwiki/*.md</td><td>Project-wide Qwen3-32b &rarr; Qwen3.6-27B swap; stale TPM figures corrected</td></tr>
+      <tr><td class="file">temp/phase1-human-actions.md</td><td>Human action report (active/passive items)</td></tr>
+      <tr><td class="file">docs/superpowers/plans/2026-07-21-phase1-environment-infra.md</td><td>The plan itself; fixed a malformed code fence found during execution</td></tr>
+    </tbody></table></div>
+  </section>
+
+  <section>
+    <h2>Risks</h2>
+    <ul>
+      <li><b>RPD/TPD split unverified.</b> <code>groq_limits.md</code> has live RPM/TPM-style figures but not the daily ceilings &mdash; Groq's API doesn't expose them. Needs a human visit to <a href="https://console.groq.com/settings/limits">console.groq.com/settings/limits</a> before Phase 7's 900-run matrix is paced.</li>
+      <li><b>Model substitution durability.</b> <code>qwen/qwen3.6-27b</code> is what's available on Groq's free tier <em>today</em>; free-tier model rosters change without notice, so this should be re-verified again before Phase 4/6 (Critic/Judge) actually run.</li>
+      <li><b>Minor, logged, not blocking:</b> <code>_loads()</code> in <code>database_manager.py</code> is still dead code (no read-side consumer needed yet); ASCII-art diagrams in <code>Architecture.md</code>/<code>Guardrails.md</code> have minor column misalignment after the longer model name; <code>graphify-out/GRAPH_REPORT.md</code>'s doc-derived prose may still reference the old model name until a full doc re-extraction runs.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Follow-ups</h2>
+    <ul>
+      <li>Visit <a href="https://console.groq.com/settings/limits">console.groq.com/settings/limits</a> and fill in <code>groq_limits.md</code>'s RPD/TPD columns before Phase 7.</li>
+      <li>Run <code>/openwiki:wiki update</code> to sync <code>openwiki/</code> pages with the model-routing change (per <code>monitor/usage.md</code>'s doc-sync guidance).</li>
+      <li>Re-run graphify's doc-update flow if a fully synced knowledge graph is wanted (current AST-only update doesn't re-run LLM doc extraction).</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Next Steps</h2>
+    <p>Commit remaining state, push <code>phase1-environment-infra</code>, and open a pull request per the human's request. Phase 2 (Ingestion &amp; Parsing) is next per <code>resources/specs/Phase Plan.md</code>, and will need the LlamaParse API key (not yet provisioned &mdash; see <code>temp/phase1-human-actions.md</code>).</p>
+  </section>
+
+  <footer><span>Generated by the monitor workflow.</span><span><a href="index.html">&larr; All reports</a> &middot; <a href="#top">&uarr; Back to Top</a></span></footer>
+
+</div>
+</body>
+</html>

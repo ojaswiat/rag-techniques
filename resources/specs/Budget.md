@@ -20,9 +20,9 @@ This document reconciles the project's resource requirements with a **near-zero-
 | BM25 retrieval (P2) | `rank_bm25` | Local CPU | $0.00 |
 | **P3 summary-index build (one-time)** | `llama-3.1-8b-instant` | Groq free tier | $0.00 |
 | Query generation | `openai/gpt-oss-120b` | Groq free tier | $0.00 |
-| Query critique | `Qwen3-32b` (+ search tool) | Groq free tier | $0.00 |
+| Query critique | `Qwen3.6-27B` (+ search tool) | Groq free tier | $0.00 |
 | **Pipeline answer generation (P1/P2/P3)** | `Llama 3.3 70B` | Groq free tier | $0.00 |
-| LLM-as-a-Judge | `Qwen3-32b` | Groq free tier | $0.00 |
+| LLM-as-a-Judge | `Qwen3.6-27B` | Groq free tier | $0.00 |
 | State / results store | SQLite | Local disk | $0.00 |
 | **Total** | | | **$0.00** |
 
@@ -39,11 +39,11 @@ All LLM calls run on Groq's free tier: open-source models on Groq's LPU hardware
 | Model | Role | RPM | RPD | TPM | TPD |
 |---|---|---|---|---|---|
 | `openai/gpt-oss-120b` | Generator | ~30 | ~1,000 | ~8,000 | ~200,000 |
-| `qwen/qwen3-32b` | Critic + Judge | ~60 | ~1,000 | ~6,000 | per Groq docs |
+| `qwen/qwen3.6-27b` | Critic + Judge | ~1,000 (per `project/groq_limits.md`, live-verified 2026-07-21) | unverified — needs console.groq.com/settings/limits | ~8,000 (per `project/groq_limits.md`, live-verified 2026-07-21) | unverified — needs console.groq.com/settings/limits |
 | `llama-3.3-70b-versatile` | Pipeline answerer | ~30 | ~1,000 | ~12,000 | ~100,000 |
 | `llama-3.1-8b-instant` | P3 index build / debug | ~30 | ~14,400 | higher | higher |
 
-> Limits apply **per organization**, not per API key — extra keys do not raise the ceiling. You hit whichever limit arrives first. **For the token-heavy phases the daily-token (TPD) ceiling binds before the daily-request (RPD) ceiling** — e.g. Llama 3.3 70B's ~100K TPD is reached long before its ~1,000 RPD. **Cached tokens do not count toward limits**, so a consistent system prompt / rubric prefix stretches the free tier substantially. For Qwen, the ~6K **TPM** is the tight axis. Re-verify all figures at `console.groq.com` before a large run.
+> Limits apply **per organization**, not per API key — extra keys do not raise the ceiling. You hit whichever limit arrives first. **For the token-heavy phases the daily-token (TPD) ceiling binds before the daily-request (RPD) ceiling** — e.g. Llama 3.3 70B's ~100K TPD is reached long before its ~1,000 RPD. **Cached tokens do not count toward limits**, so a consistent system prompt / rubric prefix stretches the free tier substantially. For Qwen, the ~8K **TPM** (per `project/groq_limits.md`, live-verified 2026-07-21) is the tight axis. Re-verify all figures at `console.groq.com` before a large run.
 
 ### Total LLM call budget for the whole project
 
@@ -51,9 +51,9 @@ All LLM calls run on Groq's free tier: open-source models on Groq's LPU hardware
 |---|---|---|
 | P3 summary-index build (one-time) | `llama-3.1-8b-instant` | ~one per node (bulk, on the 14,400 RPD model) |
 | Dataset generation | `openai/gpt-oss-120b` | ~180 |
-| Dataset critique | `Qwen3-32b` | ~180 |
+| Dataset critique | `Qwen3.6-27B` | ~180 |
 | Pipeline answer generation (900 + 60 validation) | `Llama 3.3 70B` | ~960 |
-| Judge evaluation (900 + 60 validation) | `Qwen3-32b` | ~960 |
+| Judge evaluation (900 + 60 validation) | `Qwen3.6-27B` | ~960 |
 | **Total (excl. one-time index build)** | | **~2,280 calls** |
 
 ### The TPD reality (this corrects the old "1–2 days" claim)
@@ -61,7 +61,7 @@ All LLM calls run on Groq's free tier: open-source models on Groq's LPU hardware
 The two heavy phases are token-bound, not request-bound:
 
 * **Answer generation (`Llama 3.3 70B`, ~100K TPD).** ~960 calls, each ~1–3K tokens (query + K retrieved nodes; larger at K=10), averaging ~2K → on the order of **~2M tokens**. Against ~100K TPD that is **roughly two-to-three weeks** of free-tier days, *not* 1–2. This is the project's true bottleneck.
-* **Judging (`Qwen3-32b`).** ~960 calls. With the rubric + 5 quadrant-matched few-shot exemplars **prompt-cached** (a static prefix that does not count toward limits), the uncached payload per call is small (~1K tokens), but Qwen's ~6K **TPM** still paces throughput. Spread across days, it fits comfortably.
+* **Judging (`Qwen3.6-27B`).** ~960 calls. With the rubric + 5 quadrant-matched few-shot exemplars **prompt-cached** (a static prefix that does not count toward limits), the uncached payload per call is small (~1K tokens), but Qwen's ~8K **TPM** (per `project/groq_limits.md`) still paces throughput. Spread across days, it fits comfortably.
 * **Generation + critique.** ~180 calls each; minor relative to the above.
 
 So the honest position: **at strict $0, the full 900-run benchmark spans ~2–3 weeks of intermittent free-tier running** (well inside the 10-week timeline), gated by Llama 3.3 70B's TPD. It does **not** finish in 1–2 days for free.
@@ -123,9 +123,9 @@ If local CPU runs prove too slow during development, a free Google Colab / Kaggl
 | Original plan | Revised plan | Effect |
 |---|---|---|
 | $300 Vertex AI credit allocation | $0 — Groq free tier + local CPU | Removes all cloud spend exposure |
-| Gemini 1.5 Pro / Flash (decommissioned) | gpt-oss-120b + Qwen3-32b + Llama 3.3 70B (Groq) | Restores a working, free model stack |
+| Gemini 1.5 Pro / Flash (decommissioned) | gpt-oss-120b + Qwen3.6-27B + Llama 3.3 70B (Groq) | Restores a working, free model stack |
 | Generator = Llama 3.3 70B | **Generator = gpt-oss-120b** | Cleaner family separation from the Qwen critic |
-| Judge = Llama 3.3 70B | **Judge = Qwen3-32b** | Judge ≠ answerer family; no model grades its own output |
+| Judge = Llama 3.3 70B | **Judge = Qwen3.6-27B** | Judge ≠ answerer family; no model grades its own output |
 | Answerer **unspecified / uncosted** | **Answerer = Llama 3.3 70B, explicitly costed** | Closes the biggest gap in the old budget |
 | (no structural pipeline) | **P3 Structural RAG + one-time llama-3.1-8b summary build** | New, but kept at $0 on the high-RPD model |
 | Cohere Rerank (paid) | `bge-reranker-base` (local, $0) | Removes an unbudgeted paid surface |

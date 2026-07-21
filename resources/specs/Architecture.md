@@ -64,7 +64,7 @@ A ninth point is a flagged ambiguity rather than a fix — see §12, item 3 (con
    |  Dataset Generation         |               |  Pipeline Index Builders      |
    |  dataset_gen/*.py           |               |  pipelines/*                  |
    |  external: Groq             |               |  P1: ChromaDB + bge embed     |
-   |  (gpt-oss-120b, Qwen3-32b)  |               |  P2: rank_bm25 (per document) |
+   |  (gpt-oss-120b, Qwen3.6-27B)  |               |  P2: rank_bm25 (per document) |
    +---------------+-----------------+           |  P3: SummaryIndex (1x build,  |
                    | queries / golden_queries /  |      llama-3.1-8b-instant)    |
                    | judge_validation            +---------------+---------------+
@@ -80,7 +80,7 @@ A ninth point is a flagged ambiguity rather than a fix — see §12, item 3 (con
                          +-----------------------------+
                          |   Judge & Metrics           |
                          |   judge/*.py                |
-                         |   external: Groq Qwen3-32b  |
+                         |   external: Groq Qwen3.6-27B  |
                          +---------------+---------------+
                                          | scored results
                                          v
@@ -399,7 +399,7 @@ validation_gate.py     loop_executor.py    score_gate_outputs.py    async_judge.
       |                       |                     |                     |               |
       |--prompt researcher for human_score per row------>|                                    |
       |                                              |--UPDATE results SET human_score=...----->|
-      |--for each of the 60 rows: build quadrant-matched 5-exemplar prefix, call Qwen3-32b------>|
+      |--for each of the 60 rows: build quadrant-matched 5-exemplar prefix, call Qwen3.6-27B------>|
       |                                                                     |--UPDATE results SET judge_score=...-->|
       |--compute Agreement Rate = f(human_score, judge_score) over the 60 rows------------------>|
       |--gate: Agreement Rate > 80%? --(NO)--> stop, fix rubric/model, re-run
@@ -490,7 +490,7 @@ async_generator.py        search_tool.py          async_critic.py       cross_ch
 |---|---|
 | `dataset_gen/async_generator.py` | Generator (`openai/gpt-oss-120b`) reads one `(document_id, section)` chunk at a time; accumulates 35/quadrant across all ~9 filings. |
 | `dataset_gen/search_tool.py` | Critic's independent search tool — fresh `rank_bm25` instance per document (§5, self-contained). |
-| `dataset_gen/async_critic.py` | Critic (`Qwen3-32b`), blind to the Generator's answer/citations. |
+| `dataset_gen/async_critic.py` | Critic (`Qwen3.6-27B`), blind to the Generator's answer/citations. |
 | `dataset_gen/cross_check.py` | Deterministic node-ID + value comparison → Auto-Verify or discard. |
 | `dataset_gen/split_and_label.py` | Splits into disjoint `queries`(100)/`golden_queries`(20)/`judge_validation`(20); enforces 25/5/5-per-quadrant strata and no shared `query_id`. |
 | `dataset_gen/label_gq.py` | CLI: prompts the researcher for `human_score` + `human_reasoning` on the 20 GQ. |
