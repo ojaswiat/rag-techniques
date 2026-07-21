@@ -18,7 +18,12 @@ _CACHE_FRESH_SECONDS = 48 * 3600
 _parser = LlamaParse(
     api_key=config.LLAMA_CLOUD_API_KEY or "placeholder-key-for-import-only",
     result_type="markdown",
-    system_prompt=(
+    # system_prompt_append (not system_prompt) preserves LlamaParse's tuned
+    # default prompt and adds to it -- system_prompt would replace the
+    # default wholesale, which the library's own docs warn "may impact
+    # accuracy". This module's whole job is atomic table extraction, so
+    # keeping the default intact matters.
+    system_prompt_append=(
         "This is a SEC 10-K filing. Extract all tables as clean, complete "
         "Markdown tables -- never split or truncate a table across multiple "
         "chunks. Preserve section headers (e.g. 'Item 1A. Risk Factors') as "

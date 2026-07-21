@@ -16,9 +16,14 @@ Simple running list of changes made to the project after the proposal was submit
 - 2026-07-21: `ingest/parse_filing.py`'s `LlamaParse(...)` call used the
   `parsing_instruction` parameter (as drafted in the Phase 2 plan), which
   triggers a deprecation warning in the installed `llama-parse==0.6.94`.
-  Swapped to `system_prompt` (the parameter's replacement) — same effect,
-  warning gone. Verified via the mocked unit tests and a live LlamaParse
-  smoke test.
+  First swapped to `system_prompt`, then corrected to `system_prompt_append`
+  after task review caught that `system_prompt` fully replaces LlamaParse's
+  tuned default prompt (the library's own docs warn this "may impact
+  accuracy"), while `system_prompt_append` preserves the default and adds
+  to it — the correct replacement for what was previously an additive
+  instruction. Re-verified with the mocked unit tests and a live LlamaParse
+  smoke test using real tabular content (a 2-row financial table); the
+  table came back intact with no truncation or column loss.
 
   Bigger, unresolved finding surfaced during that live smoke test: the
   entire `llama-parse` PyPI package is itself deprecated in favour of a new
