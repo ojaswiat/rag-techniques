@@ -43,7 +43,7 @@ All LLM calls run on Groq's free tier: open-source models on Groq's LPU hardware
 | `llama-3.3-70b-versatile` | Pipeline answerer | ~30 | ~1,000 | ~12,000 | ~100,000 |
 | `llama-3.1-8b-instant` | P3 index build / debug | ~30 | ~14,400 | higher | higher |
 
-> Limits apply **per organization**, not per API key — extra keys do not raise the ceiling. You hit whichever limit arrives first. **For the token-heavy phases the daily-token (TPD) ceiling binds before the daily-request (RPD) ceiling** — e.g. Llama 3.3 70B's ~100K TPD is reached long before its ~1,000 RPD. **Cached tokens do not count toward limits**, so a consistent system prompt / rubric prefix stretches the free tier substantially. For Qwen, the ~6K **TPM** is the tight axis. Re-verify all figures at `console.groq.com` before a large run.
+> Limits apply **per organization**, not per API key — extra keys do not raise the ceiling. You hit whichever limit arrives first. **For the token-heavy phases the daily-token (TPD) ceiling binds before the daily-request (RPD) ceiling** — e.g. Llama 3.3 70B's ~100K TPD is reached long before its ~1,000 RPD. **Cached tokens do not count toward limits**, so a consistent system prompt / rubric prefix stretches the free tier substantially. For Qwen, the ~8K **TPM** (per `project/groq_limits.md`, live-verified 2026-07-21) is the tight axis. Re-verify all figures at `console.groq.com` before a large run.
 
 ### Total LLM call budget for the whole project
 
