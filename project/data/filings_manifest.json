@@ -1,0 +1,11 @@
+[
+  {"document_id": "AAPL_2023", "ticker": "AAPL", "fiscal_year": 2023},
+  {"document_id": "AAPL_2024", "ticker": "AAPL", "fiscal_year": 2024},
+  {"document_id": "AAPL_2025", "ticker": "AAPL", "fiscal_year": 2025},
+  {"document_id": "MSFT_2023", "ticker": "MSFT", "fiscal_year": 2023},
+  {"document_id": "MSFT_2024", "ticker": "MSFT", "fiscal_year": 2024},
+  {"document_id": "MSFT_2025", "ticker": "MSFT", "fiscal_year": 2025},
+  {"document_id": "TSLA_2023", "ticker": "TSLA", "fiscal_year": 2023},
+  {"document_id": "TSLA_2024", "ticker": "TSLA", "fiscal_year": 2024},
+  {"document_id": "TSLA_2025", "ticker": "TSLA", "fiscal_year": 2025}
+]
