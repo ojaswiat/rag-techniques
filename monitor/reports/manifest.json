@@ -1,6 +1,13 @@
 [
   {
     "date": "2026-07-22",
+    "file": "2026-07-22-phase3-plan.html",
+    "title": "Phase 3: Implementation Plan",
+    "description": "Design + task-by-task plan for the one-time P3 summary-index build — no code written yet.",
+    "branch": "phase3-summary-index-build"
+  },
+  {
+    "date": "2026-07-22",
     "file": "2026-07-22-phase2-fresh-e2e-verification.html",
     "title": "Phase 2: Fresh End-to-End Verification",
     "description": "Re-verified after the llama-cloud-services migration: dependency resolve, 39/39 tests, live resume-skip, live parse smoke test — all clean.",

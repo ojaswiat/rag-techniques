@@ -112,7 +112,7 @@ Implement all three retrieval paradigms and the single shared answerer, with lea
 ## Goals
 1. **P1 — Vector:** local `bge-small-en-v1.5` embeddings + local `bge-reranker-base` cross-encoder over a local index (FAISS/Chroma). **No metadata pre-filter / section head-start.**
 2. **P2 — BM25:** `rank_bm25` (true Okapi BM25) with the **custom regex tokenizer** (preserves numbers, decimals, `%`, currency; strips table pipes but keeps cell values; no stemming; identical at index and query time). **No `KeywordTableIndex`.**
-3. **P3 — Structural:** retrieval by traversing the cached summary index from Phase 3.
+3. **P3 — Structural:** retrieval by traversing the cached summary index from Phase 3, via the real LlamaIndex `.as_retriever(retriever_mode="embedding")` on the index object built in Phase 3 (deferred here deliberately — see `docs/superpowers/specs/2026-07-22-phase3-summary-index-design.md`, "Out of scope").
 4. **Shared answerer (`Llama 3.3 70B`, `temperature = 0`)** across all three pipelines at identical settings, with prompts that mandate node-ID citations and receive **only the query + retrieved nodes** (no exemplars, no ground truth, no answer-location hint).
 5. Hold total context mass constant across pipelines at each K.
 
