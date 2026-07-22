@@ -104,6 +104,25 @@ async def test_build_index_for_document_cleans_stale_temp_dir_before_retry(tmp_p
     assert not (tmp_path / "AAPL_2025.tmp").exists()
 
 
+@pytest.mark.asyncio
+async def test_build_index_for_document_raises_on_no_nodes(tmp_path, monkeypatch):
+    """A document_id with zero ingested nodes must fail loudly, not silently
+    build/persist an empty TreeIndex (which would create a permanent
+    false-positive cache hit)."""
+    monkeypatch.setattr(bsi, "STORAGE_ROOT", tmp_path)
+
+    with patch.object(bsi.dbm, "get_nodes_by_document", new=AsyncMock(return_value=[])), \
+         patch.object(bsi, "TreeIndex") as mock_tree, \
+         patch.object(bsi, "Groq"):
+        with pytest.raises(ValueError):
+            await bsi.build_index_for_document("MSFT_2025")
+
+    mock_tree.assert_not_called()
+    assert bsi.is_built("MSFT_2025") is False
+    assert not (tmp_path / "MSFT_2025").exists()
+    assert not (tmp_path / "MSFT_2025.tmp").exists()
+
+
 def test_append_cost_log_creates_and_appends(tmp_path):
     log_path = tmp_path / "logs" / "index_build_costs.json"
     bsi.append_cost_log(
