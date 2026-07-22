@@ -1,3 +1,8 @@
+2026-07-22 08:17:22,906 INFO [phase2-fresh-e2e-verification] (Claude Code) Fresh end-to-end verification of Phase 2 branch: dependency resolve, full suite, live resume-skip, live LlamaParse smoke test -- all clean -- success
+branch:  phase2-ingestion-parsing
+task:    Phase 2 fresh end-to-end verification
+details: Attempted a full .venv wipe+rebuild for the cleanest possible fresh-clone simulation, but the user rejected it since they were actively sourced into that same venv in their shell (source .../activate earlier this session) -- deleting it would have broken their active session. Adjusted: ran uv sync in-place instead (safe, still verifies clean dependency resolution against pyproject.toml/uv.lock without touching the sourced venv). Then: (1) full test suite, 39/39 passed; (2) live re-run of ingest.run_ingestion against the real populated benchmark.db -- correctly skipped all 3 already-ingested AAPL filings with no crash and no re-spent LlamaParse credits, confirming the resume-skip fix from the final review still holds after the later llama-cloud-services migration; (3) DB integrity check confirmed all 2081 nodes intact across the 3 documents; (4) live LlamaParse smoke test with a real table fixture, post-migration -- table and header both intact, confirming the llama_parse -> llama_cloud_services swap is still fully correct end-to-end, not just at unit-test level.
+================================================================================
 2026-07-22 08:02:19,780 INFO [llamaparse-migration] (Claude Code) Migrated parse_filing.py from deprecated llama-parse to llama-cloud-services (same underlying class), zero behavior change -- success
 branch:  phase2-ingestion-parsing
 task:    Phase 2 cleanup

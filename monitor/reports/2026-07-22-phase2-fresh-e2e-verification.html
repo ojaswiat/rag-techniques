@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Phase 2: Fresh End-to-End Verification — rag-techniques Report</title>
+<style>
+  :root {
+    --bg: #faf9f7; --surface: #ffffff; --text: #101418; --muted: #5a6472;
+    --accent: #16181a; --accent-ink: #ffffff; --border: #d6d3cd; --hairline: #eae7e1;
+    --code-bg: #f3f1ec; --pass: #15803d; --warn: #b45309; --fail: #b91c1c;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0b0d10; --surface: #0f1216; --text: #e9e7e2; --muted: #9aa3ad;
+      --accent: #f5c518; --accent-ink: #111111; --border: #2c333b; --hairline: #1d2229;
+      --code-bg: #14181e; --pass: #4ade80; --warn: #fbbf24; --fail: #f87171;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { transition: none !important; } }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 16px; line-height: 1.6; }
+  code, pre, .mono { font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px 80px; }
+  a { color: var(--accent); text-decoration: none; font-weight: 500; }
+  a:hover { text-decoration: underline; }
+  .masthead { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--border); font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+  .masthead .brand { color: var(--accent); font-weight: 700; }
+  .masthead .mh-right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: flex-end; }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+  .branchchip { display: inline-flex; align-items: center; gap: 5px; max-width: 34ch; border: 1px solid var(--border); background: var(--surface); padding: 2px 8px; font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; font-size: 0.72rem; font-weight: 500; color: var(--text); vertical-align: middle; }
+  .branchchip svg { width: 11px; height: 11px; flex: 0 0 auto; color: var(--accent); }
+  .back { display: inline-flex; align-items: center; gap: 6px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; }
+  .back svg { width: 13px; height: 13px; }
+  header.report { padding: 40px 0 20px; border-bottom: 3px solid var(--accent); }
+  header.report h1 { font-size: clamp(1.7rem, 4.5vw, 2.6rem); font-weight: 800; letter-spacing: -0.03em; line-height: 1.15; max-width: 30ch; }
+  header.report .subtitle { margin-top: 10px; color: var(--muted); font-size: 0.95rem; max-width: 70ch; }
+  .meta-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+  .chip { border: 1px solid var(--border); padding: 4px 10px; font-size: 0.74rem; color: var(--muted); }
+  .chip b { color: var(--accent); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-right: 6px; font-size: 0.68rem; }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin: 24px 0 8px; }
+  .kpi { border: 1px solid var(--border); padding: 14px 16px; background: var(--surface); }
+  .kpi.pass { border-left: 3px solid var(--pass); }
+  .kpi .label { font-size: 0.66rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent); }
+  .kpi.pass .label { color: var(--pass); }
+  .kpi .value { margin-top: 4px; font-size: 1.45rem; font-weight: 750; letter-spacing: -0.01em; }
+  section { margin-top: 32px; }
+  h2 { font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.12em; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 8px; margin-bottom: 14px; }
+  p, li { font-size: 0.95rem; }
+  ul, ol { padding-left: 1.3em; margin-top: 6px; }
+  li { margin-top: 4px; }
+  .table-scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.9rem; margin-top: 6px; }
+  th { text-align: left; padding: 8px 12px; font-size: 0.64rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent); border-bottom: 2px solid var(--accent); }
+  td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--hairline); vertical-align: top; }
+  .tag { display: inline-block; border: 1px solid currentColor; padding: 1px 8px; font-size: 0.66rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; font-family: "SF Mono", ui-monospace, Menlo, monospace; white-space: nowrap; }
+  .tag.pass { color: var(--pass); } .tag.warn { color: var(--warn); } .tag.info { color: var(--accent); }
+  pre { background: var(--code-bg); border: 1px solid var(--hairline); padding: 14px; overflow-x: auto; font-size: 0.82rem; }
+  .file { font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; font-size: 0.82rem; }
+  .note { border-left: 3px solid var(--warn); background: var(--code-bg); padding: 10px 14px; margin-top: 12px; font-size: 0.9rem; }
+  .note b { color: var(--warn); }
+  footer { margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; font-size: 0.78rem; color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="masthead" id="top">
+    <a class="back" href="index.html" aria-label="Back to reports"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>Back</a>
+    <span><span class="brand">rag-techniques</span> · Monitor · Report</span>
+    <span class="mh-right">
+      <span class="branchchip" title="Branch: phase2-ingestion-parsing"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">phase2-ingestion-parsing</span></span>
+      <span class="mono">2026-07-22</span>
+    </span>
+  </div>
+
+  <header class="report">
+    <h1>Phase 2: Fresh End-to-End Verification</h1>
+    <p class="subtitle">Re-verifying the branch after the llama-cloud-services migration and the Changes.md cleanup — dependency resolve, full test suite, live resume-skip, live parse smoke test.</p>
+    <div class="meta-chips">
+      <span class="chip"><b>Generated</b><span class="mono">2026-07-22</span></span>
+      <span class="chip"><b>Branch</b><span class="mono">phase2-ingestion-parsing</span></span>
+      <span class="chip"><b>Commit</b><span class="mono">2e5ed35</span></span>
+      <span class="chip"><b>Status</b><span class="tag pass">All checks passed</span></span>
+    </div>
+  </header>
+
+  <div class="kpis">
+    <div class="kpi pass"><div class="label">Tests</div><div class="value">39 / 39</div></div>
+    <div class="kpi pass"><div class="label">Real nodes intact</div><div class="value">2,081</div></div>
+    <div class="kpi pass"><div class="label">Live smoke tests</div><div class="value">2 / 2 passed</div></div>
+  </div>
+
+  <section>
+    <h2>What Was Asked</h2>
+    <p>Commit and push outstanding changes on <code>phase2-ingestion-parsing</code>, do a fresh end-to-end test of everything, log via monitor, and report.</p>
+  </section>
+
+  <section>
+    <h2>What Was Done</h2>
+    <ol>
+      <li>Committed and pushed 3 outstanding local commits since the last push (monitor log sync, todo notes).</li>
+      <li>Attempted a full <code>.venv</code> wipe + rebuild for the cleanest possible fresh-clone simulation — <b>rejected by the user</b>, since they were actively sourced into that same venv in their shell (<code>source .../activate</code> earlier this session). Deleting it would have broken their active terminal session. Adjusted: ran <code>uv sync</code> in place instead — still verifies clean dependency resolution against the lockfile without touching the sourced venv.</li>
+      <li>Ran the full test suite: <b>39/39 passed</b>.</li>
+      <li>Re-ran <code>ingest.run_ingestion</code> live against the real, already-populated <code>benchmark.db</code> — confirms the resume-skip fix (from the final whole-branch review) still holds after the later LlamaParse migration: all 3 AAPL filings correctly skipped, no crash, no re-spent LlamaParse credits.</li>
+      <li>Directly queried <code>benchmark.db</code> to confirm node counts are unchanged and intact: 715 + 684 + 682 = 2,081.</li>
+      <li>Ran a fresh live LlamaParse smoke test (a small HTML fixture with a real table) through the post-migration <code>parse_filing.py</code> — table and header both came back intact, confirming the <code>llama_parse</code> → <code>llama_cloud_services</code> swap is correct end-to-end, not just at the unit-test level.</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>Evidence</h2>
+    <pre>$ uv sync
+Resolved 73 packages in 10ms
+Checked 72 packages in 3ms
+
+$ uv run pytest tests/ -v
+...
+======================== 39 passed, 1 warning in 3.76s ========================
+
+$ uv run python -m ingest.run_ingestion
+AAPL_2023: 715 nodes
+AAPL_2024: 684 nodes
+AAPL_2025: 682 nodes
+
+$ db integrity check
+AAPL_2023: 715 nodes
+AAPL_2024: 684 nodes
+AAPL_2025: 682 nodes
+total: 2081</pre>
+    <pre>$ live LlamaParse smoke test (post-migration)
+# Item 8. Financial Statements
+
+| Year | Sales |
+| ---- | ----- |
+| 2025 | 500   |
+| 2024 | 450   |</pre>
+  </section>
+
+  <section>
+    <h2>Files Touched This Session</h2>
+    <div class="table-scroll"><table><tbody>
+      <tr><td class="file">monitor/logs/*, monitor/reports/*</td><td>Log entries synced and committed; this report added</td></tr>
+      <tr><td class="file">temp/todo.md</td><td>Your own notes — untouched content, just committed</td></tr>
+    </tbody></table></div>
+    <div class="note"><b>No source code changed in this verification pass</b> — this was purely a re-confirmation that everything already built and merged-ready still works, after the earlier migration and cleanup commits.</div>
+  </section>
+
+  <section>
+    <h2>Risks</h2>
+    <ul>
+      <li>The freshest possible test (a full clean <code>.venv</code> rebuild) wasn't performed, since it would have disrupted your active shell session. <code>uv sync</code> against the existing venv is a reasonable substitute — it still validates the lockfile resolves cleanly — but isn't a byte-for-byte "brand new machine" simulation.</li>
+      <li>Only the already-ingested 3 AAPL filings were re-verified live; MSFT/TSLA still haven't been fetched (unchanged from before — this was a re-verification pass, not a new full ingestion run).</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Next Steps</h2>
+    <p>Branch is verified clean and pushed. Ready to merge PR #2 whenever you are, or run the full (unthrottled) ingestion first to bring in MSFT/TSLA before merging — your call.</p>
+  </section>
+
+  <footer><span>Generated by the monitor workflow.</span><span><a href="index.html">← All reports</a> · <a href="#top">↑ Back to Top</a></span></footer>
+
+</div>
+</body>
+</html>
