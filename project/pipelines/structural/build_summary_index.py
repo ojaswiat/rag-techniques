@@ -48,6 +48,13 @@ async def build_index_for_document(document_id: str) -> dict:
         return {"document_id": document_id, "skipped": True}
 
     nodes = await dbm.get_nodes_by_document(DB_PATH, document_id)
+    if not nodes:
+        raise ValueError(
+            f"No nodes found for document_id={document_id!r} -- this filing "
+            "has not been ingested yet (Phase 2). Refusing to build/persist "
+            "an empty TreeIndex, which would create a permanent false-positive "
+            "cache hit in storage/summary_index/."
+        )
     llama_nodes = nodes_to_llama_nodes(nodes)
 
     token_counter = TokenCountingHandler()
