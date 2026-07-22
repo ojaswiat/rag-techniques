@@ -1,3 +1,9 @@
+2026-07-22 08:35:29,659 INFO [graphify-openwiki-update] (Claude Code (graphify + openwiki:wiki update)) Refreshed the stale code graph (Phase 1+2 code now indexed, 1321 nodes) and surgically updated 3 openwiki pages that claimed no code existed yet -- success
+branch:  phase2-ingestion-parsing
+task:    Phase 2 documentation sync
+files:   graphify-out/, openwiki/quickstart.md, openwiki/system-architecture.md, openwiki/working-in-this-repo.md, AGENTS.md
+details: Both graphify-out/ and openwiki/ were last touched during Phase 1's Qwen model swap, before any Phase 1/2 code existed -- confirmed via git log before acting rather than assuming. graphify update . was AST-only, no LLM cost. openwiki update was surgical per its own update-mode rules: built a docs-impact plan first (source change -> docs affected -> edit needed), touched only quickstart.md, system-architecture.md, and working-in-this-repo.md; left benchmark-design.md untouched since Phase 4 hasn't started. Key correction across all three: the 'no implementation code yet' premise was false (Phase 1+2 built and tested), and CLAUDE.md's src/ instruction doesn't match reality -- code actually lives in project/, documented as an established discrepancy rather than silently 'fixing' CLAUDE.md itself. Also added the missing OpenWiki reference section to /AGENTS.md (CLAUDE.md already had it) per the skill's root-file rule.
+================================================================================
 2026-07-22 08:17:22,906 INFO [phase2-fresh-e2e-verification] (Claude Code) Fresh end-to-end verification of Phase 2 branch: dependency resolve, full suite, live resume-skip, live LlamaParse smoke test -- all clean -- success
 branch:  phase2-ingestion-parsing
 task:    Phase 2 fresh end-to-end verification

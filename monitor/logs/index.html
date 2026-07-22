@@ -106,7 +106,7 @@
     <span><span class="brand">rag-techniques</span> · Monitor · Logs</span>
     <span class="mh-right">
       <span class="branchchip" title="Branch: phase2-ingestion-parsing"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">phase2-ingestion-parsing</span></span>
-      <span class="mono">2026-07-22 08:17</span>
+      <span class="mono">2026-07-22 08:35</span>
     </span>
   </div>
 
@@ -118,11 +118,11 @@
 
   <div class="kpis">
     <div class="kpi"><div class="label">Current branch</div><div class="value small mono">phase2-ingestion-parsing</div></div>
-    <div class="kpi"><div class="label">Total ops</div><div class="value">26</div></div>
-    <div class="kpi pass"><div class="label">Success</div><div class="value">25</div></div>
+    <div class="kpi"><div class="label">Total ops</div><div class="value">27</div></div>
+    <div class="kpi pass"><div class="label">Success</div><div class="value">26</div></div>
     <div class="kpi warn"><div class="label">Partial</div><div class="value">1</div></div>
     <div class="kpi fail"><div class="label">Failure</div><div class="value">0</div></div>
-    <div class="kpi"><div class="label">Last activity</div><div class="value small mono">2026-07-22 08:17:22,906</div></div>
+    <div class="kpi"><div class="label">Last activity</div><div class="value small mono">2026-07-22 08:35:29,659</div></div>
   </div>
 
   <fieldset class="filter" aria-label="Filter by status">
@@ -136,6 +136,23 @@
   </fieldset>
 
   <div class="log">
+  <article class="logcard success">
+    <div class="row">
+      <time>2026-07-22 08:35:29,659</time>
+      <span class="op">graphify-openwiki-update</span>
+      <span class="toolchip">Claude Code (graphify + openwiki:wiki update)</span>
+      <span class="branchchip" title="Branch: phase2-ingestion-parsing"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">phase2-ingestion-parsing</span></span>
+      <span class="spacer"></span>
+      <span class="tag pass">SUCCESS</span>
+    </div>
+    <p class="summary">Refreshed the stale code graph (Phase 1+2 code now indexed, 1321 nodes) and surgically updated 3 openwiki pages that claimed no code existed yet</p>
+    <p class="task"><b>Task</b> Phase 2 documentation sync</p>
+    <div class="files"><span class="file">graphify-out/</span><span class="file">openwiki/quickstart.md</span><span class="file">openwiki/system-architecture.md</span><span class="file">openwiki/working-in-this-repo.md</span><span class="file">AGENTS.md</span></div>
+    <details>
+      <summary>Details</summary>
+      <p>Both graphify-out/ and openwiki/ were last touched during Phase 1&#x27;s Qwen model swap, before any Phase 1/2 code existed -- confirmed via git log before acting rather than assuming. graphify update . was AST-only, no LLM cost. openwiki update was surgical per its own update-mode rules: built a docs-impact plan first (source change -&gt; docs affected -&gt; edit needed), touched only quickstart.md, system-architecture.md, and working-in-this-repo.md; left benchmark-design.md untouched since Phase 4 hasn&#x27;t started. Key correction across all three: the &#x27;no implementation code yet&#x27; premise was false (Phase 1+2 built and tested), and CLAUDE.md&#x27;s src/ instruction doesn&#x27;t match reality -- code actually lives in project/, documented as an established discrepancy rather than silently &#x27;fixing&#x27; CLAUDE.md itself. Also added the missing OpenWiki reference section to /AGENTS.md (CLAUDE.md already had it) per the skill&#x27;s root-file rule.</p>
+    </details>
+  </article>
   <article class="logcard success">
     <div class="row">
       <time>2026-07-22 08:17:22,906</time>
@@ -565,7 +582,7 @@
   </article>
   </div>
 
-  <footer><span>Rendered from monitor/logs/operations.log · 26 entries.</span><span><a href="../index.html">← Dashboard</a> · <a href="#top">↑ Back to Top</a></span></footer>
+  <footer><span>Rendered from monitor/logs/operations.log · 27 entries.</span><span><a href="../index.html">← Dashboard</a> · <a href="#top">↑ Back to Top</a></span></footer>
 
 </div>
 </body>
