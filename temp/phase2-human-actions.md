@@ -20,8 +20,10 @@ None remaining.
   wrapper — migrating to it fully means writing your own upload/poll/
   download loop, a real rewrite. Not done; not urgent, since
   `llama_cloud_services` still works.
-- **Parsing audit report reviewed**: you read `project/parsing_audit_report.md`
-  and confirmed everything looks fine — the corpus is trusted for Phase 4.
+- **Parsing audit report reviewed**: you read the sample (now moved and
+  renamed to `temp/ingestion-corpus-sample-reference.md`, with added notes
+  on which pipelines — P1/P2/P3 — consume this data) and confirmed
+  everything looks fine — the corpus is trusted for Phase 4.
 - **Filing corpus confirmed**: AAPL, MSFT, TSLA × FY2023-2025 (9 filings) —
   you confirmed the spec's own illustrative default. Real ingestion for the
   throttled 3 (all AAPL) already ran successfully; the remaining 6 filings
