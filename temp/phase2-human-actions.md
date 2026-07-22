@@ -63,9 +63,8 @@ None remaining.
 ## Not yet needed (deferred to their own phase)
 
 - **P3 summary-index build** (Phase 3): needs the `nodes` table populated
-  (it is, for 3 of 9 filings so far), nothing else new from you.
-- **Full (unthrottled) ingestion of the remaining 6 filings**: needed
-  before Phase 4's dataset generation can draw from the complete corpus.
-  This is a routine re-run once you're ready (flip `LOCAL_TEST_THROTTLE` to
-  `false` and re-run `uv run python -m ingest.run_ingestion`), not something
-  requiring a new decision.
+  (it is, for all 9 filings now), nothing else new from you.
+- **Full (unthrottled) ingestion of the remaining 6 filings**: done
+  2026-07-22 on branch `full-corpus-ingestion`. All 9 filings now in
+  `nodes` (8,543 rows total). See `temp/deferred.md` item 2 for the final
+  per-filing counts.
