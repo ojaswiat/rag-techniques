@@ -9,7 +9,7 @@ Cost-effective tier only, never Agentic/Premium.
 import os
 import time
 
-from llama_parse import LlamaParse
+from llama_cloud_services import LlamaParse
 
 import config
 

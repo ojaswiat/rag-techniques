@@ -666,18 +666,6 @@ wheels = [
 ]
 
 [[package]]
-name = "llama-parse"
-version = "0.6.94"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "llama-cloud-services" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/97/55/0d089a90fe98027853dd41dead1f094458df1a964e0d7c379b6a44208761/llama_parse-0.6.94.tar.gz", hash = "sha256:d9e4347ec6caa1e9d5266cc5d4d8b29a29aa0d0948d921a26c73d3e4aaf5ba72", size = 3996, upload-time = "2026-02-13T23:29:34.14Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/bd/70/3d4cc14f99c80491401d4ab514f3ebe3113e38c8017cd384a73dc67b3ae4/llama_parse-0.6.94-py3-none-any.whl", hash = "sha256:48f21d909696597bf992acf5017685d88a6b25604bc1e98775021f39fe66649f", size = 5362, upload-time = "2026-02-13T23:29:35.432Z" },
-]
-
-[[package]]
 name = "markupsafe"
 version = "3.0.3"
 source = { registry = "https://pypi.org/simple" }
@@ -1231,7 +1219,7 @@ source = { virtual = "." }
 dependencies = [
     { name = "aiosqlite" },
     { name = "groq" },
-    { name = "llama-parse" },
+    { name = "llama-cloud-services" },
     { name = "python-dotenv" },
     { name = "requests" },
     { name = "tenacity" },
@@ -1247,7 +1235,7 @@ dev = [
 requires-dist = [
     { name = "aiosqlite", specifier = ">=0.22.1" },
     { name = "groq", specifier = ">=1.5.0" },
-    { name = "llama-parse", specifier = ">=0.6.94" },
+    { name = "llama-cloud-services", specifier = ">=0.6.94" },
     { name = "python-dotenv", specifier = ">=1.2.2" },
     { name = "requests", specifier = ">=2.34.2" },
     { name = "tenacity", specifier = ">=9.1.4" },
