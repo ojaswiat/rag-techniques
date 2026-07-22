@@ -1,1 +1,3 @@
-1. Remove the unnecessary changes from the Changes.md file.
+1. Commit this branch.
+2. Do a through testing.
+3. Merge the PR.

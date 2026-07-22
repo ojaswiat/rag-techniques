@@ -106,7 +106,7 @@
     <span><span class="brand">rag-techniques</span> · Monitor · Logs</span>
     <span class="mh-right">
       <span class="branchchip" title="Branch: phase2-ingestion-parsing"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">phase2-ingestion-parsing</span></span>
-      <span class="mono">2026-07-21 18:33</span>
+      <span class="mono">2026-07-22 08:02</span>
     </span>
   </div>
 
@@ -118,11 +118,11 @@
 
   <div class="kpis">
     <div class="kpi"><div class="label">Current branch</div><div class="value small mono">phase2-ingestion-parsing</div></div>
-    <div class="kpi"><div class="label">Total ops</div><div class="value">22</div></div>
-    <div class="kpi pass"><div class="label">Success</div><div class="value">21</div></div>
+    <div class="kpi"><div class="label">Total ops</div><div class="value">25</div></div>
+    <div class="kpi pass"><div class="label">Success</div><div class="value">24</div></div>
     <div class="kpi warn"><div class="label">Partial</div><div class="value">1</div></div>
     <div class="kpi fail"><div class="label">Failure</div><div class="value">0</div></div>
-    <div class="kpi"><div class="label">Last activity</div><div class="value small mono">2026-07-21 18:33:26,204</div></div>
+    <div class="kpi"><div class="label">Last activity</div><div class="value small mono">2026-07-22 08:02:19,780</div></div>
   </div>
 
   <fieldset class="filter" aria-label="Filter by status">
@@ -136,6 +136,56 @@
   </fieldset>
 
   <div class="log">
+  <article class="logcard success">
+    <div class="row">
+      <time>2026-07-22 08:02:19,780</time>
+      <span class="op">llamaparse-migration</span>
+      <span class="toolchip">Claude Code</span>
+      <span class="branchchip" title="Branch: phase2-ingestion-parsing"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">phase2-ingestion-parsing</span></span>
+      <span class="spacer"></span>
+      <span class="tag pass">SUCCESS</span>
+    </div>
+    <p class="summary">Migrated parse_filing.py from deprecated llama-parse to llama-cloud-services (same underlying class), zero behavior change</p>
+    <p class="task"><b>Task</b> Phase 2 cleanup</p>
+    <div class="files"><span class="file">project/ingest/parse_filing.py</span><span class="file">project/pyproject.toml</span><span class="file">project/uv.lock</span><span class="file">temp/phase2-human-actions.md</span></div>
+    <details>
+      <summary>Details</summary>
+      <p>User asked directly whether migration would change behavior before approving it -- checked rather than assumed: llama_parse.LlamaParse and llama_cloud_services.LlamaParse are literally the same class object (llama-parse is a thin import wrapper). Swapped the import, removed llama-parse from pyproject.toml, added llama-cloud-services directly. Verified 39/39 tests pass and a live smoke test parses identically post-swap. Deliberately did not migrate further to the raw llama-cloud REST client (v2.11.0) -- it has no convenience wrapper, a full migration means writing upload/poll/download logic from scratch, a real rewrite not justified right now since llama_cloud_services still works. All Active human-action items for Phase 2 are now resolved.</p>
+    </details>
+  </article>
+  <article class="logcard success">
+    <div class="row">
+      <time>2026-07-22 07:57:53,574</time>
+      <span class="op">phase2-audit-reviewed</span>
+      <span class="toolchip">Claude Code (human confirmation)</span>
+      <span class="branchchip" title="Branch: phase2-ingestion-parsing"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">phase2-ingestion-parsing</span></span>
+      <span class="spacer"></span>
+      <span class="tag pass">SUCCESS</span>
+    </div>
+    <p class="summary">Human reviewed parsing_audit_report.md and confirmed the corpus looks correct</p>
+    <p class="task"><b>Task</b> Phase 2 human action report</p>
+    <details>
+      <summary>Details</summary>
+      <p>The last remaining check on the throttled 3-filing corpus (headers attributed correctly, tables intact, no truncation) is now human-confirmed, not just automated. One Active item remains: the llama-parse -&gt; llama-cloud migration decision.</p>
+    </details>
+  </article>
+  <article class="logcard success">
+    <div class="row">
+      <time>2026-07-22 07:39:21,478</time>
+      <span class="op">changes-md-cleanup</span>
+      <span class="toolchip">Claude Code</span>
+      <span class="branchchip" title="Branch: phase2-ingestion-parsing"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">phase2-ingestion-parsing</span></span>
+      <span class="spacer"></span>
+      <span class="tag pass">SUCCESS</span>
+    </div>
+    <p class="summary">Pruned Changes.md down to the one genuine spec deviation (Qwen model swap); moved routine bugfix history out per corrected scope rule</p>
+    <p class="task"><b>Task</b> Phase 2 cleanup</p>
+    <div class="files"><span class="file">resources/artifacts/Changes.md</span></div>
+    <details>
+      <summary>Details</summary>
+      <p>User corrected: Changes.md is only for differences from the proposal/design specification, not ordinary implementation bugfixes -- those belong in monitor logs. Removed 4 entries covering the LlamaParse deprecated-param fix, the llama-parse package deprecation note, the Task 6 plan amendment, and the table-misclassification fix -- all of these were already captured in monitor operation logs during Phase 2 execution, so no information was lost, just correctly re-homed. Kept only the Critic/Judge model swap, which is a genuine deviation from Guardrails.md&#x27;s spec-mandated model.</p>
+    </details>
+  </article>
   <article class="logcard success">
     <div class="row">
       <time>2026-07-21 18:33:26,204</time>
@@ -499,7 +549,7 @@
   </article>
   </div>
 
-  <footer><span>Rendered from monitor/logs/operations.log · 22 entries.</span><span><a href="../index.html">← Dashboard</a> · <a href="#top">↑ Back to Top</a></span></footer>
+  <footer><span>Rendered from monitor/logs/operations.log · 25 entries.</span><span><a href="../index.html">← Dashboard</a> · <a href="#top">↑ Back to Top</a></span></footer>
 
 </div>
 </body>

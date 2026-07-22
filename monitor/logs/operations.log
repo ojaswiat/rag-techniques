@@ -1,3 +1,20 @@
+2026-07-22 08:02:19,780 INFO [llamaparse-migration] (Claude Code) Migrated parse_filing.py from deprecated llama-parse to llama-cloud-services (same underlying class), zero behavior change -- success
+branch:  phase2-ingestion-parsing
+task:    Phase 2 cleanup
+files:   project/ingest/parse_filing.py, project/pyproject.toml, project/uv.lock, temp/phase2-human-actions.md
+details: User asked directly whether migration would change behavior before approving it -- checked rather than assumed: llama_parse.LlamaParse and llama_cloud_services.LlamaParse are literally the same class object (llama-parse is a thin import wrapper). Swapped the import, removed llama-parse from pyproject.toml, added llama-cloud-services directly. Verified 39/39 tests pass and a live smoke test parses identically post-swap. Deliberately did not migrate further to the raw llama-cloud REST client (v2.11.0) -- it has no convenience wrapper, a full migration means writing upload/poll/download logic from scratch, a real rewrite not justified right now since llama_cloud_services still works. All Active human-action items for Phase 2 are now resolved.
+================================================================================
+2026-07-22 07:57:53,574 INFO [phase2-audit-reviewed] (Claude Code (human confirmation)) Human reviewed parsing_audit_report.md and confirmed the corpus looks correct -- success
+branch:  phase2-ingestion-parsing
+task:    Phase 2 human action report
+details: The last remaining check on the throttled 3-filing corpus (headers attributed correctly, tables intact, no truncation) is now human-confirmed, not just automated. One Active item remains: the llama-parse -> llama-cloud migration decision.
+================================================================================
+2026-07-22 07:39:21,478 INFO [changes-md-cleanup] (Claude Code) Pruned Changes.md down to the one genuine spec deviation (Qwen model swap); moved routine bugfix history out per corrected scope rule -- success
+branch:  phase2-ingestion-parsing
+task:    Phase 2 cleanup
+files:   resources/artifacts/Changes.md
+details: User corrected: Changes.md is only for differences from the proposal/design specification, not ordinary implementation bugfixes -- those belong in monitor logs. Removed 4 entries covering the LlamaParse deprecated-param fix, the llama-parse package deprecation note, the Task 6 plan amendment, and the table-misclassification fix -- all of these were already captured in monitor operation logs during Phase 2 execution, so no information was lost, just correctly re-homed. Kept only the Critic/Judge model swap, which is a genuine deviation from Guardrails.md's spec-mandated model.
+================================================================================
 2026-07-21 18:33:26,204 INFO [phase2-branch-ready] (Claude Code (subagent-driven-development)) Phase 2 branch re-reviewed and confirmed Ready to merge; added a caveat comment for the one Minor finding -- success
 branch:  phase2-ingestion-parsing
 task:    Phase 2 final whole-branch review
