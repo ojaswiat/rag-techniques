@@ -20,7 +20,7 @@ Each entry: **What** / **Deferred from → to** / **Why** / **Recorded in** / **
 - **Deferred from → to:** Phase 2 → whenever full-corpus ingestion is triggered (before Phase 4 dataset generation needs the complete corpus)
 - **Why:** `LOCAL_TEST_THROTTLE` capped the Phase 2 live run to 3 filings (all AAPL). Routine re-run once ready — flip `LOCAL_TEST_THROTTLE` to `false`, re-run `uv run python -m ingest.run_ingestion`. Not a design decision, just not yet executed.
 - **Recorded in:** `temp/phase2-human-actions.md` ("Not yet needed" section).
-- **Status:** Open, blocking Phase 4 if not done before then.
+- **Status:** Resolved 2026-07-22 (branch `full-corpus-ingestion`). All 9 filings now in `nodes`: AAPL 2023/2024/2025 (715/684/682), MSFT 2023/2024/2025 (1103/1234/1025), TSLA 2023/2024/2025 (1020/1028/1052) — 8,543 nodes total. 49/49 tests still passing.
 
 ## 3. Full migration off `llama_cloud_services` to the raw `llama-cloud` SDK
 
