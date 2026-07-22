@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Audit: Phases 1-3 — rag-techniques Report</title>
+<style>
+  :root {
+    --bg: #faf9f7; --surface: #ffffff; --text: #101418; --muted: #5a6472;
+    --accent: #16181a; --accent-ink: #ffffff; --border: #d6d3cd; --hairline: #eae7e1;
+    --code-bg: #f3f1ec; --pass: #15803d; --warn: #b45309; --fail: #b91c1c;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0b0d10; --surface: #0f1216; --text: #e9e7e2; --muted: #9aa3ad;
+      --accent: #f5c518; --accent-ink: #111111; --border: #2c333b; --hairline: #1d2229;
+      --code-bg: #14181e; --pass: #4ade80; --warn: #fbbf24; --fail: #f87171;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { transition: none !important; } }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 16px; line-height: 1.6; }
+  code, pre, .mono { font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px 80px; }
+  a { color: var(--accent); text-decoration: none; font-weight: 500; }
+  a:hover { text-decoration: underline; }
+  a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .masthead { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--border); font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+  .masthead .brand { color: var(--accent); font-weight: 700; }
+  .masthead .mh-right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: flex-end; }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+  .branchchip { display: inline-flex; align-items: center; gap: 5px; max-width: 34ch; border: 1px solid var(--border); background: var(--surface); padding: 2px 8px; font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; font-size: 0.72rem; font-weight: 500; letter-spacing: 0; text-transform: none; color: var(--text); vertical-align: middle; }
+  .branchchip svg { width: 11px; height: 11px; flex: 0 0 auto; color: var(--accent); }
+  .branchchip .bname { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .back { display: inline-flex; align-items: center; gap: 6px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; }
+  .back svg { width: 13px; height: 13px; }
+  header.report { padding: 40px 0 20px; border-bottom: 3px solid var(--accent); }
+  header.report h1 { font-size: clamp(1.7rem, 4.5vw, 2.6rem); font-weight: 800; letter-spacing: -0.03em; line-height: 1.15; max-width: 26ch; }
+  header.report .subtitle { margin-top: 10px; color: var(--muted); font-size: 0.95rem; }
+  .meta-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+  .chip { border: 1px solid var(--border); padding: 4px 10px; font-size: 0.74rem; color: var(--muted); }
+  .chip b { color: var(--accent); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-right: 6px; font-size: 0.68rem; }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin: 24px 0 8px; }
+  .kpi { border: 1px solid var(--border); padding: 14px 16px; background: var(--surface); }
+  .kpi.pass { border-left: 3px solid var(--pass); } .kpi.warn { border-left: 3px solid var(--warn); } .kpi.fail { border-left: 3px solid var(--fail); }
+  .kpi .label { font-size: 0.66rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent); }
+  .kpi.warn .label { color: var(--warn); } .kpi.pass .label { color: var(--pass); } .kpi.fail .label { color: var(--fail); }
+  .kpi .value { margin-top: 4px; font-size: 1.45rem; font-weight: 750; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; word-break: break-word; }
+  .kpi .value.small { font-size: 1.0rem; }
+  section { margin-top: 34px; }
+  section h2 { font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.12em; color: var(--accent); border-bottom: 1px solid var(--hairline); padding-bottom: 8px; margin-bottom: 14px; }
+  section h3 { font-size: 0.85rem; font-weight: 800; margin: 18px 0 6px; }
+  section p, section li { font-size: 0.95rem; }
+  section ul, section ol { padding-left: 22px; margin-top: 8px; }
+  section li + li { margin-top: 6px; }
+  .table-scroll { overflow-x: auto; margin-top: 6px; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+  th { text-align: left; padding: 10px 14px; font-size: 0.66rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent); border-bottom: 2px solid var(--accent); }
+  td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--hairline); vertical-align: top; }
+  tbody tr:hover { background: var(--code-bg); }
+  pre { background: var(--code-bg); border: 1px solid var(--hairline); padding: 14px 16px; overflow-x: auto; font-size: 0.85rem; white-space: pre-wrap; }
+  .tag { display: inline-block; border: 1px solid currentColor; padding: 1px 8px; font-size: 0.66rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; font-family: "SF Mono", ui-monospace, Menlo, monospace; white-space: nowrap; }
+  .tag.pass { color: var(--pass); } .tag.warn { color: var(--warn); } .tag.fail { color: var(--fail); } .tag.info { color: var(--accent); }
+  .file { font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; font-size: 0.85rem; }
+  .callout { border: 1px solid var(--border); border-left: 3px solid var(--warn); background: var(--surface); padding: 14px 16px; margin-top: 10px; }
+  .callout.action { border-left-color: var(--accent); }
+  .callout.block { border-left-color: var(--fail); }
+  footer { margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; font-size: 0.78rem; color: var(--muted); }
+  @media print { :root { --bg: #ffffff; --text: #000000; --muted: #333333; } .masthead, footer { border-color: #999; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="masthead" id="top">
+    <a class="back" href="index.html" aria-label="Back to reports"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>Back</a>
+    <span><span class="brand">rag-techniques</span> · Monitor · Report</span>
+    <span class="mh-right">
+      <span class="branchchip" title="Branch: phase3-summary-index-build"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">phase3-summary-index-build</span></span>
+      <span class="mono">2026-07-22</span>
+    </span>
+  </div>
+
+  <header class="report">
+    <h1>Audit: Phases 1-3</h1>
+    <p class="subtitle">Full state check across environment, ingestion, and the P3 index build — what's real, what's still open, and what blocks Phase 4.</p>
+    <div class="meta-chips">
+      <span class="chip"><b>Generated</b><span class="mono">2026-07-22</span></span>
+      <span class="chip"><b>Branch</b><span class="mono">phase3-summary-index-build</span></span>
+      <span class="chip"><b>PRs</b><span class="mono">#1, #2 merged · #3 open</span></span>
+      <span class="chip"><b>Status</b><span class="tag warn">action needed</span></span>
+    </div>
+  </header>
+
+  <div class="kpis">
+    <div class="kpi pass"><div class="label">Tests</div><div class="value">49/49 passing</div></div>
+    <div class="kpi warn"><div class="label">Corpus ingested</div><div class="value">3 / 9 filings</div></div>
+    <div class="kpi warn"><div class="label">P3 index built</div><div class="value">3 / 9 filings</div></div>
+    <div class="kpi warn"><div class="label">Blockers before Phase 4</div><div class="value">2</div></div>
+  </div>
+
+  <section>
+    <h2>Summary</h2>
+    <p>Phases 1 (environment/infra) and 2 (ingestion/parsing) are merged to <code>main</code> and stable. Phase 3 (P3 summary-index build) is complete, reviewed, and live-verified, sitting in open PR #3 — not yet merged. The whole pipeline currently only has real data for <strong>3 of the 9 planned filings</strong> (AAPL only) — MSFT and TSLA were never ingested past Phase 2's throttled test run. This is the one concrete blocker before Phase 4, since Phase 4's dataset generation is specced to accumulate its 140 queries "across all ~9 filings," not 3.</p>
+  </section>
+
+  <section>
+    <h2>Phase-by-Phase State</h2>
+
+    <h3>Phase 1 — Environment, Infrastructure &amp; Cost Guardrails</h3>
+    <p><span class="tag pass">merged</span> PR #1, 2026-07-21. <code>database_manager.py</code> (5-table schema), <code>groq_client.py</code> (backoff + semaphore), <code>loop_template.py</code> throttle pattern, <code>config.py</code> model routing all in place and exercised by every later phase without incident.</p>
+
+    <h3>Phase 2 — Ingestion &amp; Parsing Pipeline</h3>
+    <p><span class="tag pass">merged</span> PR #2, 2026-07-22. <code>nodes</code> table populated: <strong>2,081 rows across 3 filings</strong> (AAPL_2023: 715, AAPL_2024: 684, AAPL_2025: 682). MSFT ×3 and TSLA ×3 — 6 filings, per the 9-entry manifest — have never been fetched or parsed.</p>
+
+    <h3>Phase 3 — P3 Summary-Index Build</h3>
+    <p><span class="tag warn">PR #3 open, not merged</span>. All 6 planned tasks done, task-reviewed, and one final-review fix applied (empty-nodes cache-poisoning guard). Live throttled run against real Groq succeeded for the 3 ingested AAPL filings — <code>storage/summary_index/{AAPL_2023,AAPL_2024,AAPL_2025}/</code> all persisted, cache-hit confirmed on rerun, zero 429s. <code>logs/index_build_costs.json</code> has 6 rows (3 built + 3 cache-skip). The deliberate <code>call_groq()</code> bypass is recorded in <code>resources/artifacts/Changes.md</code> with its scoped mitigations.</p>
+  </section>
+
+  <section>
+    <h2>Evidence</h2>
+    <pre>$ git log --oneline -3 main
+906ad9b docs: update logs with latest graphify and openwiki changes for Phase 2 documentation sync
+4d5dc73 docs: update graphify code graph and openwiki pages for Phase 1+2
+c2f2169 docs: add Phase 2 fresh end-to-end verification report
+
+$ gh pr list --state merged
+#2  Phase 2: Ingestion & Parsing Pipeline   merged 2026-07-22
+#1  Phase 1: Environment, Infrastructure & Cost Guardrails  merged 2026-07-21
+(#3 Phase 3: P3 summary-index build — still OPEN)
+
+$ sqlite3 benchmark.db "SELECT document_id, COUNT(*) FROM nodes GROUP BY document_id"
+AAPL_2023|715
+AAPL_2024|684
+AAPL_2025|682
+(queries / golden_queries / judge_validation / results: all 0 rows — expected, Phase 4+ territory)
+
+$ ls storage/summary_index/
+AAPL_2023  AAPL_2024  AAPL_2025
+
+$ cd project && .venv/bin/python -m pytest -q
+49 passed, 1 warning in 4.84s
+(warning is llama-cloud-services's own deprecation notice, pre-existing, non-blocking)
+
+$ grep LOCAL_TEST_THROTTLE project/.env
+LOCAL_TEST_THROTTLE=true</pre>
+  </section>
+
+  <section>
+    <h2>What You Need To Do — Before Phase 4</h2>
+
+    <div class="callout block">
+      <strong>Blocker 1 (Active) — Ingest the remaining 6 filings.</strong>
+      <p style="margin-top:6px;">Phase 4 accumulates 35 queries/quadrant "across all ~9 filings" per the spec, not 3. Right now only AAPL exists in <code>nodes</code>. This needs a decision from you: flip <code>LOCAL_TEST_THROTTLE=false</code> in <code>project/.env</code> and re-run <code>uv run python -m ingest.run_ingestion</code> to fetch/parse MSFT ×3 and TSLA ×3 (real LlamaParse + SEC EDGAR spend, real time). Tracked in <code>temp/deferred.md</code> item 2. I can run this for you once you say go — real API cost, so flagging rather than doing it unprompted.</p>
+    </div>
+
+    <div class="callout block">
+      <strong>Blocker 2 (Active) — Decide what to do with open PR #3.</strong>
+      <p style="margin-top:6px;">Phase 3's branch is reviewed and tested but not merged to <code>main</code>. Every prior phase merged before the next phase's branch was cut. If Phase 4 branches off <code>main</code> before #3 merges, Phase 4 won't see the P3 build code at all (harmless for Phase 4 itself, which doesn't depend on it, but inconsistent with how Phases 1-3 have been run). Recommend merging #3 before starting Phase 4 — say the word and I'll do it (<a href="https://github.com/ojaswiat/rag-techniques/pull/3">github.com/ojaswiat/rag-techniques/pull/3</a>).</p>
+    </div>
+
+    <h3>Passive — known, tracked, not blocking Phase 4</h3>
+    <ul>
+      <li><strong>Full P3 index build for the remaining 6 filings</strong> is a routine re-run once Blocker 1 is resolved (same throttle-off pattern extends to <code>build_summary_index.py</code> too) — not itself required before Phase 4, since Phase 4 doesn't consume the P3 index (that's Phase 5).</li>
+      <li><strong><code>llama_cloud_services</code> deprecation</strong> — still works, no forcing function to migrate yet (<code>temp/deferred.md</code> item 3).</li>
+      <li><strong>Groq TPD/RPD split unverified</strong> — <code>project/groq_limits.md</code> has RPM/TPM from live headers but not the daily ceilings, which only matters for Phase 7's pacing, not Phase 4. Needs one manual visit to <a href="https://console.groq.com/settings/limits">console.groq.com/settings/limits</a> eventually, no rush.</li>
+      <li><strong><code>monitor/profile.json</code>'s <code>commands</code> field is still empty</strong> — the Tests KPI on Dashboard/Reports pages doesn't reflect the real 49-test suite that now exists. Cosmetic; <code>/monitor:update</code> would fix it whenever convenient.</li>
+      <li><strong>openwiki is current</strong> as of <code>main</code>'s tip (<code>906ad9b</code>) — will need one more <code>/openwiki:wiki update</code> after PR #3 merges, to document the new <code>pipelines/</code> module.</li>
+      <li><code>temp/notes.md</code> has an uncommitted edit of yours sitting in the working tree — untouched by any of this work, yours to commit whenever.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Risks Carried Forward</h2>
+    <ul>
+      <li>Phase 3's <code>call_groq()</code> bypass is proven safe only at 3-filing scale so far. Running the full 9-filing build (after Blocker 1) is the real test of the burst-rate mitigation at intended scale — worth watching the first full run rather than assuming it'll be identical to the throttled one.</li>
+      <li>No new risks from Phase 1/2 — both phases' final whole-branch reviews already closed their one Important finding each (keyless-import fix in Phase 1; non-idempotent insert fix in Phase 2).</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Next Steps</h2>
+    <ol>
+      <li>Decide on Blocker 1 (ingest remaining 6 filings) and Blocker 2 (merge PR #3) — both are yours to greenlight, not code-ready gaps.</li>
+      <li>Once both are resolved, Phase 4 (Dataset Generation &amp; Adversarial Verification) can branch cleanly off an up-to-date <code>main</code> with the full 9-filing corpus available.</li>
+    </ol>
+  </section>
+
+  <footer><span>Generated by the monitor workflow.</span><span><a href="index.html">← All reports</a> · <a href="#top">↑ Back to Top</a></span></footer>
+
+</div>
+</body>
+</html>
