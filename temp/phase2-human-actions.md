@@ -2,20 +2,24 @@
 
 ## Active — needs your input before Phase 2 is fully closed out
 
-- [ ] **Decide on the `llama-parse` → `llama-cloud` migration**: the `llama-parse`
-  package used by `ingest/parse_filing.py` is itself deprecated (its own
-  warning claims a maintenance window ending 2026-05-01, already past).
-  It's still fully installable and functional (verified live, twice), so
-  nothing is broken today. But a real migration to the new `llama-cloud`
-  SDK (currently v2.11.0) is a non-trivial rewrite of `parse_filing.py`'s
-  interface — not a one-line swap. This wasn't done automatically since it's
-  outside Phase 2's scope and risks introducing bugs under time pressure.
-  Decide: migrate now (before Phase 3/5 also build on LlamaIndex-ecosystem
-  packages), or accept the risk and revisit later if the package actually
-  stops working. See `resources/artifacts/Changes.md` for the full history.
+None remaining.
 
 ## Passive — already handled, no action needed unless you want to change it
 
+- **`llama-parse` deprecation resolved (partially)**: you asked whether
+  migrating would change behaviour. Checked directly (not guessed):
+  `llama-parse`'s `LlamaParse` class is literally the same object as
+  `llama_cloud_services`'s `LlamaParse` — `llama-parse` was just a thin
+  import-path wrapper. Swapped `parse_filing.py`'s import to
+  `llama_cloud_services` directly, removed `llama-parse` from
+  dependencies (no longer even installed), added `llama-cloud-services`.
+  Zero behaviour change, verified: 39/39 tests pass, live smoke test
+  parses identically. One deeper layer remains deliberately unmigrated:
+  `llama_cloud_services` itself points to a "new unified SDK" (`llama-cloud`
+  v2.11.0), which is a raw, low-level REST API client with no convenience
+  wrapper — migrating to it fully means writing your own upload/poll/
+  download loop, a real rewrite. Not done; not urgent, since
+  `llama_cloud_services` still works.
 - **Parsing audit report reviewed**: you read `project/parsing_audit_report.md`
   and confirmed everything looks fine — the corpus is trusted for Phase 4.
 - **Filing corpus confirmed**: AAPL, MSFT, TSLA × FY2023-2025 (9 filings) —
