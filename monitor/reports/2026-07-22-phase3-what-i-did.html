@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Phase 3: What I Did / What You Need To Do — rag-techniques Report</title>
+<style>
+  :root {
+    --bg: #faf9f7; --surface: #ffffff; --text: #101418; --muted: #5a6472;
+    --accent: #16181a; --accent-ink: #ffffff; --border: #d6d3cd; --hairline: #eae7e1;
+    --code-bg: #f3f1ec; --pass: #15803d; --warn: #b45309; --fail: #b91c1c;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0b0d10; --surface: #0f1216; --text: #e9e7e2; --muted: #9aa3ad;
+      --accent: #f5c518; --accent-ink: #111111; --border: #2c333b; --hairline: #1d2229;
+      --code-bg: #14181e; --pass: #4ade80; --warn: #fbbf24; --fail: #f87171;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { transition: none !important; } }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 16px; line-height: 1.6; }
+  code, pre, .mono { font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px 80px; }
+  a { color: var(--accent); text-decoration: none; font-weight: 500; }
+  a:hover { text-decoration: underline; }
+  a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .masthead { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--border); font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+  .masthead .brand { color: var(--accent); font-weight: 700; }
+  .masthead .mh-right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: flex-end; }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+  .branchchip { display: inline-flex; align-items: center; gap: 5px; max-width: 34ch; border: 1px solid var(--border); background: var(--surface); padding: 2px 8px; font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; font-size: 0.72rem; font-weight: 500; letter-spacing: 0; text-transform: none; color: var(--text); vertical-align: middle; }
+  .branchchip svg { width: 11px; height: 11px; flex: 0 0 auto; color: var(--accent); }
+  .branchchip .bname { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .back { display: inline-flex; align-items: center; gap: 6px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; }
+  .back svg { width: 13px; height: 13px; }
+  header.report { padding: 40px 0 20px; border-bottom: 3px solid var(--accent); }
+  header.report h1 { font-size: clamp(1.7rem, 4.5vw, 2.6rem); font-weight: 800; letter-spacing: -0.03em; line-height: 1.15; max-width: 26ch; }
+  header.report .subtitle { margin-top: 10px; color: var(--muted); font-size: 0.95rem; }
+  .meta-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+  .chip { border: 1px solid var(--border); padding: 4px 10px; font-size: 0.74rem; color: var(--muted); }
+  .chip b { color: var(--accent); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-right: 6px; font-size: 0.68rem; }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin: 24px 0 8px; }
+  .kpi { border: 1px solid var(--border); padding: 14px 16px; background: var(--surface); }
+  .kpi.pass { border-left: 3px solid var(--pass); } .kpi.warn { border-left: 3px solid var(--warn); } .kpi.fail { border-left: 3px solid var(--fail); }
+  .kpi .label { font-size: 0.66rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent); }
+  .kpi.warn .label { color: var(--warn); } .kpi.pass .label { color: var(--pass); }
+  .kpi .value { margin-top: 4px; font-size: 1.45rem; font-weight: 750; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; word-break: break-word; }
+  .kpi .value.small { font-size: 1.0rem; }
+  section { margin-top: 34px; }
+  section h2 { font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.12em; color: var(--accent); border-bottom: 1px solid var(--hairline); padding-bottom: 8px; margin-bottom: 14px; }
+  section h3 { font-size: 0.85rem; font-weight: 800; margin: 18px 0 6px; }
+  section p, section li { font-size: 0.95rem; }
+  section ul, section ol { padding-left: 22px; margin-top: 8px; }
+  section li + li { margin-top: 6px; }
+  .table-scroll { overflow-x: auto; margin-top: 6px; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+  th { text-align: left; padding: 10px 14px; font-size: 0.66rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent); border-bottom: 2px solid var(--accent); }
+  td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--hairline); vertical-align: top; }
+  tbody tr:hover { background: var(--code-bg); }
+  pre { background: var(--code-bg); border: 1px solid var(--hairline); padding: 14px 16px; overflow-x: auto; font-size: 0.85rem; white-space: pre-wrap; }
+  .tag { display: inline-block; border: 1px solid currentColor; padding: 1px 8px; font-size: 0.66rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; font-family: "SF Mono", ui-monospace, Menlo, monospace; white-space: nowrap; }
+  .tag.pass { color: var(--pass); } .tag.warn { color: var(--warn); } .tag.fail { color: var(--fail); } .tag.info { color: var(--accent); }
+  .file { font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; font-size: 0.85rem; }
+  .callout { border: 1px solid var(--border); border-left: 3px solid var(--warn); background: var(--surface); padding: 14px 16px; margin-top: 10px; }
+  .callout.action { border-left-color: var(--accent); }
+  footer { margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; font-size: 0.78rem; color: var(--muted); }
+  @media print { :root { --bg: #ffffff; --text: #000000; --muted: #333333; } .masthead, footer { border-color: #999; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="masthead" id="top">
+    <a class="back" href="index.html" aria-label="Back to reports"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>Back</a>
+    <span><span class="brand">rag-techniques</span> · Monitor · Report</span>
+    <span class="mh-right">
+      <span class="branchchip" title="Branch: phase3-summary-index-build"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">phase3-summary-index-build</span></span>
+      <span class="mono">2026-07-22</span>
+    </span>
+  </div>
+
+  <header class="report">
+    <h1>Phase 3: What I Did / What You Need To Do</h1>
+    <p class="subtitle">Five of six planned tasks implemented and reviewed via subagent-driven TDD. One task remains, and it needs a decision from you before it runs.</p>
+    <div class="meta-chips">
+      <span class="chip"><b>Generated</b><span class="mono">2026-07-22</span></span>
+      <span class="chip"><b>Branch</b><span class="mono">phase3-summary-index-build</span></span>
+      <span class="chip"><b>Commit</b><span class="mono">d45a861</span></span>
+      <span class="chip"><b>Status</b><span class="tag warn">unverified</span></span>
+    </div>
+  </header>
+
+  <div class="kpis">
+    <div class="kpi pass"><div class="label">Tests</div><div class="value">48/48 passing</div></div>
+    <div class="kpi pass"><div class="label">Tasks reviewed</div><div class="value">5/6</div></div>
+    <div class="kpi warn"><div class="label">Live Groq run</div><div class="value small">not yet done</div></div>
+  </div>
+
+  <section>
+    <h2>Summary</h2>
+    <p>Phase 3 builds one hierarchical summary tree per SEC filing (9 total), the only index build permitted to call an LLM, cached so it never rebuilds per query. Tasks 1-5 of the 6-task plan are implemented, task-reviewed, and committed — all mocked tests pass, no live Groq spend yet. <strong>Task 6's live throttled run (real API calls against 3 filings) has not been executed</strong> — it was paused mid-preparation when you interrupted a database-inspection command, and this report was requested instead. Status is marked unverified per <code>monitor/usage.md</code> until that live run completes.</p>
+  </section>
+
+  <section>
+    <h2>What I Did</h2>
+
+    <h3>Design &amp; planning (before implementation)</h3>
+    <ul>
+      <li>Surfaced a real architecture conflict before writing any code: Architecture.md's Phase 3 package choice (<code>llama-index-core</code>, <code>llama-index-llms-groq</code>) implies real LlamaIndex objects, but the project's own <code>groq_client.py</code> mandates every Groq call route through <code>call_groq()</code> (backoff + concurrency semaphore). Walked through the trade-off with you across several questions before you decided: use real LlamaIndex, accept the scoped bypass, with three mandatory mitigations.</li>
+      <li>Live-verified the actual LlamaIndex API before locking the plan (already-installed <code>llama-index-core</code> v0.14.23) — confirmed <code>TreeIndex</code>, not the flat <code>SummaryIndex</code>, is the real hierarchical-summarization class, and checked its constructor/persistence signatures against the real library rather than trusting the spec's names.</li>
+      <li>Wrote and committed the design spec (<code>docs/superpowers/specs/2026-07-22-phase3-summary-index-design.md</code>) and the 6-task implementation plan (<code>docs/superpowers/plans/2026-07-22-phase3-summary-index-build.md</code>).</li>
+      <li>Created <code>temp/deferred.md</code> per your instruction — a single running log of every deliberate deferral across the project (P3 retrieval → Phase 5, Phase 2's still-open 6-filing ingestion, Phase 2's still-open llama-cloud SDK migration) — plus a permanent memory entry so future sessions read it before writing any new plan.</li>
+      <li>Updated <code>resources/specs/Phase Plan.md</code> Phase 5, Goal 3, per your explicit instruction, pointing to the deferred P3-retrieval item.</li>
+    </ul>
+
+    <h3>Implementation (subagent-driven TDD, 5 of 6 tasks)</h3>
+    <div class="table-scroll"><table><tbody>
+      <tr><th>Task</th><th>What</th><th>Commits</th><th>Review</th></tr>
+      <tr><td>1</td><td>Added <code>llama-index-llms-groq</code> dependency</td><td class="file">ae74a13..b631e99</td><td><span class="tag pass">Approved</span></td></tr>
+      <tr><td>2</td><td><code>node_convert.py</code> — nodes-table rows → LlamaIndex <code>TextNode</code></td><td class="file">b631e99..6f04b65</td><td><span class="tag pass">Approved</span></td></tr>
+      <tr><td>3</td><td><code>build_summary_index.py</code> core — atomic build-to-temp-dir-then-rename cache</td><td class="file">6f04b65..f0663e9</td><td><span class="tag pass">Approved</span></td></tr>
+      <tr><td>4</td><td>Per-filing cost logging (<code>append_cost_log</code>)</td><td class="file">f0663e9..26237a5</td><td><span class="tag pass">Approved</span></td></tr>
+      <tr><td>5</td><td>Sequential throttle-aware orchestrator (<code>main()</code>)</td><td class="file">26237a5..dd25ca3</td><td><span class="tag pass">Approved</span></td></tr>
+      <tr><td>6</td><td>Changes.md entry (done) + live throttled run (not done)</td><td class="file">d45a861 (entry only)</td><td><span class="tag warn">in progress</span></td></tr>
+    </tbody></table></div>
+
+    <h3>A controller error I found and fixed mid-execution</h3>
+    <p>Before dispatching Task 1's implementer, I had left several of my own planning files uncommitted in the working tree (the plan, the monitor report, the <code>Phase Plan.md</code> edit, <code>temp/deferred.md</code>). The implementer's commit swept all of them in alongside its own change — the task reviewer caught this immediately (11 files in a commit that should have had 2). I split the history via <code>git reset --soft</code> back into a clean planning commit plus an isolated Task 1 commit, corrected the implementer's report to reference the new SHA, and re-reviewed — approved on the second pass. Every task after that was preceded by an explicit "verify commit scope" check before generating the review package, and none repeated the mistake.</p>
+  </section>
+
+  <section>
+    <h2>Evidence</h2>
+    <pre>$ .venv/bin/python -m pytest -v
+...
+48 passed, 1 warning in 6.93s
+(1 warning is llama-cloud-services's own deprecation notice, unrelated to this phase)
+
+$ git log --oneline -8
+d45a861 docs: record Phase 3 call_groq() bypass as a scoped, mitigated deviation
+dd25ca3 feat: sequential throttle-aware orchestrator for Phase 3 index build
+26237a5 feat: log per-filing wall-clock and token cost for Phase 3 build
+f0663e9 feat: build and atomically persist per-filing TreeIndex for Phase 3
+6f04b65 feat: convert nodes-table rows to LlamaIndex TextNode for Phase 3
+b631e99 build: add llama-index-llms-groq dependency for Phase 3 index build
+ae74a13 docs: Phase 3 plan + report (design spec follow-up)
+9fb83f9 docs: Phase 3 summary-index design spec ...</pre>
+  </section>
+
+  <section>
+    <h2>Files Touched</h2>
+    <div class="table-scroll"><table><tbody>
+      <tr><td class="file">project/pyproject.toml, project/uv.lock</td><td>llama-index-llms-groq dependency</td></tr>
+      <tr><td class="file">project/pipelines/structural/node_convert.py</td><td>new — node dict → TextNode conversion</td></tr>
+      <tr><td class="file">project/pipelines/structural/build_summary_index.py</td><td>new — build, cache, log, orchestrate</td></tr>
+      <tr><td class="file">project/tests/test_node_convert.py, test_build_summary_index.py</td><td>new — 9 tests total</td></tr>
+      <tr><td class="file">resources/artifacts/Changes.md</td><td>+1 entry — Phase 3 call_groq() bypass, risk, mitigations</td></tr>
+      <tr><td class="file">docs/superpowers/specs/, docs/superpowers/plans/</td><td>design spec + implementation plan</td></tr>
+      <tr><td class="file">temp/deferred.md, resources/specs/Phase Plan.md</td><td>deferral log; Phase 5 pointer</td></tr>
+    </tbody></table></div>
+  </section>
+
+  <section>
+    <h2>Risks</h2>
+    <ul>
+      <li><strong>Real, tracked deviation, not yet proven live:</strong> the <code>call_groq()</code> bypass is coded and mitigated (sequential builds, atomic cache, token logging), but the actual 429/burst-rate risk it addresses is only retired once the live throttled run in Task 6 actually succeeds against Groq.</li>
+      <li><strong>Full 9-filing release is blocked on Phase 2</strong>, not this plan — MSFT ×3 and TSLA ×3 still need ingesting (tracked in <code>temp/deferred.md</code>) before the non-throttled build can run.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>What You Need To Do</h2>
+
+    <div class="callout action">
+      <strong>Active — one decision needed before Task 6 proceeds:</strong>
+      <p style="margin-top:6px;">The live throttled run (3 filings: AAPL_2023/2024/2025) will make real calls to Groq using <code>llama-3.1-8b-instant</code>. This is the step you interrupted last — I was about to inspect <code>benchmark.db</code> to confirm those 3 filings' nodes are actually present before spending real API calls building trees over them. Nothing has been spent yet. Tell me to proceed (I'll re-check the DB, then run <code>python -m pipelines.structural.build_summary_index</code> and report the result), or tell me if you'd rather run it yourself, or wait.</p>
+    </div>
+
+    <h3>Passive — already handled, no action needed unless you want to change it</h3>
+    <ul>
+      <li>The <code>call_groq()</code> bypass decision, its risk, and its three mitigations are recorded in <code>resources/artifacts/Changes.md</code> and the design spec — nothing further needed from you there.</li>
+      <li><code>LOCAL_TEST_THROTTLE=true</code> confirmed in <code>project/.env</code> — Task 6 will only touch 3 filings, not all 9, until you flip it.</li>
+      <li>Deferred items (P3 retrieval, MSFT/TSLA ingestion, llama-cloud SDK migration) are tracked in <code>temp/deferred.md</code> — no decision needed now, just visibility.</li>
+    </ul>
+
+    <h3>Not yet needed (later)</h3>
+    <ul>
+      <li>Full 9-filing release — only after Phase 2's remaining 6 filings are ingested, and only after you're satisfied with the 3-filing throttled result.</li>
+      <li>Final whole-branch review and merge — after Task 6 completes.</li>
+    </ul>
+  </section>
+
+  <footer><span>Generated by the monitor workflow.</span><span><a href="index.html">← All reports</a> · <a href="#top">↑ Back to Top</a></span></footer>
+
+</div>
+</body>
+</html>

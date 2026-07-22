@@ -1,6 +1,13 @@
 [
   {
     "date": "2026-07-22",
+    "file": "2026-07-22-phase3-what-i-did.html",
+    "title": "Phase 3: What I Did / What You Need To Do",
+    "description": "5 of 6 tasks implemented and reviewed via subagent-driven TDD, 48/48 tests passing. One decision needed before the live throttled Groq run.",
+    "branch": "phase3-summary-index-build"
+  },
+  {
+    "date": "2026-07-22",
     "file": "2026-07-22-phase3-plan.html",
     "title": "Phase 3: Implementation Plan",
     "description": "Design + task-by-task plan for the one-time P3 summary-index build — no code written yet.",
