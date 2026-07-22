@@ -9,6 +9,7 @@ docs/superpowers/specs/2026-07-22-phase3-summary-index-design.md for why
 custom-built tree wouldn't provide) and the scoped, mitigated risk this
 carries (documented in resources/artifacts/Changes.md).
 """
+import json
 import os
 import shutil
 import time
@@ -24,6 +25,7 @@ from pipelines.structural.node_convert import nodes_to_llama_nodes
 
 STORAGE_ROOT = Path("storage/summary_index")
 DB_PATH = "benchmark.db"
+COST_LOG_PATH = Path("logs/index_build_costs.json")
 
 
 def _final_dir(document_id: str) -> Path:
@@ -69,3 +71,10 @@ async def build_index_for_document(document_id: str) -> dict:
         "input_tokens": token_counter.prompt_llm_token_count,
         "output_tokens": token_counter.completion_llm_token_count,
     }
+
+
+def append_cost_log(cost_row: dict, log_path: Path = COST_LOG_PATH) -> None:
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+    rows = json.loads(log_path.read_text()) if log_path.exists() else []
+    rows.append(cost_row)
+    log_path.write_text(json.dumps(rows, indent=2))
