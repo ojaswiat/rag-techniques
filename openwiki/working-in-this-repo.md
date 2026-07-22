@@ -4,10 +4,8 @@ What to watch out for when changing anything here. Sources: `CLAUDE.md`, `resour
 
 ## The two-layer split
 
-- **`src/`** holds all application and research code — pipelines, ingestion, judge, utilities, scripts. It is currently empty; new code goes here.
-- **`resources/`** holds user files and assets: the steering and reference layer. Read from it freely; do not write to it speculatively. `resources/docs/` in particular is the university brief and proposal template, and is read-only.
-
-The folder now called `resources/` was called `claude/` until recently, and that rename is **currently uncommitted** — `git status` shows the old paths as deleted and `resources/` as untracked. Anything referencing `claude/…` is out of date.
+- **`project/`** holds all application and research code — pipelines, ingestion, judge, utilities, scripts, tests. **`CLAUDE.md` says `src/`**, but Phase 1 and Phase 2 were actually built under `project/` (it already carries its own `.venv`, `pyproject.toml`, and `uv.lock`). Follow the established practice — `project/` — not the stale instruction; new code goes there.
+- **`resources/`** holds user files and assets: the steering and reference layer. Read from it freely; do not write to it speculatively. `resources/docs/` in particular is the university brief and proposal template, and is read-only. `resources/artifacts/Changes.md` specifically logs genuine deviations from the proposal/design spec (e.g. a spec-mandated model no longer being available) — it is not a general changelog for ordinary bugfixes, which belong in `monitor/` logs instead.
 
 ## Guardrails are binding, not advisory
 
@@ -97,8 +95,8 @@ The same applies to Groq's free-tier limits and LlamaParse's credit allowances: 
 
 Worth knowing before trusting any single document:
 
-- **`README.md`'s repository-layout section is stale.** It describes a `claude/` folder and does not mention `src/` or `resources/`.
-- **`README.md` names Apple as the dataset**, while `Architecture.md` §0.1 sets the corpus at 6–9 filings across 2–3 companies. The exact filing list is still open (`Architecture.md` §11 item 2). Prefer `Architecture.md`.
+- **`README.md`'s repository-layout section is stale.** It describes a `claude/` folder and does not mention `project/` or `resources/`.
+- **`README.md` names Apple as the dataset**, while the confirmed corpus (per `project/data/filings_manifest.json`) is AAPL/MSFT/TSLA × FY2023–2025 — only AAPL is actually ingested so far. Prefer the manifest and `Architecture.md` over `README.md`.
 - **`schemas/db_schema_example.jsonc`** is referenced by `Architecture.md` §11 item 1 as needing regeneration, but the file was deleted from the repo. §3.2's DDL is the sole source of truth for the schema.
 - **Context-mass standardisation** is asserted in `Project Idea.md` §10 but not mechanically enforced anywhere (`Architecture.md` §11 item 4). The recommendation is to treat "same K" as the operational definition and document the token-volume variance as an accepted approximation. Awaiting the researcher's confirmation.
 - **`TODO.md` is empty.**
@@ -108,7 +106,7 @@ Where two documents disagree, `Architecture.md` (v2) wins — it was written spe
 
 ## The knowledge graph
 
-`graphify-out/` holds a generated knowledge graph over this corpus — 204 nodes across 12 communities, built from the specs, proposals, and design assets. `CLAUDE.md` directs agents to query it before grepping raw files:
+`graphify-out/` holds a generated knowledge graph over this corpus — 1321 nodes across 185 communities as of the Phase 2 update, built from the specs, proposals, design assets, and now the Phase 1/2 source code. `CLAUDE.md` directs agents to query it before grepping raw files:
 
 ```bash
 graphify query "<question>"        # scoped subgraph

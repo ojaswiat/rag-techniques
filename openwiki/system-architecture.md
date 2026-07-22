@@ -2,7 +2,7 @@
 
 How the benchmark is meant to be built. Primary source: `resources/specs/Architecture.md` (v2), with the schedule in `resources/specs/Phase Plan.md` and the throughput maths in `resources/specs/Budget.md`.
 
-None of this exists in code yet. Everything below is the design to build against.
+Phases 1–2 exist in code under `project/` (not `src/` — see [Working in this repo](working-in-this-repo.md)); Phases 3–8 below are still the design to build against.
 
 ## Shape of the system
 
@@ -29,6 +29,8 @@ SEC EDGAR ──► ingest/ ──► nodes (SQLite)
 `nodes` is the single source for everything downstream. Two consumers read it independently — dataset generation and the three index builders — and both feed `loop_executor.py`, which is the **only** writer of `results`. `results` is then the single input to both the judge and the analysis scripts.
 
 Local on-disk state sits alongside `benchmark.db`: `storage/chroma/` (P1), `storage/bm25/` (P2, pickled per document), `storage/summary_index/` (P3, per filing), and the HuggingFace model cache for the bge models.
+
+**`project/ingest/` (built, Phase 2) resolves filing URLs at runtime, never hardcoded.** `fetch_filings.py` calls SEC's own public JSON APIs (`company_tickers.json` for ticker → CIK, `data.sec.gov/submissions/CIK….json` for the filing list) to find each 10-K's real accession number and document path before downloading — an invented or stale accession number would be indistinguishable from a real one until it 404s. `parse_filing.py` caches parsed Markdown for 48 hours (LlamaParse credits are free within that window); `node_builder.py` splits Markdown into atomic text/table nodes, never bisecting a table across two nodes; `run_ingestion.py` orchestrates the whole chain and skips a document that already has nodes, so a full corpus run resumes cleanly rather than crashing on already-ingested filings.
 
 ## Retrieval scope: per document, not cross-corpus
 
@@ -128,8 +130,8 @@ Ten weeks total, with active build work (Phases 1–6) wrapping by end of Week 7
 
 | Phase | Weeks | What gets built | Key modules |
 |---|---|---|---|
-| **1 — Infrastructure** | 1 | SQLite state layer, resilient Groq wrapper, throttle scaffolding | `config.py`, `database_manager.py`, `groq_client.py` |
-| **2 — Ingestion & parsing** | 1–3 | Filings → clean, metadata-rich nodes | `ingest/fetch_filings.py`, `parse_filing.py`, `node_builder.py`, `parsing_audit.py` |
+| **1 — Infrastructure** ✅ built | 1 | SQLite state layer, resilient Groq wrapper, throttle scaffolding | `project/config.py`, `project/database_manager.py`, `project/groq_client.py`, `project/loop_template.py` |
+| **2 — Ingestion & parsing** ✅ built | 1–3 | Filings → clean, metadata-rich nodes (3 of 9 filings ingested so far, 2081 nodes) | `project/ingest/fetch_filings.py`, `parse_filing.py`, `node_builder.py`, `parsing_audit.py`, `run_ingestion.py` |
 | **3 — P3 summary index** | 3 | One-time LLM-built summary tree per filing, cached | `pipelines/structural/build_summary_index.py` |
 | **4 — Dataset generation** | 4–5 | 140 verified queries, split into three disjoint sets, GQ hand-labelled | `dataset_gen/async_generator.py`, `async_critic.py`, `cross_check.py`, `split_and_label.py` |
 | **5 — Pipelines** | 5–6 | P1, P2, P3 plus the shared answerer and the executor | `pipelines/*`, `loop_executor.py` |

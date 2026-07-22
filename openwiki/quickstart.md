@@ -6,9 +6,9 @@ The research question, from `README.md`: *which retrieval paradigm — semantic 
 
 ## The one thing to know first
 
-**There is no implementation code yet.** The repository currently holds only design specifications, proposal deliverables, and design assets. `src/` exists but is empty; the Python modules described throughout the specs (`ingest/`, `pipelines/`, `judge/`, `loop_executor.py`) have not been written. Phase 1 of the build plan is the next milestone.
+**Phase 1 and Phase 2 of the build are done; Phases 3–8 are not.** Implementation code lives under `project/`, not the `src/` that `CLAUDE.md` describes — that's a real discrepancy, see [Working in this repo](working-in-this-repo.md). Phase 1 built the infrastructure layer (`config.py`, `database_manager.py`, `groq_client.py`, `loop_template.py`); Phase 2 built the SEC EDGAR → LlamaParse → `nodes` ingestion pipeline (`project/ingest/`). Both are tested (39 passing tests) and verified against real, live SEC EDGAR and LlamaParse data, not just mocks.
 
-That means the specs in `resources/specs/` are not documentation *of* a system — they are the binding design *for* a system that is about to be built. Treat them as the contract, not as a description of reality.
+The specs in `resources/specs/` remain the binding design for everything not yet built (Phases 3–8: P3 summary index, dataset generation, the three retrieval pipelines, the judge, the full benchmark, analysis). Treat them as the contract for that remaining work.
 
 ## Where to go next
 
@@ -21,17 +21,23 @@ That means the specs in `resources/specs/` are not documentation *of* a system �
 ## Repository layout
 
 ```
-src/                       # All application and research code — currently empty
+project/                   # All application code (Phases 1-2 built, see below)
+  config.py, database_manager.py, groq_client.py, loop_template.py  # Phase 1
+  ingest/                  # Phase 2: fetch_filings.py, parse_filing.py, node_builder.py,
+                           # parsing_audit.py, run_ingestion.py
+  tests/                   # 39 passing tests
+  benchmark.db             # SQLite state (gitignored)
 resources/                 # User files and assets: the steering and reference layer
   specs/                   # Authoritative design docs (read these in the order below)
-  artifacts/               # Proposal deliverables (.docx, .pdf)
+  artifacts/               # Proposal deliverables + Changes.md (spec deviations log)
   assets/                  # Design palette, typography, draw.io diagrams, data samples
   docs/                    # University brief and proposal template (read-only)
+docs/superpowers/plans/    # Task-by-task implementation plans for each phase
+temp/                      # Scratch notes, human-action reports, sample data references
+monitor/                   # Operation logs and generated HTML reports
 CLAUDE.md                  # Agent instructions for this repository
 README.md                  # Short project summary
-TODO.md                    # Currently empty
-skills-lock.json           # Pinned agent skills (docx, rag-implementation)
-graphify-out/              # Generated knowledge graph over the corpus
+graphify-out/              # Generated knowledge graph over the corpus and code
 openwiki/                  # This wiki
 ```
 
@@ -53,9 +59,10 @@ Six to nine SEC 10-K filings are parsed with LlamaParse into `TextNode`s, each c
 
 ## Current state and open items
 
-Planning and proposal work is complete. The build has not started. Several things are genuinely unresolved and are recorded in `Architecture.md` §11 rather than hidden:
+Phase 1 (infrastructure) and Phase 2 (ingestion) are built and tested. Phase 3 onward (P3 summary index, dataset generation, pipelines, judge, benchmark, analysis) follow the specs as designed. Several things remain genuinely unresolved:
 
-- **The exact filing list is not fixed.** `Architecture.md` §0.1 sets the corpus at 6–9 filings across 2–3 companies and 2–3 fiscal years, and §11 item 2 notes that AAPL/MSFT/TSLA × FY2023–2025 is only an illustrative example. `README.md` says "Apple Inc. SEC 10-K filings", which is narrower than the current design; prefer `Architecture.md`.
-- **Context-mass standardisation is asserted but not enforced.** `Project Idea.md` §10 principle 1 requires context mass held constant across pipelines, but K is standardised as node *count*, not token count, and node sizes vary. `Architecture.md` §11 item 4 recommends accepting and documenting the variance rather than adding a truncation step. Flagged for the researcher to confirm.
-- **`README.md`'s repository-layout section is stale.** It still describes a `claude/` folder and does not mention `src/` or `resources/`. The folder was renamed to `resources/` and that rename is currently uncommitted.
-- **`TODO.md` is empty.**
+- **The filing corpus is confirmed but only partly ingested.** The human confirmed `Architecture.md` §11's illustrative example — AAPL/MSFT/TSLA × FY2023–2025, 9 filings — as the real corpus. Only 3 (AAPL × 3 years, 2081 nodes) have actually been fetched and parsed; MSFT and TSLA await an unthrottled ingestion run. `README.md` still says "Apple Inc. SEC 10-K filings", narrower than the confirmed design; prefer `Architecture.md` and `project/data/filings_manifest.json`.
+- **Context-mass standardisation is asserted but not enforced.** `Project Idea.md` §10 principle 1 requires context mass held constant across pipelines, but K is standardised as node *count*, not token count, and node sizes vary. `Architecture.md` §11 item 4 recommends accepting and documenting the variance rather than adding a truncation step. Flagged for the researcher to confirm. Not yet relevant — no pipeline exists yet to standardise.
+- **`README.md`'s repository-layout section is stale.** It describes a `claude/` folder and does not mention `project/` or `resources/`.
+- **`CLAUDE.md` says code goes in `src/`; the actual Phase 1/2 code is in `project/`.** See [Working in this repo](working-in-this-repo.md) for the reasoning.
+- **`TODO.md` is empty**; day-to-day task notes live in `temp/todo.md` instead.

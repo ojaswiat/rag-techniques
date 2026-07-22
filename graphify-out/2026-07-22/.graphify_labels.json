@@ -168,20 +168,5 @@
   "166": "notes.md",
   "167": "todo.md",
   "168": "TODO.md",
-  "169": "TODO.md Active Task List (empty)",
-  "170": "Human Intervention Ledger (read this before starting)",
-  "171": "run_ingestion.py",
-  "172": "test_node_builder.py",
-  "173": "groq_client.py",
-  "174": "parse_filing.py",
-  "175": "4. Implementation Guardrails (Binding)",
-  "176": "Quickstart",
-  "177": "fetch_filings.py",
-  "178": "test_config.py",
-  "179": "test_fetch_filings.py",
-  "180": "Phase 1 — Human Action Report",
-  "181": "Phase 2 — Human Action Report",
-  "182": "quickstart.md",
-  "183": "test_filings_manifest.py",
-  "184": "__init__.py"
+  "169": "TODO.md Active Task List (empty)"
 }
