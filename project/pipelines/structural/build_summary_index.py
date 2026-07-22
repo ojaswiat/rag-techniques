@@ -9,6 +9,7 @@ docs/superpowers/specs/2026-07-22-phase3-summary-index-design.md for why
 custom-built tree wouldn't provide) and the scoped, mitigated risk this
 carries (documented in resources/artifacts/Changes.md).
 """
+import asyncio
 import json
 import os
 import shutil
@@ -21,11 +22,13 @@ from llama_index.llms.groq import Groq
 
 import config
 import database_manager as dbm
+import loop_template
 from pipelines.structural.node_convert import nodes_to_llama_nodes
 
 STORAGE_ROOT = Path("storage/summary_index")
 DB_PATH = "benchmark.db"
 COST_LOG_PATH = Path("logs/index_build_costs.json")
+MANIFEST_PATH = "data/filings_manifest.json"
 
 
 def _final_dir(document_id: str) -> Path:
@@ -78,3 +81,20 @@ def append_cost_log(cost_row: dict, log_path: Path = COST_LOG_PATH) -> None:
     rows = json.loads(log_path.read_text()) if log_path.exists() else []
     rows.append(cost_row)
     log_path.write_text(json.dumps(rows, indent=2))
+
+
+async def main():
+    STORAGE_ROOT.mkdir(parents=True, exist_ok=True)
+    with open(MANIFEST_PATH) as f:
+        manifest = json.load(f)
+    manifest = loop_template.apply_throttle(manifest)
+
+    for entry in manifest:
+        cost_row = await build_index_for_document(entry["document_id"])
+        append_cost_log(cost_row)
+        status = "skipped (cached)" if cost_row.get("skipped") else "built"
+        print(f"{entry['document_id']}: {status}")
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
