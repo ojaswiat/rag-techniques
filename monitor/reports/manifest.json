@@ -1,5 +1,12 @@
 [
   {
+    "date": "2026-07-22",
+    "file": "2026-07-22-phase2-fresh-e2e-verification.html",
+    "title": "Phase 2: Fresh End-to-End Verification",
+    "description": "Re-verified after the llama-cloud-services migration: dependency resolve, 39/39 tests, live resume-skip, live parse smoke test — all clean.",
+    "branch": "phase2-ingestion-parsing"
+  },
+  {
     "date": "2026-07-21",
     "file": "2026-07-21-phase2-what-you-need-to-do.html",
     "title": "Phase 2: What You Need To Do",

@@ -106,7 +106,7 @@
     <span><span class="brand">rag-techniques</span> · Monitor · Logs</span>
     <span class="mh-right">
       <span class="branchchip" title="Branch: phase2-ingestion-parsing"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">phase2-ingestion-parsing</span></span>
-      <span class="mono">2026-07-22 08:02</span>
+      <span class="mono">2026-07-22 08:17</span>
     </span>
   </div>
 
@@ -118,11 +118,11 @@
 
   <div class="kpis">
     <div class="kpi"><div class="label">Current branch</div><div class="value small mono">phase2-ingestion-parsing</div></div>
-    <div class="kpi"><div class="label">Total ops</div><div class="value">25</div></div>
-    <div class="kpi pass"><div class="label">Success</div><div class="value">24</div></div>
+    <div class="kpi"><div class="label">Total ops</div><div class="value">26</div></div>
+    <div class="kpi pass"><div class="label">Success</div><div class="value">25</div></div>
     <div class="kpi warn"><div class="label">Partial</div><div class="value">1</div></div>
     <div class="kpi fail"><div class="label">Failure</div><div class="value">0</div></div>
-    <div class="kpi"><div class="label">Last activity</div><div class="value small mono">2026-07-22 08:02:19,780</div></div>
+    <div class="kpi"><div class="label">Last activity</div><div class="value small mono">2026-07-22 08:17:22,906</div></div>
   </div>
 
   <fieldset class="filter" aria-label="Filter by status">
@@ -136,6 +136,22 @@
   </fieldset>
 
   <div class="log">
+  <article class="logcard success">
+    <div class="row">
+      <time>2026-07-22 08:17:22,906</time>
+      <span class="op">phase2-fresh-e2e-verification</span>
+      <span class="toolchip">Claude Code</span>
+      <span class="branchchip" title="Branch: phase2-ingestion-parsing"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">phase2-ingestion-parsing</span></span>
+      <span class="spacer"></span>
+      <span class="tag pass">SUCCESS</span>
+    </div>
+    <p class="summary">Fresh end-to-end verification of Phase 2 branch: dependency resolve, full suite, live resume-skip, live LlamaParse smoke test -- all clean</p>
+    <p class="task"><b>Task</b> Phase 2 fresh end-to-end verification</p>
+    <details>
+      <summary>Details</summary>
+      <p>Attempted a full .venv wipe+rebuild for the cleanest possible fresh-clone simulation, but the user rejected it since they were actively sourced into that same venv in their shell (source .../activate earlier this session) -- deleting it would have broken their active session. Adjusted: ran uv sync in-place instead (safe, still verifies clean dependency resolution against pyproject.toml/uv.lock without touching the sourced venv). Then: (1) full test suite, 39/39 passed; (2) live re-run of ingest.run_ingestion against the real populated benchmark.db -- correctly skipped all 3 already-ingested AAPL filings with no crash and no re-spent LlamaParse credits, confirming the resume-skip fix from the final review still holds after the later llama-cloud-services migration; (3) DB integrity check confirmed all 2081 nodes intact across the 3 documents; (4) live LlamaParse smoke test with a real table fixture, post-migration -- table and header both intact, confirming the llama_parse -&gt; llama_cloud_services swap is still fully correct end-to-end, not just at unit-test level.</p>
+    </details>
+  </article>
   <article class="logcard success">
     <div class="row">
       <time>2026-07-22 08:02:19,780</time>
@@ -549,7 +565,7 @@
   </article>
   </div>
 
-  <footer><span>Rendered from monitor/logs/operations.log · 25 entries.</span><span><a href="../index.html">← Dashboard</a> · <a href="#top">↑ Back to Top</a></span></footer>
+  <footer><span>Rendered from monitor/logs/operations.log · 26 entries.</span><span><a href="../index.html">← Dashboard</a> · <a href="#top">↑ Back to Top</a></span></footer>
 
 </div>
 </body>
