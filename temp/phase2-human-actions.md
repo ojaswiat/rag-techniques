@@ -2,16 +2,6 @@
 
 ## Active — needs your input before Phase 2 is fully closed out
 
-- [ ] **Eyeball the parsing audit report**: `project/parsing_audit_report.md` was
-  generated from the real throttled run (20 samples across the 3 AAPL filings)
-  but has NOT yet been read by a human. Please open it and check a handful of
-  sampled sections for table truncation, column misalignment, or garbled
-  markdown before Phase 4 starts generating queries against this corpus.
-  Two things you'll notice that are already known and explained below, not
-  new bugs to report: (1) a few nodes with content like `# FORM 10-K` (raw
-  markdown leaking from cover-page headings — cosmetic, see Passive section);
-  (2) most nodes carry a `parent_item_header` like "Item 1A. Risk Factors" —
-  this is working correctly.
 - [ ] **Decide on the `llama-parse` → `llama-cloud` migration**: the `llama-parse`
   package used by `ingest/parse_filing.py` is itself deprecated (its own
   warning claims a maintenance window ending 2026-05-01, already past).
@@ -26,6 +16,8 @@
 
 ## Passive — already handled, no action needed unless you want to change it
 
+- **Parsing audit report reviewed**: you read `project/parsing_audit_report.md`
+  and confirmed everything looks fine — the corpus is trusted for Phase 4.
 - **Filing corpus confirmed**: AAPL, MSFT, TSLA × FY2023-2025 (9 filings) —
   you confirmed the spec's own illustrative default. Real ingestion for the
   throttled 3 (all AAPL) already ran successfully; the remaining 6 filings
