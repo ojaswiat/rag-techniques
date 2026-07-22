@@ -1,5 +1,6 @@
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
+import json
 
 import pytest
 
@@ -101,3 +102,18 @@ async def test_build_index_for_document_cleans_stale_temp_dir_before_retry(tmp_p
     assert result["skipped"] is False
     assert (tmp_path / "AAPL_2025" / "docstore.json").exists()
     assert not (tmp_path / "AAPL_2025.tmp").exists()
+
+
+def test_append_cost_log_creates_and_appends(tmp_path):
+    log_path = tmp_path / "logs" / "index_build_costs.json"
+    bsi.append_cost_log(
+        {"document_id": "AAPL_2025", "skipped": False, "wall_clock_sec": 1.0,
+         "input_tokens": 10, "output_tokens": 5},
+        log_path=log_path,
+    )
+    bsi.append_cost_log({"document_id": "AAPL_2024", "skipped": True}, log_path=log_path)
+
+    rows = json.loads(log_path.read_text())
+    assert len(rows) == 2
+    assert rows[0]["document_id"] == "AAPL_2025"
+    assert rows[1]["skipped"] is True
