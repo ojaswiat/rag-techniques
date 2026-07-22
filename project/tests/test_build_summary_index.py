@@ -117,3 +117,26 @@ def test_append_cost_log_creates_and_appends(tmp_path):
     assert len(rows) == 2
     assert rows[0]["document_id"] == "AAPL_2025"
     assert rows[1]["skipped"] is True
+
+
+@pytest.mark.asyncio
+async def test_main_builds_each_manifest_entry_sequentially(tmp_path, monkeypatch):
+    manifest = [
+        {"document_id": "AAPL_2023", "ticker": "AAPL", "fiscal_year": 2023},
+        {"document_id": "AAPL_2024", "ticker": "AAPL", "fiscal_year": 2024},
+    ]
+    monkeypatch.setattr(bsi, "STORAGE_ROOT", tmp_path)
+    monkeypatch.setattr(bsi.loop_template, "apply_throttle", lambda items: items)
+
+    with patch("builtins.open", create=True) as mock_open, \
+         patch.object(bsi, "build_index_for_document", new=AsyncMock(
+             side_effect=[{"document_id": "AAPL_2023", "skipped": False},
+                          {"document_id": "AAPL_2024", "skipped": True}])) as mock_build, \
+         patch.object(bsi, "append_cost_log") as mock_log:
+        mock_open.return_value.__enter__.return_value.read.return_value = json.dumps(manifest)
+        await bsi.main()
+
+    assert mock_build.call_count == 2
+    mock_build.assert_any_call("AAPL_2023")
+    mock_build.assert_any_call("AAPL_2024")
+    assert mock_log.call_count == 2
