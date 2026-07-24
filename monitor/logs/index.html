@@ -105,8 +105,8 @@
   <div class="masthead" id="top">
     <span><span class="brand">rag-techniques</span> · Monitor · Logs</span>
     <span class="mh-right">
-      <span class="branchchip" title="Branch: phase2-ingestion-parsing"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">phase2-ingestion-parsing</span></span>
-      <span class="mono">2026-07-22 08:35</span>
+      <span class="branchchip" title="Branch: full-corpus-ingestion"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">full-corpus-ingestion</span></span>
+      <span class="mono">2026-07-23 12:08</span>
     </span>
   </div>
 
@@ -117,12 +117,12 @@
   </header>
 
   <div class="kpis">
-    <div class="kpi"><div class="label">Current branch</div><div class="value small mono">phase2-ingestion-parsing</div></div>
-    <div class="kpi"><div class="label">Total ops</div><div class="value">27</div></div>
+    <div class="kpi"><div class="label">Current branch</div><div class="value small mono">full-corpus-ingestion</div></div>
+    <div class="kpi"><div class="label">Total ops</div><div class="value">28</div></div>
     <div class="kpi pass"><div class="label">Success</div><div class="value">26</div></div>
-    <div class="kpi warn"><div class="label">Partial</div><div class="value">1</div></div>
+    <div class="kpi warn"><div class="label">Partial</div><div class="value">2</div></div>
     <div class="kpi fail"><div class="label">Failure</div><div class="value">0</div></div>
-    <div class="kpi"><div class="label">Last activity</div><div class="value small mono">2026-07-22 08:35:29,659</div></div>
+    <div class="kpi"><div class="label">Last activity</div><div class="value small mono">2026-07-23 12:08:58,120</div></div>
   </div>
 
   <fieldset class="filter" aria-label="Filter by status">
@@ -136,6 +136,22 @@
   </fieldset>
 
   <div class="log">
+  <article class="logcard partial">
+    <div class="row">
+      <time>2026-07-23 12:08:58,120</time>
+      <span class="op">p3-build-partial-resume</span>
+      <span class="toolchip">Bash</span>
+      <span class="branchchip" title="Branch: full-corpus-ingestion"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">full-corpus-ingestion</span></span>
+      <span class="spacer"></span>
+      <span class="tag warn">PARTIAL</span>
+    </div>
+    <p class="summary">Resumed P3 summary-index build on full-corpus-ingestion branch; MSFT_2023 built, hit Groq daily TPD cap (500K) again on MSFT_2024, 5 filings remain</p>
+    <div class="files"><span class="file">project/logs/index_build_costs.json</span></div>
+    <details>
+      <summary>Details</summary>
+      <p>AAPL x3 + MSFT_2023 built (4/9). MSFT_2024, MSFT_2025, TSLA x3 blocked on llama-3.1-8b-instant TPD limit. Atomic cache verified clean: no .tmp dirs, no false cache hit, cost log has correct row for MSFT_2023 only. Resume tomorrow with same build command.</p>
+    </details>
+  </article>
   <article class="logcard success">
     <div class="row">
       <time>2026-07-22 08:35:29,659</time>
@@ -582,7 +598,7 @@
   </article>
   </div>
 
-  <footer><span>Rendered from monitor/logs/operations.log · 27 entries.</span><span><a href="../index.html">← Dashboard</a> · <a href="#top">↑ Back to Top</a></span></footer>
+  <footer><span>Rendered from monitor/logs/operations.log · 28 entries.</span><span><a href="../index.html">← Dashboard</a> · <a href="#top">↑ Back to Top</a></span></footer>
 
 </div>
 </body>

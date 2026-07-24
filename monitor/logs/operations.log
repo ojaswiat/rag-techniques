@@ -1,3 +1,8 @@
+2026-07-23 12:08:58,120 INFO [p3-build-partial-resume] (Bash) Resumed P3 summary-index build on full-corpus-ingestion branch; MSFT_2023 built, hit Groq daily TPD cap (500K) again on MSFT_2024, 5 filings remain -- partial
+branch:  full-corpus-ingestion
+files:   project/logs/index_build_costs.json
+details: AAPL x3 + MSFT_2023 built (4/9). MSFT_2024, MSFT_2025, TSLA x3 blocked on llama-3.1-8b-instant TPD limit. Atomic cache verified clean: no .tmp dirs, no false cache hit, cost log has correct row for MSFT_2023 only. Resume tomorrow with same build command.
+================================================================================
 2026-07-22 08:35:29,659 INFO [graphify-openwiki-update] (Claude Code (graphify + openwiki:wiki update)) Refreshed the stale code graph (Phase 1+2 code now indexed, 1321 nodes) and surgically updated 3 openwiki pages that claimed no code existed yet -- success
 branch:  phase2-ingestion-parsing
 task:    Phase 2 documentation sync
