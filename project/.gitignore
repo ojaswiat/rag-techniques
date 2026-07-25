@@ -10,3 +10,4 @@ logs/
 data/raw/
 data/parsed/
 .pytest_cache/
+backups/
