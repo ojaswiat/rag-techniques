@@ -28,3 +28,17 @@ Simple running list of changes made to the project after the proposal was submit
   `TokenCountingHandler`. Scoped to this one build step only -- Phase 4/6/7
   Groq calls remain on `call_groq()` unconditionally. Full reasoning in
   `docs/superpowers/specs/2026-07-22-phase3-summary-index-design.md`.
+- 2026-07-26: Data integrity audit of the full 9-filing corpus (post P3 build)
+  found a LlamaParse extraction defect: 31 tables across 5 of 9 filings
+  (`MSFT_2023/2024/2025`, `TSLA_2023`, `TSLA_2025`) have a misaligned header
+  row where a units caption (e.g. `(in millions)`) merges into the table's
+  first cell instead of sitting on its own line, shifting the header/
+  separator rows down by one. `AAPL_2023/2024/2025` and `TSLA_2024` are
+  clean. Underlying figures are intact -- only header/column labeling is
+  affected, not the data itself. Storage-file validity (45/45), TreeIndex
+  tree-structure consistency (9/9), and DB sanity (8,543 nodes, 0 empty/
+  duplicate rows) all passed clean. Root cause is upstream in LlamaParse's
+  handling of caption-prefixed tables, not this project's own parsing or
+  chunking code. No fix applied -- read-only audit, documented for the
+  dissertation's data-quality/limitations discussion. Full report:
+  `monitor/reports/2026-07-26-data-integrity-audit-full-corpus.html`.
