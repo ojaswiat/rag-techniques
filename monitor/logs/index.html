@@ -106,7 +106,7 @@
     <span><span class="brand">rag-techniques</span> · Monitor · Logs</span>
     <span class="mh-right">
       <span class="branchchip" title="Branch: full-corpus-ingestion"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">full-corpus-ingestion</span></span>
-      <span class="mono">2026-07-23 12:08</span>
+      <span class="mono">2026-07-26 13:27</span>
     </span>
   </div>
 
@@ -118,11 +118,11 @@
 
   <div class="kpis">
     <div class="kpi"><div class="label">Current branch</div><div class="value small mono">full-corpus-ingestion</div></div>
-    <div class="kpi"><div class="label">Total ops</div><div class="value">28</div></div>
-    <div class="kpi pass"><div class="label">Success</div><div class="value">26</div></div>
-    <div class="kpi warn"><div class="label">Partial</div><div class="value">2</div></div>
+    <div class="kpi"><div class="label">Total ops</div><div class="value">30</div></div>
+    <div class="kpi pass"><div class="label">Success</div><div class="value">27</div></div>
+    <div class="kpi warn"><div class="label">Partial</div><div class="value">3</div></div>
     <div class="kpi fail"><div class="label">Failure</div><div class="value">0</div></div>
-    <div class="kpi"><div class="label">Last activity</div><div class="value small mono">2026-07-23 12:08:58,120</div></div>
+    <div class="kpi"><div class="label">Last activity</div><div class="value small mono">2026-07-26 13:27:38,232</div></div>
   </div>
 
   <fieldset class="filter" aria-label="Filter by status">
@@ -136,6 +136,38 @@
   </fieldset>
 
   <div class="log">
+  <article class="logcard success">
+    <div class="row">
+      <time>2026-07-26 13:27:38,232</time>
+      <span class="op">full-corpus-branch-wrapup</span>
+      <span class="toolchip">Bash</span>
+      <span class="branchchip" title="Branch: full-corpus-ingestion"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">full-corpus-ingestion</span></span>
+      <span class="spacer"></span>
+      <span class="tag pass">SUCCESS</span>
+    </div>
+    <p class="summary">Committed final audit report + Changes.md doc entry before merging full-corpus-ingestion to main</p>
+    <div class="files"><span class="file">monitor/reports/2026-07-26-data-integrity-audit-full-corpus.html</span><span class="file">monitor/reports/manifest.json</span><span class="file">resources/artifacts/Changes.md</span></div>
+    <details>
+      <summary>Details</summary>
+      <p>9/9 filings ingested, 9/9 P3 summary indices built, 49/49 tests passing, data integrity audit clean (1 documented non-blocking finding). No new code -- committing monitor report assets and Changes.md doc entry only.</p>
+    </details>
+  </article>
+  <article class="logcard partial">
+    <div class="row">
+      <time>2026-07-26 13:21:52,577</time>
+      <span class="op">data-integrity-audit</span>
+      <span class="toolchip">Bash</span>
+      <span class="branchchip" title="Branch: full-corpus-ingestion"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">full-corpus-ingestion</span></span>
+      <span class="spacer"></span>
+      <span class="tag warn">PARTIAL</span>
+    </div>
+    <p class="summary">Read-only integrity audit of full 9-filing corpus: storage/tree/DB clean, found 31-table LlamaParse header-alignment defect in 5 filings</p>
+    <div class="files"><span class="file">monitor/reports/2026-07-26-data-integrity-audit-full-corpus.html</span><span class="file">monitor/reports/manifest.json</span></div>
+    <details>
+      <summary>Details</summary>
+      <p>4-layer audit: storage file validity (45/45 OK), TreeIndex tree-structure consistency (9/9 OK, fixed a script bug that gave false 0-refs), Markdown table integrity in data/parsed/*.md (31 tables across MSFT x3 + TSLA_2023/2025 have caption-merged-into-header defect from LlamaParse; AAPL x3 + TSLA_2024 clean), DB sanity (8543 nodes, 0 empty, 0 duplicates, exactly 9 filings). No code changed per explicit instruction; audit script lives in scratchpad only.</p>
+    </details>
+  </article>
   <article class="logcard partial">
     <div class="row">
       <time>2026-07-23 12:08:58,120</time>
@@ -598,7 +630,7 @@
   </article>
   </div>
 
-  <footer><span>Rendered from monitor/logs/operations.log · 28 entries.</span><span><a href="../index.html">← Dashboard</a> · <a href="#top">↑ Back to Top</a></span></footer>
+  <footer><span>Rendered from monitor/logs/operations.log · 30 entries.</span><span><a href="../index.html">← Dashboard</a> · <a href="#top">↑ Back to Top</a></span></footer>
 
 </div>
 </body>
