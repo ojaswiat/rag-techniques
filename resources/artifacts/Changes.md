@@ -42,3 +42,36 @@ Simple running list of changes made to the project after the proposal was submit
   chunking code. No fix applied -- read-only audit, documented for the
   dissertation's data-quality/limitations discussion. Full report:
   `monitor/reports/2026-07-26-data-integrity-audit-full-corpus.html`.
+- 2026-07-28: Two fixes to Phase 4's dataset-generation cross-check, per
+  discussion recorded in the final whole-branch review's Doubts #3/#4.
+  (1) **Generator retry no longer identical.** All LLM calls run at
+  `temperature=0` (deterministic) per spec, so retrying a rejected candidate
+  query with the exact same input was guaranteed to reproduce the exact same
+  rejected output -- wasted attempts and Groq quota for no chance of success.
+  Fixed by feeding the retry what specifically failed (citation mismatch vs.
+  value mismatch, and what the Critic found instead) and nudging toward a
+  different node/angle within the same section, so each retry is a genuine
+  second attempt.
+  (2) **Cross-check numeric matching was too strict.** `values_match()`
+  required the Generator's and Critic's answers to contain the exact same
+  *count* of numbers, so a correct answer like "$100 million" failed against
+  an equally correct "$100 million in 2025" purely because of an unrelated
+  extra number (the year). Fixed by requiring only that every number in the
+  Generator's answer appear (within tolerance) in the Critic's answer --
+  extra numbers are permitted, not penalised. Considered and rejected an
+  LLM-based semantic-similarity check as an alternative/addition (a third
+  Groq call per attempt, ~50% more spend/latency, reintroduces
+  non-determinism, and duplicates the Critic's own independent re-derivation
+  -- the exact reasoning the spec already used to keep the Citation Audit
+  code-only rather than Judge-graded). Instead added a third, complementary,
+  still-deterministic gate: `bge-small-en-v1.5` embedding cosine similarity
+  between the two answer texts (same model already used for P1/P3
+  retrieval, local, free, no Groq call) above a threshold, to catch a
+  Critic answer whose numbers happen to match by coincidence but whose
+  surrounding text is otherwise unrelated. Numeric-subset matching was kept
+  alongside embedding similarity (not replaced by it) because embeddings
+  are unreliable at penalising a single wrong figure in an otherwise
+  similarly-worded sentence (e.g. "$100 million" vs. "$150 million" score
+  as highly similar) -- the three gates (citation overlap, numeric subset,
+  embedding similarity) each catch a distinct failure mode none of the
+  others cover.
