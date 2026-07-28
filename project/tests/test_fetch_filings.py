@@ -68,6 +68,36 @@ async def test_fetch_filing_skips_download_if_cached(tmp_path):
 
 
 @pytest.mark.asyncio
+async def test_fetch_filing_falls_back_to_paginated_archives(tmp_path):
+    raw_dir = str(tmp_path)
+    fake_html = b"<html>fake older 10-K</html>"
+
+    recent_no_match = {
+        "filings": {
+            "recent": {"form": ["8-K"], "reportDate": ["2025-12-31"], "accessionNumber": ["0"], "primaryDocument": ["x.htm"]},
+            "files": [{"name": "CIK0000019617-submissions-001.json"}],
+        }
+    }
+    paginated_with_match = {
+        "form": ["10-K"],
+        "reportDate": ["2023-12-31"],
+        "accessionNumber": ["0000019617-24-000010"],
+        "primaryDocument": ["jpm-20231231.htm"],
+    }
+
+    with patch.object(fetch_filings, "resolve_cik", return_value="0000019617"), \
+         patch.object(fetch_filings, "_get_json", side_effect=[recent_no_match, paginated_with_match]) as mock_get, \
+         patch.object(fetch_filings, "_download_bytes", return_value=fake_html) as mock_download:
+        path = await fetch_filings.fetch_filing("JPM", 2023, "JPM_2023", raw_dir=raw_dir)
+
+    assert os.path.exists(path)
+    with open(path, "rb") as f:
+        assert f.read() == fake_html
+    assert mock_get.call_count == 2
+    mock_download.assert_called_once()
+
+
+@pytest.mark.asyncio
 async def test_fetch_filing_raises_when_no_matching_10k(tmp_path):
     raw_dir = str(tmp_path)
     empty_submissions = {"filings": {"recent": {"form": [], "reportDate": [], "accessionNumber": [], "primaryDocument": []}}}
