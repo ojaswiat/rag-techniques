@@ -1,0 +1,51 @@
+"""Generator: proposes a query + ground truth + citations for one filing section.
+
+Uses openai/gpt-oss-120b (config.MODEL_ROUTING["generator"]) -- a different
+model family from the Critic (Task 6), per the anti-self-grading invariant.
+"""
+import json
+
+import config
+import groq_client
+
+_QUADRANT_GUIDANCE = {
+    "Q1_Direct_Text": "Ask a direct fact-retrieval question answerable from a single explicit statement in continuous prose.",
+    "Q2_Implicit_Text": "Ask a question requiring synthesis across multiple narrative passages in this section (not a single sentence).",
+    "Q3_Direct_Table": "Ask a question requiring exact extraction of a specific cell/value from a table in this section.",
+    "Q4_Implicit_Table": "Ask a question requiring a calculation or cross-row/footnote inference using a table in this section.",
+}
+
+_SYSTEM_PROMPT = (
+    "You are generating one benchmark question from a section of a SEC 10-K filing. "
+    "Respond with ONLY a JSON object (no markdown fences, no commentary): "
+    '{"query_text": "...", "ground_truth_answer": "...", "gt_citations": ["node_id", ...]}. '
+    "gt_citations must only contain node_id values that were given to you in the section."
+)
+
+
+async def generate_query(section: dict, quadrant: str) -> dict:
+    guidance = _QUADRANT_GUIDANCE[quadrant]
+    user_content = (
+        f"{guidance}\n\n"
+        f"Section: {section['section_header']}\n"
+        f"Available node_ids: {section['node_ids']}\n\n"
+        f"Section content:\n{section['content']}"
+    )
+
+    response = await groq_client.call_groq(
+        model=config.MODEL_ROUTING["generator"],
+        messages=[
+            {"role": "system", "content": _SYSTEM_PROMPT},
+            {"role": "user", "content": user_content},
+        ],
+    )
+
+    payload = json.loads(response.choices[0].message.content)
+
+    return {
+        "query_text": payload["query_text"],
+        "ground_truth_answer": payload["ground_truth_answer"],
+        "gt_citations": payload["gt_citations"],
+        "quadrant": quadrant,
+        "document_id": section["document_id"],
+    }
