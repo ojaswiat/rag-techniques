@@ -1,3 +1,33 @@
+2026-07-28 19:38:05,439 INFO [phase4-doubt6-fix] (Agent) Fixed Doubt #6: stdlib logging progress commentary per attempt (console + logs/dataset_generation_progress.log), running count against 140 total -- success
+branch:  phase4-dataset-generation
+files:   dataset_generation/run_dataset_generation.py, tests/test_run_dataset_generation.py
+details: 122/122 tests passing (118 baseline + 4 new). Reviewed clean, no Critical/Important findings, no real file-write leaks confirmed. One unrelated pre-existing Minor noted: a different existing test leaks to the real dataset_generation_summary.json path, not introduced by this fix, flagged for future follow-up. Commit 06b58d0.
+================================================================================
+2026-07-28 19:15:19,055 INFO [phase4-doubt4-fix] (Agent) Fixed Doubt #4: three-gate cross-check (citation overlap + numeric subset match + new embedding similarity gate via fastembed/bge-small-en-v1.5), replacing the too-strict exact-count numeric match -- success
+branch:  phase4-dataset-generation
+files:   dataset_generation/cross_check.py, tests/test_cross_check.py, pyproject.toml, uv.lock, ../resources/artifacts/Changes.md
+details: 118/118 tests passing (110 baseline + 8 new). Reviewed clean, no Critical/Important findings -- reviewer independently reproduced embedding scores and confirmed AND-logic/determinism/threshold placement. One Minor: onnxruntime==1.23.2 exact-pin inconsistent with rest of pyproject.toml's floor-pin style. fastembed substitution for sentence-transformers documented in Changes.md (torch has no macOS x86_64+py3.13 wheel). Commit 2ec972f.
+================================================================================
+2026-07-28 19:07:41,566 INFO [phase4-doubt3-fix] (Agent) Fixed Doubt #3: Generator retries now receive specific rejection/exception feedback via new diagnose_rejection() and generate_query()'s previous_attempt_feedback param, instead of identical temperature=0 repeats -- success
+branch:  phase4-dataset-generation
+files:   project/dataset_generation/cross_check.py, project/dataset_generation/async_generator.py, project/dataset_generation/run_dataset_generation.py
+details: 110/110 tests passing (104 baseline + 6 new). Reviewed clean, no Critical findings. One Important finding logged as deferred, not a blocker: broad TypeError catch (from Doubt #1) can mask a real code bug as an LLM failure -- pre-existing risk, not introduced by this fix. Commit c0509bf.
+================================================================================
+2026-07-28 15:36:46,216 INFO [phase4-doubt2-fix] (Agent) Fixed Doubt #2: content-aware section classification (node_type) routes tables to Q3/Q4, text to Q1/Q2; round-robin company interleaving; capped pool cycling; end-of-run underfill summary -- success
+branch:  phase4-dataset-generation
+files:   project/dataset_generation/run_dataset_generation.py, project/tests/test_run_dataset_generation.py
+details: 104/104 tests passing (94 baseline + 10 new). Reviewed clean, no Critical/Important findings. section_grouper.py confirmed untouched, its tests unmodified. 3 Minor/informational notes: redundant per-section dict rebuild (negligible), no explicit empty-pool test (traced safe), pool cycling reprocesses from index 0 each cycle (intentional, interacts with Doubt #3's retry-quota concern). Commit 1c6986d.
+================================================================================
+2026-07-28 15:18:46,273 INFO [phase4-doubt1-review-gap-fix] (Agent) Code review found real gap in Doubt #1 fix: TypeError/AttributeError from null gt_citations/computed_answer still crashed the whole run. Fixed by extending _ATTEMPT_EXCEPTIONS -- success
+branch:  phase4-dataset-generation
+files:   project/dataset_generation/run_dataset_generation.py, project/tests/test_run_dataset_generation.py
+details: 94/94 tests passing. Verified via TDD: new tests failed with exact reported tracebacks pre-fix, pass post-fix. Commit 125d7ff.
+================================================================================
+2026-07-28 15:12:33,981 INFO [phase4-doubt1-fix] (Agent) Fixed Doubt #1: per-attempt exception handling in dataset-generation orchestrator, catches Critic RuntimeError/JSON errors/APIStatusError, logs failure, continues instead of crashing -- success
+branch:  phase4-dataset-generation
+files:   project/dataset_generation/run_dataset_generation.py, project/tests/test_run_dataset_generation.py
+details: 92/92 tests passing (89 baseline + 3 new). Reviewed clean, 3 Minor findings deferred (stale 429 comment, no rejection-parity test, non-atomic log write inherited from existing precedent). Commit dd211da.
+================================================================================
 2026-07-28 10:24:50,788 INFO [phase4-final-review-fix-decision] (AskUserQuestion) Decided: content-aware + stratified quadrant routing to fix Critical finding #2 from Phase 4 final review (query-type/issuer confound) -- success
 branch:  phase4-dataset-generation
 details: Final whole-branch review of Phase 4 found the plan's own next_target() fill-order design confounds query quadrant with filing issuer (Q1~AAPL, Q2~AAPL/MSFT, Q3~MSFT, Q4~TSLA) -- undermines the P1/P2/P3 comparison a published benchmark needs. Chose content-aware + stratified routing over simple round-robin or accepting the confound as documented limitation: classify each section as table/text via node_type lookup (computed in orchestrator, section_grouper.py stays untouched), build two round-robin-interleaved pools across all 9 filings upfront (table pool feeds Q3/Q4, text pool feeds Q1/Q2), cycle pools with a safety cap instead of one-shot exhaustion (folds in Important #5 'no second pass'), and print an end-of-run underfill summary (folds in Important #6 'no logging'). Framed as standard stratified-sampling practice matching published RAG/QA benchmark methodology (FinQA, TAT-QA precedent).
