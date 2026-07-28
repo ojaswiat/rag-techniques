@@ -106,7 +106,7 @@
     <span><span class="brand">rag-techniques</span> · Monitor · Logs</span>
     <span class="mh-right">
       <span class="branchchip" title="Branch: phase4-dataset-generation"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">phase4-dataset-generation</span></span>
-      <span class="mono">2026-07-28 19:38</span>
+      <span class="mono">2026-07-28 20:28</span>
     </span>
   </div>
 
@@ -118,11 +118,11 @@
 
   <div class="kpis">
     <div class="kpi"><div class="label">Current branch</div><div class="value small mono">phase4-dataset-generation</div></div>
-    <div class="kpi"><div class="label">Total ops</div><div class="value">44</div></div>
-    <div class="kpi pass"><div class="label">Success</div><div class="value">41</div></div>
+    <div class="kpi"><div class="label">Total ops</div><div class="value">46</div></div>
+    <div class="kpi pass"><div class="label">Success</div><div class="value">43</div></div>
     <div class="kpi warn"><div class="label">Partial</div><div class="value">3</div></div>
     <div class="kpi fail"><div class="label">Failure</div><div class="value">0</div></div>
-    <div class="kpi"><div class="label">Last activity</div><div class="value small mono">2026-07-28 19:38:05,439</div></div>
+    <div class="kpi"><div class="label">Last activity</div><div class="value small mono">2026-07-28 20:28:57,101</div></div>
   </div>
 
   <fieldset class="filter" aria-label="Filter by status">
@@ -136,6 +136,38 @@
   </fieldset>
 
   <div class="log">
+  <article class="logcard success">
+    <div class="row">
+      <time>2026-07-28 20:28:57,101</time>
+      <span class="op">phase4-doubt7-improvement</span>
+      <span class="toolchip">Agent</span>
+      <span class="branchchip" title="Branch: phase4-dataset-generation"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">phase4-dataset-generation</span></span>
+      <span class="spacer"></span>
+      <span class="tag pass">SUCCESS</span>
+    </div>
+    <p class="summary">Added optional return_messages param to critique_query for direct tool-call proof in live smoke test, per prior review&#x27;s Minor suggestion</p>
+    <div class="files"><span class="file">dataset_generation/async_critic.py</span><span class="file">tests/test_async_critic.py</span><span class="file">tests/test_async_critic_live_smoke.py</span></div>
+    <details>
+      <summary>Details</summary>
+      <p>124/124 tests passing + 1 correctly-skipped live test (up from 122+1). Reviewed clean, no Critical/Important findings. Backward compatibility verified: messages key genuinely absent (not null) when flag off. Two Minor non-blocking notes: theoretical JSON key-collision edge case, live test now has two bundled assertions. Commit 3ab05c5.</p>
+    </details>
+  </article>
+  <article class="logcard success">
+    <div class="row">
+      <time>2026-07-28 20:15:37,458</time>
+      <span class="op">phase4-doubt7-fix</span>
+      <span class="toolchip">Agent</span>
+      <span class="branchchip" title="Branch: phase4-dataset-generation"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">phase4-dataset-generation</span></span>
+      <span class="spacer"></span>
+      <span class="tag pass">SUCCESS</span>
+    </div>
+    <p class="summary">Fixed Doubt #7: added live-gated (skipped by default) smoke test proving Critic tool-calling round trip works against real Groq API -- confirmed 1 search round + correct citation of a synthetic filing-specific node id, proving real tool invocation not a lucky guess</p>
+    <div class="files"><span class="file">tests/test_async_critic_live_smoke.py</span><span class="file">pyproject.toml</span></div>
+    <details>
+      <summary>Details</summary>
+      <p>122/122 pytest passing + 1 live test correctly skipped by default. Live run confirmed real success: search_filing tool called, correct answer with correct citation returned in 2 rounds. Reviewed clean, no Critical/Important findings. One Minor non-blocking suggestion: expose critique_query()&#x27;s message history for more direct tool-invocation assertions in future. Commit a958a0d.</p>
+    </details>
+  </article>
   <article class="logcard success">
     <div class="row">
       <time>2026-07-28 19:38:05,439</time>
@@ -846,7 +878,7 @@
   </article>
   </div>
 
-  <footer><span>Rendered from monitor/logs/operations.log · 44 entries.</span><span><a href="../index.html">← Dashboard</a> · <a href="#top">↑ Back to Top</a></span></footer>
+  <footer><span>Rendered from monitor/logs/operations.log · 46 entries.</span><span><a href="../index.html">← Dashboard</a> · <a href="#top">↑ Back to Top</a></span></footer>
 
 </div>
 </body>
