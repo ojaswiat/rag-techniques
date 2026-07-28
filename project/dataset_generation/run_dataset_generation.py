@@ -4,6 +4,13 @@ Resumable -- re-checks quadrant counts on every startup and skips already-full
 quadrant/table slots, so a crash never re-spends Groq quota on accepted
 queries (same resumability principle as Phase 3's build). LOCAL_TEST_THROTTLE
 caps a run to THROTTLE_LIMIT sections total (Guardrails.md §7).
+
+The numeric suffix of each `query_id` is derived from the freshly-loaded
+per-(table, quadrant) row count (`counts[table][quadrant] + 1`), not an
+in-process counter -- so it stays correct across restarts: a crash after N
+accepted rows in a (table, quadrant) slot means the next process's first
+accepted row for that same slot gets suffix N+1, never colliding with
+already-committed rows.
 """
 import config
 import database_manager as dbm
@@ -42,8 +49,8 @@ async def _load_counts(db_path: str) -> dict[str, dict[str, int]]:
     return {table: await dbm.get_quadrant_counts(db_path, table) for table in _TABLE_ORDER}
 
 
-async def _accept_query(db_path: str, table: str, generated: dict, query_index: int) -> None:
-    query_id = f"{generated['quadrant']}_{table}_{query_index:04d}"
+async def _accept_query(db_path: str, table: str, generated: dict, next_seq: int) -> None:
+    query_id = f"{generated['quadrant']}_{table}_{next_seq:04d}"
     row = {
         "query_id": query_id,
         "quadrant": generated["quadrant"],
@@ -68,7 +75,6 @@ async def main(db_path: str = "benchmark.db", document_ids: tuple[str, ...] | No
     max_sections = config.THROTTLE_LIMIT if config.LOCAL_TEST_THROTTLE else None
 
     sections_processed = 0
-    query_index = 0
 
     for document_id in document_ids:
         nodes = await dbm.get_nodes_by_document(db_path, document_id)
@@ -94,8 +100,8 @@ async def main(db_path: str = "benchmark.db", document_ids: tuple[str, ...] | No
                     critic_answer=critic_result["computed_answer"],
                 )
                 if accepted:
-                    query_index += 1
-                    await _accept_query(db_path, table, generated, query_index)
+                    next_seq = counts[table][quadrant] + 1
+                    await _accept_query(db_path, table, generated, next_seq)
                     break
 
             sections_processed += 1
