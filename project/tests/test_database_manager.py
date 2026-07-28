@@ -120,3 +120,70 @@ async def test_results_unique_constraint_blocks_duplicate():
     row["result_id"] = "R_TEST_003"  # different PK, same (source_set, query_id, pipeline, k_value)
     with pytest.raises(Exception):
         await dbm.upsert_result(TEST_DB, row)
+
+
+@pytest.mark.asyncio
+async def test_insert_query_and_quadrant_counts():
+    await dbm.init_db(TEST_DB)
+    await dbm.insert_query(TEST_DB, {
+        "query_id": "Q1_TEST_001",
+        "quadrant": "Q1_Direct_Text",
+        "query_text": "What is the total revenue?",
+        "ground_truth_answer": "$100 million",
+        "gt_citations": ["TEST_2025_n0001"],
+        "document_id": "SEC_10K_TEST_2025",
+    })
+    counts = await dbm.get_quadrant_counts(TEST_DB, "queries")
+    assert counts == {
+        "Q1_Direct_Text": 1,
+        "Q2_Implicit_Text": 0,
+        "Q3_Direct_Table": 0,
+        "Q4_Implicit_Table": 0,
+    }
+
+
+@pytest.mark.asyncio
+async def test_get_quadrant_counts_rejects_unknown_table():
+    await dbm.init_db(TEST_DB)
+    with pytest.raises(ValueError):
+        await dbm.get_quadrant_counts(TEST_DB, "results")
+
+
+@pytest.mark.asyncio
+async def test_insert_golden_query_and_update_labels():
+    await dbm.init_db(TEST_DB)
+    await dbm.insert_golden_query(TEST_DB, {
+        "query_id": "Q1_GQ_001",
+        "quadrant": "Q1_Direct_Text",
+        "query_text": "What is the total revenue?",
+        "ground_truth_answer": "$100 million",
+        "gt_citations": ["TEST_2025_n0001"],
+        "example_output": "$100 million",
+        "human_score": 1,
+        "human_reasoning": "PENDING_HUMAN_LABEL",
+        "document_id": "SEC_10K_TEST_2025",
+    })
+    golden = await dbm.get_golden_queries(TEST_DB)
+    assert len(golden) == 1
+    assert golden[0]["gt_citations"] == ["TEST_2025_n0001"]
+    assert golden[0]["human_reasoning"] == "PENDING_HUMAN_LABEL"
+
+    await dbm.update_golden_query_labels(TEST_DB, "Q1_GQ_001", 8, "Clean, unambiguous fact retrieval.")
+    golden = await dbm.get_golden_queries(TEST_DB)
+    assert golden[0]["human_score"] == 8
+    assert golden[0]["human_reasoning"] == "Clean, unambiguous fact retrieval."
+
+
+@pytest.mark.asyncio
+async def test_insert_judge_validation():
+    await dbm.init_db(TEST_DB)
+    await dbm.insert_judge_validation(TEST_DB, {
+        "query_id": "Q1_JEQ_001",
+        "quadrant": "Q1_Direct_Text",
+        "query_text": "What is the total revenue?",
+        "ground_truth_answer": "$100 million",
+        "gt_citations": ["TEST_2025_n0001"],
+        "document_id": "SEC_10K_TEST_2025",
+    })
+    counts = await dbm.get_quadrant_counts(TEST_DB, "judge_validation")
+    assert counts["Q1_Direct_Text"] == 1
