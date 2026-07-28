@@ -304,3 +304,88 @@ async def test_groq_api_status_error_is_caught_and_logged(monkeypatch, tmp_path)
     logged = json.loads(failure_log.read_text())
     assert len(logged) == 3
     assert all(entry["exception_type"] == "APIStatusError" for entry in logged)
+
+
+@pytest.mark.asyncio
+async def test_null_gt_citations_raises_type_error_caught_and_logged(monkeypatch, tmp_path):
+    """generate_query returns valid JSON but gt_citations: null (a malformed
+    but non-exception-raising LLM response). check_query -> citations_overlap
+    calls set(None), raising TypeError. main() must catch this per-attempt,
+    log it, and not crash -- exactly like the other malformed-response
+    exceptions in this file."""
+    monkeypatch.setattr("dataset_generation.run_dataset_generation.config.LOCAL_TEST_THROTTLE", True)
+    monkeypatch.setattr("dataset_generation.run_dataset_generation.config.THROTTLE_LIMIT", 1)
+    failure_log = tmp_path / "failures.json"
+    monkeypatch.setattr("dataset_generation.run_dataset_generation.FAILURE_LOG_PATH", failure_log)
+
+    generated_with_null_citations = dict(_FAKE_GENERATED, gt_citations=None)
+
+    with (
+        patch("dataset_generation.run_dataset_generation.dbm.init_db", new=AsyncMock()),
+        patch(
+            "dataset_generation.run_dataset_generation.dbm.get_quadrant_counts",
+            new=AsyncMock(return_value={q: 0 for q in _QUADRANTS}),
+        ),
+        patch(
+            "dataset_generation.run_dataset_generation.dbm.get_nodes_by_document",
+            new=AsyncMock(return_value=_FAKE_NODES),
+        ),
+        patch("dataset_generation.run_dataset_generation.dbm.insert_query", new=AsyncMock()) as mock_insert,
+        patch(
+            "dataset_generation.run_dataset_generation.generate_query",
+            new=AsyncMock(return_value=generated_with_null_citations),
+        ),
+        patch(
+            "dataset_generation.run_dataset_generation.critique_query",
+            new=AsyncMock(return_value={"cited_node_ids": ["n1"], "computed_answer": "$100 million"}),
+        ),
+    ):
+        # main() must complete without raising TypeError.
+        await main(db_path="unused.db", document_ids=["DOC_A"])
+
+    mock_insert.assert_not_awaited()
+    logged = json.loads(failure_log.read_text())
+    assert len(logged) == 3
+    assert all(entry["exception_type"] == "TypeError" for entry in logged)
+
+
+@pytest.mark.asyncio
+async def test_null_computed_answer_raises_attribute_error_caught_and_logged(monkeypatch, tmp_path):
+    """critique_query returns a valid dict but computed_answer: null, and
+    neither answer contains a number. check_query -> values_match calls
+    critic_answer.strip() on None, raising AttributeError. main() must catch
+    this per-attempt, log it, and not crash."""
+    monkeypatch.setattr("dataset_generation.run_dataset_generation.config.LOCAL_TEST_THROTTLE", True)
+    monkeypatch.setattr("dataset_generation.run_dataset_generation.config.THROTTLE_LIMIT", 1)
+    failure_log = tmp_path / "failures.json"
+    monkeypatch.setattr("dataset_generation.run_dataset_generation.FAILURE_LOG_PATH", failure_log)
+
+    generated_no_numbers = dict(_FAKE_GENERATED, ground_truth_answer="Not disclosed")
+
+    with (
+        patch("dataset_generation.run_dataset_generation.dbm.init_db", new=AsyncMock()),
+        patch(
+            "dataset_generation.run_dataset_generation.dbm.get_quadrant_counts",
+            new=AsyncMock(return_value={q: 0 for q in _QUADRANTS}),
+        ),
+        patch(
+            "dataset_generation.run_dataset_generation.dbm.get_nodes_by_document",
+            new=AsyncMock(return_value=_FAKE_NODES),
+        ),
+        patch("dataset_generation.run_dataset_generation.dbm.insert_query", new=AsyncMock()) as mock_insert,
+        patch(
+            "dataset_generation.run_dataset_generation.generate_query",
+            new=AsyncMock(return_value=generated_no_numbers),
+        ),
+        patch(
+            "dataset_generation.run_dataset_generation.critique_query",
+            new=AsyncMock(return_value={"cited_node_ids": ["n1"], "computed_answer": None}),
+        ),
+    ):
+        # main() must complete without raising AttributeError.
+        await main(db_path="unused.db", document_ids=["DOC_A"])
+
+    mock_insert.assert_not_awaited()
+    logged = json.loads(failure_log.read_text())
+    assert len(logged) == 3
+    assert all(entry["exception_type"] == "AttributeError" for entry in logged)

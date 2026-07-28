@@ -32,9 +32,14 @@ _MAX_ATTEMPTS_PER_SECTION = 3
 # Exceptions that can propagate out of a single generate/critique attempt
 # without indicating a bug worth crashing the whole 140-query batch for:
 # Critic tool-round exhaustion, malformed/incomplete JSON from either LLM,
-# and any non-429 Groq API error (429s are already retried inside
-# groq_client.call_groq via tenacity).
-_ATTEMPT_EXCEPTIONS = (RuntimeError, json.JSONDecodeError, KeyError, APIStatusError)
+# any non-429 Groq API error (429s are already retried inside
+# groq_client.call_groq via tenacity), and null-valued fields in an
+# otherwise-valid LLM response (e.g. Generator's gt_citications: null ->
+# TypeError in cross_check.citations_overlap's set(None); Critic's
+# computed_answer: null -> AttributeError in cross_check.values_match's
+# None.strip()) -- these are malformed responses, not accept/reject
+# decisions, so they're treated the same as a rejected attempt.
+_ATTEMPT_EXCEPTIONS = (RuntimeError, json.JSONDecodeError, KeyError, APIStatusError, TypeError, AttributeError)
 
 FAILURE_LOG_PATH = Path("logs/dataset_generation_failures.json")
 
