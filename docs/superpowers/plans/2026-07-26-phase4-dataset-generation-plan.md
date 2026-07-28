@@ -1312,6 +1312,46 @@ def test_parse_label_markdown_skips_unfilled_entries():
 ---
 """
     assert parse_label_markdown(unfilled) == []
+
+
+def test_parse_label_markdown_handles_multiple_entries_without_bleeding():
+    two_entries = """## Q1_GQ_0001
+
+**Quadrant:** Q1_Direct_Text
+**Document:** AAPL_2023
+**Query:** What was total revenue?
+**Ground truth:** $100 million
+
+**Score (1-10):** 9
+**Why this answer is good:** Unambiguous single-fact retrieval, directly stated.
+
+---
+
+## Q3_GQ_0002
+
+**Quadrant:** Q3_Direct_Table
+**Document:** MSFT_2024
+**Query:** What was total operating expenses?
+**Ground truth:** $52,866 million
+
+**Score (1-10):** 7
+**Why this answer is good:** Clean cell extraction, single correct value.
+
+---
+"""
+    parsed = parse_label_markdown(two_entries)
+    assert parsed == [
+        {
+            "query_id": "Q1_GQ_0001",
+            "human_score": 9,
+            "human_reasoning": "Unambiguous single-fact retrieval, directly stated.",
+        },
+        {
+            "query_id": "Q3_GQ_0002",
+            "human_score": 7,
+            "human_reasoning": "Clean cell extraction, single correct value.",
+        },
+    ]
 ```
 
 - [ ] **Step 2: Run test to verify it fails**
@@ -1416,7 +1456,7 @@ if __name__ == "__main__":
 - [ ] **Step 4: Run test to verify it passes**
 
 Run: `.venv/bin/python -m pytest tests/test_gq_labeling.py -v`
-Expected: PASS (3 tests).
+Expected: PASS (4 tests).
 
 - [ ] **Step 5: Commit**
 
