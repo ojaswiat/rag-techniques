@@ -105,8 +105,8 @@
   <div class="masthead" id="top">
     <span><span class="brand">rag-techniques</span> · Monitor · Logs</span>
     <span class="mh-right">
-      <span class="branchchip" title="Branch: dev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">dev</span></span>
-      <span class="mono">2026-07-27 01:40</span>
+      <span class="branchchip" title="Branch: corpus-expansion-3-companies"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">corpus-expansion-3-companies</span></span>
+      <span class="mono">2026-07-28 11:35</span>
     </span>
   </div>
 
@@ -117,12 +117,12 @@
   </header>
 
   <div class="kpis">
-    <div class="kpi"><div class="label">Current branch</div><div class="value small mono">dev</div></div>
-    <div class="kpi"><div class="label">Total ops</div><div class="value">36</div></div>
-    <div class="kpi pass"><div class="label">Success</div><div class="value">33</div></div>
+    <div class="kpi"><div class="label">Current branch</div><div class="value small mono">corpus-expansion-3-companies</div></div>
+    <div class="kpi"><div class="label">Total ops</div><div class="value">38</div></div>
+    <div class="kpi pass"><div class="label">Success</div><div class="value">35</div></div>
     <div class="kpi warn"><div class="label">Partial</div><div class="value">3</div></div>
     <div class="kpi fail"><div class="label">Failure</div><div class="value">0</div></div>
-    <div class="kpi"><div class="label">Last activity</div><div class="value small mono">2026-07-27 01:40:46,422</div></div>
+    <div class="kpi"><div class="label">Last activity</div><div class="value small mono">2026-07-28 11:35:41,834</div></div>
   </div>
 
   <fieldset class="filter" aria-label="Filter by status">
@@ -136,6 +136,37 @@
   </fieldset>
 
   <div class="log">
+  <article class="logcard success">
+    <div class="row">
+      <time>2026-07-28 11:35:41,834</time>
+      <span class="op">fetch-filings-pagination-fix</span>
+      <span class="toolchip">Bash</span>
+      <span class="branchchip" title="Branch: corpus-expansion-3-companies"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">corpus-expansion-3-companies</span></span>
+      <span class="spacer"></span>
+      <span class="tag pass">SUCCESS</span>
+    </div>
+    <p class="summary">Fixed real bug: fetch_filings.py only checked SEC&#x27;s recent-filings window, missing JPM&#x27;s older 10-Ks due to high filing frequency</p>
+    <div class="files"><span class="file">ingest/fetch_filings.py</span><span class="file">tests/test_fetch_filings.py</span></div>
+    <details>
+      <summary>Details</summary>
+      <p>Discovered while ingesting JPM/JNJ/WMT for corpus expansion: SEC submissions API&#x27;s &#x27;recent&#x27; list is fixed-size (~2000 entries), not fixed-time -- JPM&#x27;s high filing volume (debt shelf registrations, 8-Ks) pushed its FY2023/2024 10-Ks out of &#x27;recent&#x27; within ~2 years, unlike AAPL/MSFT/TSLA which file far less often. Added pagination fallback searching the older submissions archive pages (69 pages back to 1994 for JPM) when no match found in &#x27;recent&#x27;. New test test_fetch_filing_falls_back_to_paginated_archives added; full suite 50/50 passing.</p>
+    </details>
+  </article>
+  <article class="logcard success">
+    <div class="row">
+      <time>2026-07-28 11:33:15,406</time>
+      <span class="op">corpus-expansion-company-selection</span>
+      <span class="toolchip">AskUserQuestion</span>
+      <span class="branchchip" title="Branch: corpus-expansion-3-companies"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">corpus-expansion-3-companies</span></span>
+      <span class="spacer"></span>
+      <span class="tag pass">SUCCESS</span>
+    </div>
+    <p class="summary">Decided: add JPM, JNJ, WMT (financial/healthcare/retail) to expand corpus from 3 to 6 companies</p>
+    <details>
+      <summary>Details</summary>
+      <p>User requested downloading 3 more companies&#x27; filings with a balanced text/table dataset, to grow the corpus for Phase 4 dataset generation (also helps the earlier issuer/quadrant-clustering discussion by giving content-aware routing more issuers to draw from). Existing corpus (AAPL, MSFT, TSLA) is all tech/auto -- no financial, healthcare, or retail sector, and every 10-K legally has both narrative (Risk Factors, MD&amp;A) and tabular (financial statements) content by SEC structure, so real differentiation comes from sector diversity, not searching for special &#x27;table-heavy&#x27; filers. Picked JPMorgan Chase (JPM, financial services -- capital/balance-sheet tables + regulatory narrative), Johnson &amp; Johnson (JNJ, healthcare/pharma -- R&amp;D/litigation narrative + segment tables), Walmart (WMT, retail -- segment/same-store-sales tables + operational narrative). Branch: corpus-expansion-3-companies (off dev).</p>
+    </details>
+  </article>
   <article class="logcard success">
     <div class="row">
       <time>2026-07-27 01:40:46,422</time>
@@ -720,7 +751,7 @@
   </article>
   </div>
 
-  <footer><span>Rendered from monitor/logs/operations.log · 36 entries.</span><span><a href="../index.html">← Dashboard</a> · <a href="#top">↑ Back to Top</a></span></footer>
+  <footer><span>Rendered from monitor/logs/operations.log · 38 entries.</span><span><a href="../index.html">← Dashboard</a> · <a href="#top">↑ Back to Top</a></span></footer>
 
 </div>
 </body>
