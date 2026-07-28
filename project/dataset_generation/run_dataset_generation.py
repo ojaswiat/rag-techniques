@@ -38,7 +38,7 @@ import config
 import database_manager as dbm
 from dataset_generation.async_critic import critique_query
 from dataset_generation.async_generator import generate_query
-from dataset_generation.cross_check import check_query
+from dataset_generation.cross_check import check_query, diagnose_rejection
 from dataset_generation.section_grouper import group_sections
 
 _QUADRANTS = ("Q1_Direct_Text", "Q2_Implicit_Text", "Q3_Direct_Table", "Q4_Implicit_Table")
@@ -257,10 +257,18 @@ async def _attempt_fill(
 ) -> bool:
     """Runs up to _MAX_ATTEMPTS_PER_SECTION generate/critique attempts for
     one (section, table, quadrant) slot. Returns True iff a query was
-    accepted and inserted."""
+    accepted and inserted.
+
+    All Groq calls run at temperature=0, so an identical `generate_query`
+    input on retry would deterministically reproduce the identical (already
+    -rejected) output. `feedback` carries forward what went wrong on the
+    previous attempt -- a rejection reason from `diagnose_rejection`, or the
+    caught exception's message -- so each retry's prompt genuinely differs
+    from the last and a different candidate is actually possible."""
+    feedback: str | None = None
     for attempt_num in range(_MAX_ATTEMPTS_PER_SECTION):
         try:
-            generated = await generate_query(section, quadrant)
+            generated = await generate_query(section, quadrant, previous_attempt_feedback=feedback)
             critic_result = await critique_query(generated["query_text"], nodes)
             accepted = check_query(
                 gt_citations=generated["gt_citations"],
@@ -277,12 +285,20 @@ async def _attempt_fill(
                 "exception_type": type(exc).__name__,
                 "exception_message": str(exc),
             })
+            feedback = f"the previous attempt raised {type(exc).__name__}: {exc}"
             continue
 
         if accepted:
             next_seq = counts[table][quadrant] + 1
             await _accept_query(db_path, table, generated, next_seq)
             return True
+
+        feedback = diagnose_rejection(
+            gt_citations=generated["gt_citations"],
+            gt_answer=generated["ground_truth_answer"],
+            critic_cited_ids=critic_result["cited_node_ids"],
+            critic_answer=critic_result["computed_answer"],
+        )
     return False
 
 

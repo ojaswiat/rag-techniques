@@ -1,4 +1,10 @@
-from dataset_generation.cross_check import check_query, citations_overlap, extract_numbers, values_match
+from dataset_generation.cross_check import (
+    check_query,
+    citations_overlap,
+    diagnose_rejection,
+    extract_numbers,
+    values_match,
+)
 
 
 def test_citations_overlap_true_on_any_shared_node():
@@ -65,3 +71,27 @@ def test_check_query_rejects_on_value_mismatch():
         critic_cited_ids=["n2"],
         critic_answer="200 million",
     ) is False
+
+
+def test_diagnose_rejection_reports_citation_mismatch():
+    reason = diagnose_rejection(
+        gt_citations=["n1", "n2"],
+        gt_answer="$100 million",
+        critic_cited_ids=["n8", "n9"],
+        critic_answer="100 million",
+    )
+    assert "citation" in reason.lower()
+    assert "n8" in reason and "n9" in reason
+    assert "n1" in reason and "n2" in reason
+
+
+def test_diagnose_rejection_reports_value_mismatch():
+    reason = diagnose_rejection(
+        gt_citations=["n1", "n2"],
+        gt_answer="$100 million",
+        critic_cited_ids=["n2"],
+        critic_answer="200 million",
+    )
+    assert "value" in reason.lower()
+    assert "200 million" in reason
+    assert "$100 million" in reason

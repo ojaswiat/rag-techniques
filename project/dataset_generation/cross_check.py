@@ -45,3 +45,33 @@ def check_query(
     critic_answer: str,
 ) -> bool:
     return citations_overlap(gt_citations, critic_cited_ids) and values_match(gt_answer, critic_answer)
+
+
+def diagnose_rejection(
+    gt_citations: list[str],
+    gt_answer: str,
+    critic_cited_ids: list[str],
+    critic_answer: str,
+) -> str:
+    """Human-readable reason a rejected candidate failed `check_query`.
+
+    Only meaningful to call after `check_query` has already returned False
+    for the same inputs -- used to build retry feedback for the Generator
+    (see run_dataset_generation._attempt_fill), not as part of the
+    accept/reject decision itself. `check_query`'s own signature/return type
+    (bool) is left untouched so existing callers and tests keep working;
+    this is a separate, additive diagnostic step.
+    """
+    if not citations_overlap(gt_citations, critic_cited_ids):
+        return (
+            f"citation mismatch: the Critic's independently-found node_ids "
+            f"{critic_cited_ids} did not overlap the proposed gt_citations "
+            f"{gt_citations}"
+        )
+    if not values_match(gt_answer, critic_answer):
+        return (
+            f"value mismatch: the Critic independently computed "
+            f"'{critic_answer}', which does not match the proposed "
+            f"ground_truth_answer '{gt_answer}'"
+        )
+    return "no mismatch detected"
