@@ -146,6 +146,81 @@ async def get_completed_keys(db_path: str, source_set: str) -> set[tuple[str, st
         return {(r[0], r[1], r[2]) for r in rows}
 
 
+_QUADRANTS = ("Q1_Direct_Text", "Q2_Implicit_Text", "Q3_Direct_Table", "Q4_Implicit_Table")
+_QUADRANT_TABLES = ("queries", "golden_queries", "judge_validation")
+
+
+async def insert_query(db_path: str, row: dict) -> None:
+    params = {**row, "gt_citations": _dumps(row["gt_citations"]), "verified": int(row.get("verified", 1))}
+    async with aiosqlite.connect(db_path) as conn:
+        await conn.execute(
+            """INSERT INTO queries
+               (query_id, quadrant, query_text, ground_truth_answer, gt_citations, document_id, verified)
+               VALUES (:query_id, :quadrant, :query_text, :ground_truth_answer, :gt_citations, :document_id, :verified)""",
+            params,
+        )
+        await conn.commit()
+
+
+async def insert_golden_query(db_path: str, row: dict) -> None:
+    params = {**row, "gt_citations": _dumps(row["gt_citations"])}
+    async with aiosqlite.connect(db_path) as conn:
+        await conn.execute(
+            """INSERT INTO golden_queries
+               (query_id, quadrant, query_text, ground_truth_answer, gt_citations,
+                example_output, human_score, human_reasoning, document_id)
+               VALUES (:query_id, :quadrant, :query_text, :ground_truth_answer, :gt_citations,
+                       :example_output, :human_score, :human_reasoning, :document_id)""",
+            params,
+        )
+        await conn.commit()
+
+
+async def insert_judge_validation(db_path: str, row: dict) -> None:
+    params = {**row, "gt_citations": _dumps(row["gt_citations"])}
+    async with aiosqlite.connect(db_path) as conn:
+        await conn.execute(
+            """INSERT INTO judge_validation
+               (query_id, quadrant, query_text, ground_truth_answer, gt_citations, document_id)
+               VALUES (:query_id, :quadrant, :query_text, :ground_truth_answer, :gt_citations, :document_id)""",
+            params,
+        )
+        await conn.commit()
+
+
+async def get_quadrant_counts(db_path: str, table: str) -> dict[str, int]:
+    if table not in _QUADRANT_TABLES:
+        raise ValueError(f"unsupported table for quadrant counts: {table!r}")
+    async with aiosqlite.connect(db_path) as conn:
+        cursor = await conn.execute(f"SELECT quadrant, COUNT(*) FROM {table} GROUP BY quadrant")
+        rows = await cursor.fetchall()
+    counts = {q: 0 for q in _QUADRANTS}
+    counts.update({r[0]: r[1] for r in rows})
+    return counts
+
+
+async def get_golden_queries(db_path: str) -> list[dict]:
+    async with aiosqlite.connect(db_path) as conn:
+        conn.row_factory = aiosqlite.Row
+        cursor = await conn.execute("SELECT * FROM golden_queries")
+        rows = await cursor.fetchall()
+    result = []
+    for row in rows:
+        d = dict(row)
+        d["gt_citations"] = _loads(d["gt_citations"])
+        result.append(d)
+    return result
+
+
+async def update_golden_query_labels(db_path: str, query_id: str, human_score: int, human_reasoning: str) -> None:
+    async with aiosqlite.connect(db_path) as conn:
+        await conn.execute(
+            "UPDATE golden_queries SET human_score = ?, human_reasoning = ? WHERE query_id = ?",
+            (human_score, human_reasoning, query_id),
+        )
+        await conn.commit()
+
+
 def _dumps(items: list[str]) -> str:
     return json.dumps(items)
 
