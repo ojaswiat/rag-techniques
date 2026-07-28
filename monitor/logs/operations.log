@@ -1,3 +1,13 @@
+2026-07-28 20:28:57,101 INFO [phase4-doubt7-improvement] (Agent) Added optional return_messages param to critique_query for direct tool-call proof in live smoke test, per prior review's Minor suggestion -- success
+branch:  phase4-dataset-generation
+files:   dataset_generation/async_critic.py, tests/test_async_critic.py, tests/test_async_critic_live_smoke.py
+details: 124/124 tests passing + 1 correctly-skipped live test (up from 122+1). Reviewed clean, no Critical/Important findings. Backward compatibility verified: messages key genuinely absent (not null) when flag off. Two Minor non-blocking notes: theoretical JSON key-collision edge case, live test now has two bundled assertions. Commit 3ab05c5.
+================================================================================
+2026-07-28 20:15:37,458 INFO [phase4-doubt7-fix] (Agent) Fixed Doubt #7: added live-gated (skipped by default) smoke test proving Critic tool-calling round trip works against real Groq API -- confirmed 1 search round + correct citation of a synthetic filing-specific node id, proving real tool invocation not a lucky guess -- success
+branch:  phase4-dataset-generation
+files:   tests/test_async_critic_live_smoke.py, pyproject.toml
+details: 122/122 pytest passing + 1 live test correctly skipped by default. Live run confirmed real success: search_filing tool called, correct answer with correct citation returned in 2 rounds. Reviewed clean, no Critical/Important findings. One Minor non-blocking suggestion: expose critique_query()'s message history for more direct tool-invocation assertions in future. Commit a958a0d.
+================================================================================
 2026-07-28 19:38:05,439 INFO [phase4-doubt6-fix] (Agent) Fixed Doubt #6: stdlib logging progress commentary per attempt (console + logs/dataset_generation_progress.log), running count against 140 total -- success
 branch:  phase4-dataset-generation
 files:   dataset_generation/run_dataset_generation.py, tests/test_run_dataset_generation.py

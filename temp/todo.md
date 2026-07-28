@@ -1,6 +1,6 @@
 
 
-
+Change the models and build summary again refer to model-selection.md file.
 Full corpus ingestion required before any data related development.
 
 ## Doubts
