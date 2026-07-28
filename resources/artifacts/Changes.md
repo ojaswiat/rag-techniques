@@ -75,3 +75,21 @@ Simple running list of changes made to the project after the proposal was submit
   as highly similar) -- the three gates (citation overlap, numeric subset,
   embedding similarity) each catch a distinct failure mode none of the
   others cover.
+- 2026-07-28: Embedding library substitution for the Doubt #4 cross-check
+  fix above. `Architecture.md`'s Phase 5 package list names
+  `sentence-transformers`/`FlagEmbedding` as the project's embedding path
+  for `bge-small-en-v1.5`. Neither could be installed on this development
+  machine: `torch` (a hard dependency of both) publishes no wheel for
+  macOS x86_64 + Python 3.13 at any version -- confirmed live via
+  `uv pip install torch --dry-run`, which fails on this exact venv
+  (verified independently during code review, not just claimed by the
+  implementer). Used `fastembed` (Qdrant's ONNX Runtime-based embedding
+  library) instead, pinned with `onnxruntime==1.23.2`, loading the
+  identical `BAAI/bge-small-en-v1.5` model weights -- same model, different
+  loading library, verified via live reproduction of similarity scores
+  during review. Lighter install footprint than `torch`+`sentence-transformers`
+  would have been (~25MB of wheels vs. torch's much larger footprint).
+  This only affects Phase 4's cross-check embedding use; Phase 5's actual
+  P1 vector-store embedding path (not yet built) should re-evaluate this
+  same platform constraint when it's implemented, since `Architecture.md`
+  still names `sentence-transformers` there too.
