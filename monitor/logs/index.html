@@ -105,8 +105,8 @@
   <div class="masthead" id="top">
     <span><span class="brand">rag-techniques</span> · Monitor · Logs</span>
     <span class="mh-right">
-      <span class="branchchip" title="Branch: dev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">dev</span></span>
-      <span class="mono">2026-07-27 01:40</span>
+      <span class="branchchip" title="Branch: phase4-dataset-generation"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">phase4-dataset-generation</span></span>
+      <span class="mono">2026-07-28 10:24</span>
     </span>
   </div>
 
@@ -117,12 +117,12 @@
   </header>
 
   <div class="kpis">
-    <div class="kpi"><div class="label">Current branch</div><div class="value small mono">dev</div></div>
-    <div class="kpi"><div class="label">Total ops</div><div class="value">36</div></div>
-    <div class="kpi pass"><div class="label">Success</div><div class="value">33</div></div>
+    <div class="kpi"><div class="label">Current branch</div><div class="value small mono">phase4-dataset-generation</div></div>
+    <div class="kpi"><div class="label">Total ops</div><div class="value">38</div></div>
+    <div class="kpi pass"><div class="label">Success</div><div class="value">35</div></div>
     <div class="kpi warn"><div class="label">Partial</div><div class="value">3</div></div>
     <div class="kpi fail"><div class="label">Failure</div><div class="value">0</div></div>
-    <div class="kpi"><div class="label">Last activity</div><div class="value small mono">2026-07-27 01:40:46,422</div></div>
+    <div class="kpi"><div class="label">Last activity</div><div class="value small mono">2026-07-28 10:24:50,788</div></div>
   </div>
 
   <fieldset class="filter" aria-label="Filter by status">
@@ -136,6 +136,36 @@
   </fieldset>
 
   <div class="log">
+  <article class="logcard success">
+    <div class="row">
+      <time>2026-07-28 10:24:50,788</time>
+      <span class="op">phase4-final-review-fix-decision</span>
+      <span class="toolchip">AskUserQuestion</span>
+      <span class="branchchip" title="Branch: phase4-dataset-generation"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">phase4-dataset-generation</span></span>
+      <span class="spacer"></span>
+      <span class="tag pass">SUCCESS</span>
+    </div>
+    <p class="summary">Decided: content-aware + stratified quadrant routing to fix Critical finding #2 from Phase 4 final review (query-type/issuer confound)</p>
+    <details>
+      <summary>Details</summary>
+      <p>Final whole-branch review of Phase 4 found the plan&#x27;s own next_target() fill-order design confounds query quadrant with filing issuer (Q1~AAPL, Q2~AAPL/MSFT, Q3~MSFT, Q4~TSLA) -- undermines the P1/P2/P3 comparison a published benchmark needs. Chose content-aware + stratified routing over simple round-robin or accepting the confound as documented limitation: classify each section as table/text via node_type lookup (computed in orchestrator, section_grouper.py stays untouched), build two round-robin-interleaved pools across all 9 filings upfront (table pool feeds Q3/Q4, text pool feeds Q1/Q2), cycle pools with a safety cap instead of one-shot exhaustion (folds in Important #5 &#x27;no second pass&#x27;), and print an end-of-run underfill summary (folds in Important #6 &#x27;no logging&#x27;). Framed as standard stratified-sampling practice matching published RAG/QA benchmark methodology (FinQA, TAT-QA precedent).</p>
+    </details>
+  </article>
+  <article class="logcard success">
+    <div class="row">
+      <time>2026-07-28 05:24:52,086</time>
+      <span class="op">phase4-plan-validation</span>
+      <span class="toolchip">Bash</span>
+      <span class="branchchip" title="Branch: phase4-dataset-generation"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">phase4-dataset-generation</span></span>
+      <span class="spacer"></span>
+      <span class="tag pass">SUCCESS</span>
+    </div>
+    <p class="summary">Validated Phase 4 implementation plan before execution; found and fixed one real gap (missing multi-entry Markdown parsing test in Task 8)</p>
+    <details>
+      <summary>Details</summary>
+      <p>Pre-execution review of docs/superpowers/plans/2026-07-26-phase4-dataset-generation-plan.md. Traced the gq_label_import.py regex by hand to confirm the lazy quantifier correctly scopes to one entry at a time across multiple GQ entries, but the plan only had single-entry test coverage for that logic. Added a two-entry test (test_parse_label_markdown_handles_multiple_entries_without_bleeding) to Task 8 before dispatching any implementer subagents. Rest of plan (schema names, groq_client/config interfaces, task type consistency) re-verified clean.</p>
+    </details>
+  </article>
   <article class="logcard success">
     <div class="row">
       <time>2026-07-27 01:40:46,422</time>
@@ -720,7 +750,7 @@
   </article>
   </div>
 
-  <footer><span>Rendered from monitor/logs/operations.log · 36 entries.</span><span><a href="../index.html">← Dashboard</a> · <a href="#top">↑ Back to Top</a></span></footer>
+  <footer><span>Rendered from monitor/logs/operations.log · 38 entries.</span><span><a href="../index.html">← Dashboard</a> · <a href="#top">↑ Back to Top</a></span></footer>
 
 </div>
 </body>
