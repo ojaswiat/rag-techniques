@@ -24,6 +24,9 @@ dev = [
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+markers = [
+    "live: makes a real network call against the live Groq API; gated behind RUN_LIVE_GROQ_TESTS=1, never run by default `pytest -q`.",
+]
 
 [tool.rag-benchmark]
 # Resolved Phase 1 versions (recorded 2026-07-21, uv pip list):
