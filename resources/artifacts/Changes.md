@@ -42,3 +42,20 @@ Simple running list of changes made to the project after the proposal was submit
   chunking code. No fix applied -- read-only audit, documented for the
   dissertation's data-quality/limitations discussion. Full report:
   `monitor/reports/2026-07-26-data-integrity-audit-full-corpus.html`.
+- 2026-07-28: Expanded the corpus from 3 companies (9 filings) to 6
+  companies (18 filings). `Phase Plan.md` originally scoped the corpus at
+  "2-3 companies x 2-3 fiscal years, ~6-9 SEC 10-Ks"; added JPMorgan Chase
+  (JPM), Johnson & Johnson (JNJ), and Walmart (WMT), FY2023-2025 each, on
+  top of the existing AAPL/MSFT/TSLA. Reason: the original three were all
+  tech/auto -- adding financial services, healthcare, and retail gives
+  sector diversity and more issuers for the Phase 4 quadrant-routing fix
+  (content-aware, stratified-by-issuer section assignment) to draw from,
+  reducing the risk of any one issuer dominating a query quadrant.
+  26,050 nodes across 18 filings total (up from 8,543/9). Surfaced a real
+  bug during ingestion: `fetch_filings.py` only checked SEC EDGAR's
+  "recent" filings window, which is fixed-size (not fixed-time) -- JPM's
+  high filing frequency (8-Ks, debt shelf registrations) had already
+  pushed its FY2023/2024 10-Ks out of that window by the time of this
+  ingestion. Fixed with a paginated-archive fallback in
+  `project/ingest/fetch_filings.py`; AAPL/MSFT/TSLA never hit this since
+  they file far less often. Branch: `corpus-expansion-3-companies`.
