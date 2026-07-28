@@ -1,8 +1,10 @@
 import json
+import logging
 from unittest.mock import AsyncMock, patch
 
 import pytest
 
+from dataset_generation import run_dataset_generation as rdg
 from dataset_generation.run_dataset_generation import (
     main,
     next_target,
@@ -16,6 +18,22 @@ from dataset_generation.run_dataset_generation import (
     _TARGETS,
     _TABLE_ORDER,
 )
+
+
+@pytest.fixture(autouse=True)
+def _isolate_progress_log(monkeypatch, tmp_path):
+    """Every test in this module calls main(), which now calls
+    _configure_logging() on entry. Without isolation, the first test to run
+    would permanently attach handlers pointing at the real
+    logs/dataset_generation_progress.log (since _configure_logging is a
+    no-op once logger.handlers is non-empty), and every later test would
+    silently reuse that same real-path config. Point PROGRESS_LOG_PATH at a
+    per-test tmp_path and clear handlers before/after each test so every
+    test gets a fresh, isolated logger configuration."""
+    monkeypatch.setattr(rdg, "PROGRESS_LOG_PATH", tmp_path / "progress.log")
+    rdg.logger.handlers.clear()
+    yield
+    rdg.logger.handlers.clear()
 
 
 def _empty_counts():
@@ -748,3 +766,164 @@ async def test_main_routes_table_sections_only_to_table_quadrants(monkeypatch, t
 
     assert text_calls and all(q in _TEXT_QUADRANTS for q in text_calls)
     assert table_calls and all(q in _TABLE_QUADRANTS for q in table_calls)
+
+
+# --- Doubt #6: per-attempt progress logging ---------------------------------
+
+
+@pytest.mark.asyncio
+async def test_accepted_attempt_logs_document_id_quadrant_and_accepted(monkeypatch, caplog):
+    monkeypatch.setattr("dataset_generation.run_dataset_generation.config.LOCAL_TEST_THROTTLE", True)
+    monkeypatch.setattr("dataset_generation.run_dataset_generation.config.THROTTLE_LIMIT", 1)
+
+    with (
+        patch("dataset_generation.run_dataset_generation.dbm.init_db", new=AsyncMock()),
+        patch(
+            "dataset_generation.run_dataset_generation.dbm.get_quadrant_counts",
+            new=AsyncMock(return_value={q: 0 for q in _QUADRANTS}),
+        ),
+        patch(
+            "dataset_generation.run_dataset_generation.dbm.get_nodes_by_document",
+            new=AsyncMock(return_value=_FAKE_NODES),
+        ),
+        patch("dataset_generation.run_dataset_generation.dbm.insert_query", new=AsyncMock()),
+        patch(
+            "dataset_generation.run_dataset_generation.generate_query",
+            new=AsyncMock(return_value=_FAKE_GENERATED),
+        ),
+        patch(
+            "dataset_generation.run_dataset_generation.critique_query",
+            new=AsyncMock(return_value={"cited_node_ids": ["n1"], "computed_answer": "$100 million"}),
+        ),
+        caplog.at_level(logging.INFO, logger="dataset_generation.run_dataset_generation"),
+    ):
+        await main(db_path="unused.db", document_ids=["DOC_A"])
+
+    accepted_records = [r for r in caplog.records if "ACCEPTED" in r.message]
+    assert accepted_records, "expected an ACCEPTED progress line"
+    message = accepted_records[0].message
+    assert "DOC_A" in message
+    assert "Q1_Direct_Text" in message
+    assert "ACCEPTED" in message
+
+
+@pytest.mark.asyncio
+async def test_rejected_attempt_logs_diagnose_rejection_reason(monkeypatch, caplog, tmp_path):
+    """Attempt 1 is rejected via a citation mismatch (Critic cites an
+    unrelated node); the progress line for that attempt must surface
+    diagnose_rejection's specific reason, not just a generic 'REJECTED'."""
+    monkeypatch.setattr("dataset_generation.run_dataset_generation.config.LOCAL_TEST_THROTTLE", True)
+    monkeypatch.setattr("dataset_generation.run_dataset_generation.config.THROTTLE_LIMIT", 1)
+    monkeypatch.setattr(
+        "dataset_generation.run_dataset_generation.FAILURE_LOG_PATH", tmp_path / "failures.json"
+    )
+
+    with (
+        patch("dataset_generation.run_dataset_generation.dbm.init_db", new=AsyncMock()),
+        patch(
+            "dataset_generation.run_dataset_generation.dbm.get_quadrant_counts",
+            new=AsyncMock(return_value={q: 0 for q in _QUADRANTS}),
+        ),
+        patch(
+            "dataset_generation.run_dataset_generation.dbm.get_nodes_by_document",
+            new=AsyncMock(return_value=_FAKE_NODES),
+        ),
+        patch("dataset_generation.run_dataset_generation.dbm.insert_query", new=AsyncMock()),
+        patch(
+            "dataset_generation.run_dataset_generation.generate_query",
+            new=AsyncMock(return_value=_FAKE_GENERATED),
+        ),
+        patch(
+            "dataset_generation.run_dataset_generation.critique_query",
+            new=AsyncMock(
+                side_effect=[
+                    {"cited_node_ids": ["n_unrelated"], "computed_answer": "$100 million"},
+                    {"cited_node_ids": ["n1"], "computed_answer": "$100 million"},
+                ]
+            ),
+        ),
+        caplog.at_level(logging.INFO, logger="dataset_generation.run_dataset_generation"),
+    ):
+        await main(db_path="unused.db", document_ids=["DOC_A"])
+
+    rejected_records = [r for r in caplog.records if "REJECTED" in r.message]
+    assert rejected_records, "expected a REJECTED progress line"
+    message = rejected_records[0].message
+    assert "citation mismatch" in message.lower()
+    assert "n_unrelated" in message
+
+
+@pytest.mark.asyncio
+async def test_exception_caught_attempt_logs_exception_type(monkeypatch, caplog, tmp_path):
+    monkeypatch.setattr("dataset_generation.run_dataset_generation.config.LOCAL_TEST_THROTTLE", True)
+    monkeypatch.setattr("dataset_generation.run_dataset_generation.config.THROTTLE_LIMIT", 1)
+    monkeypatch.setattr(
+        "dataset_generation.run_dataset_generation.FAILURE_LOG_PATH", tmp_path / "failures.json"
+    )
+
+    with (
+        patch("dataset_generation.run_dataset_generation.dbm.init_db", new=AsyncMock()),
+        patch(
+            "dataset_generation.run_dataset_generation.dbm.get_quadrant_counts",
+            new=AsyncMock(return_value={q: 0 for q in _QUADRANTS}),
+        ),
+        patch(
+            "dataset_generation.run_dataset_generation.dbm.get_nodes_by_document",
+            new=AsyncMock(return_value=_FAKE_NODES),
+        ),
+        patch("dataset_generation.run_dataset_generation.dbm.insert_query", new=AsyncMock()),
+        patch(
+            "dataset_generation.run_dataset_generation.generate_query",
+            new=AsyncMock(
+                side_effect=json.JSONDecodeError("Expecting value", "not json", 0)
+            ),
+        ),
+        patch(
+            "dataset_generation.run_dataset_generation.critique_query",
+            new=AsyncMock(),
+        ),
+        caplog.at_level(logging.INFO, logger="dataset_generation.run_dataset_generation"),
+    ):
+        await main(db_path="unused.db", document_ids=["DOC_A"])
+
+    exception_records = [r for r in caplog.records if "EXCEPTION" in r.message]
+    assert len(exception_records) == 3  # one per _MAX_ATTEMPTS_PER_SECTION
+    assert all("JSONDecodeError" in r.message for r in exception_records)
+
+
+@pytest.mark.asyncio
+async def test_calling_main_twice_does_not_duplicate_log_handlers(monkeypatch, caplog):
+    """main() calls _configure_logging() on every entry; a process that (in
+    theory) calls main() more than once must not accumulate a second
+    console+file handler pair, which would otherwise print/write every
+    subsequent progress line twice."""
+    monkeypatch.setattr("dataset_generation.run_dataset_generation.config.LOCAL_TEST_THROTTLE", True)
+    monkeypatch.setattr("dataset_generation.run_dataset_generation.config.THROTTLE_LIMIT", 1)
+
+    with (
+        patch("dataset_generation.run_dataset_generation.dbm.init_db", new=AsyncMock()),
+        patch(
+            "dataset_generation.run_dataset_generation.dbm.get_quadrant_counts",
+            new=AsyncMock(return_value={q: 0 for q in _QUADRANTS}),
+        ),
+        patch(
+            "dataset_generation.run_dataset_generation.dbm.get_nodes_by_document",
+            new=AsyncMock(return_value=_FAKE_NODES),
+        ),
+        patch("dataset_generation.run_dataset_generation.dbm.insert_query", new=AsyncMock()),
+        patch(
+            "dataset_generation.run_dataset_generation.generate_query",
+            new=AsyncMock(return_value=_FAKE_GENERATED),
+        ),
+        patch(
+            "dataset_generation.run_dataset_generation.critique_query",
+            new=AsyncMock(return_value={"cited_node_ids": ["n1"], "computed_answer": "$100 million"}),
+        ),
+    ):
+        await main(db_path="unused.db", document_ids=["DOC_A"])
+        handlers_after_first_call = len(rdg.logger.handlers)
+        await main(db_path="unused.db", document_ids=["DOC_A"])
+        handlers_after_second_call = len(rdg.logger.handlers)
+
+    assert handlers_after_first_call == 2  # console + file
+    assert handlers_after_second_call == handlers_after_first_call

@@ -29,6 +29,7 @@ not unbounded, so a structurally too-small pool (e.g. too few table
 sections in the corpus) can't spin forever burning Groq quota.
 """
 import json
+import logging
 from collections import defaultdict
 from pathlib import Path
 
@@ -74,6 +75,95 @@ _ATTEMPT_EXCEPTIONS = (RuntimeError, json.JSONDecodeError, KeyError, APIStatusEr
 
 FAILURE_LOG_PATH = Path("logs/dataset_generation_failures.json")
 SUMMARY_LOG_PATH = Path("logs/dataset_generation_summary.json")
+PROGRESS_LOG_PATH = Path("logs/dataset_generation_progress.log")
+
+# Total accepted-query count across all three tables' quadrant targets (used
+# only for the human-readable running-total in progress log lines, e.g.
+# "47/140 accepted") -- derived from _TARGETS/_QUADRANTS rather than
+# hardcoded so it stays correct if either changes.
+_TOTAL_TARGET = sum(_TARGETS.values()) * len(_QUADRANTS)
+
+# Doubt #6 fix: per-attempt human-readable progress commentary, additive to
+# (not a replacement for) the structured JSON logs above (append_failure_log,
+# _write_summary_log). A run can take hours across up to 140 questions with
+# retries and previously printed nothing until the very end -- this gives
+# live console visibility plus a durable transcript in
+# logs/dataset_generation_progress.log. Uses stdlib `logging` (timestamps and
+# levels for free, no new dependency) rather than print().
+logger = logging.getLogger(__name__)
+_LOG_FORMAT = "%(asctime)s [%(levelname)s] %(message)s"
+_LOG_DATE_FORMAT = "%H:%M:%S"
+
+
+def _configure_logging(log_path: Path | None = None) -> None:
+    """Attaches a console handler and a file handler (writing to
+    ``log_path``, default ``PROGRESS_LOG_PATH``) to the module logger, both
+    sharing one formatter so log-call sites never duplicate formatting code
+    per destination.
+
+    Guarded on ``logger.handlers`` so a second call in the same process (e.g.
+    ``main()`` invoked more than once, as happens repeatedly across this
+    module's test suite) is a no-op rather than attaching duplicate handlers
+    -- which would otherwise print/write every subsequent line twice (once
+    per accumulated handler set).
+
+    File handler opens in append mode, matching the project's existing
+    append-style log precedent (append_failure_log) -- a fresh multi-hour run
+    resumed after a crash should extend the same transcript, not silently
+    discard the record of what happened before the crash.
+    """
+    if logger.handlers:
+        return
+    if log_path is None:
+        log_path = PROGRESS_LOG_PATH
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+    formatter = logging.Formatter(fmt=_LOG_FORMAT, datefmt=_LOG_DATE_FORMAT)
+
+    console_handler = logging.StreamHandler()
+    console_handler.setFormatter(formatter)
+
+    file_handler = logging.FileHandler(log_path, mode="a")
+    file_handler.setFormatter(formatter)
+
+    logger.addHandler(console_handler)
+    logger.addHandler(file_handler)
+    logger.setLevel(logging.INFO)
+
+
+def _total_accepted(counts: dict[str, dict[str, int]]) -> int:
+    """Sum of accepted-query counts across every (table, quadrant) slot --
+    used only to render the running total in progress log lines."""
+    return sum(counts[table][quadrant] for table in counts for quadrant in counts[table])
+
+
+def _log_attempt_outcome(
+    document_id: str,
+    table: str,
+    quadrant: str,
+    attempt_num: int,
+    outcome: str,
+    detail: str | None,
+    total_accepted: int,
+) -> None:
+    """One progress line per generate/critique attempt, e.g.:
+
+    ``14:32:07 [INFO] [Q3_Direct_Table/queries] AAPL_2023 attempt 2/3:
+    REJECTED (value mismatch: ...) -- 47/140 accepted``
+    """
+    suffix = f" ({detail})" if detail else ""
+    logger.info(
+        "[%s/%s] %s attempt %d/%d: %s%s -- %d/%d accepted",
+        quadrant,
+        table,
+        document_id,
+        attempt_num + 1,
+        _MAX_ATTEMPTS_PER_SECTION,
+        outcome,
+        suffix,
+        total_accepted,
+        _TOTAL_TARGET,
+    )
+
 
 _ALL_FILINGS = (
     "AAPL_2023", "AAPL_2024", "AAPL_2025",
@@ -285,12 +375,18 @@ async def _attempt_fill(
                 "exception_type": type(exc).__name__,
                 "exception_message": str(exc),
             })
+            _log_attempt_outcome(
+                document_id, table, quadrant, attempt_num, "EXCEPTION", type(exc).__name__, _total_accepted(counts)
+            )
             feedback = f"the previous attempt raised {type(exc).__name__}: {exc}"
             continue
 
         if accepted:
             next_seq = counts[table][quadrant] + 1
             await _accept_query(db_path, table, generated, next_seq)
+            _log_attempt_outcome(
+                document_id, table, quadrant, attempt_num, "ACCEPTED", None, _total_accepted(counts) + 1
+            )
             return True
 
         feedback = diagnose_rejection(
@@ -299,10 +395,12 @@ async def _attempt_fill(
             critic_cited_ids=critic_result["cited_node_ids"],
             critic_answer=critic_result["computed_answer"],
         )
+        _log_attempt_outcome(document_id, table, quadrant, attempt_num, "REJECTED", feedback, _total_accepted(counts))
     return False
 
 
 async def main(db_path: str = "benchmark.db", document_ids: tuple[str, ...] | None = None) -> None:
+    _configure_logging()
     await dbm.init_db(db_path)
     document_ids = document_ids or _ALL_FILINGS
     max_sections = config.THROTTLE_LIMIT if config.LOCAL_TEST_THROTTLE else None
