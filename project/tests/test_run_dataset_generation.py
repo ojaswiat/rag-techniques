@@ -180,6 +180,104 @@ _FAKE_GENERATED = {
 
 
 @pytest.mark.asyncio
+async def test_first_attempt_rejected_second_attempt_receives_rejection_feedback(monkeypatch, tmp_path):
+    """Attempt 1 is rejected by check_query (citation mismatch: Critic cites
+    a node the Generator didn't). Because every Groq call runs at
+    temperature=0, retrying generate_query with an identical prompt would
+    deterministically reproduce the same rejected candidate -- so attempt
+    2's call to generate_query must receive a `previous_attempt_feedback`
+    string describing what specifically failed on attempt 1, and attempt 1's
+    call must not have received any feedback (nothing to report yet)."""
+    monkeypatch.setattr("dataset_generation.run_dataset_generation.config.LOCAL_TEST_THROTTLE", True)
+    monkeypatch.setattr("dataset_generation.run_dataset_generation.config.THROTTLE_LIMIT", 1)
+    monkeypatch.setattr(
+        "dataset_generation.run_dataset_generation.FAILURE_LOG_PATH", tmp_path / "failures.json"
+    )
+
+    with (
+        patch("dataset_generation.run_dataset_generation.dbm.init_db", new=AsyncMock()),
+        patch(
+            "dataset_generation.run_dataset_generation.dbm.get_quadrant_counts",
+            new=AsyncMock(return_value={q: 0 for q in _QUADRANTS}),
+        ),
+        patch(
+            "dataset_generation.run_dataset_generation.dbm.get_nodes_by_document",
+            new=AsyncMock(return_value=_FAKE_NODES),
+        ),
+        patch("dataset_generation.run_dataset_generation.dbm.insert_query", new=AsyncMock()) as mock_insert,
+        patch(
+            "dataset_generation.run_dataset_generation.generate_query",
+            new=AsyncMock(return_value=_FAKE_GENERATED),
+        ) as mock_generate,
+        patch(
+            "dataset_generation.run_dataset_generation.critique_query",
+            new=AsyncMock(
+                side_effect=[
+                    # attempt 1: Critic cites an unrelated node -> no
+                    # citation overlap -> check_query rejects.
+                    {"cited_node_ids": ["n_unrelated"], "computed_answer": "$100 million"},
+                    # attempt 2: Critic's citation now overlaps -> accepted.
+                    {"cited_node_ids": ["n1"], "computed_answer": "$100 million"},
+                ]
+            ),
+        ),
+    ):
+        await main(db_path="unused.db", document_ids=["DOC_A"])
+
+    mock_insert.assert_awaited_once()
+    assert mock_generate.await_count == 2
+
+    first_call_kwargs = mock_generate.await_args_list[0].kwargs
+    second_call_kwargs = mock_generate.await_args_list[1].kwargs
+
+    assert first_call_kwargs.get("previous_attempt_feedback") is None
+
+    second_feedback = second_call_kwargs.get("previous_attempt_feedback")
+    assert second_feedback is not None
+    assert "citation" in second_feedback.lower()
+    assert "n_unrelated" in second_feedback
+
+
+@pytest.mark.asyncio
+async def test_first_attempt_accepted_no_feedback_passed(monkeypatch, tmp_path):
+    """When the first attempt is accepted outright, generate_query must be
+    called exactly once, with no previous_attempt_feedback (there was
+    nothing to fail yet)."""
+    monkeypatch.setattr("dataset_generation.run_dataset_generation.config.LOCAL_TEST_THROTTLE", True)
+    monkeypatch.setattr("dataset_generation.run_dataset_generation.config.THROTTLE_LIMIT", 1)
+    monkeypatch.setattr(
+        "dataset_generation.run_dataset_generation.FAILURE_LOG_PATH", tmp_path / "failures.json"
+    )
+
+    with (
+        patch("dataset_generation.run_dataset_generation.dbm.init_db", new=AsyncMock()),
+        patch(
+            "dataset_generation.run_dataset_generation.dbm.get_quadrant_counts",
+            new=AsyncMock(return_value={q: 0 for q in _QUADRANTS}),
+        ),
+        patch(
+            "dataset_generation.run_dataset_generation.dbm.get_nodes_by_document",
+            new=AsyncMock(return_value=_FAKE_NODES),
+        ),
+        patch("dataset_generation.run_dataset_generation.dbm.insert_query", new=AsyncMock()) as mock_insert,
+        patch(
+            "dataset_generation.run_dataset_generation.generate_query",
+            new=AsyncMock(return_value=_FAKE_GENERATED),
+        ) as mock_generate,
+        patch(
+            "dataset_generation.run_dataset_generation.critique_query",
+            new=AsyncMock(return_value={"cited_node_ids": ["n1"], "computed_answer": "$100 million"}),
+        ),
+    ):
+        await main(db_path="unused.db", document_ids=["DOC_A"])
+
+    mock_insert.assert_awaited_once()
+    mock_generate.assert_awaited_once()
+    call_kwargs = mock_generate.await_args_list[0].kwargs
+    assert call_kwargs.get("previous_attempt_feedback") is None
+
+
+@pytest.mark.asyncio
 async def test_critic_runtime_error_on_first_attempt_recovers_on_second(monkeypatch, tmp_path):
     """critique_query raises RuntimeError (Critic exceeded tool-call rounds) on
     attempt 1; attempt 2 succeeds and the query still gets accepted. main()
@@ -616,7 +714,7 @@ async def test_main_routes_table_sections_only_to_table_quadrants(monkeypatch, t
 
     calls = []
 
-    async def fake_generate_query(section, quadrant):
+    async def fake_generate_query(section, quadrant, previous_attempt_feedback=None):
         calls.append((section["section_header"], quadrant))
         return {
             "query_text": f"query for {section['section_header']}",

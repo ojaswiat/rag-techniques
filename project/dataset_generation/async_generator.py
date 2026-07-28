@@ -23,7 +23,9 @@ _SYSTEM_PROMPT = (
 )
 
 
-async def generate_query(section: dict, quadrant: str) -> dict:
+async def generate_query(
+    section: dict, quadrant: str, previous_attempt_feedback: str | None = None
+) -> dict:
     guidance = _QUADRANT_GUIDANCE[quadrant]
     user_content = (
         f"{guidance}\n\n"
@@ -31,6 +33,20 @@ async def generate_query(section: dict, quadrant: str) -> dict:
         f"Available node_ids: {section['node_ids']}\n\n"
         f"Section content:\n{section['content']}"
     )
+
+    if previous_attempt_feedback:
+        # temperature=0 means an identical prompt reproduces the identical
+        # (already-rejected) output, so a retry must change the input --
+        # tell the Generator what specifically failed and steer it toward a
+        # genuinely different candidate (different fact/number/angle) from
+        # the same section, rather than restating the prior one.
+        user_content += (
+            "\n\nA previous attempt for this section was rejected: "
+            f"{previous_attempt_feedback}\n"
+            "Propose a genuinely different question this time -- pick a "
+            "different fact, number, or passage from the section content "
+            "above, phrased so its citation and answer are unambiguous."
+        )
 
     response = await groq_client.call_groq(
         model=config.MODEL_ROUTING["generator"],
