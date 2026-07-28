@@ -53,3 +53,55 @@ async def test_critique_query_raises_after_max_rounds_without_final_answer():
     ):
         with pytest.raises(RuntimeError, match="exceeded"):
             await critique_query("What was total revenue?", _NODES)
+
+
+@pytest.mark.asyncio
+async def test_critique_query_default_return_shape_is_unchanged():
+    """Without return_messages, the return value must be exactly the same
+    two-key dict as before -- no "messages" key leaks in by default."""
+    final_payload = {"cited_node_ids": ["n1"], "computed_answer": "$100 million"}
+
+    with patch(
+        "dataset_generation.async_critic.groq_client.call_groq",
+        new=AsyncMock(side_effect=[_tool_call_response(), _final_response(final_payload)]),
+    ):
+        result = await critique_query("What was total revenue?", _NODES)
+
+    assert result == {"cited_node_ids": ["n1"], "computed_answer": "$100 million"}
+    assert "messages" not in result
+
+
+@pytest.mark.asyncio
+async def test_critique_query_return_messages_includes_full_history():
+    final_payload = {"cited_node_ids": ["n1"], "computed_answer": "$100 million"}
+
+    with patch(
+        "dataset_generation.async_critic.groq_client.call_groq",
+        new=AsyncMock(side_effect=[_tool_call_response(), _final_response(final_payload)]),
+    ):
+        result = await critique_query(
+            "What was total revenue?", _NODES, return_messages=True
+        )
+
+    assert result["cited_node_ids"] == ["n1"]
+    assert result["computed_answer"] == "$100 million"
+    assert "messages" in result
+
+    messages = result["messages"]
+    # system, user, assistant(tool_calls), tool(result), assistant(final)
+    assert messages[0]["role"] == "system"
+    assert messages[1]["role"] == "user"
+
+    tool_call_messages = [
+        m for m in messages if m.get("role") == "assistant" and m.get("tool_calls")
+    ]
+    assert len(tool_call_messages) == 1
+    assert tool_call_messages[0]["tool_calls"][0].id == "call_1"
+
+    tool_result_messages = [m for m in messages if m.get("role") == "tool"]
+    assert len(tool_result_messages) == 1
+    assert tool_result_messages[0]["tool_call_id"] == "call_1"
+
+    # Final assistant answer message is included too.
+    assert messages[-1]["role"] == "assistant"
+    assert messages[-1]["content"] == json.dumps(final_payload)

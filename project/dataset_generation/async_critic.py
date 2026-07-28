@@ -22,7 +22,19 @@ _SYSTEM_PROMPT = (
 )
 
 
-async def critique_query(query_text: str, all_nodes: list[dict]) -> dict:
+async def critique_query(
+    query_text: str, all_nodes: list[dict], return_messages: bool = False
+) -> dict:
+    """Run the Critic's search-then-answer loop and return the parsed final
+    answer as {"cited_node_ids": [...], "computed_answer": "..."}.
+
+    If return_messages is True, the returned dict additionally carries a
+    "messages" key holding the full Groq message history for the run
+    (system/user/assistant/tool messages, including any tool-call and
+    tool-result turns) -- useful for tests/diagnostics that need to assert
+    directly on tool-call behaviour rather than inferring it from the final
+    answer. Default is False, so existing callers are unaffected.
+    """
     messages = [
         {"role": "system", "content": _SYSTEM_PROMPT},
         {"role": "user", "content": query_text},
@@ -55,6 +67,11 @@ async def critique_query(query_text: str, all_nodes: list[dict]) -> dict:
                 })
             continue
 
-        return json.loads(message.content)
+        final = json.loads(message.content)
+        if return_messages:
+            final["messages"] = messages + [
+                {"role": "assistant", "content": message.content}
+            ]
+        return final
 
     raise RuntimeError(f"Critic exceeded {_MAX_TOOL_ROUNDS} tool-call rounds without a final answer")
