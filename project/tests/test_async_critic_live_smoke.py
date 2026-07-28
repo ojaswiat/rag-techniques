@@ -199,7 +199,7 @@ async def test_critique_query_live_round_trip_against_real_groq_api():
     """
     assert len(_JNJ_2023_ITEM_9_SLICE) <= _MAX_ALLOWED_NODES
 
-    result = await critique_query(_QUESTION, _JNJ_2023_ITEM_9_SLICE)
+    result = await critique_query(_QUESTION, _JNJ_2023_ITEM_9_SLICE, return_messages=True)
 
     assert isinstance(result, dict)
     assert "computed_answer" in result
@@ -207,8 +207,24 @@ async def test_critique_query_live_round_trip_against_real_groq_api():
     assert isinstance(result["cited_node_ids"], list)
     assert isinstance(result["computed_answer"], str) and result["computed_answer"].strip()
 
-    # The only node containing "Rule 10b5-1" / "trading arrangement" is n1169.
-    # A correct search-then-answer round trip must cite it -- if the model
-    # answered without ever searching, or searched but ignored the result,
-    # this node would not appear.
+    # Indirect proof (kept, additive): the only node containing "Rule 10b5-1" /
+    # "trading arrangement" is n1169. A correct search-then-answer round trip
+    # must cite it -- if the model answered without ever searching, or
+    # searched but ignored the result, this node would not appear.
     assert "JNJ_2023_n1169" in result["cited_node_ids"]
+
+    # Direct proof: the real message history must actually contain a
+    # tool-call turn -- an assistant message with a non-empty tool_calls
+    # list -- rather than inferring tool use only from the cited node above.
+    assert "messages" in result
+    assert isinstance(result["messages"], list) and result["messages"]
+    tool_call_messages = [
+        m
+        for m in result["messages"]
+        if m.get("role") == "assistant" and m.get("tool_calls")
+    ]
+    assert tool_call_messages, (
+        "Expected at least one assistant message with a non-empty tool_calls "
+        "list in the real Groq message history, proving the Critic actually "
+        "invoked search_filing rather than answering directly."
+    )
