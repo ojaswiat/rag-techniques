@@ -12,6 +12,11 @@ accepted rows in a (table, quadrant) slot means the next process's first
 accepted row for that same slot gets suffix N+1, never colliding with
 already-committed rows.
 """
+import json
+from pathlib import Path
+
+from groq import APIStatusError
+
 import config
 import database_manager as dbm
 from dataset_generation.async_critic import critique_query
@@ -23,6 +28,15 @@ _QUADRANTS = ("Q1_Direct_Text", "Q2_Implicit_Text", "Q3_Direct_Table", "Q4_Impli
 _TABLE_ORDER = ("queries", "golden_queries", "judge_validation")
 _TARGETS = {"queries": 25, "golden_queries": 5, "judge_validation": 5}
 _MAX_ATTEMPTS_PER_SECTION = 3
+
+# Exceptions that can propagate out of a single generate/critique attempt
+# without indicating a bug worth crashing the whole 140-query batch for:
+# Critic tool-round exhaustion, malformed/incomplete JSON from either LLM,
+# and any non-429 Groq API error (429s are already retried inside
+# groq_client.call_groq via tenacity).
+_ATTEMPT_EXCEPTIONS = (RuntimeError, json.JSONDecodeError, KeyError, APIStatusError)
+
+FAILURE_LOG_PATH = Path("logs/dataset_generation_failures.json")
 
 _ALL_FILINGS = (
     "AAPL_2023", "AAPL_2024", "AAPL_2025",
@@ -47,6 +61,21 @@ def next_target(counts: dict[str, dict[str, int]]) -> tuple[str, str] | None:
 
 async def _load_counts(db_path: str) -> dict[str, dict[str, int]]:
     return {table: await dbm.get_quadrant_counts(db_path, table) for table in _TABLE_ORDER}
+
+
+def append_failure_log(failure_row: dict, log_path: Path | None = None) -> None:
+    """Durable JSON-array append, mirroring
+    pipelines/structural/build_summary_index.py's append_cost_log pattern.
+
+    ``log_path`` is resolved against the module-level ``FAILURE_LOG_PATH`` at
+    call time (rather than bound as a mutable default argument) so tests can
+    monkeypatch ``FAILURE_LOG_PATH`` and have it take effect."""
+    if log_path is None:
+        log_path = FAILURE_LOG_PATH
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+    rows = json.loads(log_path.read_text()) if log_path.exists() else []
+    rows.append(failure_row)
+    log_path.write_text(json.dumps(rows, indent=2))
 
 
 async def _accept_query(db_path: str, table: str, generated: dict, next_seq: int) -> None:
@@ -91,14 +120,26 @@ async def main(db_path: str = "benchmark.db", document_ids: tuple[str, ...] | No
             table, quadrant = target
 
             for _attempt in range(_MAX_ATTEMPTS_PER_SECTION):
-                generated = await generate_query(section, quadrant)
-                critic_result = await critique_query(generated["query_text"], nodes)
-                accepted = check_query(
-                    gt_citations=generated["gt_citations"],
-                    gt_answer=generated["ground_truth_answer"],
-                    critic_cited_ids=critic_result["cited_node_ids"],
-                    critic_answer=critic_result["computed_answer"],
-                )
+                try:
+                    generated = await generate_query(section, quadrant)
+                    critic_result = await critique_query(generated["query_text"], nodes)
+                    accepted = check_query(
+                        gt_citations=generated["gt_citations"],
+                        gt_answer=generated["ground_truth_answer"],
+                        critic_cited_ids=critic_result["cited_node_ids"],
+                        critic_answer=critic_result["computed_answer"],
+                    )
+                except _ATTEMPT_EXCEPTIONS as exc:
+                    append_failure_log({
+                        "document_id": document_id,
+                        "table": table,
+                        "quadrant": quadrant,
+                        "attempt": _attempt + 1,
+                        "exception_type": type(exc).__name__,
+                        "exception_message": str(exc),
+                    })
+                    continue
+
                 if accepted:
                     next_seq = counts[table][quadrant] + 1
                     await _accept_query(db_path, table, generated, next_seq)
