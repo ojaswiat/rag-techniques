@@ -96,7 +96,7 @@ The same applies to Groq's free-tier limits and LlamaParse's credit allowances: 
 Worth knowing before trusting any single document:
 
 - **`README.md`'s repository-layout section is stale.** It describes a `claude/` folder and does not mention `project/` or `resources/`.
-- **`README.md` names Apple as the dataset**, while the confirmed corpus (per `project/data/filings_manifest.json`) is AAPL/MSFT/TSLA × FY2023–2025 — only AAPL is actually ingested so far. Prefer the manifest and `Architecture.md` over `README.md`.
+- **`README.md`'s dataset line now matches the real corpus** (updated 2026-07-29): 18 filings, 6 companies (AAPL, MSFT, TSLA, JPM, JNJ, WMT) × FY2023–2025, all ingested. `project/data/filings_manifest.json` remains the authoritative source if this drifts again.
 - **`schemas/db_schema_example.jsonc`** is referenced by `Architecture.md` §11 item 1 as needing regeneration, but the file was deleted from the repo. §3.2's DDL is the sole source of truth for the schema.
 - **Context-mass standardisation** is asserted in `Project Idea.md` §10 but not mechanically enforced anywhere (`Architecture.md` §11 item 4). The recommendation is to treat "same K" as the operational definition and document the token-volume variance as an accepted approximation. Awaiting the researcher's confirmation.
 - **`TODO.md` is empty.**
