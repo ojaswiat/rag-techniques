@@ -42,3 +42,35 @@ Simple running list of changes made to the project after the proposal was submit
   chunking code. No fix applied -- read-only audit, documented for the
   dissertation's data-quality/limitations discussion. Full report:
   `monitor/reports/2026-07-26-data-integrity-audit-full-corpus.html`.
+- 2026-07-29: Swapped P3's summariser model from `llama-3.1-8b-instant` to
+  `openai/gpt-oss-20b` (`config.MODEL_ROUTING["p3_index_build"]`). Reason:
+  8B judged too small for reliable summary quality on dense financial
+  filing sections -- a real quality concern, not a throughput one (8B was
+  originally chosen purely for its high free-tier daily request ceiling,
+  per `Budget.md`). Considered and rejected `Llama 3.3 70B` (would be the
+  same model as the shared Answerer -- gives P3 alone an unfair "home
+  advantage" reading its own writing style, a structural confound against
+  P1/P2). Considered and rejected `Qwen3.6-27B` (viable but already reused
+  for Critic and Judge -- more role overlap than necessary when a cleaner
+  option exists). Considered switching provider entirely (Gemini,
+  OpenRouter, SambaNova, Cerebras) -- rejected for now: Cerebras's "free
+  tier" turned out to be a $5 trial credit, not perpetual free (corrected
+  after an initial wrong claim); Gemini's per-minute request cap (~10 RPM)
+  risks throttling this bursty per-filing build harder than Groq's TPD
+  wall did; all three require a real client rewrite (`build_summary_index.py`
+  calls `llama_index.llms.groq.Groq` directly, not a swappable wrapper) and
+  a new live rate-limit verification pass, disproportionate to the problem
+  being solved. `openai/gpt-oss-20b` needed no client change, no new
+  Guardrails deviation beyond the model ID itself, and no role overlap.
+  This requires a full 18-filing P3 rebuild (not just the 9 previously
+  built on 8B) for cross-filing summarization consistency -- deleted the 9
+  stale `storage/summary_index/` directories (already preserved in
+  `project/backups/backup-20260729-100133/`) to force a clean rebuild.
+  Also found and fixed a related gap while wiring this up:
+  `data/filings_manifest.json` on this branch (`phase3-summary-index-build`)
+  was still pinned to the original 9 filings; the JPM/JNJ/WMT entries only
+  existed on the unmerged `corpus-expansion-3-companies` branch. Copied the
+  18-filing manifest content directly rather than merging branches (per
+  standing instruction not to merge/sync branches without being asked) --
+  node data for all 18 filings was already present in `benchmark.db`
+  regardless of git branch (it's gitignored, filesystem-level state).
