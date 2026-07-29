@@ -9,6 +9,7 @@ from dataset_generation.run_dataset_generation import (
     main,
     next_target,
     classify_section,
+    chunk_section,
     build_pools,
     _round_robin_interleave,
     format_underfill_summary,
@@ -616,6 +617,117 @@ def test_build_pools_routes_by_content_type_and_interleaves_companies():
     assert [s["document_id"] for s in table_pool] == ["AAPL_2023", "MSFT_2023"]
     assert all(s["section_header"] == "Item 1A" for s in text_pool)
     assert all(s["section_header"] == "Item 8" for s in table_pool)
+
+
+def _words(n):
+    """`n` single-token words: tiktoken's cl100k_base encoding tokenizes
+    the bare word "x" to exactly 1 token, so `_words(n)` gives content with
+    an exact, predictable token count of `n` -- verified directly against
+    the real encoding, not assumed."""
+    return " ".join(["x"] * n)
+
+
+def test_chunk_section_under_limit_returns_itself_unchanged():
+    """The overwhelmingly common case: a section under _MAX_SECTION_TOKENS
+    must produce exactly one chunk, and that chunk must be the original
+    section dict, unchanged -- zero behaviour change for ordinary
+    sections."""
+    nodes = [_node("n1", "DOC_A", "Item 1A", node_type="text", content="alpha beta gamma")]
+    section = _section(["n1"])
+
+    result = chunk_section(section, nodes)
+
+    assert result == [section]
+
+
+def test_chunk_section_over_limit_splits_into_multiple_chunks_each_under_limit(monkeypatch):
+    monkeypatch.setattr(rdg, "_MAX_SECTION_TOKENS", 10)
+    nodes = [
+        _node("n1", "DOC_A", "Item 1A", node_type="text", content=_words(6)),
+        _node("n2", "DOC_A", "Item 1A", node_type="text", content=_words(6)),
+        _node("n3", "DOC_A", "Item 1A", node_type="text", content=_words(6)),
+    ]
+    section = {
+        "document_id": "DOC_A",
+        "section_header": "Item 1A",
+        "node_ids": ["n1", "n2", "n3"],
+        "content": "irrelevant",
+        "token_count": 18,
+    }
+
+    chunks = chunk_section(section, nodes)
+
+    assert len(chunks) > 1
+    encoding = rdg._get_encoding()
+    for chunk in chunks:
+        assert len(encoding.encode(chunk["content"])) <= 10
+    # every original node lands in exactly one chunk, order preserved.
+    assert [nid for c in chunks for nid in c["node_ids"]] == ["n1", "n2", "n3"]
+    for chunk in chunks:
+        assert chunk["document_id"] == "DOC_A"
+        assert chunk["section_header"] == "Item 1A"
+
+
+def test_chunk_section_never_splits_text_node_away_from_following_table(monkeypatch):
+    """Naive greedy packing would close the chunk right before n2 (the
+    6-token text node n1 already fills the 10-token budget, and n2 alone
+    would push it over) -- but n2 is a table immediately following text
+    node n1, so the boundary must back up and keep n1+n2 together in one
+    (over-budget) chunk instead of splitting them."""
+    monkeypatch.setattr(rdg, "_MAX_SECTION_TOKENS", 10)
+    nodes = [
+        _node("n1", "DOC_A", "Item 8", node_type="text", content=_words(6)),
+        _node("n2", "DOC_A", "Item 8", node_type="table", content=_words(6)),
+        _node("n3", "DOC_A", "Item 8", node_type="text", content=_words(6)),
+    ]
+    section = {
+        "document_id": "DOC_A",
+        "section_header": "Item 8",
+        "node_ids": ["n1", "n2", "n3"],
+        "content": "irrelevant",
+        "token_count": 18,
+    }
+
+    chunks = chunk_section(section, nodes)
+
+    # n1 (text) and n2 (table) must land in the same chunk, even though
+    # that chunk exceeds _MAX_SECTION_TOKENS as a result.
+    first_chunk_ids = chunks[0]["node_ids"]
+    assert "n1" in first_chunk_ids
+    assert "n2" in first_chunk_ids
+    assert first_chunk_ids.index("n1") < first_chunk_ids.index("n2")
+    # n3 was pushed out to its own chunk.
+    assert "n3" not in first_chunk_ids
+    assert any("n3" in c["node_ids"] for c in chunks[1:])
+
+
+def test_chunk_section_single_oversized_node_logged_and_skipped_rest_packed(monkeypatch, caplog):
+    """A single node (almost always one huge table) that alone exceeds
+    _MAX_SECTION_TOKENS cannot be split further without breaking table
+    atomicity -- it must be logged and skipped, without blocking the rest
+    of the section's nodes from being packed normally."""
+    monkeypatch.setattr(rdg, "_MAX_SECTION_TOKENS", 10)
+    nodes = [
+        _node("n1", "DOC_A", "Item 8", node_type="text", content=_words(5)),
+        _node("huge", "DOC_A", "Item 8", node_type="table", content=_words(20)),
+        _node("n2", "DOC_A", "Item 8", node_type="text", content=_words(5)),
+    ]
+    section = {
+        "document_id": "DOC_A",
+        "section_header": "Item 8",
+        "node_ids": ["n1", "huge", "n2"],
+        "content": "irrelevant",
+        "token_count": 30,
+    }
+
+    with caplog.at_level(logging.WARNING, logger=rdg.logger.name):
+        chunks = chunk_section(section, nodes)
+
+    all_node_ids = [nid for c in chunks for nid in c["node_ids"]]
+    assert "huge" not in all_node_ids
+    assert "n1" in all_node_ids
+    assert "n2" in all_node_ids
+    assert any("huge" in record.getMessage() and "20" in record.getMessage() for record in caplog.records)
 
 
 def test_next_target_restricts_search_to_given_quadrants():
