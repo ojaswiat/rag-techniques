@@ -40,8 +40,9 @@ CREATE TABLE IF NOT EXISTS golden_queries (
     ground_truth_answer TEXT NOT NULL,
     gt_citations        TEXT NOT NULL,
     example_output      TEXT NOT NULL,
-    human_score         INTEGER NOT NULL CHECK (human_score BETWEEN 1 AND 10),
+    human_score         INTEGER NOT NULL CHECK (human_score BETWEEN 0 AND 100),
     human_reasoning     TEXT NOT NULL,
+    is_good             INTEGER CHECK (is_good IS NULL OR is_good IN (0, 1)),
     document_id         TEXT NOT NULL
 );
 
@@ -86,7 +87,36 @@ async def init_db(db_path: str) -> None:
     async with aiosqlite.connect(db_path) as conn:
         await conn.execute("PRAGMA journal_mode=WAL;")
         await conn.executescript(_SCHEMA)
+        await _migrate_golden_queries_schema(conn)
         await conn.commit()
+
+
+async def _migrate_golden_queries_schema(conn: aiosqlite.Connection) -> None:
+    """CREATE TABLE IF NOT EXISTS never alters an already-existing table, so
+    a golden_queries table created under an older schema (missing is_good,
+    or the old human_score BETWEEN 1 AND 10 CHECK) silently persists forever
+    -- the exact gap that let the 0-100/is_good rescale drift out of sync
+    with this project's real on-disk database. Rebuild the table in place
+    when stale, but only if it holds no real rows: SQLite can't ALTER an
+    existing CHECK constraint, so fixing it requires recreating the table,
+    and this refuses to silently discard real hand-labeled research data.
+    """
+    cursor = await conn.execute("PRAGMA table_info(golden_queries)")
+    columns = {row[1] for row in await cursor.fetchall()}
+    if "is_good" in columns:
+        return
+
+    cursor = await conn.execute("SELECT COUNT(*) FROM golden_queries")
+    (row_count,) = await cursor.fetchone()
+    if row_count > 0:
+        raise RuntimeError(
+            f"golden_queries has an outdated schema (missing is_good column) "
+            f"and {row_count} real row(s) -- refusing to silently drop data. "
+            "Write a manual migration to preserve the existing rows."
+        )
+
+    await conn.execute("DROP TABLE golden_queries")
+    await conn.executescript(_SCHEMA)
 
 
 async def insert_node(db_path: str, node: dict) -> None:
@@ -212,11 +242,22 @@ async def get_golden_queries(db_path: str) -> list[dict]:
     return result
 
 
-async def update_golden_query_labels(db_path: str, query_id: str, human_score: int, human_reasoning: str) -> None:
+async def update_golden_query_labels(
+    db_path: str,
+    query_id: str,
+    human_score: int,
+    human_reasoning: str,
+    is_good: bool | None = None,
+) -> None:
+    if not isinstance(human_score, int) or isinstance(human_score, bool) or not (0 <= human_score <= 100):
+        raise ValueError(f"{query_id}: human_score {human_score!r} must be an integer in 0-100")
+    if is_good is not None and is_good not in (True, False, 0, 1):
+        raise ValueError(f"{query_id}: is_good {is_good!r} must be None, True/1, or False/0")
+
     async with aiosqlite.connect(db_path) as conn:
         cursor = await conn.execute(
-            "UPDATE golden_queries SET human_score = ?, human_reasoning = ? WHERE query_id = ?",
-            (human_score, human_reasoning, query_id),
+            "UPDATE golden_queries SET human_score = ?, human_reasoning = ?, is_good = ? WHERE query_id = ?",
+            (human_score, human_reasoning, None if is_good is None else int(is_good), query_id),
         )
         await conn.commit()
         if cursor.rowcount == 0:

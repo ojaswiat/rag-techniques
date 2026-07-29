@@ -7,7 +7,8 @@ import database_manager as dbm
 _ENTRY_RE = re.compile(
     r"^## (?P<query_id>\S+)\n\n"
     r".*?"
-    r"\*\*Score \(1-10\):\*\*\s*(?P<score>\S+)?\s*\n"
+    r"\*\*Score \(0-100\):\*\*\s*(?P<score>\S+)?\s*\n"
+    r"(?:\*\*Good Example \(yes/no\):\*\*\s*(?P<is_good>\S+)?\s*\n)?"
     r"\*\*Why this answer is good:\*\*\s*(?P<reasoning>.*?)\s*\n",
     re.DOTALL | re.MULTILINE,
 )
@@ -20,14 +21,27 @@ def parse_label_markdown(markdown_text: str) -> list[dict]:
         reasoning = (match.group("reasoning") or "").strip()
         if not score_raw or not reasoning:
             continue
+        query_id = match.group("query_id")
         try:
             score = int(score_raw)
         except ValueError:
-            continue
+            raise ValueError(f"{query_id}: score {score_raw!r} is not an integer")
+
+        is_good_raw = (match.group("is_good") or "").strip().lower() or None
+        if is_good_raw is None:
+            is_good = None
+        elif is_good_raw == "yes":
+            is_good = True
+        elif is_good_raw == "no":
+            is_good = False
+        else:
+            raise ValueError(f"{query_id}: is_good {is_good_raw!r} is not 'yes' or 'no'")
+
         results.append({
-            "query_id": match.group("query_id"),
+            "query_id": query_id,
             "human_score": score,
             "human_reasoning": reasoning,
+            "is_good": is_good,
         })
     return results
 
@@ -40,7 +54,8 @@ async def main(db_path: str = "benchmark.db", in_path: str = "golden_queries_to_
     for i, label in enumerate(labels):
         try:
             await dbm.update_golden_query_labels(
-                db_path, label["query_id"], label["human_score"], label["human_reasoning"]
+                db_path, label["query_id"], label["human_score"], label["human_reasoning"],
+                label.get("is_good"),
             )
         except Exception:
             print(f"Imported {i} of {len(labels)} labels before failing on {label['query_id']!r}")

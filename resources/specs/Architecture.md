@@ -209,10 +209,17 @@ CREATE TABLE golden_queries (
     ground_truth_answer TEXT NOT NULL,
     gt_citations        TEXT NOT NULL,   -- JSON array of node_id
     example_output       TEXT NOT NULL,
-    human_score          INTEGER NOT NULL CHECK (human_score BETWEEN 1 AND 10),
+    human_score          INTEGER NOT NULL CHECK (human_score BETWEEN 0 AND 100),
     human_reasoning       TEXT NOT NULL,
+    is_good                INTEGER CHECK (is_good IS NULL OR is_good IN (0, 1)),
     document_id           TEXT NOT NULL
 );
+-- NOTE: is_good is new schema support for a researcher-assigned 10-good/10-bad
+-- exemplar split (nullable until hand-labeled). It is a separate, independently
+-- filled-in dimension, not derived from human_score. Phase 6's Judge few-shot
+-- selection (Guardrails.md §4a) is currently purely quadrant-based (5 GQ per
+-- quadrant) and has not yet been redesigned to use this dimension -- flagged
+-- here for whoever builds Phase 6.
 
 CREATE TABLE judge_validation (
     query_id            TEXT PRIMARY KEY,
@@ -277,9 +284,9 @@ Real corpus (expanded from the original illustrative 9-filing example):
 
 **`golden_queries`**
 
-| query_id | quadrant | query_text | ground_truth_answer | gt_citations | example_output | human_score | human_reasoning | document_id |
-|---|---|---|---|---|---|---|---|---|
-| `G_Q4_03` | Q4_Implicit_Table | "Calculate the YoY change in Microsoft's total operating expenses for FY2024." | "Decreased 4.2% YoY." | `["MSFT_2024_n0588","MSFT_2024_n0742"]` | "Operating expenses fell about 4% year over year." | 8 | "Correct direction and magnitude, but vague on the exact figure." | `SEC_10K_MSFT_2024` |
+| query_id | quadrant | query_text | ground_truth_answer | gt_citations | example_output | human_score | human_reasoning | is_good | document_id |
+|---|---|---|---|---|---|---|---|---|---|
+| `G_Q4_03` | Q4_Implicit_Table | "Calculate the YoY change in Microsoft's total operating expenses for FY2024." | "Decreased 4.2% YoY." | `["MSFT_2024_n0588","MSFT_2024_n0742"]` | "Operating expenses fell about 4% year over year." | 80 | "Correct direction and magnitude, but vague on the exact figure." | 1 | `SEC_10K_MSFT_2024` |
 
 **`judge_validation`**
 
