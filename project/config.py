@@ -17,7 +17,7 @@ THROTTLE_LIMIT: int = 3
 MODEL_ROUTING: dict[str, str] = {
     "generator": "openai/gpt-oss-120b",
     "critic": "qwen/qwen3.6-27b",
-    "p3_index_build": "llama-3.1-8b-instant",
+    "p3_index_build": "openai/gpt-oss-20b",
     "answerer": "llama-3.3-70b-versatile",
     "judge": "qwen/qwen3.6-27b",
     "debug": "llama-3.1-8b-instant",
