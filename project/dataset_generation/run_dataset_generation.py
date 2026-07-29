@@ -31,8 +31,10 @@ sections in the corpus) can't spin forever burning Groq quota.
 import json
 import logging
 from collections import defaultdict
+from functools import lru_cache
 from pathlib import Path
 
+import tiktoken
 from groq import APIStatusError
 
 import config
@@ -60,6 +62,32 @@ _MAX_ATTEMPTS_PER_SECTION = 3
 # structurally too small to ever reach its target (e.g. the corpus simply
 # doesn't have enough table sections).
 _MAX_POOL_CYCLES = 5
+
+# Doubt #8 fix: a hard cap on how many tokens' worth of section content
+# generate_query() is ever handed in one Generator call. gpt-oss-120b's
+# context window is 128K tokens, but the raw window isn't the right budget
+# to chunk against -- the system prompt, per-quadrant guidance, the
+# node_ids list, the retry feedback text appended on later attempts, and
+# the model's own JSON response all draw from the same window. 60,000 was
+# chosen as a value that (a) leaves >65K tokens of headroom under the raw
+# 128K limit for all of the above plus a safety margin for the fact that
+# tiktoken's cl100k_base encoding (used below) is an approximation of
+# gpt-oss-120b's actual tokenizer, not an exact match, and (b) sits well
+# above the largest real section measured in the corpus as of this fix
+# (~29,478 tokens) -- so today this is a precautionary ceiling that never
+# actually triggers a split, not an active behavior change, but the corpus
+# can grow well past that before this limit becomes the binding constraint.
+_MAX_SECTION_TOKENS = 60_000
+
+# Real-tokenizer counting for chunk_section (see below). nodes.token_count
+# in the DB is a plain whitespace word count (len(stripped.split()) in
+# ingest/node_builder.py), not a real tokenizer count, so it would
+# undercount actual Groq usage -- chunk_section re-counts with tiktoken
+# instead. cl100k_base is used as a widely-available stand-in encoding
+# (gpt-oss-120b has no public tiktoken encoding registered); combined with
+# the headroom reasoning above, an approximate-but-close count is fine for
+# a safety ceiling. lru_cache(maxsize=1) avoids re-loading the encoding's
+# merge-rank table on every call.
 
 # Exceptions that can propagate out of a single generate/critique attempt
 # without indicating a bug worth crashing the whole 140-query batch for:
@@ -239,6 +267,115 @@ def classify_section(section: dict, nodes: list[dict]) -> str:
     return "table" if is_table else "text"
 
 
+@lru_cache(maxsize=1)
+def _get_encoding() -> tiktoken.Encoding:
+    return tiktoken.get_encoding("cl100k_base")
+
+
+def _log_oversized_node_skipped(document_id: str, node_id: str, node_tokens: int) -> None:
+    """Doubt #8 fix: mirrors _log_attempt_outcome's structured-logging style
+    (module logger, one line, key facts in the message) for the rare edge
+    case where a single node -- almost always one enormous table -- exceeds
+    _MAX_SECTION_TOKENS entirely on its own and can't be chunked further
+    without breaking table atomicity (classify_section/Doubt #2 depend on
+    tables staying intact, single nodes). That node is skipped; the rest of
+    its section is still packed normally around it."""
+    logger.warning(
+        "[chunk_section] %s node %s (%d tokens) exceeds _MAX_SECTION_TOKENS (%d) "
+        "on its own and cannot be split further without breaking table atomicity "
+        "-- skipping this node, packing continues around it",
+        document_id,
+        node_id,
+        node_tokens,
+        _MAX_SECTION_TOKENS,
+    )
+
+
+def chunk_section(section: dict, nodes: list[dict]) -> list[dict]:
+    """Splits a group_sections() section into one or more Generator-sized
+    chunks, each shaped like a normal section dict (document_id,
+    section_header, node_ids, content, token_count) so it can enter the
+    build_pools/classify_section/pool-consumption flow exactly like an
+    unchunked section.
+
+    Like classify_section, group_sections() only keeps node_ids, not each
+    node's content/type, so callers must pass the original node list the
+    section was grouped from.
+
+    Algorithm: greedy node-boundary packing against a real tiktoken count
+    (see _MAX_SECTION_TOKENS's comment for why, and why not
+    nodes.token_count), walking `section['node_ids']` in original document
+    order (already preserved by group_sections/get_nodes_by_document) and
+    closing a chunk whenever the next node would push it over the limit --
+    with one refinement: a chunk boundary must never fall between a
+    text node and an immediately-following table node. If closing here
+    would leave a table as the first node of the next chunk, and the node
+    that would be left behind (the current chunk's last node) is text, the
+    boundary is backed up -- the table is kept in the CURRENT chunk instead,
+    even if that means exceeding _MAX_SECTION_TOKENS for this one chunk. A
+    boundary may only land right after a table block ends, never right
+    before one starts.
+
+    A section already under the limit produces exactly one chunk: the
+    original `section`, unchanged (the overwhelmingly common case, verified
+    by a dedicated test -- zero behaviour change for ordinary sections).
+
+    If a single node alone exceeds _MAX_SECTION_TOKENS (almost always one
+    huge table), it is logged and skipped via _log_oversized_node_skipped --
+    it cannot be split further without breaking table atomicity -- and the
+    rest of the section's nodes are packed normally around it.
+    """
+    node_by_id = {n["node_id"]: n for n in nodes}
+    ordered_nodes = [node_by_id[node_id] for node_id in section["node_ids"] if node_id in node_by_id]
+
+    encoding = _get_encoding()
+    token_counts = {n["node_id"]: len(encoding.encode(n["content"])) for n in ordered_nodes}
+
+    if sum(token_counts.values()) <= _MAX_SECTION_TOKENS:
+        return [section]
+
+    packable_nodes = []
+    for node in ordered_nodes:
+        node_tokens = token_counts[node["node_id"]]
+        if node_tokens > _MAX_SECTION_TOKENS:
+            _log_oversized_node_skipped(section["document_id"], node["node_id"], node_tokens)
+            continue
+        packable_nodes.append(node)
+
+    if not packable_nodes:
+        return []
+
+    chunks_of_nodes: list[list[dict]] = []
+    current: list[dict] = []
+    current_tokens = 0
+    for node in packable_nodes:
+        node_tokens = token_counts[node["node_id"]]
+        would_overflow = bool(current) and current_tokens + node_tokens > _MAX_SECTION_TOKENS
+        table_after_text = node["node_type"] == "table" and current and current[-1]["node_type"] == "text"
+
+        if would_overflow and not table_after_text:
+            chunks_of_nodes.append(current)
+            current = []
+            current_tokens = 0
+
+        current.append(node)
+        current_tokens += node_tokens
+
+    if current:
+        chunks_of_nodes.append(current)
+
+    return [
+        {
+            "document_id": section["document_id"],
+            "section_header": section["section_header"],
+            "node_ids": [n["node_id"] for n in chunk_nodes],
+            "content": "\n\n".join(n["content"] for n in chunk_nodes),
+            "token_count": sum(token_counts[n["node_id"]] for n in chunk_nodes),
+        }
+        for chunk_nodes in chunks_of_nodes
+    ]
+
+
 def _round_robin_interleave(buckets: dict[str, list[dict]], order: list[str]) -> list[dict]:
     """Flattens per-company section lists into one list by taking one
     section from each company in `order` per round (AAPL, MSFT, TSLA, ...,
@@ -264,10 +401,14 @@ def build_pools(documents: list[tuple[str, list[dict]]]) -> tuple[list[dict], li
     """Builds the two content pools upfront, across ALL filings.
 
     `documents` is a list of (document_id, nodes) pairs for every filing in
-    the run. Returns (text_pool, table_pool): each a list of section dicts
-    (as returned by group_sections), classified via classify_section and
-    interleaved round-robin across companies via _round_robin_interleave, so
-    every company contributes as evenly as possible to both pools."""
+    the run. Each group_sections() section is first run through
+    chunk_section (Doubt #8 fix) -- a section under _MAX_SECTION_TOKENS
+    produces itself unchanged, an oversized one produces multiple
+    chunk dicts, each entering the pools as its own independent candidate
+    "section". Returns (text_pool, table_pool): each a list of
+    section/chunk dicts, classified via classify_section and interleaved
+    round-robin across companies via _round_robin_interleave, so every
+    company contributes as evenly as possible to both pools."""
     text_by_company: dict[str, list[dict]] = defaultdict(list)
     table_by_company: dict[str, list[dict]] = defaultdict(list)
     order: list[str] = []
@@ -277,8 +418,9 @@ def build_pools(documents: list[tuple[str, list[dict]]]) -> tuple[list[dict], li
         if company not in order:
             order.append(company)
         for section in group_sections(nodes):
-            bucket = table_by_company if classify_section(section, nodes) == "table" else text_by_company
-            bucket[company].append(section)
+            for chunk in chunk_section(section, nodes):
+                bucket = table_by_company if classify_section(chunk, nodes) == "table" else text_by_company
+                bucket[company].append(chunk)
 
     text_pool = _round_robin_interleave(text_by_company, order)
     table_pool = _round_robin_interleave(table_by_company, order)
