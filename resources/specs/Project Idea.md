@@ -118,7 +118,7 @@ Every query is stored as a deterministic record with explicit ground-truth mappi
 
 ```json
 {
-  "query_id": "Q4_087",
+  "query_id": "QT4_PQ_087",
   "quadrant": "Q4_Implicit_Table",
   "query_text": "Using the operating-expense breakdown in the income statement, calculate the year-over-year percentage change in total operating expenses for FY2025, then adjust for the restructuring impairment disclosed in the footnotes.",
   "ground_truth_answer": "Operating expenses decreased 4.2% YoY. Factoring in the $15M impairment, normalized expenses rose 1.1%.",

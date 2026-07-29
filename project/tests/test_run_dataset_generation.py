@@ -123,8 +123,8 @@ async def test_main_smoke_runs_under_throttle(monkeypatch):
 async def test_resume_after_restart_does_not_collide_with_existing_query_ids(monkeypatch):
     """Simulates process A having already committed 2 accepted queries into
     (queries, Q1_Direct_Text) before crashing. Process B restarts main(), and
-    the newly generated query_id must be Q1_Direct_Text_queries_0003 -- not a
-    collision with the _0001/_0002 rows process A already committed.
+    the newly generated query_id must be QT1_PQ_003 -- not a
+    collision with the _001/_002 rows process A already committed.
     """
     monkeypatch.setattr("dataset_generation.run_dataset_generation.config.LOCAL_TEST_THROTTLE", True)
     monkeypatch.setattr("dataset_generation.run_dataset_generation.config.THROTTLE_LIMIT", 1)
@@ -174,7 +174,7 @@ async def test_resume_after_restart_does_not_collide_with_existing_query_ids(mon
 
     mock_insert.assert_awaited_once()
     inserted_row = mock_insert.await_args.args[1]
-    assert inserted_row["query_id"] == "Q1_Direct_Text_queries_0003"
+    assert inserted_row["query_id"] == "QT1_PQ_003"
 
 
 _FAKE_NODES = [

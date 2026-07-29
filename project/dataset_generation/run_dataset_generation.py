@@ -205,6 +205,22 @@ _INSERTER_NAMES = {
     "judge_validation": "insert_judge_validation",
 }
 
+# query_id construction only -- the `quadrant` column values, their CHECK
+# constraint, and _QUADRANT_GUIDANCE keys in async_generator.py are
+# unaffected. "QT" (Query Type) avoids reading as a fiscal quarter in a
+# project built on SEC 10-K filings.
+_QUADRANT_TO_QT = {
+    "Q1_Direct_Text": "QT1",
+    "Q2_Implicit_Text": "QT2",
+    "Q3_Direct_Table": "QT3",
+    "Q4_Implicit_Table": "QT4",
+}
+_TABLE_CODE = {
+    "queries": "PQ",
+    "golden_queries": "GQ",
+    "judge_validation": "JEQ",
+}
+
 
 def next_target(
     counts: dict[str, dict[str, int]], quadrants: tuple[str, ...] = _QUADRANTS
@@ -459,7 +475,7 @@ def _write_summary_log(counts: dict[str, dict[str, int]], log_path: Path | None 
 
 
 async def _accept_query(db_path: str, table: str, generated: dict, next_seq: int) -> None:
-    query_id = f"{generated['quadrant']}_{table}_{next_seq:04d}"
+    query_id = f"{_QUADRANT_TO_QT[generated['quadrant']]}_{_TABLE_CODE[table]}_{next_seq:03d}"
     row = {
         "query_id": query_id,
         "quadrant": generated["quadrant"],

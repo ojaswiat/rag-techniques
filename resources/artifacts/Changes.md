@@ -216,3 +216,35 @@ Simple running list of changes made to the project after the proposal was submit
   by new regression tests (`test_init_db_migrates_stale_golden_queries_schema_when_empty`,
   `test_init_db_refuses_to_migrate_stale_golden_queries_schema_with_real_rows`,
   `test_parse_label_markdown_handles_entry_missing_good_example_line`).
+- 2026-07-29: Shortened the `query_id` format `_accept_query()` constructs
+  in `run_dataset_generation.py`, from `{full_quadrant}_{full_table}_{seq:04d}`
+  (e.g. `Q1_Direct_Text_queries_0001`) to `{QT#}_{table_code}_{seq:03d}`
+  (e.g. `QT1_PQ_001`). This closes Doubt #11 ("naming is clunky, IDs longer
+  than necessary") plus a follow-up decision made after the user was asked:
+  the quadrant labels `Q1`-`Q4` read as ambiguous against fiscal quarters
+  in a project built entirely on SEC 10-K financial filings, so the new
+  prefix is `QT` (Query Type) rather than reusing `Q` for quadrant. Two
+  small module-level dicts do the mapping -- `_QUADRANT_TO_QT`
+  (`Q1_Direct_Text`->`QT1`, `Q2_Implicit_Text`->`QT2`, `Q3_Direct_Table`->`QT3`,
+  `Q4_Implicit_Table`->`QT4`) and `_TABLE_CODE` (`queries`->`PQ`,
+  `golden_queries`->`GQ`, `judge_validation`->`JEQ`). Sequence padding
+  dropped from 4 digits to 3, sized to the project's real fixed per-quadrant
+  caps (25 PQ / 5 GQ / 5 JEQ per quadrant, i.e. 100/20/20 total per
+  `Project Idea.md`), not an arbitrary round number. Explicit scope
+  boundary, confirmed with the user before making this change: only the
+  constructed `query_id` string changed. The `quadrant` column and its
+  values (`Q1_Direct_Text` .. `Q4_Implicit_Table`), that column's `CHECK`
+  constraint, the `_QUADRANT_GUIDANCE` prompt-guidance dict keys in
+  `async_generator.py`, and "quadrant" terminology everywhere else in the
+  codebase and docs are untouched. Also reconciled `Architecture.md`'s and
+  `Project Idea.md`'s example `query_id` values (`Q3_017`, `Q2_044`,
+  `G_Q4_03`, `V_Q1_02`, `Q4_087`), which never actually matched what the
+  code produced in the first place -- a separate pre-existing doc/code
+  mismatch, not introduced by this change -- to the new canonical format
+  (`QT3_PQ_017`, `QT2_PQ_044`, `QT4_GQ_003`, `QT1_JEQ_002`, `QT4_PQ_087`).
+  `queries`, `golden_queries`, and `judge_validation` all had zero real
+  rows at the time of this change (verified live, same as the 0-100/`is_good`
+  change above), so no data migration was needed. Updated:
+  `project/dataset_generation/run_dataset_generation.py`,
+  `project/tests/test_run_dataset_generation.py`,
+  `resources/specs/Architecture.md`, `resources/specs/Project Idea.md`.
