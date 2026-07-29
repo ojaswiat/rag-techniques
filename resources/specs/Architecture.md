@@ -279,29 +279,29 @@ Real corpus (expanded from the original illustrative 9-filing example):
 
 | query_id | quadrant | query_text | ground_truth_answer | gt_citations | document_id | verified |
 |---|---|---|---|---|---|---|
-| `Q3_017` | Q3_Direct_Table | "What was Apple's total net sales for FY2025?" | "$394.3B" | `["AAPL_2025_n0421"]` | `SEC_10K_AAPL_2025` | 1 |
-| `Q2_044` | Q2_Implicit_Text | "How did Tesla's management characterize the driver of FY2023 delivery growth?" | "Management attributed the increase primarily to higher production volumes at the Texas and Berlin gigafactories." | `["TSLA_2023_n0299"]` | `SEC_10K_TSLA_2023` | 1 |
+| `QT3_PQ_017` | Q3_Direct_Table | "What was Apple's total net sales for FY2025?" | "$394.3B" | `["AAPL_2025_n0421"]` | `SEC_10K_AAPL_2025` | 1 |
+| `QT2_PQ_044` | Q2_Implicit_Text | "How did Tesla's management characterize the driver of FY2023 delivery growth?" | "Management attributed the increase primarily to higher production volumes at the Texas and Berlin gigafactories." | `["TSLA_2023_n0299"]` | `SEC_10K_TSLA_2023` | 1 |
 
 **`golden_queries`**
 
 | query_id | quadrant | query_text | ground_truth_answer | gt_citations | example_output | human_score | human_reasoning | is_good | document_id |
 |---|---|---|---|---|---|---|---|---|---|
-| `G_Q4_03` | Q4_Implicit_Table | "Calculate the YoY change in Microsoft's total operating expenses for FY2024." | "Decreased 4.2% YoY." | `["MSFT_2024_n0588","MSFT_2024_n0742"]` | "Operating expenses fell about 4% year over year." | 80 | "Correct direction and magnitude, but vague on the exact figure." | 1 | `SEC_10K_MSFT_2024` |
+| `QT4_GQ_003` | Q4_Implicit_Table | "Calculate the YoY change in Microsoft's total operating expenses for FY2024." | "Decreased 4.2% YoY." | `["MSFT_2024_n0588","MSFT_2024_n0742"]` | "Operating expenses fell about 4% year over year." | 80 | "Correct direction and magnitude, but vague on the exact figure." | 1 | `SEC_10K_MSFT_2024` |
 
 **`judge_validation`**
 
 | query_id | quadrant | query_text | ground_truth_answer | gt_citations | document_id |
 |---|---|---|---|---|---|
-| `V_Q1_02` | Q1_Direct_Text | "Name the primary risk factor Microsoft cites for its cloud business." | "Concentration risk: reliance on a small number of hyperscale competitors and on data-center capacity." | `["MSFT_2024_n0118"]` | `SEC_10K_MSFT_2024` |
+| `QT1_JEQ_002` | Q1_Direct_Text | "Name the primary risk factor Microsoft cites for its cloud business." | "Concentration risk: reliance on a small number of hyperscale competitors and on data-center capacity." | `["MSFT_2024_n0118"]` | `SEC_10K_MSFT_2024` |
 
 **`results`** — one PQ row, one Q2/Q4-style row showing `exact_match = NULL`, and two JEQ-gate rows for the same validation query across two pipelines (demonstrating how 60 gate outputs fit into one table):
 
 | result_id | source_set | query_id | pipeline | k_value | retrieved_node_ids | pipeline_output | cited_node_ids | precision_at_k | recall_at_k | evidence_hit | citation_match | token_f1 | exact_match | judge_score | human_score | latency_sec | input_tokens | output_tokens |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| `R_000457` | PQ | `Q3_017` | P1_vector | 5 | `["AAPL_2025_n0421","AAPL_2025_n0420"]` | "Apple's FY2025 net sales were $394.3B. [[node:AAPL_2025_n0421]]" | `["AAPL_2025_n0421"]` | 0.20 | 1.0 | 1 | 1 | 0.95 | 1 | 9 | NULL | 1.84 | 2100 | 40 |
-| `R_000312` | PQ | `Q2_044` | P3_structural | 10 | `["TSLA_2023_n0299", "TSLA_2023_n0301"]` | "Management cited higher production at the Texas and Berlin gigafactories. [[node:TSLA_2023_n0299]]" | `["TSLA_2023_n0299"]` | 0.30 | 1.0 | 1 | 1 | 0.58 | NULL | 7 | NULL | 2.40 | 3100 | 85 |
-| `R_G00012` | JEQ | `V_Q1_02` | P2_bm25 | 5 | `["MSFT_2024_n0118","MSFT_2024_n0119"]` | "Reliance on a small number of third-party cloud/data-center providers. [[node:MSFT_2024_n0118]]" | `["MSFT_2024_n0118"]` | 0.20 | 1.0 | 1 | 1 | 0.62 | NULL | 6 | 7 | 0.91 | 1800 | 22 |
-| `R_G00013` | JEQ | `V_Q1_02` | P3_structural | 5 | `["MSFT_2024_n0118"]` | "Concentration of supply among a few hyperscale cloud competitors. [[node:MSFT_2024_n0118]]" | `["MSFT_2024_n0118"]` | 1.0 | 1.0 | 1 | 1 | 0.71 | NULL | 7 | 7 | 1.10 | 1950 | 28 |
+| `R_000457` | PQ | `QT3_PQ_017` | P1_vector | 5 | `["AAPL_2025_n0421","AAPL_2025_n0420"]` | "Apple's FY2025 net sales were $394.3B. [[node:AAPL_2025_n0421]]" | `["AAPL_2025_n0421"]` | 0.20 | 1.0 | 1 | 1 | 0.95 | 1 | 9 | NULL | 1.84 | 2100 | 40 |
+| `R_000312` | PQ | `QT2_PQ_044` | P3_structural | 10 | `["TSLA_2023_n0299", "TSLA_2023_n0301"]` | "Management cited higher production at the Texas and Berlin gigafactories. [[node:TSLA_2023_n0299]]" | `["TSLA_2023_n0299"]` | 0.30 | 1.0 | 1 | 1 | 0.58 | NULL | 7 | NULL | 2.40 | 3100 | 85 |
+| `R_G00012` | JEQ | `QT1_JEQ_002` | P2_bm25 | 5 | `["MSFT_2024_n0118","MSFT_2024_n0119"]` | "Reliance on a small number of third-party cloud/data-center providers. [[node:MSFT_2024_n0118]]" | `["MSFT_2024_n0118"]` | 0.20 | 1.0 | 1 | 1 | 0.62 | NULL | 6 | 7 | 0.91 | 1800 | 22 |
+| `R_G00013` | JEQ | `QT1_JEQ_002` | P3_structural | 5 | `["MSFT_2024_n0118"]` | "Concentration of supply among a few hyperscale cloud competitors. [[node:MSFT_2024_n0118]]" | `["MSFT_2024_n0118"]` | 1.0 | 1.0 | 1 | 1 | 0.71 | NULL | 7 | 7 | 1.10 | 1950 | 28 |
 
 Note `exact_match = NULL` on the Q2/Q4 row (per `Project_Idea.md` §7, EM is Q1/Q3-only) and `human_score = NULL` on the PQ rows (only `JEQ` rows are hand-scored, per the Phase 6 gate).
 
