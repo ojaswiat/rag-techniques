@@ -1,3 +1,8 @@
+2026-07-29 09:29:58,161 INFO [phase4-doubt8-fix] (Agent) Fixed Doubt #8: tiktoken-based real token counting, chunk_section() splits oversized sections at node boundaries in run_dataset_generation.py, with table-context boundary rule (never split text-intro away from following table) and oversized-single-node logging -- success
+branch:  phase4-dataset-generation
+files:   dataset_generation/run_dataset_generation.py, tests/test_run_dataset_generation.py, pyproject.toml
+details: 128/128 tests passing + 1 correctly-skipped live test (up from 124+1). Reviewed clean, no Critical findings. Table-boundary rule verified correct by hand-trace against multiple node-sequence scenarios. One Important non-blocking finding logged as deferred: tiktoken cl100k_base downloads merge-rank table over network on first use, undocumented in code -- fails clearly if offline, just not flagged in advance. Corpus's actual max section size (~29,478 tokens) is well under the 60,000 threshold chosen, so this is precautionary, not currently active. Commits 33537bf, 91cc8d0.
+================================================================================
 2026-07-28 20:28:57,101 INFO [phase4-doubt7-improvement] (Agent) Added optional return_messages param to critique_query for direct tool-call proof in live smoke test, per prior review's Minor suggestion -- success
 branch:  phase4-dataset-generation
 files:   dataset_generation/async_critic.py, tests/test_async_critic.py, tests/test_async_critic_live_smoke.py
