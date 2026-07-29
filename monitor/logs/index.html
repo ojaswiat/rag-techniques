@@ -105,8 +105,8 @@
   <div class="masthead" id="top">
     <span><span class="brand">rag-techniques</span> · Monitor · Logs</span>
     <span class="mh-right">
-      <span class="branchchip" title="Branch: phase2-ingestion-parsing"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">phase2-ingestion-parsing</span></span>
-      <span class="mono">2026-07-22 08:35</span>
+      <span class="branchchip" title="Branch: dev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">dev</span></span>
+      <span class="mono">2026-07-27 01:40</span>
     </span>
   </div>
 
@@ -117,12 +117,12 @@
   </header>
 
   <div class="kpis">
-    <div class="kpi"><div class="label">Current branch</div><div class="value small mono">phase2-ingestion-parsing</div></div>
-    <div class="kpi"><div class="label">Total ops</div><div class="value">27</div></div>
-    <div class="kpi pass"><div class="label">Success</div><div class="value">26</div></div>
-    <div class="kpi warn"><div class="label">Partial</div><div class="value">1</div></div>
+    <div class="kpi"><div class="label">Current branch</div><div class="value small mono">dev</div></div>
+    <div class="kpi"><div class="label">Total ops</div><div class="value">36</div></div>
+    <div class="kpi pass"><div class="label">Success</div><div class="value">33</div></div>
+    <div class="kpi warn"><div class="label">Partial</div><div class="value">3</div></div>
     <div class="kpi fail"><div class="label">Failure</div><div class="value">0</div></div>
-    <div class="kpi"><div class="label">Last activity</div><div class="value small mono">2026-07-22 08:35:29,659</div></div>
+    <div class="kpi"><div class="label">Last activity</div><div class="value small mono">2026-07-27 01:40:46,422</div></div>
   </div>
 
   <fieldset class="filter" aria-label="Filter by status">
@@ -136,6 +136,144 @@
   </fieldset>
 
   <div class="log">
+  <article class="logcard success">
+    <div class="row">
+      <time>2026-07-27 01:40:46,422</time>
+      <span class="op">phase4-planning-decision</span>
+      <span class="toolchip">AskUserQuestion</span>
+      <span class="branchchip" title="Branch: dev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">dev</span></span>
+      <span class="spacer"></span>
+      <span class="tag pass">SUCCESS</span>
+    </div>
+    <p class="summary">Decided: GQ human-labeling delivered as an editable Markdown file, re-imported by a small script</p>
+    <details>
+      <summary>Details</summary>
+      <p>Phase 4 dataset-generation brainstorm, decision 6. The 20 golden_queries need a human-written &#x27;why this answer is good&#x27; note + 1-10 score each (Phase Plan Goal 5) -- this must be the user, not an AI, since it&#x27;s the calibration ground truth the Judge is taught against. Chose a generated golden_queries_to_label.md (query + ground truth + blank note/score fields) over CSV or interactive CLI prompt, since Markdown is easiest to review/edit in a normal editor and matches the project&#x27;s existing doc conventions.</p>
+    </details>
+  </article>
+  <article class="logcard success">
+    <div class="row">
+      <time>2026-07-27 01:36:41,491</time>
+      <span class="op">phase4-planning-decision</span>
+      <span class="toolchip">AskUserQuestion</span>
+      <span class="branchchip" title="Branch: dev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">dev</span></span>
+      <span class="spacer"></span>
+      <span class="tag pass">SUCCESS</span>
+    </div>
+    <p class="summary">Decided: max 3 Generator/Critic regeneration attempts per section before moving on</p>
+    <details>
+      <summary>Details</summary>
+      <p>Phase 4 dataset-generation brainstorm, decision 5. Caps worst-case Groq spend per section-quadrant attempt at 3x (Generator+Critic call pairs) while absorbing normal cross-check rejection noise, rather than unlimited retry-until-quota-filled (quota risk) or single-shot no-retry (likely under-fills quadrants, needs a second pass).</p>
+    </details>
+  </article>
+  <article class="logcard success">
+    <div class="row">
+      <time>2026-07-27 01:34:48,484</time>
+      <span class="op">phase4-planning-decision</span>
+      <span class="toolchip">AskUserQuestion</span>
+      <span class="branchchip" title="Branch: dev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">dev</span></span>
+      <span class="spacer"></span>
+      <span class="tag pass">SUCCESS</span>
+    </div>
+    <p class="summary">Decided: cross-check accepts on node-ID overlap (not exact set match) + exact numeric match after normalization</p>
+    <details>
+      <summary>Details</summary>
+      <p>Phase 4 dataset-generation brainstorm, decision 4. Two sub-decisions: (a) Critic&#x27;s cited node_ids only need &gt;=1 node in common with Generator&#x27;s gt_citations to pass, not an identical set -- two independent searchers rarely land on the exact same exhaustive node list even when both are correct, so exact-set-match would over-reject sound queries. (b) Numeric ground-truth values (currency, percentages) are compared via normalization (strip symbols/commas/whitespace, parse as float) then exact equality / tiny rounding tolerance (~0.01) -- these are single-correct-answer filing figures, not estimates, so no fuzzy percentage band.</p>
+    </details>
+  </article>
+  <article class="logcard success">
+    <div class="row">
+      <time>2026-07-27 01:28:40,811</time>
+      <span class="op">phase4-planning-decision</span>
+      <span class="toolchip">AskUserQuestion</span>
+      <span class="branchchip" title="Branch: dev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">dev</span></span>
+      <span class="spacer"></span>
+      <span class="tag pass">SUCCESS</span>
+    </div>
+    <p class="summary">Decided: exclude the 537 nodes (~6%) with NULL/empty parent_item_header from query generation; normalize header casing before grouping</p>
+    <details>
+      <summary>Details</summary>
+      <p>Phase 4 dataset-generation brainstorm, decision 3. Found during sanity-check of the parent_item_header grouping scheme: 537/8543 nodes have no header (likely cover pages, TOC, signature blocks, exhibits lists) -- excluded as non-substantive rather than bucketed as a fallback &#x27;Uncategorized&#x27; group. Also found header casing inconsistency (e.g. TSLA_2025 has both &#x27;ITEM 1A. RISK FACTORS&#x27; and &#x27;Item 1A. Risk Factors&#x27; as separate literal strings) -- will normalize (case-fold) before grouping so these merge into one section instead of splitting Generator input. Max section size found to be 29,478 tokens (TSLA_2023 Item 8), comfortably inside the 128K generator window.</p>
+    </details>
+  </article>
+  <article class="logcard success">
+    <div class="row">
+      <time>2026-07-27 01:24:55,587</time>
+      <span class="op">phase4-planning-decision</span>
+      <span class="toolchip">AskUserQuestion</span>
+      <span class="branchchip" title="Branch: dev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">dev</span></span>
+      <span class="spacer"></span>
+      <span class="tag pass">SUCCESS</span>
+    </div>
+    <p class="summary">Decided: Generator&#x27;s per-section chunk = all nodes sharing the same parent_item_header</p>
+    <details>
+      <summary>Details</summary>
+      <p>Phase 4 dataset-generation brainstorm, decision 2. Reuses Phase 2&#x27;s existing node metadata (parent_item_header, e.g. &#x27;Item 7. Management&#x27;s Discussion&#x27;) as the natural section boundary for chunked generation, instead of arbitrary fixed token windows. Avoids splitting mid-topic or straddling two unrelated Item headers in one Generator call.</p>
+    </details>
+  </article>
+  <article class="logcard success">
+    <div class="row">
+      <time>2026-07-27 01:22:13,073</time>
+      <span class="op">phase4-planning-decision</span>
+      <span class="toolchip">AskUserQuestion</span>
+      <span class="branchchip" title="Branch: dev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">dev</span></span>
+      <span class="spacer"></span>
+      <span class="tag pass">SUCCESS</span>
+    </div>
+    <p class="summary">Decided: 140-query pool split evenly across 9 filings (~15-16/filing) rather than per-company or fill-order</p>
+    <details>
+      <summary>Details</summary>
+      <p>Phase 4 dataset-generation brainstorm, decision 1 of N. Spec only specifies 25/5/5 per quadrant (140 total); per-filing distribution was unspecified. Chose even split over per-company split or unconstrained fill-order, to avoid any single filing dominating the benchmark. User asked that every subsequent Phase 4 design decision be logged this way for the dissertation record.</p>
+    </details>
+  </article>
+  <article class="logcard success">
+    <div class="row">
+      <time>2026-07-26 13:27:38,232</time>
+      <span class="op">full-corpus-branch-wrapup</span>
+      <span class="toolchip">Bash</span>
+      <span class="branchchip" title="Branch: full-corpus-ingestion"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">full-corpus-ingestion</span></span>
+      <span class="spacer"></span>
+      <span class="tag pass">SUCCESS</span>
+    </div>
+    <p class="summary">Committed final audit report + Changes.md doc entry before merging full-corpus-ingestion to main</p>
+    <div class="files"><span class="file">monitor/reports/2026-07-26-data-integrity-audit-full-corpus.html</span><span class="file">monitor/reports/manifest.json</span><span class="file">resources/artifacts/Changes.md</span></div>
+    <details>
+      <summary>Details</summary>
+      <p>9/9 filings ingested, 9/9 P3 summary indices built, 49/49 tests passing, data integrity audit clean (1 documented non-blocking finding). No new code -- committing monitor report assets and Changes.md doc entry only.</p>
+    </details>
+  </article>
+  <article class="logcard partial">
+    <div class="row">
+      <time>2026-07-26 13:21:52,577</time>
+      <span class="op">data-integrity-audit</span>
+      <span class="toolchip">Bash</span>
+      <span class="branchchip" title="Branch: full-corpus-ingestion"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">full-corpus-ingestion</span></span>
+      <span class="spacer"></span>
+      <span class="tag warn">PARTIAL</span>
+    </div>
+    <p class="summary">Read-only integrity audit of full 9-filing corpus: storage/tree/DB clean, found 31-table LlamaParse header-alignment defect in 5 filings</p>
+    <div class="files"><span class="file">monitor/reports/2026-07-26-data-integrity-audit-full-corpus.html</span><span class="file">monitor/reports/manifest.json</span></div>
+    <details>
+      <summary>Details</summary>
+      <p>4-layer audit: storage file validity (45/45 OK), TreeIndex tree-structure consistency (9/9 OK, fixed a script bug that gave false 0-refs), Markdown table integrity in data/parsed/*.md (31 tables across MSFT x3 + TSLA_2023/2025 have caption-merged-into-header defect from LlamaParse; AAPL x3 + TSLA_2024 clean), DB sanity (8543 nodes, 0 empty, 0 duplicates, exactly 9 filings). No code changed per explicit instruction; audit script lives in scratchpad only.</p>
+    </details>
+  </article>
+  <article class="logcard partial">
+    <div class="row">
+      <time>2026-07-23 12:08:58,120</time>
+      <span class="op">p3-build-partial-resume</span>
+      <span class="toolchip">Bash</span>
+      <span class="branchchip" title="Branch: full-corpus-ingestion"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">full-corpus-ingestion</span></span>
+      <span class="spacer"></span>
+      <span class="tag warn">PARTIAL</span>
+    </div>
+    <p class="summary">Resumed P3 summary-index build on full-corpus-ingestion branch; MSFT_2023 built, hit Groq daily TPD cap (500K) again on MSFT_2024, 5 filings remain</p>
+    <div class="files"><span class="file">project/logs/index_build_costs.json</span></div>
+    <details>
+      <summary>Details</summary>
+      <p>AAPL x3 + MSFT_2023 built (4/9). MSFT_2024, MSFT_2025, TSLA x3 blocked on llama-3.1-8b-instant TPD limit. Atomic cache verified clean: no .tmp dirs, no false cache hit, cost log has correct row for MSFT_2023 only. Resume tomorrow with same build command.</p>
+    </details>
+  </article>
   <article class="logcard success">
     <div class="row">
       <time>2026-07-22 08:35:29,659</time>
@@ -582,7 +720,7 @@
   </article>
   </div>
 
-  <footer><span>Rendered from monitor/logs/operations.log · 27 entries.</span><span><a href="../index.html">← Dashboard</a> · <a href="#top">↑ Back to Top</a></span></footer>
+  <footer><span>Rendered from monitor/logs/operations.log · 36 entries.</span><span><a href="../index.html">← Dashboard</a> · <a href="#top">↑ Back to Top</a></span></footer>
 
 </div>
 </body>
