@@ -1,7 +1,11 @@
 
 
 Change the models and build summary again refer to model-selection.md file.
+Build the node tables again.
 Full corpus ingestion required before any data related development.
+
+- Phase 3 reads it to build P3's summary tree (a separate, one-time step).
+- Phase 4 reads it to write benchmark questions and cite exact pieces of evidence.
 
 ## Doubts
 1. One hiccup kills everything. If the Critic robot ever gets stuck (can't answer in 5 tries) or sends back broken text, the whole program crashes instead of just skipping that one question and moving to the next. Imagine your dishwasher stopping forever because one plate was dirty, instead of just re-washing that plate.

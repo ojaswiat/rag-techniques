@@ -1,0 +1,552 @@
+<title>project/ — Codebase Mind Map</title>
+<style>
+  :root {
+    --bg: #f4f2fb;
+    --bg2: #ecebf7;
+    --surface: #ffffff;
+    --surface2: #f9f8fd;
+    --border: #ddd9ee;
+    --text: #1c1a2e;
+    --muted: #5c5a78;
+    --muted2: #8482a0;
+    --shadow: 0 10px 30px -12px rgba(40,30,90,0.18);
+    --wire: #c7c2e0;
+
+    --done-bg: #e3faf0; --done-fg: #0a7d54; --done-ring: #34d399;
+    --partial-bg: #fff6e0; --partial-fg: #92650a; --partial-ring: #f0b429;
+    --notbuilt-bg: #f0eef8; --notbuilt-fg: #5c5a78; --notbuilt-ring: #9c97c2;
+    --notstarted-bg: #f4f4f4; --notstarted-fg: #6b6b6b; --notstarted-ring: #b3b3b3;
+
+    --p1: #4f8ff0; --p2: #17a999; --p3: #8b5cf6; --pf: #a78bfa;
+    --p4: #e07a1f; --p5: #e0559b; --p6: #1c9ecf; --p7: #b58900; --p8: #7a7896;
+  }
+  :root[data-theme="dark"] {
+    --bg: #0b0e1a; --bg2: #0f1326; --surface: #131730; --surface2: #10142a;
+    --border: #262c4c; --text: #eceaf9; --muted: #a7a4cc; --muted2: #7c79a3;
+    --shadow: 0 14px 34px -14px rgba(0,0,0,0.55);
+    --wire: #34395f;
+    --done-bg: #0f2a20; --done-fg: #4ee2a4; --done-ring: #2fbd8a;
+    --partial-bg: #2b2308; --partial-fg: #f4c14a; --partial-ring: #d9a520;
+    --notbuilt-bg: #1c2040; --notbuilt-fg: #b3aee0; --notbuilt-ring: #4a4780;
+    --notstarted-bg: #191b2e; --notstarted-fg: #83809f; --notstarted-ring: #4c4a6a;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0b0e1a; --bg2: #0f1326; --surface: #131730; --surface2: #10142a;
+      --border: #262c4c; --text: #eceaf9; --muted: #a7a4cc; --muted2: #7c79a3;
+      --shadow: 0 14px 34px -14px rgba(0,0,0,0.55);
+      --wire: #34395f;
+      --done-bg: #0f2a20; --done-fg: #4ee2a4; --done-ring: #2fbd8a;
+      --partial-bg: #2b2308; --partial-fg: #f4c14a; --partial-ring: #d9a520;
+      --notbuilt-bg: #1c2040; --notbuilt-fg: #b3aee0; --notbuilt-ring: #4a4780;
+      --notstarted-bg: #191b2e; --notstarted-fg: #83809f; --notstarted-ring: #4c4a6a;
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; overflow-x: hidden; }
+  body {
+    background:
+      radial-gradient(1100px 500px at 12% -8%, color-mix(in srgb, var(--p1) 14%, transparent), transparent 60%),
+      radial-gradient(900px 500px at 100% 10%, color-mix(in srgb, var(--p4) 12%, transparent), transparent 60%),
+      var(--bg);
+    color: var(--text);
+    font-family: ui-rounded, "SF Pro Rounded", "Hiragino Maru Gothic ProN", Quicksand, Verdana, "Segoe UI", sans-serif;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; }
+  .wrap { max-width: 1220px; margin: 0 auto; padding: 0 20px 120px; }
+
+  /* ---------- top bar ---------- */
+  .topbar {
+    position: sticky; top: 0; z-index: 50;
+    backdrop-filter: blur(14px) saturate(140%);
+    background: color-mix(in srgb, var(--bg) 82%, transparent);
+    border-bottom: 1px solid var(--border);
+  }
+  .topbar-inner {
+    max-width: 1220px; margin: 0 auto; padding: 12px 20px;
+    display: flex; align-items: center; gap: 18px; flex-wrap: wrap;
+  }
+  .brand { font-weight: 800; font-size: 0.98rem; letter-spacing: -0.01em; white-space: nowrap; }
+  .brand small { display: block; font-weight: 500; font-size: 0.68rem; color: var(--muted); letter-spacing: 0.02em; }
+  .navpills { display: flex; gap: 6px; flex-wrap: wrap; flex: 1; }
+  .navpills a {
+    text-decoration: none; font-size: 0.72rem; font-weight: 700; padding: 6px 11px;
+    border-radius: 999px; border: 1px solid var(--border); background: var(--surface);
+    color: var(--muted); white-space: nowrap; transition: transform .15s ease, color .15s ease, border-color .15s ease;
+  }
+  .navpills a:hover { color: var(--text); transform: translateY(-1px); }
+  .navpills a .dot { display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:6px; vertical-align:middle; }
+  .legend { display: flex; gap: 10px; align-items: center; font-size: 0.68rem; color: var(--muted); flex-wrap: wrap; }
+  .legend .item { display: flex; align-items: center; gap: 5px; white-space: nowrap; }
+  .legend .swatch { width: 10px; height: 10px; border-radius: 3px; }
+
+  /* ---------- hero ---------- */
+  .hero { padding: 56px 0 20px; text-align: center; }
+  .hero h1 {
+    font-size: clamp(1.8rem, 4.2vw, 2.9rem); font-weight: 800; letter-spacing: -0.02em; margin: 0 0 10px;
+  }
+  .hero p.lead { max-width: 62ch; margin: 0 auto; color: var(--muted); font-size: 1.02rem; }
+  .stat-strip {
+    display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; margin: 26px auto 0; max-width: 980px;
+  }
+  .stat {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+    padding: 12px 18px; min-width: 132px; box-shadow: var(--shadow);
+  }
+  .stat b { display: block; font-size: 1.35rem; font-weight: 800; }
+  .stat span { font-size: 0.68rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+
+  .goldenrule {
+    max-width: 820px; margin: 30px auto 0; text-align: left;
+    background: linear-gradient(135deg, color-mix(in srgb, var(--p4) 16%, var(--surface)), var(--surface));
+    border: 1px solid color-mix(in srgb, var(--p4) 45%, var(--border));
+    border-radius: 18px; padding: 18px 22px; box-shadow: var(--shadow);
+    display: flex; gap: 14px; align-items: flex-start;
+  }
+  .goldenrule .ring {
+    flex: none; width: 38px; height: 38px; border-radius: 50%;
+    border: 3px solid var(--p4); display:flex; align-items:center; justify-content:center;
+    font-weight: 800; font-size: 0.85rem; color: var(--p4);
+  }
+  .goldenrule h3 { margin: 0 0 5px; font-size: 0.95rem; }
+  .goldenrule p { margin: 0; color: var(--muted); font-size: 0.88rem; }
+
+  /* ---------- section shell ---------- */
+  .phase-section { margin-top: 68px; scroll-margin-top: 90px; }
+  .phase-head { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 18px; }
+  .phase-num {
+    flex: none; width: 52px; height: 52px; border-radius: 16px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 1.2rem; color: #fff;
+    box-shadow: var(--shadow);
+  }
+  .phase-titlewrap h2 { margin: 0 0 4px; font-size: 1.4rem; letter-spacing: -0.01em; }
+  .status-pill {
+    display: inline-flex; align-items: center; gap: 6px; font-size: 0.68rem; font-weight: 800;
+    text-transform: uppercase; letter-spacing: 0.06em; padding: 4px 10px; border-radius: 999px;
+    margin-left: 4px; vertical-align: middle;
+  }
+  .status-pill .dot { width: 7px; height: 7px; border-radius: 50%; }
+  .status-done { background: var(--done-bg); color: var(--done-fg); }
+  .status-done .dot { background: var(--done-ring); }
+  .status-partial { background: var(--partial-bg); color: var(--partial-fg); }
+  .status-partial .dot { background: var(--partial-ring); }
+  .status-notbuilt { background: var(--notbuilt-bg); color: var(--notbuilt-fg); }
+  .status-notbuilt .dot { background: var(--notbuilt-ring); }
+  .status-notstarted { background: var(--notstarted-bg); color: var(--notstarted-fg); }
+  .status-notstarted .dot { background: var(--notstarted-ring); }
+
+  .phase-desc { color: var(--muted); font-size: 0.95rem; max-width: 92ch; margin: 0 0 22px; }
+  .status-line {
+    font-size: 0.82rem; font-weight: 700; margin: -8px 0 22px; padding: 10px 14px;
+    border-radius: 12px; border: 1px dashed var(--border); color: var(--muted); display:inline-block;
+  }
+
+  /* ---------- cluster (mind-map graph) ---------- */
+  .cluster { position: relative; display: flex; gap: 26px; align-items: flex-start; }
+  .cluster svg.wires { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+  .hub {
+    flex: none; width: 108px; height: 108px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; text-align: center;
+    font-weight: 800; font-size: 0.78rem; line-height: 1.2; color: #fff;
+    box-shadow: var(--shadow); position: relative; z-index: 2;
+    padding: 8px;
+  }
+  .bubble-grid { display: flex; flex-wrap: wrap; gap: 14px; position: relative; z-index: 2; flex: 1; min-width: 0; }
+  .bubble {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+    padding: 12px 15px; width: 268px; box-shadow: var(--shadow);
+    border-left-width: 4px; border-left-style: solid;
+    transition: transform .15s ease, box-shadow .15s ease;
+  }
+  .bubble:hover { transform: translateY(-2px); }
+  .bubble .term { font-weight: 800; font-size: 0.86rem; margin-bottom: 4px; display:block; }
+  .bubble .def { font-size: 0.8rem; color: var(--muted); }
+  .bubble.wide { width: 100%; max-width: 560px; }
+
+  @media (max-width: 760px) {
+    .cluster { flex-direction: column; }
+    .hub { width: 84px; height: 84px; font-size: 0.7rem; }
+    .cluster svg.wires { display: none; }
+    .bubble { width: 100%; }
+  }
+
+  footer { margin-top: 90px; text-align: center; color: var(--muted2); font-size: 0.78rem; padding-top: 24px; border-top: 1px solid var(--border); }
+</style>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">project/ codebase map<small>SEC 10-K RAG retrieval benchmark — COMP702 dissertation</small></div>
+    <div class="navpills">
+      <a href="#foundation"><span class="dot" style="background:var(--pf)"></span>Foundation</a>
+      <a href="#phase1"><span class="dot" style="background:var(--p1)"></span>P1 Plan</a>
+      <a href="#phase2"><span class="dot" style="background:var(--p2)"></span>P2 Ingest</a>
+      <a href="#phase3"><span class="dot" style="background:var(--p3)"></span>P3 Tree</a>
+      <a href="#phase4"><span class="dot" style="background:var(--p4)"></span>P4 Dataset</a>
+      <a href="#phase5"><span class="dot" style="background:var(--p5)"></span>P5 Pipelines</a>
+      <a href="#phase6"><span class="dot" style="background:var(--p6)"></span>P6 Judge</a>
+      <a href="#phase7"><span class="dot" style="background:var(--p7)"></span>P7 Run</a>
+      <a href="#phase8"><span class="dot" style="background:var(--p8)"></span>P8 Write-up</a>
+    </div>
+    <div class="legend">
+      <div class="item"><span class="swatch" style="background:var(--done-ring)"></span>Done</div>
+      <div class="item"><span class="swatch" style="background:var(--partial-ring)"></span>Partial</div>
+      <div class="item"><span class="swatch" style="background:var(--notbuilt-ring)"></span>Not built</div>
+      <div class="item"><span class="swatch" style="background:var(--notstarted-ring)"></span>Not started</div>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <section class="hero">
+    <h1>What's actually inside <code>project/</code>?</h1>
+    <p class="lead">
+      This dissertation compares three ways of finding answers inside real company filings —
+      searching by <em>meaning</em>, searching by <em>keyword</em>, and searching a <em>summary tree</em> —
+      then scores which one answers best. Below is every piece of the codebase that exists so far,
+      what it does in plain English, and exactly how far each phase has actually got.
+    </p>
+    <div class="stat-strip">
+      <div class="stat"><b>6</b><span>companies</span></div>
+      <div class="stat"><b>18</b><span>filings (3 yrs each)</span></div>
+      <div class="stat"><b>26,050</b><span>nodes in the database</span></div>
+      <div class="stat"><b>0 / 140</b><span>benchmark questions written so far</span></div>
+      <div class="stat"><b>9 / 18</b><span>summary trees built</span></div>
+      <div class="stat"><b>8</b><span>total project phases</span></div>
+    </div>
+    <div class="goldenrule">
+      <div class="ring">!</div>
+      <div>
+        <h3>The one rule that runs through everything: no AI grades its own homework</h3>
+        <p>
+          The AI that <em>writes</em> a question (Generator) is never the same model family as the AI that
+          <em>checks</em> it (Critic). The AI that <em>answers</em> benchmark questions (Answerer) is never the
+          same model family as the AI that later <em>grades</em> those answers (Judge). This "anti-self-grading"
+          rule is enforced in the model-routing configuration everywhere it applies, not just hoped for.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOUNDATION ================= -->
+  <section class="phase-section" id="foundation">
+    <div class="phase-head">
+      <div class="phase-num" style="background:var(--pf)">F</div>
+      <div class="phase-titlewrap">
+        <h2>Shared foundation <span class="status-pill status-done"><span class="dot"></span>built &amp; in use</span></h2>
+      </div>
+    </div>
+    <p class="phase-desc">
+      Four small files every other phase leans on. None of them are a "phase" of the dissertation themselves —
+      they're the plumbing that makes every other phase safe, consistent, and cheap to run.
+    </p>
+    <div class="cluster" data-hub-color="var(--pf)">
+      <div class="hub" style="background:var(--pf)">FOUNDATION</div>
+      <div class="bubble-grid">
+        <div class="bubble" style="border-left-color:var(--pf)"><span class="term">config.py</span><span class="def">The single source of truth for which AI model plays which role (Generator, Critic, Answerer, Judge, and the cheaper model used for the Phase 3 tree build), plus the project-wide "throttle" switch described below.</span></div>
+        <div class="bubble" style="border-left-color:var(--pf)"><span class="term">database_manager.py</span><span class="def">The only piece of code allowed to write raw database queries. Every other module goes through it instead of touching the database directly, so the five tables always stay in a consistent, predictable shape.</span></div>
+        <div class="bubble" style="border-left-color:var(--pf)"><span class="term">groq_client.py</span><span class="def">A shared wrapper around every single AI call this project makes. If the free AI service says "slow down", it waits and retries automatically, and it caps how many calls can be in flight at once — so no phase can accidentally burn through the free quota in one burst.</span></div>
+        <div class="bubble" style="border-left-color:var(--pf)"><span class="term">loop_template.py — LOCAL_TEST_THROTTLE</span><span class="def">A tiny safety switch every long-running script copies. When it's on, a script processes only 3 items instead of the full batch, so brand-new code is always proven safe on a tiny sample before it's ever let loose on a real, quota-costing full run.</span></div>
+        <div class="bubble" style="border-left-color:var(--pf)"><span class="term">benchmark.db</span><span class="def">The single database file holding all five tables: nodes (the filing content), queries / golden_queries / judge_validation (the three question sets), and results (the eventual 900 graded benchmark answers). Every phase's real output ends up here.</span></div>
+        <div class="bubble" style="border-left-color:var(--pf)"><span class="term">tests/</span><span class="def">A full automated test suite, one file per module, that checks the code's logic works correctly without spending any real AI quota — fake model replies stand in for the real AI almost everywhere. A handful of separate, deliberately real "live smoke tests" exist purely to prove the real API behaves the way the fake ones assume.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= PHASE 1 ================= -->
+  <section class="phase-section" id="phase1">
+    <div class="phase-head">
+      <div class="phase-num" style="background:var(--p1)">1</div>
+      <div class="phase-titlewrap"><h2>Planning <span class="status-pill status-done"><span class="dot"></span>done</span></h2></div>
+    </div>
+    <p class="phase-desc">
+      Before any code was written, the research design itself had to be decided: which three retrieval methods to
+      compare, what the 140 test questions should look like, what the database should contain, and which hard rules
+      the build must never break (like "never pay for always-on cloud infrastructure" and the anti-self-grading rule
+      above). This phase produced planning documents only — nothing in <code>project/</code> came directly from it,
+      but every later phase follows what it decided.
+    </p>
+    <div class="cluster">
+      <div class="hub" style="background:var(--p1)">PLANNING</div>
+      <div class="bubble-grid">
+        <div class="bubble" style="border-left-color:var(--p1)"><span class="term">Guardrails</span><span class="def">A binding list of hard constraints for the build — e.g. only free-tier/local infrastructure, fixed model routing per role, and mandatory resumability so a crash never re-spends AI quota.</span></div>
+        <div class="bubble" style="border-left-color:var(--p1)"><span class="term">Phase Plan</span><span class="def">The 8-phase build schedule this whole map is organised around — Planning through Ingestion, Tree-build, Dataset generation, Pipelines, Judge, Full run, and Write-up.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= PHASE 2 ================= -->
+  <section class="phase-section" id="phase2">
+    <div class="phase-head">
+      <div class="phase-num" style="background:var(--p2)">2</div>
+      <div class="phase-titlewrap"><h2>Ingestion <span class="status-pill status-done"><span class="dot"></span>done</span></h2></div>
+    </div>
+    <p class="phase-desc">
+      Turns 18 real SEC 10-K annual reports (6 companies, 3 fiscal years each) into small, labelled pieces of text
+      and tables sitting in the database, ready for anything built later to search or summarise. This runs once per
+      filing and is completely finished — verified directly against the live database: <strong>26,050 nodes</strong>
+      across all 18 filings, every one of the 6 companies represented.
+    </p>
+    <div class="status-line">Verified live: 26,050 nodes (23,733 text + 2,317 table) across AAPL, MSFT, TSLA, JPM, JNJ, WMT — all 3 years each.</div>
+    <div class="cluster">
+      <div class="hub" style="background:var(--p2)">INGESTION</div>
+      <div class="bubble-grid">
+        <div class="bubble" style="border-left-color:var(--p2)"><span class="term">fetch_filings.py</span><span class="def">Looks up each company's real filing on the SEC's own public EDGAR lookup system and downloads the raw HTML. It never guesses a web address — it always asks SEC's own service for the real one.</span></div>
+        <div class="bubble" style="border-left-color:var(--p2)"><span class="term">LlamaParse (outside service)</span><span class="def">Not part of this project's own code — a third-party service that turns the raw, messy HTML into clean, readable Markdown, specifically instructed never to split a financial table apart while doing so.</span></div>
+        <div class="bubble" style="border-left-color:var(--p2)"><span class="term">node_builder.py</span><span class="def">Chops the clean Markdown into "nodes" — small, self-contained pieces, one per paragraph or one per whole table (a table is never split across two nodes). Also remembers which section of the filing each node fell under.</span></div>
+        <div class="bubble" style="border-left-color:var(--p2)"><span class="term">node</span><span class="def">The smallest unit in the whole project — one paragraph, or one whole table. Every node has a unique node_id, remembers which filing it's from (document_id), whether it's "text" or "table" (node_type), and which section it sits under (parent_item_header).</span></div>
+        <div class="bubble" style="border-left-color:var(--p2)"><span class="term">node_id</span><span class="def">A unique label for one node, e.g. AAPL_2023_n0042 — the 42nd node found while processing Apple's 2023 filing.</span></div>
+        <div class="bubble" style="border-left-color:var(--p2)"><span class="term">document_id</span><span class="def">Which filing a node belongs to, written as TICKER_YEAR, e.g. MSFT_2024.</span></div>
+        <div class="bubble" style="border-left-color:var(--p2)"><span class="term">node_type</span><span class="def">Either "text" (ordinary prose) or "table" (a data table) — never anything else.</span></div>
+        <div class="bubble" style="border-left-color:var(--p2)"><span class="term">parent_item_header</span><span class="def">Which numbered section of the 10-K a node sits under, e.g. "Item 1A. Risk Factors" — lets later code group everything belonging to one topic together.</span></div>
+        <div class="bubble" style="border-left-color:var(--p2)"><span class="term">run_ingestion.py</span><span class="def">The conductor: runs fetch → parse → build-nodes → save-to-database for every filing on the list, skipping any filing already fully saved so a crash never re-downloads or re-pays for work already done.</span></div>
+        <div class="bubble" style="border-left-color:var(--p2)"><span class="term">parsing_audit.py</span><span class="def">Pulls a random sample of nodes so a human can eyeball whether parsing actually worked — tables intact, sections attributed correctly, nothing truncated. It can only present the evidence; only a human can confirm it looks right.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= PHASE 3 ================= -->
+  <section class="phase-section" id="phase3">
+    <div class="phase-head">
+      <div class="phase-num" style="background:var(--p3)">3</div>
+      <div class="phase-titlewrap"><h2>P3's summary-tree build <span class="status-pill status-partial"><span class="dot"></span>partial — 9 / 18 filings</span></h2></div>
+    </div>
+    <p class="phase-desc">
+      The "structural" pipeline (P3) won't search raw text — it searches a hierarchical summary of each filing,
+      like a table of contents that gets more detailed the deeper you go. This one-time step builds that summary
+      tree per filing using a cheap AI model, then saves the finished tree to disk so it's never rebuilt.
+    </p>
+    <div class="status-line">
+      Verified live: storage/summary_index/ contains 9 finished trees — AAPL, MSFT, TSLA (all 3 years each).
+      JPM, JNJ, WMT (9 filings) are blocked on Groq's free daily quota limit; the build stopped mid-run and hasn't
+      been resumed. A possible swap to a different model for this step is under discussion, not yet decided.
+    </div>
+    <div class="cluster">
+      <div class="hub" style="background:var(--p3)">P3 TREE BUILD</div>
+      <div class="bubble-grid">
+        <div class="bubble" style="border-left-color:var(--p3)"><span class="term">build_summary_index.py</span><span class="def">Reads all of one filing's nodes, hands them to llama-3.1-8b-instant (the cheapest model in the project's line-up), and asks it to write summaries at each level of a tree — several layers deep, each layer a summary of the layer below.</span></div>
+        <div class="bubble" style="border-left-color:var(--p3)"><span class="term">node_convert.py</span><span class="def">A small translation step: reshapes this project's own node records into exactly the object shape a third-party library expects, so the tree-builder can hand nodes over without that library needing to know anything about this project's database.</span></div>
+        <div class="bubble" style="border-left-color:var(--p3)"><span class="term">summary tree</span><span class="def">A hierarchical structure — the whole filing is summarised at the top, branching down into section summaries, branching down into the original text. Phase 5's P3 pipeline will later search this tree top-down instead of scanning raw text, which is what makes it "structural" rather than "semantic" or "statistical".</span></div>
+        <div class="bubble" style="border-left-color:var(--p3)"><span class="term">storage/summary_index/</span><span class="def">Where each filing's finished tree is permanently saved, one folder per filing — so it only ever needs to be built once, no matter how many benchmark questions later get asked against it.</span></div>
+        <div class="bubble" style="border-left-color:var(--p3)"><span class="term">Groq daily quota</span><span class="def">The free AI-hosting tier's limit on how many tokens can be processed in a day. Hitting it mid-build for JPM/JNJ/WMT is exactly why 9 of the 18 trees aren't built yet — not a bug, a quota wall.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= PHASE 4 ================= -->
+  <section class="phase-section" id="phase4">
+    <div class="phase-head">
+      <div class="phase-num" style="background:var(--p4)">4</div>
+      <div class="phase-titlewrap"><h2>Dataset generation <span class="status-pill status-partial"><span class="dot"></span>code built &amp; fixed — 0 / 140 questions generated</span></h2></div>
+    </div>
+    <p class="phase-desc">
+      The most recently worked-on part of the whole project. The goal: automatically write all 140 benchmark
+      questions by having two different AI models check each other's work, so questions and their "correct" answers
+      can be trusted without a human writing all 140 by hand. All of the code for this exists and has been through
+      several rounds of bug-fixing very recently — but the real generation run hasn't happened yet.
+    </p>
+    <div class="status-line">
+      Verified live: the queries, golden_queries and judge_validation tables all currently have <strong>zero rows</strong>
+      — 0/25 in every quadrant, across all three question sets. The machinery is ready; nothing has been generated yet.
+    </div>
+
+    <h3 style="margin:0 0 12px;font-size:1.02rem;">The three question sets — 140 questions total</h3>
+    <div class="cluster">
+      <div class="hub" style="background:var(--p4)">140 QUESTIONS</div>
+      <div class="bubble-grid">
+        <div class="bubble" style="border-left-color:var(--p4)"><span class="term">PQ — Pipeline Queries (100)</span><span class="def">The real test. Every one of these gets asked to all three retrieval pipelines once the benchmark actually runs, and the three answers get compared against each other.</span></div>
+        <div class="bubble" style="border-left-color:var(--p4)"><span class="term">GQ — Golden Queries (20)</span><span class="def">A teaching set. For each one, the project owner personally writes a note explaining why a good answer is good, plus a 1–10 score. The Judge AI reads these every time it grades something, so it learns the human's standard first. Pipelines never see these.</span></div>
+        <div class="bubble" style="border-left-color:var(--p4)"><span class="term">JEQ — Judge Evaluation Queries (20)</span><span class="def">An exam for the Judge itself. Run through the pipelines once, scored by a human by hand and by the Judge blind, then compared — the Judge must agree with the human at least 80% of the time before it's trusted on the real 900 results.</span></div>
+        <div class="bubble" style="border-left-color:var(--p4)"><span class="term">Quadrant (Q1–Q4)</span><span class="def">Every question is tagged with one of four categories, evenly split within each set (25/5/5 per quadrant): Q1 a plain fact stated directly in text; Q2 something needing two or more passages connected; Q3 a specific number pulled straight from a table; Q4 a calculation or inference using a table.</span></div>
+      </div>
+    </div>
+
+    <h3 style="margin:34px 0 12px;font-size:1.02rem;">How one question gets written and checked</h3>
+    <div class="cluster">
+      <div class="hub" style="background:var(--p4)">GENERATE →<br>CHECK</div>
+      <div class="bubble-grid">
+        <div class="bubble" style="border-left-color:var(--p4)"><span class="term">Generator (gpt-oss-120b)</span><span class="def">Reads one section of a filing and proposes a candidate question, what it believes the correct answer is, and exactly which node_ids back that answer up.</span></div>
+        <div class="bubble" style="border-left-color:var(--p4)"><span class="term">Critic (Qwen3.6-27B)</span><span class="def">Given ONLY the question — never the Generator's answer — independently searches the same filing itself with its own small search tool and works out its own answer and citations. Deliberately a different AI model family, so it can't just agree with a familiar "voice".</span></div>
+        <div class="bubble" style="border-left-color:var(--p4)"><span class="term">search_tool.py</span><span class="def">A tiny, dependency-free keyword search used only by the Critic to look through a filing's nodes for evidence — entirely separate from the real retrieval pipelines being benchmarked. It exists purely so the Critic can check itself.</span></div>
+        <div class="bubble wide" style="border-left-color:var(--p4)"><span class="term">cross_check.py — the 3-gate referee</span><span class="def">A plain, code-only check — not another AI call — that only accepts a candidate if all three hold between the Generator's answer and the Critic's independent one: (1) their cited nodes overlap at least partly; (2) every number in the Generator's answer also appears in the Critic's answer; (3) the two answer texts are similar enough in meaning, measured with a fast, free, local text-similarity model. All three must pass, or the candidate is thrown away.</span></div>
+        <div class="bubble" style="border-left-color:var(--p4)"><span class="term">retry-with-feedback</span><span class="def">Every AI call runs at temperature 0 ("always answer the same way"), so blindly re-asking after a rejection would just fail the same way again. Instead the specific rejection reason is fed back to the Generator, which is told to pick a genuinely different fact from the same section — up to 3 attempts per section.</span></div>
+        <div class="bubble" style="border-left-color:var(--p4)"><span class="term">section_grouper.py</span><span class="def">Gathers all nodes sharing one section header (e.g. everything under "Item 7") into a single chunk, so the Generator sees a whole topic at once. About 6% of nodes have no header at all (cover pages, tables of contents, signatures) and are simply excluded.</span></div>
+      </div>
+    </div>
+
+    <h3 style="margin:34px 0 12px;font-size:1.02rem;">Running the whole batch, fairly</h3>
+    <div class="cluster">
+      <div class="hub" style="background:var(--p4)">ORCHESTRATOR</div>
+      <div class="bubble-grid">
+        <div class="bubble wide" style="border-left-color:var(--p4)"><span class="term">run_dataset_generation.py</span><span class="def">The conductor for this whole phase. Works out which (question-set, quadrant) slots are still short of target, feeds it sections in a fair rotation across all six companies, sends each section through Generator → Critic → cross-check, retries with feedback if rejected, and writes a running progress log throughout. Safe to stop and restart at any point — it re-checks the database on startup and never repeats already-finished work.</span></div>
+        <div class="bubble" style="border-left-color:var(--p4)"><span class="term">company-balanced routing</span><span class="def">Sections are classified as mostly-prose (routed to Q1/Q2) or containing a table (routed to Q3/Q4), then handed out round-robin across all six companies — so, say, the table-question quadrants don't end up dominated by whichever company's filings happened to be processed first.</span></div>
+        <div class="bubble" style="border-left-color:var(--p4)"><span class="term">query_id numbering</span><span class="def">Each accepted question's ID number is worked out fresh from what's already saved in the database, not counted in-process — so if the run crashes and restarts, the next question picks up the correct next number instead of colliding with one already saved.</span></div>
+        <div class="bubble" style="border-left-color:var(--p4)"><span class="term">gq_label_export.py / gq_label_import.py</span><span class="def">The one deliberately manual step in this phase. Export writes the 20 golden queries to a plain text file with blank spaces for a human to fill in a score and explanation; import reads that filled-in file back into the database. The only place in the project where a human, not an AI, supplies grading ground truth.</span></div>
+      </div>
+    </div>
+
+    <h3 style="margin:34px 0 12px;font-size:1.02rem;">What's been fixed this week, and what's still open</h3>
+    <div class="cluster">
+      <div class="hub" style="background:var(--partial-ring)">RECENT<br>WORK</div>
+      <div class="bubble-grid">
+        <div class="bubble wide" style="border-left-color:var(--done-ring)"><span class="term">Fixed — one bad reply no longer crashes the run</span><span class="def">A single malformed or unexpected AI response used to bring down the entire multi-hour batch. Now a per-attempt failure is logged and treated as a rejected attempt, and the run moves on.</span></div>
+        <div class="bubble wide" style="border-left-color:var(--done-ring)"><span class="term">Fixed — content-aware, company-balanced routing</span><span class="def">Sections are now matched to the question type they can actually support (table content → table questions) and spread evenly across all 6 companies, instead of accidentally clustering by whichever filing came first.</span></div>
+        <div class="bubble wide" style="border-left-color:var(--done-ring)"><span class="term">Fixed — genuinely different retries</span><span class="def">Retries now carry forward what specifically went wrong, so a second attempt is a real second attempt rather than a guaranteed repeat of the same rejected answer.</span></div>
+        <div class="bubble wide" style="border-left-color:var(--done-ring)"><span class="term">Fixed — fairer 3-way agreement check</span><span class="def">The check that used to reject correct answers over trivial wording or an extra unrelated number now uses three complementary, deliberately non-strict gates instead of one overly strict one.</span></div>
+        <div class="bubble wide" style="border-left-color:var(--done-ring)"><span class="term">Fixed — live progress visibility</span><span class="def">The run used to print nothing until the very end of a multi-hour session. It now prints a line per attempt, live, plus a durable log file.</span></div>
+        <div class="bubble wide" style="border-left-color:var(--done-ring)"><span class="term">Fixed — proven against the real API</span><span class="def">A dedicated, opt-in live test now confirms the Critic's AI-to-AI "search, then answer" handshake genuinely works against the real service, not just against a faked stand-in.</span></div>
+        <div class="bubble wide" style="border-left-color:var(--partial-ring)"><span class="term">Still open — oversized sections</span><span class="def">A few filing sections run unusually long. Handing an entire oversized section to the Generator or Critic in one go risks the AI call failing outright. A fix — splitting only the oversized sections into smaller pieces at safe boundaries, carefully never separating a table from the paragraph that explains it — has been discussed as a design, but is not yet built into the code.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= PHASE 5 ================= -->
+  <section class="phase-section" id="phase5">
+    <div class="phase-head">
+      <div class="phase-num" style="background:var(--p5)">5</div>
+      <div class="phase-titlewrap"><h2>Retrieval pipelines &amp; Answerer <span class="status-pill status-notbuilt"><span class="dot"></span>not built yet</span></h2></div>
+    </div>
+    <p class="phase-desc">
+      This is where the actual experiment happens: three different ways of finding relevant material in a filing,
+      plus one shared "Answerer" AI that reads whatever each pipeline hands it and writes the actual answer.
+      None of this exists as working code yet — only an empty pipelines/ folder skeleton and the Phase 3 tree-building
+      code a future P3 pipeline will eventually read from.
+    </p>
+    <div class="status-line">
+      Design note filed for later, not yet implemented: a retry-queue approach for the loop that will drive
+      Phases 5 and 7, so a failed benchmark call can be revisited instead of silently skipped.
+    </div>
+    <div class="cluster">
+      <div class="hub" style="background:var(--p5)">3 PIPELINES<br>+ ANSWERER</div>
+      <div class="bubble-grid">
+        <div class="bubble" style="border-left-color:var(--p5)"><span class="term">P1 — semantic vector search</span><span class="def">Finds nodes whose meaning is closest to the question, using AI-generated embeddings and a local vector index. No cloud database — runs entirely on this machine.</span></div>
+        <div class="bubble" style="border-left-color:var(--p5)"><span class="term">P2 — statistical keyword search</span><span class="def">Finds nodes with the most matching keywords, using the classic BM25 statistical ranking formula. Deliberately kept pure statistics with no AI involved in retrieval, so it stays a genuinely different contrast to P1 and P3.</span></div>
+        <div class="bubble" style="border-left-color:var(--p5)"><span class="term">P3 — structural search</span><span class="def">Searches the hierarchical summary tree built back in Phase 3, top-down, using the tree's own structure to narrow in on the right section before finding the actual nodes.</span></div>
+        <div class="bubble" style="border-left-color:var(--p5)"><span class="term">Answerer (Llama 3.3 70B)</span><span class="def">The one AI model shared by all three pipelines at benchmark time. It never retrieves anything itself — it only reads whatever nodes its pipeline handed it and writes an answer, so any score difference reflects a difference in what got retrieved, not who's answering.</span></div>
+        <div class="bubble" style="border-left-color:var(--p5)"><span class="term">k_value (3, 5, 10)</span><span class="def">How many results each pipeline is allowed to retrieve for a given question. The benchmark tests all three settings, to see how each pipeline's performance changes with more or less room to work with.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= PHASE 6 ================= -->
+  <section class="phase-section" id="phase6">
+    <div class="phase-head">
+      <div class="phase-num" style="background:var(--p6)">6</div>
+      <div class="phase-titlewrap"><h2>Judge <span class="status-pill status-notbuilt"><span class="dot"></span>not built yet</span></h2></div>
+    </div>
+    <p class="phase-desc">
+      A separate AI (same model family as the Critic, but deliberately never the same model as the Answerer it
+      grades) that will read each pipeline's real answer next to the correct answer and score it. Before it's
+      trusted on the real 900 results, it has to pass an exam first. None of this is built yet.
+    </p>
+    <div class="cluster">
+      <div class="hub" style="background:var(--p6)">JUDGE</div>
+      <div class="bubble-grid">
+        <div class="bubble" style="border-left-color:var(--p6)"><span class="term">Judge (Qwen3.6-27B)</span><span class="def">Grades each pipeline's real answer against the known-correct answer, 1–10, once it exists and has passed its own exam below.</span></div>
+        <div class="bubble wide" style="border-left-color:var(--p6)"><span class="term">The 80% human-agreement gate</span><span class="def">The pass/fail bar the Judge must clear before it's allowed anywhere near the real benchmark: score the same 20 JEQ × 3 pipelines = 60 outputs a human already scored by hand, and agree with that human at least 80% of the time. This check runs before the expensive full run, specifically so a badly-calibrated Judge can't quietly poison all 900 results.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= PHASE 7 ================= -->
+  <section class="phase-section" id="phase7">
+    <div class="phase-head">
+      <div class="phase-num" style="background:var(--p7)">7</div>
+      <div class="phase-titlewrap"><h2>Full benchmark run <span class="status-pill status-notbuilt"><span class="dot"></span>not built yet</span></h2></div>
+    </div>
+    <p class="phase-desc">
+      Once Phases 5 and 6 exist, this phase actually runs the experiment: all 100 PQ questions, asked to each of
+      the 3 pipelines, at each of 3 k-values — 100 × 3 × 3 = 900 individual graded results. Every result is graded
+      once (no repeated sampling), and the whole run is resumable.
+    </p>
+    <div class="cluster">
+      <div class="hub" style="background:var(--p7)">~900<br>RESULTS</div>
+      <div class="bubble-grid">
+        <div class="bubble" style="border-left-color:var(--p7)"><span class="term">results table</span><span class="def">One row per (question, pipeline, k-value) combination — 900 rows once the full run finishes — holding what was retrieved, what the Answerer said, and what the Judge scored it.</span></div>
+        <div class="bubble" style="border-left-color:var(--p7)"><span class="term">Resumability</span><span class="def">Every result row is protected by a uniqueness rule on its (question, pipeline, k-value) combination — so re-running after a crash simply skips everything already saved instead of paying for it twice, matching the same crash-safe pattern used everywhere else in the project.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= PHASE 8 ================= -->
+  <section class="phase-section" id="phase8">
+    <div class="phase-head">
+      <div class="phase-num" style="background:var(--p8)">8</div>
+      <div class="phase-titlewrap"><h2>Final analysis &amp; write-up <span class="status-pill status-notstarted"><span class="dot"></span>not started</span></h2></div>
+    </div>
+    <p class="phase-desc">
+      Turning the 900 graded results into the dissertation's actual findings — which retrieval paradigm wins, on
+      which question types, and why. Nothing has started here; it depends on every phase before it being finished.
+    </p>
+    <div class="cluster">
+      <div class="hub" style="background:var(--p8)">WRITE-UP</div>
+      <div class="bubble-grid">
+        <div class="bubble wide" style="border-left-color:var(--p8)"><span class="term">Depends on everything above</span><span class="def">This phase reads the finished results table and turns it into charts and conclusions for the dissertation. It cannot meaningfully begin until Phases 4 through 7 have produced real, graded data to analyse.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    Generated from a direct read of the <code>project/</code> source and a live query of <code>benchmark.db</code> on 2026-07-28.
+    Scope: <code>project/</code> only — specs, monitor logs and docs live outside this map.
+  </footer>
+</div>
+
+<script>
+(function () {
+  function drawCluster(cluster) {
+    var svg = cluster.querySelector('svg.wires');
+    var hub = cluster.querySelector('.hub');
+    var bubbles = cluster.querySelectorAll('.bubble');
+    if (!svg || !hub || !bubbles.length) return;
+
+    var crect = cluster.getBoundingClientRect();
+    svg.setAttribute('viewBox', '0 0 ' + crect.width + ' ' + crect.height);
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+
+    var hrect = hub.getBoundingClientRect();
+    var hx = hrect.right - crect.left;
+    var hy = hrect.top - crect.top + hrect.height / 2;
+
+    var color = getComputedStyle(hub).backgroundColor;
+
+    bubbles.forEach(function (b) {
+      var brect = b.getBoundingClientRect();
+      var bx = brect.left - crect.left;
+      var by = brect.top - crect.top + Math.min(28, brect.height / 2);
+      var midx = hx + (bx - hx) * 0.5;
+
+      var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      var d = 'M ' + hx + ' ' + hy + ' C ' + midx + ' ' + hy + ', ' + midx + ' ' + by + ', ' + bx + ' ' + by;
+      path.setAttribute('d', d);
+      path.setAttribute('fill', 'none');
+      path.setAttribute('stroke', color);
+      path.setAttribute('stroke-width', '1.6');
+      path.setAttribute('stroke-opacity', '0.38');
+      path.setAttribute('stroke-linecap', 'round');
+      svg.appendChild(path);
+    });
+  }
+
+  function drawAll() {
+    document.querySelectorAll('.cluster').forEach(drawCluster);
+  }
+
+  var t;
+  function scheduleRedraw() {
+    clearTimeout(t);
+    t = setTimeout(drawAll, 120);
+  }
+
+  window.addEventListener('load', drawAll);
+  window.addEventListener('resize', scheduleRedraw);
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(drawAll);
+  }
+  setTimeout(drawAll, 60);
+})();
+</script>
