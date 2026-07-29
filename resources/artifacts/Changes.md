@@ -93,3 +93,24 @@ Simple running list of changes made to the project after the proposal was submit
   P1 vector-store embedding path (not yet built) should re-evaluate this
   same platform constraint when it's implemented, since `Architecture.md`
   still names `sentence-transformers` there too.
+- 2026-07-29: Added `tiktoken` as a new Phase 4 dependency, not listed in
+  `Architecture.md`'s Phase 4 package line ("`groq`, `rank_bm25`
+  (already introduced)"). Reason: fixed a real correctness gap (Doubt #8) --
+  the Generator receives an entire filing section's concatenated content in
+  one prompt, and a few real sections run large. The DB's existing
+  `nodes.token_count` column is a plain whitespace word count
+  (`len(stripped.split())` in `ingest/node_builder.py`), not a real
+  tokenizer count, so it can't be trusted to guard against exceeding the
+  Generator model's request limit. `tiktoken` gives an accurate local count
+  (no Groq call) to check section size before sending, and to drive
+  `chunk_section()`'s node-boundary splitting when a section exceeds
+  `_MAX_SECTION_TOKENS` (60,000, chosen with headroom under `gpt-oss-120b`'s
+  128K window). Live-verified the corpus's actual largest section is
+  ~29,478 tokens -- comfortably under both the model's real limit and the
+  new threshold, so this fix is precautionary today, not an active
+  blocker, but a real gap worth closing since corpus size may grow.
+  Pinned as a floor (`tiktoken>=0.12.0`), matching the project's dominant
+  dependency-pinning style. Operational note: `cl100k_base`'s encoding
+  table downloads over the network on first use (cached locally after) --
+  not an issue in this environment, but would need pre-warming or a
+  documented fallback in a fully offline/CI run.
