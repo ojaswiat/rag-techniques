@@ -214,11 +214,13 @@ async def get_golden_queries(db_path: str) -> list[dict]:
 
 async def update_golden_query_labels(db_path: str, query_id: str, human_score: int, human_reasoning: str) -> None:
     async with aiosqlite.connect(db_path) as conn:
-        await conn.execute(
+        cursor = await conn.execute(
             "UPDATE golden_queries SET human_score = ?, human_reasoning = ? WHERE query_id = ?",
             (human_score, human_reasoning, query_id),
         )
         await conn.commit()
+        if cursor.rowcount == 0:
+            raise ValueError(f"No golden_query found with query_id={query_id!r} -- check for a typo")
 
 
 def _dumps(items: list[str]) -> str:

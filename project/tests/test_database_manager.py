@@ -175,6 +175,52 @@ async def test_insert_golden_query_and_update_labels():
 
 
 @pytest.mark.asyncio
+async def test_update_golden_query_labels_raises_on_unknown_query_id():
+    await dbm.init_db(TEST_DB)
+    await dbm.insert_golden_query(TEST_DB, {
+        "query_id": "Q1_GQ_001",
+        "quadrant": "Q1_Direct_Text",
+        "query_text": "What is the total revenue?",
+        "ground_truth_answer": "$100 million",
+        "gt_citations": ["TEST_2025_n0001"],
+        "example_output": "$100 million",
+        "human_score": 1,
+        "human_reasoning": "PENDING_HUMAN_LABEL",
+        "document_id": "SEC_10K_TEST_2025",
+    })
+
+    with pytest.raises(ValueError, match="Q1_GQ_999"):
+        await dbm.update_golden_query_labels(TEST_DB, "Q1_GQ_999", 9, "typo'd id")
+
+    golden = await dbm.get_golden_queries(TEST_DB)
+    assert len(golden) == 1
+    assert golden[0]["human_score"] == 1
+    assert golden[0]["human_reasoning"] == "PENDING_HUMAN_LABEL"
+
+
+@pytest.mark.asyncio
+async def test_update_golden_query_labels_happy_path_no_raise():
+    await dbm.init_db(TEST_DB)
+    await dbm.insert_golden_query(TEST_DB, {
+        "query_id": "Q1_GQ_002",
+        "quadrant": "Q1_Direct_Text",
+        "query_text": "What is the total revenue?",
+        "ground_truth_answer": "$100 million",
+        "gt_citations": ["TEST_2025_n0001"],
+        "example_output": "$100 million",
+        "human_score": 1,
+        "human_reasoning": "PENDING_HUMAN_LABEL",
+        "document_id": "SEC_10K_TEST_2025",
+    })
+
+    await dbm.update_golden_query_labels(TEST_DB, "Q1_GQ_002", 7, "Solid citation match.")
+
+    golden = await dbm.get_golden_queries(TEST_DB)
+    assert golden[0]["human_score"] == 7
+    assert golden[0]["human_reasoning"] == "Solid citation match."
+
+
+@pytest.mark.asyncio
 async def test_insert_judge_validation():
     await dbm.init_db(TEST_DB)
     await dbm.insert_judge_validation(TEST_DB, {
