@@ -146,3 +146,73 @@ Simple running list of changes made to the project after the proposal was submit
   standing instruction not to merge/sync branches without being asked) --
   node data for all 18 filings was already present in `benchmark.db`
   regardless of git branch (it's gitignored, filesystem-level state).
+- 2026-07-29: Changed the GQ (golden query) hand-labeling scheme in
+  `golden_queries.human_score` from a 1-10 scale to **0-100**, and added
+  loud, non-silent validation: `gq_label_import.parse_label_markdown()` now
+  raises `ValueError` (naming the query_id and bad value) on a non-blank
+  score that fails `int()`, instead of silently skipping the entry as
+  before; `database_manager.update_golden_query_labels()` now raises
+  `ValueError` if `human_score` isn't an integer in 0-100 (this is the
+  single source of truth for the range check, matching where the schema's
+  own `CHECK (human_score BETWEEN 0 AND 100)` constraint lives). This
+  supersedes the original Doubt #10 finding ("no sanity check on the 1-10
+  score -- '99' would be silently accepted"). Also added a new nullable
+  schema column, `golden_queries.is_good INTEGER CHECK (is_good IS NULL OR
+  is_good IN (0, 1))`, so the researcher can mark 10 of the 20 GQ as "good"
+  exemplars and 10 as "bad" -- a genuinely new, human-filled dimension,
+  deliberately **not derived from `human_score`** (a low/high numeric score
+  and a "good/bad" exemplar-quality judgement are different questions).
+  Left nullable (no placeholder value, no `NOT NULL`) since it has no
+  legacy insert-time placeholder pattern to match, unlike `human_score`/
+  `human_reasoning` (which get `1`/`"PENDING_HUMAN_LABEL"` from
+  `run_dataset_generation.py`'s `_accept_query`, left unchanged -- still
+  valid on the new 0-100 range). `gq_label_export.py`'s markdown template
+  gained a `**Good Example (yes/no):**` line; `gq_label_import.py` parses
+  it (blank -> `None`, "yes" -> `True`/1, "no" -> `False`/0, anything else
+  non-blank -> `ValueError` naming the query_id, raised at parse time since
+  it's a closed-vocabulary check). `update_golden_query_labels()` gained an
+  `is_good: bool | None = None` parameter (default keeps all 3 existing
+  call sites working). Explicit scope decision: `results.human_score` and
+  `results.judge_score` (the Phase 6 JEQ human-vs-judge agreement gate,
+  still 1-10, a different concept -- grading pipeline *answers*, not GQ
+  *exemplars*) were deliberately left untouched, not conflated with this
+  change. Open question, not resolved here: `Guardrails.md` §4a's Judge
+  few-shot selection is purely quadrant-based (5 GQ per quadrant) and has
+  not been redesigned to use the new `is_good` good/bad dimension --
+  flagged in both `Architecture.md` and `Guardrails.md` for whoever builds
+  Phase 6. `golden_queries` had zero real rows at the time of this change
+  (verified live), so no data migration was needed. Updated:
+  `project/database_manager.py`, `project/dataset_generation/gq_label_export.py`,
+  `project/dataset_generation/gq_label_import.py`,
+  `project/tests/test_gq_labeling.py`, `project/tests/test_database_manager.py`,
+  `resources/specs/Architecture.md`, `resources/specs/Guardrails.md`.
+- 2026-07-29: Two real bugs caught by `/code-review` on the 0-100/`is_good`
+  change above, fixed before commit. (1) **Schema drift between code and
+  the live database.** `database_manager._SCHEMA` uses
+  `CREATE TABLE IF NOT EXISTS`, which never alters an already-existing
+  table -- confirmed live: this repo's actual `project/benchmark.db` still
+  had `golden_queries` under the *old* schema (`human_score BETWEEN 1 AND
+  10`, no `is_good` column), because the table already existed when the
+  schema source changed. The next real `gq_label_import.main()` run would
+  have hit `sqlite3.OperationalError: no such column: is_good`. Fixed by
+  adding `database_manager._migrate_golden_queries_schema()`, called from
+  `init_db()`: detects a missing `is_good` column via `PRAGMA table_info`,
+  and if the table is empty, drops and recreates it from the current
+  `_SCHEMA`; if it holds real rows, raises `RuntimeError` instead of
+  silently discarding them (SQLite can't `ALTER` an existing `CHECK`
+  constraint, so fixing one requires recreating the table -- this refuses
+  to do that blindly once real research data exists). Also ran this
+  migration against the actual live `benchmark.db` (0 rows, migrated
+  cleanly). (2) **Regex silently dropped entries missing the new field.**
+  `gq_label_import.py`'s `_ENTRY_RE` hard-required the new
+  `**Good Example (yes/no):**` line inside every entry; an entry from an
+  older-format `golden_queries_to_label.md` (or one hand-edited to drop
+  that line) simply failed to match at all, so `parse_label_markdown`
+  silently returned `[]` for it and `main()` printed a false
+  `"Imported 0 human labels"` success -- the exact silent-failure pattern
+  Doubt #9/#10 were meant to eliminate. Fixed by making that line optional
+  in the regex (`(?:...)?`), so a missing line now correctly yields
+  `is_good: None` instead of dropping the whole entry. Both fixes covered
+  by new regression tests (`test_init_db_migrates_stale_golden_queries_schema_when_empty`,
+  `test_init_db_refuses_to_migrate_stale_golden_queries_schema_with_real_rows`,
+  `test_parse_label_markdown_handles_entry_missing_good_example_line`).

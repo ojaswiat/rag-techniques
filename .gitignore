@@ -3,3 +3,4 @@
 monitor/scripts/__pycache__/
 .venv
 .superpowers/
+.DS_Store

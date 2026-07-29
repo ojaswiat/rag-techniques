@@ -72,6 +72,7 @@ You are prohibited from building a single static prompt containing all 20 GQ exe
 
 * Before scoring an output, `async_judge.py` must read the target query's quadrant and construct a prompt containing **exactly the 5 GQ exemplars matching that quadrant** (`WHERE quadrant = :current_quadrant` against `golden_queries`). The other 15 must be omitted.
 * This yields **four cacheable prompt prefixes** (one per quadrant: rubric + 5 exemplars). Cache them — cached tokens do not count toward Groq limits.
+* **Forward reference:** `golden_queries.is_good` (nullable boolean, researcher-assigned 10-good/10-bad split) now exists in schema but is not yet wired into this quadrant-based selection logic — it is a separate dimension for a future Judge exemplar-selection refinement, not yet designed.
 
 ### 4b. The judge-validation gate (hard prerequisite for the full run)
 The automated Judge must be proven against the human standard **before** it grades the 900-run benchmark.

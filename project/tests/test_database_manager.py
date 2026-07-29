@@ -45,6 +45,63 @@ async def test_wal_mode_enabled():
     assert mode.lower() == "wal"
 
 
+_OLD_GOLDEN_QUERIES_SCHEMA = """
+CREATE TABLE golden_queries (
+    query_id            TEXT PRIMARY KEY,
+    quadrant            TEXT NOT NULL,
+    query_text          TEXT NOT NULL,
+    ground_truth_answer TEXT NOT NULL,
+    gt_citations        TEXT NOT NULL,
+    example_output      TEXT NOT NULL,
+    human_score         INTEGER NOT NULL CHECK (human_score BETWEEN 1 AND 10),
+    human_reasoning     TEXT NOT NULL,
+    document_id         TEXT NOT NULL
+);
+"""
+
+
+@pytest.mark.asyncio
+async def test_init_db_migrates_stale_golden_queries_schema_when_empty():
+    import aiosqlite
+
+    async with aiosqlite.connect(TEST_DB) as conn:
+        await conn.executescript(_OLD_GOLDEN_QUERIES_SCHEMA)
+        await conn.commit()
+
+    await dbm.init_db(TEST_DB)
+
+    async with aiosqlite.connect(TEST_DB) as conn:
+        cursor = await conn.execute("PRAGMA table_info(golden_queries)")
+        columns = {row[1] for row in await cursor.fetchall()}
+    assert "is_good" in columns
+
+
+@pytest.mark.asyncio
+async def test_init_db_refuses_to_migrate_stale_golden_queries_schema_with_real_rows():
+    import aiosqlite
+
+    async with aiosqlite.connect(TEST_DB) as conn:
+        await conn.executescript(_OLD_GOLDEN_QUERIES_SCHEMA)
+        await conn.execute(
+            """INSERT INTO golden_queries
+               (query_id, quadrant, query_text, ground_truth_answer, gt_citations,
+                example_output, human_score, human_reasoning, document_id)
+               VALUES ('Q1_GQ_0001', 'Q1_Direct_Text', 'q', 'a', '[]', 'a', 8, 'r', 'AAPL_2023')""",
+        )
+        await conn.commit()
+
+    with pytest.raises(RuntimeError, match="1 real row"):
+        await dbm.init_db(TEST_DB)
+
+    async with aiosqlite.connect(TEST_DB) as conn:
+        cursor = await conn.execute("PRAGMA table_info(golden_queries)")
+        columns = {row[1] for row in await cursor.fetchall()}
+        cursor = await conn.execute("SELECT query_id FROM golden_queries")
+        rows = await cursor.fetchall()
+    assert "is_good" not in columns
+    assert rows == [("Q1_GQ_0001",)]
+
+
 @pytest.mark.asyncio
 async def test_insert_and_get_node():
     await dbm.init_db(TEST_DB)
@@ -218,6 +275,117 @@ async def test_update_golden_query_labels_happy_path_no_raise():
     golden = await dbm.get_golden_queries(TEST_DB)
     assert golden[0]["human_score"] == 7
     assert golden[0]["human_reasoning"] == "Solid citation match."
+
+
+@pytest.mark.asyncio
+async def test_update_golden_query_labels_rejects_score_above_100():
+    await dbm.init_db(TEST_DB)
+    await dbm.insert_golden_query(TEST_DB, {
+        "query_id": "Q1_GQ_003",
+        "quadrant": "Q1_Direct_Text",
+        "query_text": "What is the total revenue?",
+        "ground_truth_answer": "$100 million",
+        "gt_citations": ["TEST_2025_n0001"],
+        "example_output": "$100 million",
+        "human_score": 1,
+        "human_reasoning": "PENDING_HUMAN_LABEL",
+        "document_id": "SEC_10K_TEST_2025",
+    })
+
+    with pytest.raises(ValueError, match="150"):
+        await dbm.update_golden_query_labels(TEST_DB, "Q1_GQ_003", 150, "too high")
+
+    golden = await dbm.get_golden_queries(TEST_DB)
+    assert golden[0]["human_score"] == 1
+    assert golden[0]["human_reasoning"] == "PENDING_HUMAN_LABEL"
+
+
+@pytest.mark.asyncio
+async def test_update_golden_query_labels_rejects_negative_score():
+    await dbm.init_db(TEST_DB)
+    await dbm.insert_golden_query(TEST_DB, {
+        "query_id": "Q1_GQ_004",
+        "quadrant": "Q1_Direct_Text",
+        "query_text": "What is the total revenue?",
+        "ground_truth_answer": "$100 million",
+        "gt_citations": ["TEST_2025_n0001"],
+        "example_output": "$100 million",
+        "human_score": 1,
+        "human_reasoning": "PENDING_HUMAN_LABEL",
+        "document_id": "SEC_10K_TEST_2025",
+    })
+
+    with pytest.raises(ValueError, match="-1"):
+        await dbm.update_golden_query_labels(TEST_DB, "Q1_GQ_004", -1, "too low")
+
+    golden = await dbm.get_golden_queries(TEST_DB)
+    assert golden[0]["human_score"] == 1
+
+
+@pytest.mark.asyncio
+async def test_update_golden_query_labels_rejects_non_integer_score():
+    await dbm.init_db(TEST_DB)
+    await dbm.insert_golden_query(TEST_DB, {
+        "query_id": "Q1_GQ_005",
+        "quadrant": "Q1_Direct_Text",
+        "query_text": "What is the total revenue?",
+        "ground_truth_answer": "$100 million",
+        "gt_citations": ["TEST_2025_n0001"],
+        "example_output": "$100 million",
+        "human_score": 1,
+        "human_reasoning": "PENDING_HUMAN_LABEL",
+        "document_id": "SEC_10K_TEST_2025",
+    })
+
+    with pytest.raises(ValueError):
+        await dbm.update_golden_query_labels(TEST_DB, "Q1_GQ_005", 7.5, "non-integer")
+
+    golden = await dbm.get_golden_queries(TEST_DB)
+    assert golden[0]["human_score"] == 1
+
+
+@pytest.mark.asyncio
+async def test_update_golden_query_labels_rejects_invalid_is_good():
+    await dbm.init_db(TEST_DB)
+    await dbm.insert_golden_query(TEST_DB, {
+        "query_id": "Q1_GQ_006",
+        "quadrant": "Q1_Direct_Text",
+        "query_text": "What is the total revenue?",
+        "ground_truth_answer": "$100 million",
+        "gt_citations": ["TEST_2025_n0001"],
+        "example_output": "$100 million",
+        "human_score": 1,
+        "human_reasoning": "PENDING_HUMAN_LABEL",
+        "document_id": "SEC_10K_TEST_2025",
+    })
+
+    with pytest.raises(ValueError, match="maybe"):
+        await dbm.update_golden_query_labels(TEST_DB, "Q1_GQ_006", 50, "unsure", is_good="maybe")
+
+    golden = await dbm.get_golden_queries(TEST_DB)
+    assert golden[0]["human_score"] == 1
+
+
+@pytest.mark.asyncio
+async def test_update_golden_query_labels_persists_valid_is_good():
+    await dbm.init_db(TEST_DB)
+    await dbm.insert_golden_query(TEST_DB, {
+        "query_id": "Q1_GQ_007",
+        "quadrant": "Q1_Direct_Text",
+        "query_text": "What is the total revenue?",
+        "ground_truth_answer": "$100 million",
+        "gt_citations": ["TEST_2025_n0001"],
+        "example_output": "$100 million",
+        "human_score": 1,
+        "human_reasoning": "PENDING_HUMAN_LABEL",
+        "document_id": "SEC_10K_TEST_2025",
+    })
+
+    await dbm.update_golden_query_labels(TEST_DB, "Q1_GQ_007", 90, "great exemplar", is_good=True)
+
+    golden = await dbm.get_golden_queries(TEST_DB)
+    assert golden[0]["human_score"] == 90
+    assert golden[0]["is_good"] == 1
 
 
 @pytest.mark.asyncio
