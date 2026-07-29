@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Data Integrity Audit: Full Corpus (9/9) — rag-techniques Report</title>
+<style>
+  :root {
+    --bg: #faf9f7; --surface: #ffffff; --text: #101418; --muted: #5a6472;
+    --accent: #16181a; --accent-ink: #ffffff; --border: #d6d3cd; --hairline: #eae7e1;
+    --code-bg: #f3f1ec; --pass: #15803d; --warn: #b45309; --fail: #b91c1c;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0b0d10; --surface: #0f1216; --text: #e9e7e2; --muted: #9aa3ad;
+      --accent: #f5c518; --accent-ink: #111111; --border: #2c333b; --hairline: #1d2229;
+      --code-bg: #14181e; --pass: #4ade80; --warn: #fbbf24; --fail: #f87171;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { transition: none !important; } }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 16px; line-height: 1.6; }
+  code, pre, .mono { font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px 80px; }
+  a { color: var(--accent); text-decoration: none; font-weight: 500; }
+  a:hover { text-decoration: underline; }
+  a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .masthead { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--border); font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+  .masthead .brand { color: var(--accent); font-weight: 700; }
+  .masthead .mh-right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: flex-end; }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+  .branchchip { display: inline-flex; align-items: center; gap: 5px; max-width: 34ch; border: 1px solid var(--border); background: var(--surface); padding: 2px 8px; font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; font-size: 0.72rem; font-weight: 500; letter-spacing: 0; text-transform: none; color: var(--text); vertical-align: middle; }
+  .branchchip svg { width: 11px; height: 11px; flex: 0 0 auto; color: var(--accent); }
+  .branchchip .bname { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .back { display: inline-flex; align-items: center; gap: 6px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; }
+  .back svg { width: 13px; height: 13px; }
+  header.report { padding: 40px 0 20px; border-bottom: 3px solid var(--accent); }
+  header.report h1 { font-size: clamp(1.7rem, 4.5vw, 2.6rem); font-weight: 800; letter-spacing: -0.03em; line-height: 1.15; max-width: 26ch; }
+  header.report .subtitle { margin-top: 10px; color: var(--muted); font-size: 0.95rem; }
+  .meta-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+  .chip { border: 1px solid var(--border); padding: 4px 10px; font-size: 0.74rem; color: var(--muted); }
+  .chip b { color: var(--accent); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-right: 6px; font-size: 0.68rem; }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin: 24px 0 8px; }
+  .kpi { border: 1px solid var(--border); padding: 14px 16px; background: var(--surface); }
+  .kpi.pass { border-left: 3px solid var(--pass); } .kpi.warn { border-left: 3px solid var(--warn); } .kpi.fail { border-left: 3px solid var(--fail); }
+  .kpi .label { font-size: 0.66rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent); }
+  .kpi.warn .label { color: var(--warn); } .kpi.pass .label { color: var(--pass); } .kpi.fail .label { color: var(--fail); }
+  .kpi .value { margin-top: 4px; font-size: 1.45rem; font-weight: 750; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; word-break: break-word; }
+  .kpi .value.small { font-size: 1.0rem; }
+  section { margin-top: 34px; }
+  section h2 { font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.12em; color: var(--accent); border-bottom: 1px solid var(--hairline); padding-bottom: 8px; margin-bottom: 14px; }
+  section h3 { font-size: 0.85rem; font-weight: 800; margin: 18px 0 6px; }
+  section p, section li { font-size: 0.95rem; }
+  section ul, section ol { padding-left: 22px; margin-top: 8px; }
+  section li + li { margin-top: 6px; }
+  .table-scroll { overflow-x: auto; margin-top: 6px; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+  th { text-align: left; padding: 10px 14px; font-size: 0.66rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent); border-bottom: 2px solid var(--accent); }
+  td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--hairline); vertical-align: top; }
+  tbody tr:hover { background: var(--code-bg); }
+  pre { background: var(--code-bg); border: 1px solid var(--hairline); padding: 14px 16px; overflow-x: auto; font-size: 0.85rem; white-space: pre-wrap; }
+  .tag { display: inline-block; border: 1px solid currentColor; padding: 1px 8px; font-size: 0.66rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; font-family: "SF Mono", ui-monospace, Menlo, monospace; white-space: nowrap; }
+  .tag.pass { color: var(--pass); } .tag.warn { color: var(--warn); } .tag.fail { color: var(--fail); } .tag.info { color: var(--accent); }
+  .file { font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; font-size: 0.85rem; }
+  .callout { border: 1px solid var(--border); border-left: 3px solid var(--warn); background: var(--surface); padding: 14px 16px; margin-top: 10px; }
+  .callout.action { border-left-color: var(--accent); }
+  .callout.block { border-left-color: var(--fail); }
+  footer { margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; font-size: 0.78rem; color: var(--muted); }
+  @media print { :root { --bg: #ffffff; --text: #000000; --muted: #333333; } .masthead, footer { border-color: #999; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="masthead" id="top">
+    <a class="back" href="index.html" aria-label="Back to reports"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>Back</a>
+    <span><span class="brand">rag-techniques</span> · Monitor · Report</span>
+    <span class="mh-right">
+      <span class="branchchip" title="Branch: full-corpus-ingestion"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">full-corpus-ingestion</span></span>
+      <span class="mono">2026-07-26</span>
+    </span>
+  </div>
+
+  <header class="report">
+    <h1>Data Integrity Audit: Full Corpus (9/9 Filings)</h1>
+    <p class="subtitle">Read-only verification of storage files, TreeIndex structure, DB sanity, and Markdown table integrity now that all 9 filings have a P3 summary index built. No code changed by this audit.</p>
+    <div class="meta-chips">
+      <span class="chip"><b>Generated</b><span class="mono">2026-07-26</span></span>
+      <span class="chip"><b>Branch</b><span class="mono">full-corpus-ingestion</span></span>
+      <span class="chip"><b>Commit</b><span class="mono">557b784</span></span>
+      <span class="chip"><b>Status</b><span class="tag warn">1 finding, non-blocking</span></span>
+    </div>
+  </header>
+
+  <div class="kpis">
+    <div class="kpi pass"><div class="label">Storage files valid</div><div class="value">45 / 45</div></div>
+    <div class="kpi pass"><div class="label">Tree structure consistent</div><div class="value">9 / 9</div></div>
+    <div class="kpi pass"><div class="label">DB sanity</div><div class="value">8,543 nodes clean</div></div>
+    <div class="kpi warn"><div class="label">Table anomalies</div><div class="value">31 tables / 5 filings</div></div>
+  </div>
+
+  <section>
+    <h2>Summary</h2>
+    <p>Ran a 4-layer read-only integrity audit across the full 9-filing corpus (AAPL, MSFT, TSLA × 2023/2024/2025), covering both the SQLite <code>nodes</code> table and the persisted <code>storage/summary_index/</code> TreeIndex artifacts. Three of four layers came back fully clean: all 45 storage JSON files parse without truncation, every filing's TreeIndex tree structure is internally consistent (no orphan node references, no docstore nodes excluded from the tree), and the <code>nodes</code> table has zero empty-content rows, zero duplicate <code>node_id</code>s, and exactly the 9 expected filings. The fourth layer — Markdown table integrity in the LlamaParse output (<code>data/parsed/*.md</code>) — found a real, reproducible defect: 31 tables across 5 of 9 filings have a misaligned header caused by a units caption ("(in millions)"/"(in thousands)") merging into the table's first cell. This is a source-parsing quality issue, not corruption of the ingested nodes or the built index — the affected tables are all in AAPL-adjacent balance-sheet/cash-flow style statements in MSFT and TSLA.</p>
+  </section>
+
+  <section>
+    <h2>What Was Checked</h2>
+    <ol>
+      <li><strong>Storage file validity</strong> — every one of 9 filings × 5 files (<code>docstore.json</code>, <code>index_store.json</code>, <code>graph_store.json</code>, <code>default__vector_store.json</code>, <code>image__vector_store.json</code>) parsed as complete, non-truncated JSON.</li>
+      <li><strong>Tree structure consistency</strong> — for each filing, every node ID referenced by the TreeIndex's <code>all_nodes</code>/<code>root_nodes</code>/<code>node_id_to_children_ids</code> structures was cross-checked against the actual node IDs present in <code>docstore.json</code>. No orphan references (tree pointing at a node that doesn't exist), no uncovered nodes (docstore entries the tree never references).</li>
+      <li><strong>Markdown table integrity</strong> — scanned <code>data/parsed/*.md</code> (the direct LlamaParse output, which is where the ingestion prompt's "never split or truncate a table" guarantee actually applies) for tables missing a header separator row or with inconsistent column counts across rows. Deliberately <em>not</em> checked at the TreeIndex node-chunk level — chunk boundaries cutting through a table there is expected/benign, not a corruption signal, since chunking happens after parsing.</li>
+      <li><strong>DB sanity</strong> — <code>nodes</code> table checked for NULL/empty <code>content</code>, duplicate <code>node_id</code> values, and that <code>document_id</code> coverage is exactly the 9 expected filings (no missing, no unexpected extras).</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>Finding: Misaligned Table Headers in 5 Filings</h2>
+    <p>In <code>data/parsed/MSFT_2023.md</code>, <code>MSFT_2024.md</code>, <code>MSFT_2025.md</code>, <code>TSLA_2023.md</code>, and <code>TSLA_2025.md</code>, 31 tables total show the same defect. Example from <code>MSFT_2023.md</code> line 1580:</p>
+    <pre>(In millions)|                    |          |         |
+| ------------------ | -------- | --------- | -------- |
+| 2024                | Thereafter | Total   |          |
+| Long-term debt: (a) | Principal payments | $ 5,250 | $ 47,616 |</pre>
+    <p>The caption <code>(In millions)</code> has no leading <code>|</code>, so it merges into what should be a separate title line above the table. The separator row (<code>| --- | --- |...</code>) is then misidentified as the table's first data row, and the real header row ("2024 | Thereafter | Total") ends up one row too late. Column counts are also ragged — 5 pipe-delimited columns in the separator vs. 3-4 populated cells in most data rows. Confirmed the identical pattern in <code>TSLA_2023.md</code> line 1552 (a Consolidated Statements of Comprehensive Income table). <code>AAPL_2023/2024/2025.md</code> and <code>TSLA_2024.md</code> have zero flagged tables — clean.</p>
+    <p>This is a LlamaParse extraction artifact specific to tables immediately preceded by a units caption line, not a database or index corruption. It affects the source Markdown, and by extension whatever nodes were chunked from those specific table regions — but nothing was silently dropped; the data is present, just header-misaligned.</p>
+  </section>
+
+  <section>
+    <h2>Evidence</h2>
+    <pre>$ python3 audit_integrity_v2.py   (scratchpad, not committed)
+
+1. STORAGE FILE VALIDITY (45 files across 9 filings)
+Issues: 0
+
+2. TREE STRUCTURE CONSISTENCY
+AAPL_2023: OK  (docstore=795, tree_nodes=795, roots=8)
+AAPL_2024: OK  (docstore=760, tree_nodes=760, roots=7)
+AAPL_2025: OK  (docstore=758, tree_nodes=758, roots=7)
+MSFT_2023: OK  (docstore=1228, tree_nodes=1228, roots=2)
+MSFT_2024: OK  (docstore=1373, tree_nodes=1373, roots=2)
+MSFT_2025: OK  (docstore=1141, tree_nodes=1141, roots=2)
+TSLA_2023: OK  (docstore=1135, tree_nodes=1135, roots=2)
+TSLA_2024: OK  (docstore=1144, tree_nodes=1144, roots=2)
+TSLA_2025: OK  (docstore=1171, tree_nodes=1171, roots=2)
+
+3. MARKDOWN TABLE INTEGRITY (data/parsed/*.md)
+AAPL_2023: OK
+AAPL_2024: OK
+AAPL_2025: OK
+MSFT_2023: 9 FLAGS
+MSFT_2024: 6 FLAGS
+MSFT_2025: 12 FLAGS
+TSLA_2023: 2 FLAGS
+TSLA_2024: OK
+TSLA_2025: 2 FLAGS
+
+4. DB SANITY
+total_nodes: 8543
+per_filing_counts: {AAPL_2023: 715, AAPL_2024: 684, AAPL_2025: 682,
+                     MSFT_2023: 1103, MSFT_2024: 1234, MSFT_2025: 1025,
+                     TSLA_2023: 1020, TSLA_2024: 1028, TSLA_2025: 1052}
+missing_filings: []
+extra_filings: []
+empty_content_rows: 0
+duplicate_node_ids: 0</pre>
+  </section>
+
+  <section>
+    <h2>Files Touched</h2>
+    <div class="table-scroll"><table>
+      <thead><tr><th>File</th><th>Change</th></tr></thead>
+      <tbody>
+        <tr><td class="file">monitor/reports/2026-07-26-data-integrity-audit-full-corpus.html</td><td>This report (new)</td></tr>
+        <tr><td class="file">monitor/reports/manifest.json</td><td>Entry prepended</td></tr>
+        <tr><td class="file">scratchpad/audit_integrity_v2.py</td><td>Audit script — scratchpad only, not part of the repo</td></tr>
+      </tbody>
+    </table></div>
+    <p style="margin-top:10px; color:var(--muted); font-size:0.85rem;">No files under <code>project/</code> were modified. This was a read-only audit as explicitly requested.</p>
+  </section>
+
+  <section>
+    <h2>Risks</h2>
+    <ul>
+      <li>The 31 misaligned tables sit inside nodes that P1 (vector) and P2 (BM25) will retrieve and P3 (structural) has already indexed. A retrieval hit on one of these specific nodes will hand the LLM a slightly garbled table (right numbers, wrong header alignment) rather than a cleanly labeled one — worth keeping in mind if a judge/critic ever flags an answer as "numerically right but mislabeled" for a contractual-obligations or comprehensive-income query against MSFT or TSLA.</li>
+      <li>Root cause is upstream in LlamaParse's handling of caption-prefixed tables, not in this project's own parsing/chunking code — no local bug to fix, only a data-quality caveat to carry forward.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Follow-ups (not done, no code changed per instruction)</h2>
+    <ul>
+      <li>If this ever needs fixing: a small preprocessing pass on <code>data/parsed/*.md</code> could detect the caption-merged-into-table pattern (line matching <code>^\(in (millions|thousands|billions)\)\|</code>) and split the caption onto its own line before the table starts. Scoped to <code>ingest/parse_filing.py</code>'s output, not the parser itself.</li>
+      <li>Not urgent for Phase 4 (dataset generation) — the underlying numbers are intact, only header labeling is affected, and only in 31 of ~8,543 nodes' worth of content.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Next Steps</h2>
+    <ul>
+      <li>No action required to proceed with Phase 4 — this was a verification pass, not a blocker.</li>
+      <li>If/when the table-header fix above is wanted, that's a small, separate, well-scoped task — say the word.</li>
+    </ul>
+  </section>
+
+  <footer><span>Generated by the monitor workflow.</span><span><a href="index.html">← All reports</a> · <a href="#top">↑ Back to Top</a></span></footer>
+
+</div>
+</body>
+</html>
