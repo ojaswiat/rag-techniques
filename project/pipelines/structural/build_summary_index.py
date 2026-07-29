@@ -55,6 +55,7 @@ async def build_index_for_document(document_id: str) -> dict:
             "an empty TreeIndex, which would create a permanent false-positive "
             "cache hit in storage/summary_index/."
         )
+    print(f"Started: {document_id} ({len(nodes)} nodes)", flush=True)
     llama_nodes = nodes_to_llama_nodes(nodes)
 
     token_counter = TokenCountingHandler()
@@ -73,6 +74,7 @@ async def build_index_for_document(document_id: str) -> dict:
         shutil.rmtree(temp_dir)
     index.storage_context.persist(persist_dir=str(temp_dir))
     os.rename(temp_dir, _final_dir(document_id))
+    print(f"Finished: {document_id} ({wall_clock_sec:.1f}s)", flush=True)
 
     return {
         "document_id": document_id,
