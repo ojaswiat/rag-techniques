@@ -12,7 +12,7 @@ This is a methodology-chapter-appropriate level of design detail (an M.Sc. disse
 
 ## 0. Decisions Carried Over From the Scoping Discussion
 
-1. **Corpus: ~6–9 filings (2–3 companies × 2–3 fiscal years)**, not one document. The fixed counts from `Project_Idea.md` (140 total queries, 100/20/20 split, 900 benchmark runs) are unchanged — only where queries are sourced from changes.
+1. **Corpus: 18 filings (6 companies × 3 fiscal years)**, not one document. Expanded from the original ~6–9 filing / 2–3 company scope (AAPL, MSFT, TSLA) to add JPM, JNJ, and WMT — covering financial services, healthcare, and retail alongside the original tech/auto set (see `resources/artifacts/Changes.md`, `corpus-expansion-3-companies` branch). The fixed counts from `Project_Idea.md` (140 total queries, 100/20/20 split, 900 benchmark runs) are unchanged — only where queries are sourced from changes.
 2. **Retrieval scope: per-document, not cross-corpus.** Every pipeline retrieves only within the one filing (`document_id`) a query is about. This is *not* the metadata pre-filter `Guardrails.md` §3 bans — that ban is about narrowing to a target *section* using answer-derived information; narrowing to the correct *filing* is a property of the query itself (every query already carries `document_id`), applied identically to all three pipelines.
 3. **P1 vector store: ChromaDB** (local, embedded) — the third option `Guardrails.md` §1 leaves open.
 
@@ -252,11 +252,13 @@ CREATE INDEX idx_results_query_id   ON results(query_id);
 CREATE INDEX idx_results_pipeline_k ON results(pipeline, k_value);
 ```
 
-Row volume: `nodes` ≈ a few thousand (6–9 filings); `queries` = 100; `golden_queries` = 20; `judge_validation` = 20; `results` = 900 (PQ, full benchmark) + 60 (JEQ, Phase-6 gate) = **960 rows**.
+Row volume: `nodes` = 26,050 (18 filings, confirmed live 2026-07-29); `queries` = 100; `golden_queries` = 20; `judge_validation` = 20; `results` = 900 (PQ, full benchmark) + 60 (JEQ, Phase-6 gate) = **960 rows**.
 
 ### 3.3 Example Rows
 
-Illustrative corpus: **AAPL, MSFT, TSLA** (3 companies) × **FY2023, FY2024, FY2025** (3 fiscal years) = 9 filings — within the agreed 2–3×2–3 range.
+Real corpus (expanded from the original illustrative 9-filing example):
+**AAPL, MSFT, TSLA, JPM, JNJ, WMT** (6 companies) × **FY2023, FY2024, FY2025**
+(3 fiscal years) = 18 filings.
 
 **`nodes`**
 
@@ -459,7 +461,7 @@ async_generator.py        search_tool.py          async_critic.py       cross_ch
 
 | Module | Responsibility |
 |---|---|
-| `data/filings_manifest.json` | `{document_id, ticker, fiscal_year, source_url}` for each of the ~9 filings. |
+| `data/filings_manifest.json` | `{document_id, ticker, fiscal_year, source_url}` for each of the 18 filings. |
 | `ingest/fetch_filings.py` | Downloads each raw filing; caches to `data/raw/{document_id}.html`. |
 | `ingest/parse_filing.py` | `LlamaParse` (Cost-effective tier, markdown, atomic-table instructions) per filing; caches to `data/parsed/{document_id}.md`. |
 | `ingest/node_builder.py` | Markdown → `TextNode`s; assigns `node_id` (`{ticker}_{fiscal_year}_n{NNNN}`), `document_id`, `parent_item_header`, `node_type`, `source_page_num`; never bisects a table block. |
@@ -476,7 +478,7 @@ async_generator.py        search_tool.py          async_critic.py       cross_ch
 | Module | Responsibility |
 |---|---|
 | `pipelines/structural/build_summary_index.py` | Per `document_id`, builds a `SummaryIndex` over that document's nodes using `llama-3.1-8b-instant`; persists to `storage/summary_index/{document_id}/`; directory-existence check is the cache test. |
-| `logs/index_build_costs.json` | One row per filing: wall-clock + token cost (Pillar 3 metric). Flat-file is acceptable here — ~9 rows, no crash-resume requirement, unlike `results`. |
+| `logs/index_build_costs.json` | One row per filing: wall-clock + token cost (Pillar 3 metric). Flat-file is acceptable here — 18 rows, no crash-resume requirement, unlike `results`. |
 
 **Packages:** `llama-index-core`, `llama-index-llms-groq`.
 
@@ -488,7 +490,7 @@ async_generator.py        search_tool.py          async_critic.py       cross_ch
 
 | Module | Responsibility |
 |---|---|
-| `dataset_gen/async_generator.py` | Generator (`openai/gpt-oss-120b`) reads one `(document_id, section)` chunk at a time; accumulates 35/quadrant across all ~9 filings. |
+| `dataset_gen/async_generator.py` | Generator (`openai/gpt-oss-120b`) reads one `(document_id, section)` chunk at a time; accumulates 35/quadrant across all 18 filings. |
 | `dataset_gen/search_tool.py` | Critic's independent search tool — fresh `rank_bm25` instance per document (§5, self-contained). |
 | `dataset_gen/async_critic.py` | Critic (`Qwen3.6-27B`), blind to the Generator's answer/citations. |
 | `dataset_gen/cross_check.py` | Deterministic node-ID + value comparison → Auto-Verify or discard. |
@@ -687,7 +689,7 @@ No new packages were needed for the §4 LLD additions (citation parsing, numeric
 ## 11. Open Items / Recommendations
 
 1. **Regenerate `schemas/db_schema_example.jsonc`** from §3.2/§3.3 above — it still reflects the old 2-pipeline/600-row/12-JEQ design.
-2. **Exact filing list** — §6 Phase 2's manifest needs the actual 2–3 tickers and 2–3 fiscal years before `data/filings_manifest.json` can be filled in. AAPL/MSFT/TSLA × FY2023–2025 is used above only as an illustrative example.
+2. ~~**Exact filing list**~~ — **resolved**: corpus expanded to 18 filings, `AAPL, MSFT, TSLA, JPM, JNJ, WMT × FY2023–2025`, confirmed in `data/filings_manifest.json`.
 3. ~~`Guardrails.md` §6's wording is stale against §1 issue #1's fix~~ — **resolved**: `Guardrails.md` §6 has been reworded so its "mandatory schema" and `judge_validation` bullets now match this design exactly (`judge_validation` holds question fields only; the 60 gate outputs and their `human_score`/`judge_score` land on `results` tagged `source_set='JEQ'`).
 4. **"Context mass held constant across pipelines" (`Project_Idea.md` §10, principle 1) is not mechanically enforced anywhere** — K is standardized as *node count*, not *token count*, and node sizes vary (a table node can be much longer than a text node), so two pipelines at the same K can still pass different token volumes to the answerer. Nothing in any spec doc specifies a token-budget truncation step to force exact equality. The recommendation here is to treat "same K" as the operational definition of "standardized context volume" and document the resulting token-volume variance as an accepted approximation (consistent with the project's existing "statistical honesty" framing elsewhere) rather than adding a truncation mechanism that no spec doc currently calls for. Flagged for the researcher to confirm or override.
 5. **Per-filing query allocation isn't forced even** — Phase 4 accumulates 35/quadrant across the corpus, not a fixed number per filing. Left open deliberately, per the original v1 note.

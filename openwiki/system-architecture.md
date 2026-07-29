@@ -131,7 +131,7 @@ Ten weeks total, with active build work (Phases 1–6) wrapping by end of Week 7
 | Phase | Weeks | What gets built | Key modules |
 |---|---|---|---|
 | **1 — Infrastructure** ✅ built | 1 | SQLite state layer, resilient Groq wrapper, throttle scaffolding | `project/config.py`, `project/database_manager.py`, `project/groq_client.py`, `project/loop_template.py` |
-| **2 — Ingestion & parsing** ✅ built | 1–3 | Filings → clean, metadata-rich nodes (3 of 9 filings ingested so far, 2081 nodes) | `project/ingest/fetch_filings.py`, `parse_filing.py`, `node_builder.py`, `parsing_audit.py`, `run_ingestion.py` |
+| **2 — Ingestion & parsing** ✅ built | 1–3 | Filings → clean, metadata-rich nodes (all 18 filings ingested, 26,050 nodes) | `project/ingest/fetch_filings.py`, `parse_filing.py`, `node_builder.py`, `parsing_audit.py`, `run_ingestion.py` |
 | **3 — P3 summary index** | 3 | One-time LLM-built summary tree per filing, cached | `pipelines/structural/build_summary_index.py` |
 | **4 — Dataset generation** | 4–5 | 140 verified queries, split into three disjoint sets, GQ hand-labelled | `dataset_gen/async_generator.py`, `async_critic.py`, `cross_check.py`, `split_and_label.py` |
 | **5 — Pipelines** | 5–6 | P1, P2, P3 plus the shared answerer and the executor | `pipelines/*`, `loop_executor.py` |
