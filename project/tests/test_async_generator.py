@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from dataset_generation.async_generator import generate_query
+from project.llm_client import LLMFactory
 
 
 def _fake_response(payload: dict):
@@ -28,10 +29,16 @@ async def test_generate_query_parses_generator_response():
         "gt_citations": ["n1"],
     }
 
-    with patch(
-        "dataset_generation.async_generator.groq_client.call_groq",
-        new=AsyncMock(return_value=_fake_response(payload)),
-    ) as mock_call:
+    captured = {}
+
+    async def mock_create(*args, **kwargs):
+        captured.update(kwargs)
+        return _fake_response(payload)
+
+    mock_client = AsyncMock()
+    mock_client.chat.completions.create = mock_create
+
+    with patch.object(LLMFactory, "get_client_for_stage", return_value=mock_client) as mock_get:
         result = await generate_query(section, "Q1_Direct_Text")
 
     assert result["query_text"] == "What was total revenue?"
@@ -39,9 +46,12 @@ async def test_generate_query_parses_generator_response():
     assert result["gt_citations"] == ["n1"]
     assert result["quadrant"] == "Q1_Direct_Text"
     assert result["document_id"] == "SEC_10K_TEST_2025"
-    mock_call.assert_awaited_once()
-    _, kwargs = mock_call.call_args
-    assert kwargs["model"] == "openai/gpt-oss-120b"
+    mock_get.assert_called_once_with("generator")
+    assert captured["model"] == "openai/gpt-oss-120b"
+    assert len(captured["messages"]) == 2
+    assert captured["messages"][0]["role"] == "system"
+    assert captured["messages"][1]["role"] == "user"
+    assert captured["temperature"] == 0.0
 
 
 @pytest.mark.asyncio
@@ -59,14 +69,19 @@ async def test_generate_query_first_attempt_has_no_feedback_in_prompt():
         "gt_citations": ["n1"],
     }
 
-    with patch(
-        "dataset_generation.async_generator.groq_client.call_groq",
-        new=AsyncMock(return_value=_fake_response(payload)),
-    ) as mock_call:
+    captured = {}
+
+    async def mock_create(*args, **kwargs):
+        captured.update(kwargs)
+        return _fake_response(payload)
+
+    mock_client = AsyncMock()
+    mock_client.chat.completions.create = mock_create
+
+    with patch.object(LLMFactory, "get_client_for_stage", return_value=mock_client):
         await generate_query(section, "Q1_Direct_Text")
 
-    _, kwargs = mock_call.call_args
-    user_message = kwargs["messages"][1]["content"]
+    user_message = captured["messages"][1]["content"]
     assert "previous attempt" not in user_message.lower()
 
 
@@ -89,13 +104,18 @@ async def test_generate_query_retry_includes_previous_attempt_feedback_in_prompt
         "which does not match the proposed ground_truth_answer '$100 million'"
     )
 
-    with patch(
-        "dataset_generation.async_generator.groq_client.call_groq",
-        new=AsyncMock(return_value=_fake_response(payload)),
-    ) as mock_call:
+    captured = {}
+
+    async def mock_create(*args, **kwargs):
+        captured.update(kwargs)
+        return _fake_response(payload)
+
+    mock_client = AsyncMock()
+    mock_client.chat.completions.create = mock_create
+
+    with patch.object(LLMFactory, "get_client_for_stage", return_value=mock_client):
         await generate_query(section, "Q1_Direct_Text", previous_attempt_feedback=feedback)
 
-    _, kwargs = mock_call.call_args
-    user_message = kwargs["messages"][1]["content"]
+    user_message = captured["messages"][1]["content"]
     assert feedback in user_message
     assert "different" in user_message.lower()

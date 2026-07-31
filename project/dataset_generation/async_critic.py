@@ -8,7 +8,7 @@ must search the filing itself before answering.
 import json
 
 import config
-import groq_client
+from project.llm_client import LLMFactory
 from dataset_generation.search_tool import SEARCH_TOOL_SCHEMA, search_filing_nodes
 
 _MAX_TOOL_ROUNDS = 5
@@ -17,8 +17,8 @@ _SYSTEM_PROMPT = (
     "You are a financial-filing fact-checker. You will be given a question about "
     "a SEC 10-K filing. You do not know the answer yet. Use the search_filing tool "
     "to find the relevant passages, then respond with ONLY a JSON object (no "
-    'markdown fences, no commentary): {"cited_node_ids": ["node_id", ...], '
-    '"computed_answer": "..."}. Cite only node_ids you actually found via search_filing.'
+    "markdown fences, no commentary): {\"cited_node_ids\": [\"node_id\", ...], "
+    "\"computed_answer\": \"...\"}. Cite only node_ids you actually found via search_filing."
 )
 
 
@@ -29,7 +29,7 @@ async def critique_query(
     answer as {"cited_node_ids": [...], "computed_answer": "..."}.
 
     If return_messages is True, the returned dict additionally carries a
-    "messages" key holding the full Groq message history for the run
+    "messages" key holding the full message history for the run
     (system/user/assistant/tool messages, including any tool-call and
     tool-result turns) -- useful for tests/diagnostics that need to assert
     directly on tool-call behaviour rather than inferring it from the final
@@ -40,10 +40,14 @@ async def critique_query(
         {"role": "user", "content": query_text},
     ]
 
+    # Get client for critic stage
+    critic_client = LLMFactory.get_client_for_stage("critic")
+
     for _ in range(_MAX_TOOL_ROUNDS):
-        response = await groq_client.call_groq(
-            model=config.MODEL_ROUTING["critic"],
+        response = await critic_client.chat.completions.create(
+            model=config.MODEL_ROUTING["critic"]["model"],
             messages=messages,
+            temperature=0.0,
             tools=[SEARCH_TOOL_SCHEMA],
         )
         message = response.choices[0].message
