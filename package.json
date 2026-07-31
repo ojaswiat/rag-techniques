@@ -1,0 +1,26 @@
+{
+  "name": "rag-bench-10k",
+  "version": "1.0.0",
+  "description": "Project to benchmark 3 RAG Pipelines.",
+  "homepage": "https://github.com/ojaswiat/rag-techniques#readme",
+  "bugs": {
+    "url": "https://github.com/ojaswiat/rag-techniques/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ojaswiat/rag-techniques.git"
+  },
+  "license": "MIT",
+  "author": "Ojaswi Athghara",
+  "type": "commonjs",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "claude-mem": "^13.12.4"
+  }
+}
