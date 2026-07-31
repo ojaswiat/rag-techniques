@@ -36,7 +36,8 @@ async def test_groq_client_retries_on_429_then_succeeds():
             )
         return success_result
 
-    with patch("groq.AsyncGroq") as mock_ctor:
+    # Patch the class where it is used in this module
+    with patch("project.groq_client.AsyncGroq") as mock_ctor:
         mock_client = AsyncMock()
         mock_client.chat.completions.create = AsyncMock(side_effect=flaky_create)
         mock_ctor.return_value = mock_client
@@ -53,7 +54,7 @@ async def test_groq_client_retries_on_429_then_succeeds():
 
 @pytest.mark.asyncio
 async def test_groq_client_respects_semaphore_bound():
-    # Force creation of a client to initialise the module‑level _semaphore
+    # Force creation of a client to initialise the module-level _semaphore
     _ = get_groq_client("dummy")
     assert _semaphore._value == 5
 
@@ -67,7 +68,7 @@ async def test_groq_client_passes_tools_through_when_given():
         captured.update(kwargs)
         return success_result
 
-    with patch("groq.AsyncGroq") as mock_ctor:
+    with patch("project.groq_client.AsyncGroq") as mock_ctor:
         mock_client = AsyncMock()
         mock_client.chat.completions.create = AsyncMock(side_effect=capture_create)
         mock_ctor.return_value = mock_client
@@ -92,7 +93,7 @@ async def test_groq_client_omits_tools_when_not_given():
         captured.update(kwargs)
         return success_result
 
-    with patch("groq.AsyncGroq") as mock_ctor:
+    with patch("project.groq_client.AsyncGroq") as mock_ctor:
         mock_client = AsyncMock()
         mock_client.chat.completions.create = AsyncMock(side_effect=capture_create)
         mock_ctor.return_value = mock_client
@@ -110,11 +111,11 @@ async def test_groq_client_omits_tools_when_not_given():
 async def test_call_groq_backward_compatibility():
     """Ensure the module‑level call_groq still works (used by legacy code)."""
     success_result = _FakeResult()
-    count = {"n": 0}
+    call_count = {"n": 0}
 
     async def flaky_create(*args, **kwargs):
-        count["n"] += 1
-        if count["n"] < 3:
+        call_count["n"] += 1
+        if call_count["n"] < 3:
             raise APIStatusError(
                 message="rate limited",
                 response=_FakeResponse(),
@@ -122,12 +123,12 @@ async def test_call_groq_backward_compatibility():
             )
         return success_result
 
-    with patch("project.groq_client._client.chat.completions.create", new_callable=AsyncMock) as mock_create:
-        mock_create.side_effect = flaky_create
+    with patch("project.groq_client._client") as mock_client:
+        mock_client.chat.completions.create = AsyncMock(side_effect=flaky_create)
         result = await call_groq(
             model="llama-3.1-8b-instant",
             messages=[{"role": "user", "content": "hi"}],
         )
 
     assert result.choices == success_result.choices
-    assert count["n"] == 3
+    assert call_count["n"] == 3

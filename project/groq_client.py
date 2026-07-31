@@ -1,6 +1,8 @@
 """Groq client provider.
 
 Returns a ready-to-use AsyncGroq instance with retry and semaphore applied.
+Also provides a backward‑compatible module‑level ``call_groq`` coroutine that
+mimics the original groq_client interface.
 """
 
 from __future__ import annotations
@@ -9,26 +11,10 @@ import asyncio
 from typing import Any
 
 from . import config
+from ._llm_utils import _is_rate_limit_error, _retry_decorator
 from groq import APIStatusError, AsyncGroq
-from tenacity import (
-    retry,
-    retry_if_exception,
-    stop_after_attempt,
-    wait_random_exponential,
-)
 
 logger = __import__('logging').getLogger(__name__)
-
-def _is_rate_limit_error(exc: BaseException) -> bool:
-    return isinstance(exc, APIStatusError) and exc.response.status_code == 429
-
-def _retry_decorator():
-    return retry(
-        retry=retry_if_exception(_isRateLimitError),
-        wait=wait_random_exponential(multiplier=1, max=60),
-        stop=stop_after_attempt(6),
-        reraise=True,
-    )
 
 def get_groq_client(model: str) -> AsyncGroq:
     """Return an AsyncGroq client configured with retries and concurrency limit."""
@@ -46,13 +32,15 @@ def get_groq_client(model: str) -> AsyncGroq:
             return await original_create(**kwargs)
 
     _client.chat.completions.create = wrapped_create  # type: ignore[assignment]
+    # Attach the semaphore so external code can access it (used by tests)
+    _client._semaphore = _semaphore  # type: ignore[attr-defined]
     return _client
 
 
 # Backward‑compatible shim for existing test suite
 # Create a default client (model ignored) for the shim
 _shim_client = get_groq_client("placeholder-model")  # model not used by shim
-_client = _shim_client  # raw AsyncGroq instance with wrapped create
+_client = _shim_client  # raw AsyncGroq instance with wrapped create and _semaphore
 _semaphore = _shim_client._semaphore  # type: ignore[attr-defined]
 
 @_retry_decorator()

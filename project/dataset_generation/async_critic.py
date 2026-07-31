@@ -7,9 +7,9 @@ must search the filing itself before answering.
 """
 import json
 
-import config
+from project import config
 from project.llm_client import LLMFactory
-from dataset_generation.search_tool import SEARCH_TOOL_SCHEMA, search_filing_nodes
+from .search_tool import SEARCH_TOOL_SCHEMA, search_filing_nodes
 
 _MAX_TOOL_ROUNDS = 5
 

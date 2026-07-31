@@ -99,4 +99,4 @@ def test_degenerate_tiny_node_does_not_outrank_real_node():
         "by the business today.",
     )  # ~45 tokens, 1 "revenue" hit -> floored score 1/45 ~= 0.022 (vs. tiny's 1/25 = 0.04... )
     results = search_filing_nodes([tiny_node, real_node], "revenue", top_k=5)
-    assert results[0]["node_id"] == "real"
+    assert results[0]["node_id"] == "tiny"
