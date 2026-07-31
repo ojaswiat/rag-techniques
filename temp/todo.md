@@ -33,6 +33,11 @@ Minor (nice-to-have, not urgent):
 ## Daily Cap Limit
 Qwen for building summary tree is hitting daily cap of groq without even generating a summary. Need to change it.
 
+## Final Run
+1. Create a script called main.py to run all the 3 pipelines in parallel (ignore if already done).
+2. The script should return all the metrics, numbers and information in an understandable manner (tables, data, stats, etc) in the artifacts/results.md file.
+3. Using this information and ui-ux-skill-pro-max create a standalone HTML file with suitable graph and charts to compare the 3 pipelines in different metrics.
+
 ## Research
 **In a fresh session**
 Use /superpowers:brainstorming and /monitor (especially the search) skills to

@@ -5,8 +5,8 @@ model family from the Critic (Task 6), per the anti-self-grading invariant.
 """
 import json
 
+from project.llm_client import LLMFactory
 import config
-import groq_client
 
 _QUADRANT_GUIDANCE = {
     "Q1_Direct_Text": "Ask a direct fact-retrieval question answerable from a single explicit statement in continuous prose.",
@@ -48,12 +48,16 @@ async def generate_query(
             "above, phrased so its citation and answer are unambiguous."
         )
 
-    response = await groq_client.call_groq(
-        model=config.MODEL_ROUTING["generator"],
+    # Get client for the generator stage
+    client = LLMFactory.get_client_for_stage("generator")
+
+    response = await client.chat.completions.create(
+        model=config.MODEL_ROUTING["generator"]["model"],
         messages=[
             {"role": "system", "content": _SYSTEM_PROMPT},
             {"role": "user", "content": user_content},
         ],
+        temperature=0.0,
     )
 
     payload = json.loads(response.choices[0].message.content)
