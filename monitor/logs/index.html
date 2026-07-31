@@ -105,8 +105,8 @@
   <div class="masthead" id="top">
     <span><span class="brand">rag-techniques</span> · Monitor · Logs</span>
     <span class="mh-right">
-      <span class="branchchip" title="Branch: dev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">dev</span></span>
-      <span class="mono">2026-07-27 01:40</span>
+      <span class="branchchip" title="Branch: phase4-dataset-generation"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">phase4-dataset-generation</span></span>
+      <span class="mono">2026-07-29 09:29</span>
     </span>
   </div>
 
@@ -117,12 +117,12 @@
   </header>
 
   <div class="kpis">
-    <div class="kpi"><div class="label">Current branch</div><div class="value small mono">dev</div></div>
-    <div class="kpi"><div class="label">Total ops</div><div class="value">36</div></div>
-    <div class="kpi pass"><div class="label">Success</div><div class="value">33</div></div>
+    <div class="kpi"><div class="label">Current branch</div><div class="value small mono">phase4-dataset-generation</div></div>
+    <div class="kpi"><div class="label">Total ops</div><div class="value">47</div></div>
+    <div class="kpi pass"><div class="label">Success</div><div class="value">44</div></div>
     <div class="kpi warn"><div class="label">Partial</div><div class="value">3</div></div>
     <div class="kpi fail"><div class="label">Failure</div><div class="value">0</div></div>
-    <div class="kpi"><div class="label">Last activity</div><div class="value small mono">2026-07-27 01:40:46,422</div></div>
+    <div class="kpi"><div class="label">Last activity</div><div class="value small mono">2026-07-29 09:29:58,161</div></div>
   </div>
 
   <fieldset class="filter" aria-label="Filter by status">
@@ -136,6 +136,180 @@
   </fieldset>
 
   <div class="log">
+  <article class="logcard success">
+    <div class="row">
+      <time>2026-07-29 09:29:58,161</time>
+      <span class="op">phase4-doubt8-fix</span>
+      <span class="toolchip">Agent</span>
+      <span class="branchchip" title="Branch: phase4-dataset-generation"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">phase4-dataset-generation</span></span>
+      <span class="spacer"></span>
+      <span class="tag pass">SUCCESS</span>
+    </div>
+    <p class="summary">Fixed Doubt #8: tiktoken-based real token counting, chunk_section() splits oversized sections at node boundaries in run_dataset_generation.py, with table-context boundary rule (never split text-intro away from following table) and oversized-single-node logging</p>
+    <div class="files"><span class="file">dataset_generation/run_dataset_generation.py</span><span class="file">tests/test_run_dataset_generation.py</span><span class="file">pyproject.toml</span></div>
+    <details>
+      <summary>Details</summary>
+      <p>128/128 tests passing + 1 correctly-skipped live test (up from 124+1). Reviewed clean, no Critical findings. Table-boundary rule verified correct by hand-trace against multiple node-sequence scenarios. One Important non-blocking finding logged as deferred: tiktoken cl100k_base downloads merge-rank table over network on first use, undocumented in code -- fails clearly if offline, just not flagged in advance. Corpus&#x27;s actual max section size (~29,478 tokens) is well under the 60,000 threshold chosen, so this is precautionary, not currently active. Commits 33537bf, 91cc8d0.</p>
+    </details>
+  </article>
+  <article class="logcard success">
+    <div class="row">
+      <time>2026-07-28 20:28:57,101</time>
+      <span class="op">phase4-doubt7-improvement</span>
+      <span class="toolchip">Agent</span>
+      <span class="branchchip" title="Branch: phase4-dataset-generation"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">phase4-dataset-generation</span></span>
+      <span class="spacer"></span>
+      <span class="tag pass">SUCCESS</span>
+    </div>
+    <p class="summary">Added optional return_messages param to critique_query for direct tool-call proof in live smoke test, per prior review&#x27;s Minor suggestion</p>
+    <div class="files"><span class="file">dataset_generation/async_critic.py</span><span class="file">tests/test_async_critic.py</span><span class="file">tests/test_async_critic_live_smoke.py</span></div>
+    <details>
+      <summary>Details</summary>
+      <p>124/124 tests passing + 1 correctly-skipped live test (up from 122+1). Reviewed clean, no Critical/Important findings. Backward compatibility verified: messages key genuinely absent (not null) when flag off. Two Minor non-blocking notes: theoretical JSON key-collision edge case, live test now has two bundled assertions. Commit 3ab05c5.</p>
+    </details>
+  </article>
+  <article class="logcard success">
+    <div class="row">
+      <time>2026-07-28 20:15:37,458</time>
+      <span class="op">phase4-doubt7-fix</span>
+      <span class="toolchip">Agent</span>
+      <span class="branchchip" title="Branch: phase4-dataset-generation"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">phase4-dataset-generation</span></span>
+      <span class="spacer"></span>
+      <span class="tag pass">SUCCESS</span>
+    </div>
+    <p class="summary">Fixed Doubt #7: added live-gated (skipped by default) smoke test proving Critic tool-calling round trip works against real Groq API -- confirmed 1 search round + correct citation of a synthetic filing-specific node id, proving real tool invocation not a lucky guess</p>
+    <div class="files"><span class="file">tests/test_async_critic_live_smoke.py</span><span class="file">pyproject.toml</span></div>
+    <details>
+      <summary>Details</summary>
+      <p>122/122 pytest passing + 1 live test correctly skipped by default. Live run confirmed real success: search_filing tool called, correct answer with correct citation returned in 2 rounds. Reviewed clean, no Critical/Important findings. One Minor non-blocking suggestion: expose critique_query()&#x27;s message history for more direct tool-invocation assertions in future. Commit a958a0d.</p>
+    </details>
+  </article>
+  <article class="logcard success">
+    <div class="row">
+      <time>2026-07-28 19:38:05,439</time>
+      <span class="op">phase4-doubt6-fix</span>
+      <span class="toolchip">Agent</span>
+      <span class="branchchip" title="Branch: phase4-dataset-generation"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">phase4-dataset-generation</span></span>
+      <span class="spacer"></span>
+      <span class="tag pass">SUCCESS</span>
+    </div>
+    <p class="summary">Fixed Doubt #6: stdlib logging progress commentary per attempt (console + logs/dataset_generation_progress.log), running count against 140 total</p>
+    <div class="files"><span class="file">dataset_generation/run_dataset_generation.py</span><span class="file">tests/test_run_dataset_generation.py</span></div>
+    <details>
+      <summary>Details</summary>
+      <p>122/122 tests passing (118 baseline + 4 new). Reviewed clean, no Critical/Important findings, no real file-write leaks confirmed. One unrelated pre-existing Minor noted: a different existing test leaks to the real dataset_generation_summary.json path, not introduced by this fix, flagged for future follow-up. Commit 06b58d0.</p>
+    </details>
+  </article>
+  <article class="logcard success">
+    <div class="row">
+      <time>2026-07-28 19:15:19,055</time>
+      <span class="op">phase4-doubt4-fix</span>
+      <span class="toolchip">Agent</span>
+      <span class="branchchip" title="Branch: phase4-dataset-generation"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">phase4-dataset-generation</span></span>
+      <span class="spacer"></span>
+      <span class="tag pass">SUCCESS</span>
+    </div>
+    <p class="summary">Fixed Doubt #4: three-gate cross-check (citation overlap + numeric subset match + new embedding similarity gate via fastembed/bge-small-en-v1.5), replacing the too-strict exact-count numeric match</p>
+    <div class="files"><span class="file">dataset_generation/cross_check.py</span><span class="file">tests/test_cross_check.py</span><span class="file">pyproject.toml</span><span class="file">uv.lock</span><span class="file">../resources/artifacts/Changes.md</span></div>
+    <details>
+      <summary>Details</summary>
+      <p>118/118 tests passing (110 baseline + 8 new). Reviewed clean, no Critical/Important findings -- reviewer independently reproduced embedding scores and confirmed AND-logic/determinism/threshold placement. One Minor: onnxruntime==1.23.2 exact-pin inconsistent with rest of pyproject.toml&#x27;s floor-pin style. fastembed substitution for sentence-transformers documented in Changes.md (torch has no macOS x86_64+py3.13 wheel). Commit 2ec972f.</p>
+    </details>
+  </article>
+  <article class="logcard success">
+    <div class="row">
+      <time>2026-07-28 19:07:41,566</time>
+      <span class="op">phase4-doubt3-fix</span>
+      <span class="toolchip">Agent</span>
+      <span class="branchchip" title="Branch: phase4-dataset-generation"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">phase4-dataset-generation</span></span>
+      <span class="spacer"></span>
+      <span class="tag pass">SUCCESS</span>
+    </div>
+    <p class="summary">Fixed Doubt #3: Generator retries now receive specific rejection/exception feedback via new diagnose_rejection() and generate_query()&#x27;s previous_attempt_feedback param, instead of identical temperature=0 repeats</p>
+    <div class="files"><span class="file">project/dataset_generation/cross_check.py</span><span class="file">project/dataset_generation/async_generator.py</span><span class="file">project/dataset_generation/run_dataset_generation.py</span></div>
+    <details>
+      <summary>Details</summary>
+      <p>110/110 tests passing (104 baseline + 6 new). Reviewed clean, no Critical findings. One Important finding logged as deferred, not a blocker: broad TypeError catch (from Doubt #1) can mask a real code bug as an LLM failure -- pre-existing risk, not introduced by this fix. Commit c0509bf.</p>
+    </details>
+  </article>
+  <article class="logcard success">
+    <div class="row">
+      <time>2026-07-28 15:36:46,216</time>
+      <span class="op">phase4-doubt2-fix</span>
+      <span class="toolchip">Agent</span>
+      <span class="branchchip" title="Branch: phase4-dataset-generation"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">phase4-dataset-generation</span></span>
+      <span class="spacer"></span>
+      <span class="tag pass">SUCCESS</span>
+    </div>
+    <p class="summary">Fixed Doubt #2: content-aware section classification (node_type) routes tables to Q3/Q4, text to Q1/Q2; round-robin company interleaving; capped pool cycling; end-of-run underfill summary</p>
+    <div class="files"><span class="file">project/dataset_generation/run_dataset_generation.py</span><span class="file">project/tests/test_run_dataset_generation.py</span></div>
+    <details>
+      <summary>Details</summary>
+      <p>104/104 tests passing (94 baseline + 10 new). Reviewed clean, no Critical/Important findings. section_grouper.py confirmed untouched, its tests unmodified. 3 Minor/informational notes: redundant per-section dict rebuild (negligible), no explicit empty-pool test (traced safe), pool cycling reprocesses from index 0 each cycle (intentional, interacts with Doubt #3&#x27;s retry-quota concern). Commit 1c6986d.</p>
+    </details>
+  </article>
+  <article class="logcard success">
+    <div class="row">
+      <time>2026-07-28 15:18:46,273</time>
+      <span class="op">phase4-doubt1-review-gap-fix</span>
+      <span class="toolchip">Agent</span>
+      <span class="branchchip" title="Branch: phase4-dataset-generation"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">phase4-dataset-generation</span></span>
+      <span class="spacer"></span>
+      <span class="tag pass">SUCCESS</span>
+    </div>
+    <p class="summary">Code review found real gap in Doubt #1 fix: TypeError/AttributeError from null gt_citations/computed_answer still crashed the whole run. Fixed by extending _ATTEMPT_EXCEPTIONS</p>
+    <div class="files"><span class="file">project/dataset_generation/run_dataset_generation.py</span><span class="file">project/tests/test_run_dataset_generation.py</span></div>
+    <details>
+      <summary>Details</summary>
+      <p>94/94 tests passing. Verified via TDD: new tests failed with exact reported tracebacks pre-fix, pass post-fix. Commit 125d7ff.</p>
+    </details>
+  </article>
+  <article class="logcard success">
+    <div class="row">
+      <time>2026-07-28 15:12:33,981</time>
+      <span class="op">phase4-doubt1-fix</span>
+      <span class="toolchip">Agent</span>
+      <span class="branchchip" title="Branch: phase4-dataset-generation"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">phase4-dataset-generation</span></span>
+      <span class="spacer"></span>
+      <span class="tag pass">SUCCESS</span>
+    </div>
+    <p class="summary">Fixed Doubt #1: per-attempt exception handling in dataset-generation orchestrator, catches Critic RuntimeError/JSON errors/APIStatusError, logs failure, continues instead of crashing</p>
+    <div class="files"><span class="file">project/dataset_generation/run_dataset_generation.py</span><span class="file">project/tests/test_run_dataset_generation.py</span></div>
+    <details>
+      <summary>Details</summary>
+      <p>92/92 tests passing (89 baseline + 3 new). Reviewed clean, 3 Minor findings deferred (stale 429 comment, no rejection-parity test, non-atomic log write inherited from existing precedent). Commit dd211da.</p>
+    </details>
+  </article>
+  <article class="logcard success">
+    <div class="row">
+      <time>2026-07-28 10:24:50,788</time>
+      <span class="op">phase4-final-review-fix-decision</span>
+      <span class="toolchip">AskUserQuestion</span>
+      <span class="branchchip" title="Branch: phase4-dataset-generation"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">phase4-dataset-generation</span></span>
+      <span class="spacer"></span>
+      <span class="tag pass">SUCCESS</span>
+    </div>
+    <p class="summary">Decided: content-aware + stratified quadrant routing to fix Critical finding #2 from Phase 4 final review (query-type/issuer confound)</p>
+    <details>
+      <summary>Details</summary>
+      <p>Final whole-branch review of Phase 4 found the plan&#x27;s own next_target() fill-order design confounds query quadrant with filing issuer (Q1~AAPL, Q2~AAPL/MSFT, Q3~MSFT, Q4~TSLA) -- undermines the P1/P2/P3 comparison a published benchmark needs. Chose content-aware + stratified routing over simple round-robin or accepting the confound as documented limitation: classify each section as table/text via node_type lookup (computed in orchestrator, section_grouper.py stays untouched), build two round-robin-interleaved pools across all 9 filings upfront (table pool feeds Q3/Q4, text pool feeds Q1/Q2), cycle pools with a safety cap instead of one-shot exhaustion (folds in Important #5 &#x27;no second pass&#x27;), and print an end-of-run underfill summary (folds in Important #6 &#x27;no logging&#x27;). Framed as standard stratified-sampling practice matching published RAG/QA benchmark methodology (FinQA, TAT-QA precedent).</p>
+    </details>
+  </article>
+  <article class="logcard success">
+    <div class="row">
+      <time>2026-07-28 05:24:52,086</time>
+      <span class="op">phase4-plan-validation</span>
+      <span class="toolchip">Bash</span>
+      <span class="branchchip" title="Branch: phase4-dataset-generation"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">phase4-dataset-generation</span></span>
+      <span class="spacer"></span>
+      <span class="tag pass">SUCCESS</span>
+    </div>
+    <p class="summary">Validated Phase 4 implementation plan before execution; found and fixed one real gap (missing multi-entry Markdown parsing test in Task 8)</p>
+    <details>
+      <summary>Details</summary>
+      <p>Pre-execution review of docs/superpowers/plans/2026-07-26-phase4-dataset-generation-plan.md. Traced the gq_label_import.py regex by hand to confirm the lazy quantifier correctly scopes to one entry at a time across multiple GQ entries, but the plan only had single-entry test coverage for that logic. Added a two-entry test (test_parse_label_markdown_handles_multiple_entries_without_bleeding) to Task 8 before dispatching any implementer subagents. Rest of plan (schema names, groq_client/config interfaces, task type consistency) re-verified clean.</p>
+    </details>
+  </article>
   <article class="logcard success">
     <div class="row">
       <time>2026-07-27 01:40:46,422</time>
@@ -720,7 +894,7 @@
   </article>
   </div>
 
-  <footer><span>Rendered from monitor/logs/operations.log · 36 entries.</span><span><a href="../index.html">← Dashboard</a> · <a href="#top">↑ Back to Top</a></span></footer>
+  <footer><span>Rendered from monitor/logs/operations.log · 47 entries.</span><span><a href="../index.html">← Dashboard</a> · <a href="#top">↑ Back to Top</a></span></footer>
 
 </div>
 </body>

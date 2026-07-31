@@ -43,3 +43,40 @@ async def test_call_groq_retries_on_429_then_succeeds():
 @pytest.mark.asyncio
 async def test_call_groq_respects_semaphore_bound():
     assert groq_client._semaphore._value == 5
+
+
+@pytest.mark.asyncio
+async def test_call_groq_passes_tools_through_when_given():
+    success_result = {"choices": [{"message": {"content": "ok"}}]}
+    captured_kwargs = {}
+
+    async def capture_create(**kwargs):
+        captured_kwargs.update(kwargs)
+        return success_result
+
+    with patch.object(groq_client, "_client") as mock_client:
+        mock_client.chat.completions.create = AsyncMock(side_effect=capture_create)
+        await groq_client.call_groq(
+            model="llama-3.1-8b-instant",
+            messages=[{"role": "user", "content": "hi"}],
+            tools=[{"type": "function", "function": {"name": "search_filing"}}],
+        )
+
+    assert "tools" in captured_kwargs
+    assert captured_kwargs["tools"][0]["function"]["name"] == "search_filing"
+
+
+@pytest.mark.asyncio
+async def test_call_groq_omits_tools_when_not_given():
+    success_result = {"choices": [{"message": {"content": "ok"}}]}
+    captured_kwargs = {}
+
+    async def capture_create(**kwargs):
+        captured_kwargs.update(kwargs)
+        return success_result
+
+    with patch.object(groq_client, "_client") as mock_client:
+        mock_client.chat.completions.create = AsyncMock(side_effect=capture_create)
+        await groq_client.call_groq(model="llama-3.1-8b-instant", messages=[{"role": "user", "content": "hi"}])
+
+    assert "tools" not in captured_kwargs

@@ -1,3 +1,56 @@
+2026-07-29 09:29:58,161 INFO [phase4-doubt8-fix] (Agent) Fixed Doubt #8: tiktoken-based real token counting, chunk_section() splits oversized sections at node boundaries in run_dataset_generation.py, with table-context boundary rule (never split text-intro away from following table) and oversized-single-node logging -- success
+branch:  phase4-dataset-generation
+files:   dataset_generation/run_dataset_generation.py, tests/test_run_dataset_generation.py, pyproject.toml
+details: 128/128 tests passing + 1 correctly-skipped live test (up from 124+1). Reviewed clean, no Critical findings. Table-boundary rule verified correct by hand-trace against multiple node-sequence scenarios. One Important non-blocking finding logged as deferred: tiktoken cl100k_base downloads merge-rank table over network on first use, undocumented in code -- fails clearly if offline, just not flagged in advance. Corpus's actual max section size (~29,478 tokens) is well under the 60,000 threshold chosen, so this is precautionary, not currently active. Commits 33537bf, 91cc8d0.
+================================================================================
+2026-07-28 20:28:57,101 INFO [phase4-doubt7-improvement] (Agent) Added optional return_messages param to critique_query for direct tool-call proof in live smoke test, per prior review's Minor suggestion -- success
+branch:  phase4-dataset-generation
+files:   dataset_generation/async_critic.py, tests/test_async_critic.py, tests/test_async_critic_live_smoke.py
+details: 124/124 tests passing + 1 correctly-skipped live test (up from 122+1). Reviewed clean, no Critical/Important findings. Backward compatibility verified: messages key genuinely absent (not null) when flag off. Two Minor non-blocking notes: theoretical JSON key-collision edge case, live test now has two bundled assertions. Commit 3ab05c5.
+================================================================================
+2026-07-28 20:15:37,458 INFO [phase4-doubt7-fix] (Agent) Fixed Doubt #7: added live-gated (skipped by default) smoke test proving Critic tool-calling round trip works against real Groq API -- confirmed 1 search round + correct citation of a synthetic filing-specific node id, proving real tool invocation not a lucky guess -- success
+branch:  phase4-dataset-generation
+files:   tests/test_async_critic_live_smoke.py, pyproject.toml
+details: 122/122 pytest passing + 1 live test correctly skipped by default. Live run confirmed real success: search_filing tool called, correct answer with correct citation returned in 2 rounds. Reviewed clean, no Critical/Important findings. One Minor non-blocking suggestion: expose critique_query()'s message history for more direct tool-invocation assertions in future. Commit a958a0d.
+================================================================================
+2026-07-28 19:38:05,439 INFO [phase4-doubt6-fix] (Agent) Fixed Doubt #6: stdlib logging progress commentary per attempt (console + logs/dataset_generation_progress.log), running count against 140 total -- success
+branch:  phase4-dataset-generation
+files:   dataset_generation/run_dataset_generation.py, tests/test_run_dataset_generation.py
+details: 122/122 tests passing (118 baseline + 4 new). Reviewed clean, no Critical/Important findings, no real file-write leaks confirmed. One unrelated pre-existing Minor noted: a different existing test leaks to the real dataset_generation_summary.json path, not introduced by this fix, flagged for future follow-up. Commit 06b58d0.
+================================================================================
+2026-07-28 19:15:19,055 INFO [phase4-doubt4-fix] (Agent) Fixed Doubt #4: three-gate cross-check (citation overlap + numeric subset match + new embedding similarity gate via fastembed/bge-small-en-v1.5), replacing the too-strict exact-count numeric match -- success
+branch:  phase4-dataset-generation
+files:   dataset_generation/cross_check.py, tests/test_cross_check.py, pyproject.toml, uv.lock, ../resources/artifacts/Changes.md
+details: 118/118 tests passing (110 baseline + 8 new). Reviewed clean, no Critical/Important findings -- reviewer independently reproduced embedding scores and confirmed AND-logic/determinism/threshold placement. One Minor: onnxruntime==1.23.2 exact-pin inconsistent with rest of pyproject.toml's floor-pin style. fastembed substitution for sentence-transformers documented in Changes.md (torch has no macOS x86_64+py3.13 wheel). Commit 2ec972f.
+================================================================================
+2026-07-28 19:07:41,566 INFO [phase4-doubt3-fix] (Agent) Fixed Doubt #3: Generator retries now receive specific rejection/exception feedback via new diagnose_rejection() and generate_query()'s previous_attempt_feedback param, instead of identical temperature=0 repeats -- success
+branch:  phase4-dataset-generation
+files:   project/dataset_generation/cross_check.py, project/dataset_generation/async_generator.py, project/dataset_generation/run_dataset_generation.py
+details: 110/110 tests passing (104 baseline + 6 new). Reviewed clean, no Critical findings. One Important finding logged as deferred, not a blocker: broad TypeError catch (from Doubt #1) can mask a real code bug as an LLM failure -- pre-existing risk, not introduced by this fix. Commit c0509bf.
+================================================================================
+2026-07-28 15:36:46,216 INFO [phase4-doubt2-fix] (Agent) Fixed Doubt #2: content-aware section classification (node_type) routes tables to Q3/Q4, text to Q1/Q2; round-robin company interleaving; capped pool cycling; end-of-run underfill summary -- success
+branch:  phase4-dataset-generation
+files:   project/dataset_generation/run_dataset_generation.py, project/tests/test_run_dataset_generation.py
+details: 104/104 tests passing (94 baseline + 10 new). Reviewed clean, no Critical/Important findings. section_grouper.py confirmed untouched, its tests unmodified. 3 Minor/informational notes: redundant per-section dict rebuild (negligible), no explicit empty-pool test (traced safe), pool cycling reprocesses from index 0 each cycle (intentional, interacts with Doubt #3's retry-quota concern). Commit 1c6986d.
+================================================================================
+2026-07-28 15:18:46,273 INFO [phase4-doubt1-review-gap-fix] (Agent) Code review found real gap in Doubt #1 fix: TypeError/AttributeError from null gt_citations/computed_answer still crashed the whole run. Fixed by extending _ATTEMPT_EXCEPTIONS -- success
+branch:  phase4-dataset-generation
+files:   project/dataset_generation/run_dataset_generation.py, project/tests/test_run_dataset_generation.py
+details: 94/94 tests passing. Verified via TDD: new tests failed with exact reported tracebacks pre-fix, pass post-fix. Commit 125d7ff.
+================================================================================
+2026-07-28 15:12:33,981 INFO [phase4-doubt1-fix] (Agent) Fixed Doubt #1: per-attempt exception handling in dataset-generation orchestrator, catches Critic RuntimeError/JSON errors/APIStatusError, logs failure, continues instead of crashing -- success
+branch:  phase4-dataset-generation
+files:   project/dataset_generation/run_dataset_generation.py, project/tests/test_run_dataset_generation.py
+details: 92/92 tests passing (89 baseline + 3 new). Reviewed clean, 3 Minor findings deferred (stale 429 comment, no rejection-parity test, non-atomic log write inherited from existing precedent). Commit dd211da.
+================================================================================
+2026-07-28 10:24:50,788 INFO [phase4-final-review-fix-decision] (AskUserQuestion) Decided: content-aware + stratified quadrant routing to fix Critical finding #2 from Phase 4 final review (query-type/issuer confound) -- success
+branch:  phase4-dataset-generation
+details: Final whole-branch review of Phase 4 found the plan's own next_target() fill-order design confounds query quadrant with filing issuer (Q1~AAPL, Q2~AAPL/MSFT, Q3~MSFT, Q4~TSLA) -- undermines the P1/P2/P3 comparison a published benchmark needs. Chose content-aware + stratified routing over simple round-robin or accepting the confound as documented limitation: classify each section as table/text via node_type lookup (computed in orchestrator, section_grouper.py stays untouched), build two round-robin-interleaved pools across all 9 filings upfront (table pool feeds Q3/Q4, text pool feeds Q1/Q2), cycle pools with a safety cap instead of one-shot exhaustion (folds in Important #5 'no second pass'), and print an end-of-run underfill summary (folds in Important #6 'no logging'). Framed as standard stratified-sampling practice matching published RAG/QA benchmark methodology (FinQA, TAT-QA precedent).
+================================================================================
+2026-07-28 05:24:52,086 INFO [phase4-plan-validation] (Bash) Validated Phase 4 implementation plan before execution; found and fixed one real gap (missing multi-entry Markdown parsing test in Task 8) -- success
+branch:  phase4-dataset-generation
+details: Pre-execution review of docs/superpowers/plans/2026-07-26-phase4-dataset-generation-plan.md. Traced the gq_label_import.py regex by hand to confirm the lazy quantifier correctly scopes to one entry at a time across multiple GQ entries, but the plan only had single-entry test coverage for that logic. Added a two-entry test (test_parse_label_markdown_handles_multiple_entries_without_bleeding) to Task 8 before dispatching any implementer subagents. Rest of plan (schema names, groq_client/config interfaces, task type consistency) re-verified clean.
+================================================================================
 2026-07-27 01:40:46,422 INFO [phase4-planning-decision] (AskUserQuestion) Decided: GQ human-labeling delivered as an editable Markdown file, re-imported by a small script -- success
 branch:  dev
 details: Phase 4 dataset-generation brainstorm, decision 6. The 20 golden_queries need a human-written 'why this answer is good' note + 1-10 score each (Phase Plan Goal 5) -- this must be the user, not an AI, since it's the calibration ground truth the Judge is taught against. Chose a generated golden_queries_to_label.md (query + ground truth + blank note/score fields) over CSV or interactive CLI prompt, since Markdown is easiest to review/edit in a normal editor and matches the project's existing doc conventions.

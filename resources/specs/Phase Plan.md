@@ -1,6 +1,6 @@
 # Phase Plan — COMP702 RAG Benchmark Build
 
-This plan covers the **technical build only** (not the CA1 proposal or the dissertation write-up). It is scoped to a **solo 10-week total budget**, with the final stretch reserved for the dissertation write-up — so active build work (Phases 1–6) must substantially wrap by the end of **Week 7**. The schedule below reflects a multi-filing corpus (2–3 companies × 2–3 fiscal years, ≈6–9 SEC 10-Ks) rather than a single filing — see `Architecture.md` §0/§8 for the full rationale.
+This plan covers the **technical build only** (not the CA1 proposal or the dissertation write-up). It is scoped to a **solo 10-week total budget**, with the final stretch reserved for the dissertation write-up — so active build work (Phases 1–6) must substantially wrap by the end of **Week 7**. The schedule below reflects a multi-filing corpus — expanded from the original 2–3 company / ≈6–9 filing scope to 6 companies × 3 fiscal years (18 SEC 10-Ks: AAPL, MSFT, TSLA, JPM, JNJ, WMT) — rather than a single filing; see `Architecture.md` §0/§8 for the full rationale.
 
 It tracks the three in-scope pipelines (**P1 Vector**, **P2 BM25**, **P3 Structural**) and the phase structure in `Project_Idea.md §8`, with all constraints from `Guardrails.md` and `Budget.md` enforced.
 
@@ -38,7 +38,7 @@ Stand up the repo, the SQLite state layer, and the rate-limit/throttle scaffoldi
 
 # Phase 2: Ingestion & Parsing Pipeline
 Turn raw SEC 10-K filings into a clean, metadata-rich node store. Every downstream metric keys off the `node_id` produced here, so correctness in this phase is load-bearing for the whole project.
-**Weeks 1–3** *(extended from 2 to 3 weeks: the corpus is now ~6–9 filings — 2–3 companies × 2–3 fiscal years — not one)*
+**Weeks 1–3** *(extended from 2 to 3 weeks: the corpus is now 18 filings — 6 companies × 3 fiscal years — not one)*
 
 ## Goals
 1. Source the target 10-K filing(s) from SEC EDGAR.
