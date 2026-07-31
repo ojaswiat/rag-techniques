@@ -60566,3 +60566,12 @@
 [2026-07-31 15:53:13.420] [INFO ] [HTTP  ] SessionRoutes: handleSessionInitByClaudeId called {contentSessionId=ses_04755bed8ffeyvHBB4JRWwFe4x, project=rag-techniques, platformSource=opencode, prompt_length=3132, customTitle=undefined}
 [2026-07-31 15:53:13.420] [ERROR] [WORKER] ✗ Request failed disk I/O error
 [2026-07-31 15:53:13.528] [ERROR] [WORKER] ✗ Request failed disk I/O error
+[2026-07-31 15:54:12.060] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=ses_04755bed8ffeyvHBB4JRWwFe4x, toolName=read} disk I/O error
+[2026-07-31 15:54:14.898] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=ses_04755bed8ffeyvHBB4JRWwFe4x, toolName=read} disk I/O error
+[2026-07-31 15:54:22.065] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=ses_04755bed8ffeyvHBB4JRWwFe4x, toolName=read} disk I/O error
+[2026-07-31 15:54:27.205] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=ses_04755bed8ffeyvHBB4JRWwFe4x, toolName=glob} disk I/O error
+[2026-07-31 15:54:46.850] [ERROR] [WORKER] ✗ Request failed disk I/O error
+[2026-07-31 15:55:01.239] [INFO ] [HTTP  ] SessionRoutes: handleSessionInitByClaudeId called {contentSessionId=ses_0475419a7ffeJjyBkJmzuTv0jZ, project=rag-techniques, platformSource=opencode, prompt_length=21, customTitle=undefined}
+[2026-07-31 15:55:01.239] [ERROR] [WORKER] ✗ Request failed disk I/O error
+[2026-07-31 15:55:01.837] [ERROR] [WORKER] ✗ Request failed disk I/O error
+[2026-07-31 15:55:25.511] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=ses_0475419a7ffeJjyBkJmzuTv0jZ, toolName=bash} disk I/O error
