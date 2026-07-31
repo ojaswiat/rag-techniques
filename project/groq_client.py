@@ -31,10 +31,9 @@ def _is_rate_limit_error(exc: BaseException) -> bool:
     stop=stop_after_attempt(6),
     reraise=True,
 )
-async def call_groq(model: str, messages: list[dict], temperature: float = 0.0):
+async def call_groq(model: str, messages: list[dict], temperature: float = 0.0, tools: list[dict] | None = None):
     async with _semaphore:
-        return await _client.chat.completions.create(
-            model=model,
-            messages=messages,
-            temperature=temperature,
-        )
+        kwargs = {"model": model, "messages": messages, "temperature": temperature}
+        if tools:
+            kwargs["tools"] = tools
+        return await _client.chat.completions.create(**kwargs)

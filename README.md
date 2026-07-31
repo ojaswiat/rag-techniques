@@ -17,7 +17,7 @@ Which retrieval paradigm — semantic (vector), statistical (BM25), or structura
 ## Benchmark Design
 
 - **140 queries** across three sets: 100 Pipeline Queries (PQ), 20 Golden Queries (GQ), 20 Judge Evaluation Queries (JEQ)
-- **Dataset**: Apple Inc. SEC 10-K filings (EDGAR XBRL)
+- **Dataset**: 18 SEC 10-K filings (EDGAR) across 6 companies — AAPL, MSFT, TSLA, JPM, JNJ, WMT — × FY2023-2025
 - **Judge**: LLM-as-judge with a >80% human-agreement gate before the full 900-run benchmark runs
 - **Storage**: SQLite with WAL mode, fully resumable runs
 

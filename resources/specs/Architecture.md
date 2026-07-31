@@ -12,7 +12,7 @@ This is a methodology-chapter-appropriate level of design detail (an M.Sc. disse
 
 ## 0. Decisions Carried Over From the Scoping Discussion
 
-1. **Corpus: ~6–9 filings (2–3 companies × 2–3 fiscal years)**, not one document. The fixed counts from `Project_Idea.md` (140 total queries, 100/20/20 split, 900 benchmark runs) are unchanged — only where queries are sourced from changes.
+1. **Corpus: 18 filings (6 companies × 3 fiscal years)**, not one document. Expanded from the original ~6–9 filing / 2–3 company scope (AAPL, MSFT, TSLA) to add JPM, JNJ, and WMT — covering financial services, healthcare, and retail alongside the original tech/auto set (see `resources/artifacts/Changes.md`, `corpus-expansion-3-companies` branch). The fixed counts from `Project_Idea.md` (140 total queries, 100/20/20 split, 900 benchmark runs) are unchanged — only where queries are sourced from changes.
 2. **Retrieval scope: per-document, not cross-corpus.** Every pipeline retrieves only within the one filing (`document_id`) a query is about. This is *not* the metadata pre-filter `Guardrails.md` §3 bans — that ban is about narrowing to a target *section* using answer-derived information; narrowing to the correct *filing* is a property of the query itself (every query already carries `document_id`), applied identically to all three pipelines.
 3. **P1 vector store: ChromaDB** (local, embedded) — the third option `Guardrails.md` §1 leaves open.
 
@@ -209,10 +209,17 @@ CREATE TABLE golden_queries (
     ground_truth_answer TEXT NOT NULL,
     gt_citations        TEXT NOT NULL,   -- JSON array of node_id
     example_output       TEXT NOT NULL,
-    human_score          INTEGER NOT NULL CHECK (human_score BETWEEN 1 AND 10),
+    human_score          INTEGER NOT NULL CHECK (human_score BETWEEN 0 AND 100),
     human_reasoning       TEXT NOT NULL,
+    is_good                INTEGER CHECK (is_good IS NULL OR is_good IN (0, 1)),
     document_id           TEXT NOT NULL
 );
+-- NOTE: is_good is new schema support for a researcher-assigned 10-good/10-bad
+-- exemplar split (nullable until hand-labeled). It is a separate, independently
+-- filled-in dimension, not derived from human_score. Phase 6's Judge few-shot
+-- selection (Guardrails.md §4a) is currently purely quadrant-based (5 GQ per
+-- quadrant) and has not yet been redesigned to use this dimension -- flagged
+-- here for whoever builds Phase 6.
 
 CREATE TABLE judge_validation (
     query_id            TEXT PRIMARY KEY,
@@ -252,11 +259,13 @@ CREATE INDEX idx_results_query_id   ON results(query_id);
 CREATE INDEX idx_results_pipeline_k ON results(pipeline, k_value);
 ```
 
-Row volume: `nodes` ≈ a few thousand (6–9 filings); `queries` = 100; `golden_queries` = 20; `judge_validation` = 20; `results` = 900 (PQ, full benchmark) + 60 (JEQ, Phase-6 gate) = **960 rows**.
+Row volume: `nodes` = 26,050 (18 filings, confirmed live 2026-07-29); `queries` = 100; `golden_queries` = 20; `judge_validation` = 20; `results` = 900 (PQ, full benchmark) + 60 (JEQ, Phase-6 gate) = **960 rows**.
 
 ### 3.3 Example Rows
 
-Illustrative corpus: **AAPL, MSFT, TSLA** (3 companies) × **FY2023, FY2024, FY2025** (3 fiscal years) = 9 filings — within the agreed 2–3×2–3 range.
+Real corpus (expanded from the original illustrative 9-filing example):
+**AAPL, MSFT, TSLA, JPM, JNJ, WMT** (6 companies) × **FY2023, FY2024, FY2025**
+(3 fiscal years) = 18 filings.
 
 **`nodes`**
 
@@ -270,29 +279,29 @@ Illustrative corpus: **AAPL, MSFT, TSLA** (3 companies) × **FY2023, FY2024, FY2
 
 | query_id | quadrant | query_text | ground_truth_answer | gt_citations | document_id | verified |
 |---|---|---|---|---|---|---|
-| `Q3_017` | Q3_Direct_Table | "What was Apple's total net sales for FY2025?" | "$394.3B" | `["AAPL_2025_n0421"]` | `SEC_10K_AAPL_2025` | 1 |
-| `Q2_044` | Q2_Implicit_Text | "How did Tesla's management characterize the driver of FY2023 delivery growth?" | "Management attributed the increase primarily to higher production volumes at the Texas and Berlin gigafactories." | `["TSLA_2023_n0299"]` | `SEC_10K_TSLA_2023` | 1 |
+| `QT3_PQ_017` | Q3_Direct_Table | "What was Apple's total net sales for FY2025?" | "$394.3B" | `["AAPL_2025_n0421"]` | `SEC_10K_AAPL_2025` | 1 |
+| `QT2_PQ_044` | Q2_Implicit_Text | "How did Tesla's management characterize the driver of FY2023 delivery growth?" | "Management attributed the increase primarily to higher production volumes at the Texas and Berlin gigafactories." | `["TSLA_2023_n0299"]` | `SEC_10K_TSLA_2023` | 1 |
 
 **`golden_queries`**
 
-| query_id | quadrant | query_text | ground_truth_answer | gt_citations | example_output | human_score | human_reasoning | document_id |
-|---|---|---|---|---|---|---|---|---|
-| `G_Q4_03` | Q4_Implicit_Table | "Calculate the YoY change in Microsoft's total operating expenses for FY2024." | "Decreased 4.2% YoY." | `["MSFT_2024_n0588","MSFT_2024_n0742"]` | "Operating expenses fell about 4% year over year." | 8 | "Correct direction and magnitude, but vague on the exact figure." | `SEC_10K_MSFT_2024` |
+| query_id | quadrant | query_text | ground_truth_answer | gt_citations | example_output | human_score | human_reasoning | is_good | document_id |
+|---|---|---|---|---|---|---|---|---|---|
+| `QT4_GQ_003` | Q4_Implicit_Table | "Calculate the YoY change in Microsoft's total operating expenses for FY2024." | "Decreased 4.2% YoY." | `["MSFT_2024_n0588","MSFT_2024_n0742"]` | "Operating expenses fell about 4% year over year." | 80 | "Correct direction and magnitude, but vague on the exact figure." | 1 | `SEC_10K_MSFT_2024` |
 
 **`judge_validation`**
 
 | query_id | quadrant | query_text | ground_truth_answer | gt_citations | document_id |
 |---|---|---|---|---|---|
-| `V_Q1_02` | Q1_Direct_Text | "Name the primary risk factor Microsoft cites for its cloud business." | "Concentration risk: reliance on a small number of hyperscale competitors and on data-center capacity." | `["MSFT_2024_n0118"]` | `SEC_10K_MSFT_2024` |
+| `QT1_JEQ_002` | Q1_Direct_Text | "Name the primary risk factor Microsoft cites for its cloud business." | "Concentration risk: reliance on a small number of hyperscale competitors and on data-center capacity." | `["MSFT_2024_n0118"]` | `SEC_10K_MSFT_2024` |
 
 **`results`** — one PQ row, one Q2/Q4-style row showing `exact_match = NULL`, and two JEQ-gate rows for the same validation query across two pipelines (demonstrating how 60 gate outputs fit into one table):
 
 | result_id | source_set | query_id | pipeline | k_value | retrieved_node_ids | pipeline_output | cited_node_ids | precision_at_k | recall_at_k | evidence_hit | citation_match | token_f1 | exact_match | judge_score | human_score | latency_sec | input_tokens | output_tokens |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| `R_000457` | PQ | `Q3_017` | P1_vector | 5 | `["AAPL_2025_n0421","AAPL_2025_n0420"]` | "Apple's FY2025 net sales were $394.3B. [[node:AAPL_2025_n0421]]" | `["AAPL_2025_n0421"]` | 0.20 | 1.0 | 1 | 1 | 0.95 | 1 | 9 | NULL | 1.84 | 2100 | 40 |
-| `R_000312` | PQ | `Q2_044` | P3_structural | 10 | `["TSLA_2023_n0299", "TSLA_2023_n0301"]` | "Management cited higher production at the Texas and Berlin gigafactories. [[node:TSLA_2023_n0299]]" | `["TSLA_2023_n0299"]` | 0.30 | 1.0 | 1 | 1 | 0.58 | NULL | 7 | NULL | 2.40 | 3100 | 85 |
-| `R_G00012` | JEQ | `V_Q1_02` | P2_bm25 | 5 | `["MSFT_2024_n0118","MSFT_2024_n0119"]` | "Reliance on a small number of third-party cloud/data-center providers. [[node:MSFT_2024_n0118]]" | `["MSFT_2024_n0118"]` | 0.20 | 1.0 | 1 | 1 | 0.62 | NULL | 6 | 7 | 0.91 | 1800 | 22 |
-| `R_G00013` | JEQ | `V_Q1_02` | P3_structural | 5 | `["MSFT_2024_n0118"]` | "Concentration of supply among a few hyperscale cloud competitors. [[node:MSFT_2024_n0118]]" | `["MSFT_2024_n0118"]` | 1.0 | 1.0 | 1 | 1 | 0.71 | NULL | 7 | 7 | 1.10 | 1950 | 28 |
+| `R_000457` | PQ | `QT3_PQ_017` | P1_vector | 5 | `["AAPL_2025_n0421","AAPL_2025_n0420"]` | "Apple's FY2025 net sales were $394.3B. [[node:AAPL_2025_n0421]]" | `["AAPL_2025_n0421"]` | 0.20 | 1.0 | 1 | 1 | 0.95 | 1 | 9 | NULL | 1.84 | 2100 | 40 |
+| `R_000312` | PQ | `QT2_PQ_044` | P3_structural | 10 | `["TSLA_2023_n0299", "TSLA_2023_n0301"]` | "Management cited higher production at the Texas and Berlin gigafactories. [[node:TSLA_2023_n0299]]" | `["TSLA_2023_n0299"]` | 0.30 | 1.0 | 1 | 1 | 0.58 | NULL | 7 | NULL | 2.40 | 3100 | 85 |
+| `R_G00012` | JEQ | `QT1_JEQ_002` | P2_bm25 | 5 | `["MSFT_2024_n0118","MSFT_2024_n0119"]` | "Reliance on a small number of third-party cloud/data-center providers. [[node:MSFT_2024_n0118]]" | `["MSFT_2024_n0118"]` | 0.20 | 1.0 | 1 | 1 | 0.62 | NULL | 6 | 7 | 0.91 | 1800 | 22 |
+| `R_G00013` | JEQ | `QT1_JEQ_002` | P3_structural | 5 | `["MSFT_2024_n0118"]` | "Concentration of supply among a few hyperscale cloud competitors. [[node:MSFT_2024_n0118]]" | `["MSFT_2024_n0118"]` | 1.0 | 1.0 | 1 | 1 | 0.71 | NULL | 7 | 7 | 1.10 | 1950 | 28 |
 
 Note `exact_match = NULL` on the Q2/Q4 row (per `Project_Idea.md` §7, EM is Q1/Q3-only) and `human_score = NULL` on the PQ rows (only `JEQ` rows are hand-scored, per the Phase 6 gate).
 
@@ -459,7 +468,7 @@ async_generator.py        search_tool.py          async_critic.py       cross_ch
 
 | Module | Responsibility |
 |---|---|
-| `data/filings_manifest.json` | `{document_id, ticker, fiscal_year, source_url}` for each of the ~9 filings. |
+| `data/filings_manifest.json` | `{document_id, ticker, fiscal_year, source_url}` for each of the 18 filings. |
 | `ingest/fetch_filings.py` | Downloads each raw filing; caches to `data/raw/{document_id}.html`. |
 | `ingest/parse_filing.py` | `LlamaParse` (Cost-effective tier, markdown, atomic-table instructions) per filing; caches to `data/parsed/{document_id}.md`. |
 | `ingest/node_builder.py` | Markdown → `TextNode`s; assigns `node_id` (`{ticker}_{fiscal_year}_n{NNNN}`), `document_id`, `parent_item_header`, `node_type`, `source_page_num`; never bisects a table block. |
@@ -476,7 +485,7 @@ async_generator.py        search_tool.py          async_critic.py       cross_ch
 | Module | Responsibility |
 |---|---|
 | `pipelines/structural/build_summary_index.py` | Per `document_id`, builds a `SummaryIndex` over that document's nodes using `llama-3.1-8b-instant`; persists to `storage/summary_index/{document_id}/`; directory-existence check is the cache test. |
-| `logs/index_build_costs.json` | One row per filing: wall-clock + token cost (Pillar 3 metric). Flat-file is acceptable here — ~9 rows, no crash-resume requirement, unlike `results`. |
+| `logs/index_build_costs.json` | One row per filing: wall-clock + token cost (Pillar 3 metric). Flat-file is acceptable here — 18 rows, no crash-resume requirement, unlike `results`. |
 
 **Packages:** `llama-index-core`, `llama-index-llms-groq`.
 
@@ -488,7 +497,7 @@ async_generator.py        search_tool.py          async_critic.py       cross_ch
 
 | Module | Responsibility |
 |---|---|
-| `dataset_gen/async_generator.py` | Generator (`openai/gpt-oss-120b`) reads one `(document_id, section)` chunk at a time; accumulates 35/quadrant across all ~9 filings. |
+| `dataset_gen/async_generator.py` | Generator (`openai/gpt-oss-120b`) reads one `(document_id, section)` chunk at a time; accumulates 35/quadrant across all 18 filings. |
 | `dataset_gen/search_tool.py` | Critic's independent search tool — fresh `rank_bm25` instance per document (§5, self-contained). |
 | `dataset_gen/async_critic.py` | Critic (`Qwen3.6-27B`), blind to the Generator's answer/citations. |
 | `dataset_gen/cross_check.py` | Deterministic node-ID + value comparison → Auto-Verify or discard. |
@@ -687,7 +696,7 @@ No new packages were needed for the §4 LLD additions (citation parsing, numeric
 ## 11. Open Items / Recommendations
 
 1. **Regenerate `schemas/db_schema_example.jsonc`** from §3.2/§3.3 above — it still reflects the old 2-pipeline/600-row/12-JEQ design.
-2. **Exact filing list** — §6 Phase 2's manifest needs the actual 2–3 tickers and 2–3 fiscal years before `data/filings_manifest.json` can be filled in. AAPL/MSFT/TSLA × FY2023–2025 is used above only as an illustrative example.
+2. ~~**Exact filing list**~~ — **resolved**: corpus expanded to 18 filings, `AAPL, MSFT, TSLA, JPM, JNJ, WMT × FY2023–2025`, confirmed in `data/filings_manifest.json`.
 3. ~~`Guardrails.md` §6's wording is stale against §1 issue #1's fix~~ — **resolved**: `Guardrails.md` §6 has been reworded so its "mandatory schema" and `judge_validation` bullets now match this design exactly (`judge_validation` holds question fields only; the 60 gate outputs and their `human_score`/`judge_score` land on `results` tagged `source_set='JEQ'`).
 4. **"Context mass held constant across pipelines" (`Project_Idea.md` §10, principle 1) is not mechanically enforced anywhere** — K is standardized as *node count*, not *token count*, and node sizes vary (a table node can be much longer than a text node), so two pipelines at the same K can still pass different token volumes to the answerer. Nothing in any spec doc specifies a token-budget truncation step to force exact equality. The recommendation here is to treat "same K" as the operational definition of "standardized context volume" and document the resulting token-volume variance as an accepted approximation (consistent with the project's existing "statistical honesty" framing elsewhere) rather than adding a truncation mechanism that no spec doc currently calls for. Flagged for the researcher to confirm or override.
 5. **Per-filing query allocation isn't forced even** — Phase 4 accumulates 35/quadrant across the corpus, not a fixed number per filing. Left open deliberately, per the original v1 note.

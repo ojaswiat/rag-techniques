@@ -40,8 +40,9 @@ CREATE TABLE IF NOT EXISTS golden_queries (
     ground_truth_answer TEXT NOT NULL,
     gt_citations        TEXT NOT NULL,
     example_output      TEXT NOT NULL,
-    human_score         INTEGER NOT NULL CHECK (human_score BETWEEN 1 AND 10),
+    human_score         INTEGER NOT NULL CHECK (human_score BETWEEN 0 AND 100),
     human_reasoning     TEXT NOT NULL,
+    is_good             INTEGER CHECK (is_good IS NULL OR is_good IN (0, 1)),
     document_id         TEXT NOT NULL
 );
 
@@ -86,7 +87,36 @@ async def init_db(db_path: str) -> None:
     async with aiosqlite.connect(db_path) as conn:
         await conn.execute("PRAGMA journal_mode=WAL;")
         await conn.executescript(_SCHEMA)
+        await _migrate_golden_queries_schema(conn)
         await conn.commit()
+
+
+async def _migrate_golden_queries_schema(conn: aiosqlite.Connection) -> None:
+    """CREATE TABLE IF NOT EXISTS never alters an already-existing table, so
+    a golden_queries table created under an older schema (missing is_good,
+    or the old human_score BETWEEN 1 AND 10 CHECK) silently persists forever
+    -- the exact gap that let the 0-100/is_good rescale drift out of sync
+    with this project's real on-disk database. Rebuild the table in place
+    when stale, but only if it holds no real rows: SQLite can't ALTER an
+    existing CHECK constraint, so fixing it requires recreating the table,
+    and this refuses to silently discard real hand-labeled research data.
+    """
+    cursor = await conn.execute("PRAGMA table_info(golden_queries)")
+    columns = {row[1] for row in await cursor.fetchall()}
+    if "is_good" in columns:
+        return
+
+    cursor = await conn.execute("SELECT COUNT(*) FROM golden_queries")
+    (row_count,) = await cursor.fetchone()
+    if row_count > 0:
+        raise RuntimeError(
+            f"golden_queries has an outdated schema (missing is_good column) "
+            f"and {row_count} real row(s) -- refusing to silently drop data. "
+            "Write a manual migration to preserve the existing rows."
+        )
+
+    await conn.execute("DROP TABLE golden_queries")
+    await conn.executescript(_SCHEMA)
 
 
 async def insert_node(db_path: str, node: dict) -> None:
@@ -144,6 +174,94 @@ async def get_completed_keys(db_path: str, source_set: str) -> set[tuple[str, st
         )
         rows = await cursor.fetchall()
         return {(r[0], r[1], r[2]) for r in rows}
+
+
+_QUADRANTS = ("Q1_Direct_Text", "Q2_Implicit_Text", "Q3_Direct_Table", "Q4_Implicit_Table")
+_QUADRANT_TABLES = ("queries", "golden_queries", "judge_validation")
+
+
+async def insert_query(db_path: str, row: dict) -> None:
+    params = {**row, "gt_citations": _dumps(row["gt_citations"]), "verified": int(row.get("verified", 1))}
+    async with aiosqlite.connect(db_path) as conn:
+        await conn.execute(
+            """INSERT INTO queries
+               (query_id, quadrant, query_text, ground_truth_answer, gt_citations, document_id, verified)
+               VALUES (:query_id, :quadrant, :query_text, :ground_truth_answer, :gt_citations, :document_id, :verified)""",
+            params,
+        )
+        await conn.commit()
+
+
+async def insert_golden_query(db_path: str, row: dict) -> None:
+    params = {**row, "gt_citations": _dumps(row["gt_citations"])}
+    async with aiosqlite.connect(db_path) as conn:
+        await conn.execute(
+            """INSERT INTO golden_queries
+               (query_id, quadrant, query_text, ground_truth_answer, gt_citations,
+                example_output, human_score, human_reasoning, document_id)
+               VALUES (:query_id, :quadrant, :query_text, :ground_truth_answer, :gt_citations,
+                       :example_output, :human_score, :human_reasoning, :document_id)""",
+            params,
+        )
+        await conn.commit()
+
+
+async def insert_judge_validation(db_path: str, row: dict) -> None:
+    params = {**row, "gt_citations": _dumps(row["gt_citations"])}
+    async with aiosqlite.connect(db_path) as conn:
+        await conn.execute(
+            """INSERT INTO judge_validation
+               (query_id, quadrant, query_text, ground_truth_answer, gt_citations, document_id)
+               VALUES (:query_id, :quadrant, :query_text, :ground_truth_answer, :gt_citations, :document_id)""",
+            params,
+        )
+        await conn.commit()
+
+
+async def get_quadrant_counts(db_path: str, table: str) -> dict[str, int]:
+    if table not in _QUADRANT_TABLES:
+        raise ValueError(f"unsupported table for quadrant counts: {table!r}")
+    async with aiosqlite.connect(db_path) as conn:
+        cursor = await conn.execute(f"SELECT quadrant, COUNT(*) FROM {table} GROUP BY quadrant")
+        rows = await cursor.fetchall()
+    counts = {q: 0 for q in _QUADRANTS}
+    counts.update({r[0]: r[1] for r in rows})
+    return counts
+
+
+async def get_golden_queries(db_path: str) -> list[dict]:
+    async with aiosqlite.connect(db_path) as conn:
+        conn.row_factory = aiosqlite.Row
+        cursor = await conn.execute("SELECT * FROM golden_queries")
+        rows = await cursor.fetchall()
+    result = []
+    for row in rows:
+        d = dict(row)
+        d["gt_citations"] = _loads(d["gt_citations"])
+        result.append(d)
+    return result
+
+
+async def update_golden_query_labels(
+    db_path: str,
+    query_id: str,
+    human_score: int,
+    human_reasoning: str,
+    is_good: bool | None = None,
+) -> None:
+    if not isinstance(human_score, int) or isinstance(human_score, bool) or not (0 <= human_score <= 100):
+        raise ValueError(f"{query_id}: human_score {human_score!r} must be an integer in 0-100")
+    if is_good is not None and is_good not in (True, False, 0, 1):
+        raise ValueError(f"{query_id}: is_good {is_good!r} must be None, True/1, or False/0")
+
+    async with aiosqlite.connect(db_path) as conn:
+        cursor = await conn.execute(
+            "UPDATE golden_queries SET human_score = ?, human_reasoning = ?, is_good = ? WHERE query_id = ?",
+            (human_score, human_reasoning, None if is_good is None else int(is_good), query_id),
+        )
+        await conn.commit()
+        if cursor.rowcount == 0:
+            raise ValueError(f"No golden_query found with query_id={query_id!r} -- check for a typo")
 
 
 def _dumps(items: list[str]) -> str:

@@ -1,0 +1,745 @@
+<title>RAG Benchmark — Architecture</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;900&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  :root {
+    --color-primary: #171717;
+    --color-on-primary: #FFFFFF;
+    --color-secondary: #404040;
+    --color-accent: #A16207;
+    --color-background: #FFFFFF;
+    --color-surface: #FAFAF9;
+    --color-foreground: #171717;
+    --color-muted: #E8ECF0;
+    --color-muted-fg: #52525B;
+    --color-border: #E5E5E5;
+    --color-destructive: #DC2626;
+    --color-ring: #171717;
+    --color-done: #166534;
+    --color-progress: #A16207;
+    --color-pending: #71717A;
+
+    --space-1: 0.25rem;
+    --space-2: 0.5rem;
+    --space-3: 0.75rem;
+    --space-4: 1rem;
+    --space-6: 1.5rem;
+    --space-8: 2rem;
+    --space-12: 3rem;
+    --space-16: 4rem;
+    --space-24: 6rem;
+
+    --font-display: 'Montserrat', system-ui, sans-serif;
+    --font-body: 'Century Gothic', CenturyGothic, AppleGothic, system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Consolas', monospace;
+  }
+
+  :root[data-theme="dark"] {
+    --color-primary: #F5F5F4;
+    --color-on-primary: #171717;
+    --color-secondary: #D4D4D4;
+    --color-accent: #E0A825;
+    --color-background: #121212;
+    --color-surface: #1A1A19;
+    --color-foreground: #F5F5F4;
+    --color-muted: #232322;
+    --color-muted-fg: #A1A1AA;
+    --color-border: #2E2E2C;
+    --color-ring: #F5F5F4;
+    --color-done: #4ADE80;
+    --color-progress: #E0A825;
+    --color-pending: #8A8A85;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --color-primary: #F5F5F4;
+      --color-on-primary: #171717;
+      --color-secondary: #D4D4D4;
+      --color-accent: #E0A825;
+      --color-background: #121212;
+      --color-surface: #1A1A19;
+      --color-foreground: #F5F5F4;
+      --color-muted: #232322;
+      --color-muted-fg: #A1A1AA;
+      --color-border: #2E2E2C;
+      --color-ring: #F5F5F4;
+      --color-done: #4ADE80;
+      --color-progress: #E0A825;
+      --color-pending: #8A8A85;
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    margin: 0;
+    background: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-body);
+    font-size: 17px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection { background: var(--color-accent); color: var(--color-on-primary); }
+
+  a { color: var(--color-accent); }
+
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    line-height: 1.15;
+    margin: 0;
+    letter-spacing: -0.01em;
+  }
+
+  .container {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 0 var(--space-8);
+  }
+
+  /* ---------- Theme toggle ---------- */
+  .theme-toggle {
+    position: fixed;
+    top: var(--space-6);
+    right: var(--space-6);
+    z-index: 50;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    color: var(--color-foreground);
+    cursor: pointer;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    transition: background 200ms ease, border-color 200ms ease;
+  }
+  .theme-toggle:hover { border-color: var(--color-accent); }
+
+  /* ---------- Top bar ---------- */
+  .topbar {
+    border-bottom: 1px solid var(--color-border);
+    padding: var(--space-4) 0;
+  }
+  .topbar .container { display: flex; align-items: center; justify-content: space-between; }
+  .topbar .brand {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-muted-fg);
+  }
+  .topbar nav { display: flex; gap: var(--space-6); }
+  .topbar nav a {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    text-decoration: none;
+    color: var(--color-muted-fg);
+    letter-spacing: 0.03em;
+    transition: color 200ms ease;
+  }
+  .topbar nav a:hover { color: var(--color-foreground); }
+
+  /* ---------- Hero ---------- */
+  .hero {
+    padding: var(--space-24) 0 var(--space-16);
+    border-bottom: 1px solid var(--color-border);
+  }
+  .hero .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-accent);
+    margin-bottom: var(--space-4);
+  }
+  .hero h1 {
+    font-size: clamp(2.5rem, 5vw, 4.5rem);
+    max-width: 16ch;
+    margin-bottom: var(--space-6);
+  }
+  .hero .lede {
+    font-size: 1.25rem;
+    max-width: 62ch;
+    color: var(--color-secondary);
+    font-weight: 400;
+  }
+  .hero .lede em { color: var(--color-foreground); font-style: italic; }
+
+  .status-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-top: var(--space-8);
+  }
+  .pill {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--color-border);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+  .pill .dot { width: 7px; height: 7px; display: inline-block; }
+  .dot.done { background: var(--color-done); }
+  .dot.progress { background: var(--color-progress); }
+  .dot.pending { background: var(--color-pending); }
+
+  /* ---------- Section scaffolding ---------- */
+  section { padding: var(--space-16) 0; border-bottom: 1px solid var(--color-border); }
+  section:last-of-type { border-bottom: none; }
+  .section-head { margin-bottom: var(--space-12); max-width: 70ch; }
+  .section-num {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--color-accent);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: var(--space-2);
+    display: block;
+  }
+  .section-head h2 { font-size: clamp(1.75rem, 3vw, 2.5rem); margin-bottom: var(--space-3); }
+  .section-head p { color: var(--color-muted-fg); font-size: 1.05rem; }
+
+  /* ---------- Pipeline cards ---------- */
+  .pipeline-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--color-border);
+    border: 1px solid var(--color-border);
+  }
+  .pipeline-card {
+    background: var(--color-background);
+    padding: var(--space-8);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+  .pipeline-card .tag {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--color-on-primary);
+    background: var(--color-primary);
+    padding: var(--space-1) var(--space-2);
+    align-self: flex-start;
+    letter-spacing: 0.05em;
+  }
+  .pipeline-card h3 { font-size: 1.5rem; margin-top: var(--space-2); }
+  .pipeline-card .mech { color: var(--color-accent); font-weight: 600; font-family: var(--font-mono); font-size: 13px; text-transform: uppercase; letter-spacing: 0.04em; }
+  .pipeline-card p { color: var(--color-secondary); font-size: 0.98rem; margin: 0; }
+  .pipeline-card .impl {
+    margin-top: auto;
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--color-border);
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    color: var(--color-muted-fg);
+    line-height: 1.6;
+  }
+  .pipeline-note {
+    margin-top: var(--space-8);
+    padding: var(--space-6);
+    background: var(--color-surface);
+    border-left: 3px solid var(--color-accent);
+    font-size: 0.98rem;
+    color: var(--color-secondary);
+    max-width: 80ch;
+  }
+
+  /* ---------- Phase timeline ---------- */
+  .phase-list { border-top: 1px solid var(--color-border); }
+  .phase-row {
+    display: grid;
+    grid-template-columns: 90px 44px 1fr 220px;
+    gap: var(--space-6);
+    align-items: start;
+    padding: var(--space-6) 0;
+    border-bottom: 1px solid var(--color-border);
+  }
+  .phase-row .weeks {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--color-muted-fg);
+    padding-top: 3px;
+  }
+  .phase-row .marker {
+    display: flex;
+    justify-content: center;
+    padding-top: 3px;
+  }
+  .marker-box {
+    width: 22px; height: 22px;
+    border: 2px solid var(--color-border);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-mono); font-size: 12px; font-weight: 700;
+  }
+  .marker-box.done { border-color: var(--color-done); color: var(--color-done); background: color-mix(in srgb, var(--color-done) 12%, transparent); }
+  .marker-box.pending { border-color: var(--color-border); color: var(--color-pending); }
+  .phase-row h4 { font-size: 1.15rem; margin-bottom: var(--space-1); }
+  .phase-row .desc { color: var(--color-secondary); font-size: 0.95rem; }
+  .phase-row .modules {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    color: var(--color-muted-fg);
+    line-height: 1.7;
+    text-align: right;
+  }
+  .phase-row.done h4 { color: var(--color-foreground); }
+  .phase-row.pending h4 { color: var(--color-muted-fg); }
+
+  /* ---------- Flow diagram ---------- */
+  .flow {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+    gap: 0;
+    border: 1px solid var(--color-border);
+    background: var(--color-border);
+  }
+  .flow-node {
+    background: var(--color-background);
+    padding: var(--space-6) var(--space-5);
+    flex: 1 1 150px;
+    min-width: 150px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    position: relative;
+  }
+  .flow-node .step-num {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--color-accent);
+  }
+  .flow-node strong { font-size: 1rem; font-family: var(--font-display); font-weight: 700; }
+  .flow-node span.detail { font-size: 0.85rem; color: var(--color-muted-fg); font-family: var(--font-mono);}
+  .flow-arrow {
+    display: flex; align-items: center; justify-content: center;
+    background: var(--color-surface);
+    padding: 0 var(--space-3);
+    color: var(--color-accent);
+    font-size: 1.1rem;
+    flex: 0 0 auto;
+  }
+  @media (max-width: 900px) {
+    .flow { flex-direction: column; }
+    .flow-arrow { transform: rotate(90deg); padding: var(--space-2) 0; }
+  }
+
+  /* ---------- Two-col info ---------- */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-12);
+  }
+  @media (max-width: 800px) { .two-col, .pipeline-grid { grid-template-columns: 1fr; } }
+
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th, td { text-align: left; padding: var(--space-3) var(--space-2); border-bottom: 1px solid var(--color-border); }
+  th { font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-muted-fg); font-weight: 500; }
+  td { color: var(--color-secondary); }
+  td.mono, code { font-family: var(--font-mono); font-size: 0.85em; color: var(--color-foreground); }
+  code {
+    background: var(--color-surface);
+    padding: 0.1em 0.4em;
+    border: 1px solid var(--color-border);
+  }
+
+  .schema-block h4 { font-size: 1rem; margin-bottom: var(--space-3); font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.04em; }
+
+  .quadrant-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: var(--color-border);
+    border: 1px solid var(--color-border);
+    margin-top: var(--space-6);
+  }
+  .quadrant-cell {
+    background: var(--color-background);
+    padding: var(--space-5);
+  }
+  .quadrant-cell .qid { font-family: var(--font-mono); color: var(--color-accent); font-size: 0.85rem; font-weight: 700; }
+  .quadrant-cell p { margin: var(--space-1) 0 0; font-size: 0.9rem; color: var(--color-secondary); }
+
+  footer {
+    padding: var(--space-12) 0;
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    color: var(--color-muted-fg);
+  }
+  footer .container { display: flex; justify-content: space-between; flex-wrap: wrap; gap: var(--space-4); }
+
+  .callout-warning {
+    margin-top: var(--space-6);
+    padding: var(--space-4) var(--space-5);
+    border: 1px dashed var(--color-border);
+    font-size: 0.9rem;
+    color: var(--color-muted-fg);
+    font-family: var(--font-mono);
+    line-height: 1.6;
+  }
+</style>
+
+<button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">◐</button>
+
+<header class="topbar">
+  <div class="container">
+    <span class="brand">COMP702 — RAG Benchmark</span>
+    <nav>
+      <a href="#pipelines">Pipelines</a>
+      <a href="#state">Build state</a>
+      <a href="#flow">Happy flow</a>
+      <a href="#schema">Schema</a>
+    </nav>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="container">
+    <span class="eyebrow">M.Sc. Dissertation — Design Preview</span>
+    <h1>Which retrieval paradigm survives contact with a 10&#8209;K?</h1>
+    <p class="lede">
+      A comparative benchmark of three RAG retrieval architectures — <em>semantic</em>,
+      <em>statistical</em>, and <em>structural</em> — evaluated against SEC 10-K financial
+      filings, to find which performs best on complex, structurally dense documents and
+      where each one breaks down.
+    </p>
+    <div class="status-row">
+      <span class="pill"><span class="dot done"></span>Phase 1 — Infrastructure</span>
+      <span class="pill"><span class="dot done"></span>Phase 2 — Ingestion (18 filings, 26,050 nodes)</span>
+      <span class="pill"><span class="dot progress"></span>Phase 3–8 — Designed, not yet built</span>
+    </div>
+  </div>
+</section>
+
+<section id="pipelines">
+  <div class="container">
+    <div class="section-head">
+      <span class="section-num">01 — Three Paradigms</span>
+      <h2>Meaning, words, and structure</h2>
+      <p>Every pipeline retrieves only within the one filing a query is about, shares the same answerer model, and is judged on the same rubric &mdash; so any score difference has to come from retrieval, not generation.</p>
+    </div>
+
+    <div class="pipeline-grid">
+      <div class="pipeline-card">
+        <span class="tag">P1 — Vector</span>
+        <h3>Semantic RAG</h3>
+        <span class="mech">Retrieval by meaning</span>
+        <p>Dense embeddings plus a cross-encoder re-ranker. No metadata pre-filter &mdash; narrowing to a section at query time would risk leaking the answer.</p>
+        <div class="impl">bge&#8209;small&#8209;en&#8209;v1.5<br>bge&#8209;reranker&#8209;base<br>ChromaDB · local CPU</div>
+      </div>
+      <div class="pipeline-card">
+        <span class="tag">P2 — BM25</span>
+        <h3>Statistical RAG</h3>
+        <span class="mech">Retrieval by exact words</span>
+        <p>Okapi BM25 over tokenised nodes. Purely statistical &mdash; never LlamaIndex's KeywordTableIndex, which calls an LLM and would collapse the contrast.</p>
+        <div class="impl">rank_bm25 · custom tokenizer<br>preserves numbers, %, currency<br>no LLM at any point</div>
+      </div>
+      <div class="pipeline-card">
+        <span class="tag">P3 — Structural</span>
+        <h3>Summary&#8209;Tree RAG</h3>
+        <span class="mech">Retrieval by tree traversal</span>
+        <p>Hierarchical SummaryIndex over parent summaries. Expected to degrade on table-heavy queries &mdash; that predicted failure is a documented part of the study.</p>
+        <div class="impl">LlamaIndex SummaryIndex<br>one-time LLM build (8B)<br>local retrieval thereafter</div>
+      </div>
+    </div>
+
+    <div class="pipeline-note">
+      Three further pipelines &mdash; P4 brute-force full-context, P5 naive vector, P6 hybrid fusion &mdash; are documented as reserved future scope. No modules exist for them.
+    </div>
+  </div>
+</section>
+
+<section id="state">
+  <div class="container">
+    <div class="section-head">
+      <span class="section-num">02 — Current Build State</span>
+      <h2>Eight phases, ten weeks</h2>
+      <p>Phases 1&ndash;2 are built and tested (39 passing tests, verified against live SEC EDGAR and LlamaParse data). Phases 3&ndash;8 remain the binding design in <code>resources/specs/</code>, not yet implemented.</p>
+    </div>
+
+    <div class="phase-list">
+      <div class="phase-row done">
+        <span class="weeks">Wk 1</span>
+        <span class="marker"><span class="marker-box done">✓</span></span>
+        <div>
+          <h4>1 — Infrastructure</h4>
+          <p class="desc">SQLite state layer, resilient Groq wrapper, throttle scaffolding.</p>
+        </div>
+        <span class="modules">config.py<br>database_manager.py<br>groq_client.py<br>loop_template.py</span>
+      </div>
+
+      <div class="phase-row done">
+        <span class="weeks">Wk 1&ndash;3</span>
+        <span class="marker"><span class="marker-box done">✓</span></span>
+        <div>
+          <h4>2 — Ingestion &amp; Parsing</h4>
+          <p class="desc">Filings &rarr; clean, metadata-rich nodes. All 18 filings ingested (6 companies &times; FY2023&ndash;25).</p>
+        </div>
+        <span class="modules">ingest/fetch_filings.py<br>parse_filing.py · node_builder.py<br>parsing_audit.py · run_ingestion.py</span>
+      </div>
+
+      <div class="phase-row pending">
+        <span class="weeks">Wk 3</span>
+        <span class="marker"><span class="marker-box pending">3</span></span>
+        <div>
+          <h4>3 — P3 Summary Index</h4>
+          <p class="desc">One-time LLM-built summary tree per filing, cached to disk.</p>
+        </div>
+        <span class="modules">pipelines/structural/<br>build_summary_index.py</span>
+      </div>
+
+      <div class="phase-row pending">
+        <span class="weeks">Wk 4&ndash;5</span>
+        <span class="marker"><span class="marker-box pending">4</span></span>
+        <div>
+          <h4>4 — Dataset Generation</h4>
+          <p class="desc">140 verified queries, split into three disjoint sets, GQ hand-labelled.</p>
+        </div>
+        <span class="modules">dataset_gen/async_generator.py<br>async_critic.py · cross_check.py<br>split_and_label.py</span>
+      </div>
+
+      <div class="phase-row pending">
+        <span class="weeks">Wk 5&ndash;6</span>
+        <span class="marker"><span class="marker-box pending">5</span></span>
+        <div>
+          <h4>5 — Pipelines</h4>
+          <p class="desc">P1, P2, P3 index builders plus the shared answerer and the executor.</p>
+        </div>
+        <span class="modules">pipelines/* · loop_executor.py</span>
+      </div>
+
+      <div class="phase-row pending">
+        <span class="weeks">Wk 6&ndash;7</span>
+        <span class="marker"><span class="marker-box pending">6</span></span>
+        <div>
+          <h4>6 — Judge &amp; Validation Gate</h4>
+          <p class="desc">Quadrant-routed few-shot judge, code metrics, the 80% human-agreement gate.</p>
+        </div>
+        <span class="modules">judge/async_judge.py<br>metrics.py · validation_gate.py</span>
+      </div>
+
+      <div class="phase-row pending">
+        <span class="weeks">Wk 7&ndash;9</span>
+        <span class="marker"><span class="marker-box pending">7</span></span>
+        <div>
+          <h4>7 — Full Benchmark</h4>
+          <p class="desc">The 900-cell matrix, TPD-paced against Groq limits, resumable, run in the background.</p>
+        </div>
+        <span class="modules">run_benchmark.py</span>
+      </div>
+
+      <div class="phase-row pending">
+        <span class="weeks">Wk 8&ndash;10</span>
+        <span class="marker"><span class="marker-box pending">8</span></span>
+        <div>
+          <h4>8 — Analysis</h4>
+          <p class="desc">Tri-pillar aggregation, per-quadrant breakdown, tables and figures for the write-up.</p>
+        </div>
+        <span class="modules">analysis/aggregate.py<br>plots.py · tables.py</span>
+      </div>
+    </div>
+
+    <div class="callout-warning">
+      This is a fast-moving project &mdash; state captured 2026-07-29. Check <code>openwiki/quickstart.md</code> for the current phase status before relying on this snapshot.
+    </div>
+  </div>
+</section>
+
+<section id="flow">
+  <div class="container">
+    <div class="section-head">
+      <span class="section-num">03 — The Happy Flow</span>
+      <h2>Filing to figure, end to end</h2>
+      <p>Everything runs as plain local Python — no server, no managed cloud component — with three outbound services only: SEC EDGAR, LlamaParse, and Groq.</p>
+    </div>
+
+    <div class="flow">
+      <div class="flow-node">
+        <span class="step-num">00</span>
+        <strong>SEC EDGAR</strong>
+        <span class="detail">18 filings, resolved at runtime</span>
+      </div>
+      <div class="flow-arrow">&rarr;</div>
+      <div class="flow-node">
+        <span class="step-num">01</span>
+        <strong>Ingestion</strong>
+        <span class="detail">nodes table · 26,050 rows</span>
+      </div>
+      <div class="flow-arrow">&rarr;</div>
+      <div class="flow-node">
+        <span class="step-num">02</span>
+        <strong>Dataset Gen</strong>
+        <span class="detail">generator + critic &rarr; 140 queries</span>
+      </div>
+      <div class="flow-arrow">&rarr;</div>
+      <div class="flow-node">
+        <span class="step-num">03</span>
+        <strong>Index Build</strong>
+        <span class="detail">P1 Chroma · P2 BM25 · P3 tree</span>
+      </div>
+      <div class="flow-arrow">&rarr;</div>
+      <div class="flow-node">
+        <span class="step-num">04</span>
+        <strong>Executor</strong>
+        <span class="detail">retrieve &rarr; answer &rarr; upsert</span>
+      </div>
+      <div class="flow-arrow">&rarr;</div>
+      <div class="flow-node">
+        <span class="step-num">05</span>
+        <strong>Judge</strong>
+        <span class="detail">80% gate, then 900 runs scored</span>
+      </div>
+      <div class="flow-arrow">&rarr;</div>
+      <div class="flow-node">
+        <span class="step-num">06</span>
+        <strong>Analysis</strong>
+        <span class="detail">tri-pillar tables &amp; figures</span>
+      </div>
+    </div>
+
+    <div class="two-col" style="margin-top: var(--space-16);">
+      <div>
+        <h3 style="font-size:1.3rem; margin-bottom: var(--space-3);">The central loop</h3>
+        <p style="color:var(--color-secondary); font-size:0.95rem;">Runs 960 times &mdash; once per benchmark cell &mdash; and everything about crash-resumability hangs off its first and last step.</p>
+        <table>
+          <tr><td class="mono">get_completed_keys()</td><td>skip cells already in <code>results</code></td></tr>
+          <tr><td class="mono">retrieve(query, doc_id, k)</td><td>P1/P2/P3 &rarr; NodeWithScore list</td></tr>
+          <tr><td class="mono">answer(query, nodes)</td><td>Llama 3.3 70B, temp 0</td></tr>
+          <tr><td class="mono">upsert_result(row)</td><td>write to <code>results</code></td></tr>
+        </table>
+      </div>
+      <div>
+        <h3 style="font-size:1.3rem; margin-bottom: var(--space-3);">Scale, honestly</h3>
+        <p style="color:var(--color-secondary); font-size:0.95rem;">100 PQ &times; 3 pipelines &times; K &isin; {3,5,10} = <strong>900 runs</strong>, plus a 60-output judge gate = <strong>960 rows</strong>. Every cell runs once at temperature 0 &mdash; no repeated sampling.</p>
+        <table>
+          <tr><th>Set</th><th>Count</th><th>Role</th></tr>
+          <tr><td class="mono">PQ</td><td>100</td><td>Pipeline benchmark test set</td></tr>
+          <tr><td class="mono">GQ</td><td>20</td><td>Judge few-shot teaching set</td></tr>
+          <tr><td class="mono">JEQ</td><td>20</td><td>Judge validation only</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <div class="section-head">
+      <span class="section-num">04 — Evaluation Design</span>
+      <h2>Four quadrants, three pillars</h2>
+      <p>Every query set is stratified so each paradigm's strengths and failure modes surface by kind, not averaged away.</p>
+    </div>
+
+    <div class="quadrant-grid">
+      <div class="quadrant-cell">
+        <span class="qid">Q1 — Direct Text</span>
+        <p>Fact retrieval from dense prose. Exact Match applies.</p>
+      </div>
+      <div class="quadrant-cell">
+        <span class="qid">Q3 — Direct Table</span>
+        <p>Strict cell / value extraction. Exact Match applies.</p>
+      </div>
+      <div class="quadrant-cell">
+        <span class="qid">Q2 — Implicit Text</span>
+        <p>Multi-hop inference across pages. Judge-scored only.</p>
+      </div>
+      <div class="quadrant-cell">
+        <span class="qid">Q4 — Implicit Table</span>
+        <p>Cross-row and footnote calculation. Judge-scored only.</p>
+      </div>
+    </div>
+
+    <div class="two-col" style="margin-top: var(--space-12);">
+      <div class="schema-block">
+        <h4>Pillar 1 — Retrieval</h4>
+        <p style="color:var(--color-secondary); font-size:0.92rem;">Precision@K, Recall@K, Evidence Hit Rate &mdash; deterministic, code only, operating on node IDs.</p>
+      </div>
+      <div class="schema-block">
+        <h4>Pillar 2 — Answer Quality</h4>
+        <p style="color:var(--color-secondary); font-size:0.92rem;">LLM judge 1&ndash;10 (primary), Token-F1 (secondary), Exact Match (Q1/Q3), Citation Audit (deterministic).</p>
+      </div>
+    </div>
+    <div class="pipeline-note" style="margin-top: var(--space-6);">
+      <strong>Coincidental-correctness trap:</strong> a model can answer correctly off the wrong node entirely. Token-F1 and Exact Match miss this; comparing cited node IDs against <code>gt_citations</code> is what catches it.
+    </div>
+  </div>
+</section>
+
+<section id="schema">
+  <div class="container">
+    <div class="section-head">
+      <span class="section-num">05 — Storage</span>
+      <h2>Five tables, one SQLite file</h2>
+      <p><code>PRAGMA journal_mode = WAL</code>, accessed through <code>aiosqlite</code>. <code>nodes</code> is the single source of truth for everything downstream.</p>
+    </div>
+
+    <table>
+      <tr><th>Table</th><th>Rows</th><th>Holds</th></tr>
+      <tr><td class="mono">nodes</td><td>~26,050</td><td>node_id, document_id, content, node_type, token_count</td></tr>
+      <tr><td class="mono">queries</td><td>100</td><td>PQ test set — quadrant, ground truth, gt_citations</td></tr>
+      <tr><td class="mono">golden_queries</td><td>20</td><td>GQ teaching set — example_output, human_score</td></tr>
+      <tr><td class="mono">judge_validation</td><td>20</td><td>JEQ validation set — question + ground truth only</td></tr>
+      <tr><td class="mono">results</td><td>960</td><td>900 PQ + 60 JEQ runs, source_set &isin; {PQ, JEQ}</td></tr>
+    </table>
+
+    <div class="two-col" style="margin-top: var(--space-12);">
+      <div>
+        <h3 style="font-size:1.2rem; margin-bottom: var(--space-3);">Model routing</h3>
+        <table>
+          <tr><th>Stage</th><th>Model</th></tr>
+          <tr><td>Dataset generation</td><td class="mono">gpt-oss-120b</td></tr>
+          <tr><td>Dataset critique</td><td class="mono">Qwen3.6-27B</td></tr>
+          <tr><td>P3 index build</td><td class="mono">llama-3.1-8b</td></tr>
+          <tr><td>Pipeline answerer</td><td class="mono">Llama 3.3 70B</td></tr>
+          <tr><td>Judge</td><td class="mono">Qwen3.6-27B</td></tr>
+        </table>
+      </div>
+      <div>
+        <h3 style="font-size:1.2rem; margin-bottom: var(--space-3);">Binding invariants</h3>
+        <p style="color:var(--color-secondary); font-size:0.92rem; margin-bottom: var(--space-3);">Generator ≠ Critic family, and Answerer ≠ Judge family &mdash; so no model grades output from its own family.</p>
+        <p style="color:var(--color-secondary); font-size:0.92rem; margin-bottom: var(--space-3);">The answerer is shared and identical across P1/P2/P3, so score differences must come from retrieval.</p>
+        <p style="color:var(--color-secondary); font-size:0.92rem;"><code>UNIQUE(source_set, query_id, pipeline, k_value)</code> is the resume key &mdash; a crash never re-spends free-tier quota.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <span>COMP702 M.Sc. Dissertation — Design Preview, not a final deliverable</span>
+    <span>Sources: openwiki/, resources/specs/Architecture.md, Phase Plan.md</span>
+  </div>
+</footer>
+
+<script>
+  (function () {
+    var root = document.documentElement;
+    var btn = document.getElementById('themeToggle');
+    var stored = null;
+    try { stored = localStorage.getItem('rag-theme'); } catch (e) {}
+    if (stored) root.setAttribute('data-theme', stored);
+
+    function current() {
+      if (root.getAttribute('data-theme')) return root.getAttribute('data-theme');
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+
+    btn.addEventListener('click', function () {
+      var next = current() === 'dark' ? 'light' : 'dark';
+      root.setAttribute('data-theme', next);
+      try { localStorage.setItem('rag-theme', next); } catch (e) {}
+    });
+  })();
+</script>
