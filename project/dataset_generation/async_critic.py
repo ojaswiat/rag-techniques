@@ -7,8 +7,8 @@ must search the filing itself before answering.
 """
 import json
 
-from project import config
-from project.llm_client import LLMFactory
+from llm_client import config
+from llm_client.llm_factory import LLMFactory
 from .search_tool import SEARCH_TOOL_SCHEMA, search_filing_nodes
 
 _MAX_TOOL_ROUNDS = 5

@@ -5,7 +5,7 @@ and returns a ready‑to‑use client object (AsyncGroq or AsyncOpenAI) that
 already includes retry‑on‑429 and semaphore logic.
 
 Usage:
-    from project.llm_client import LLMFactory
+    from llm_client import LLMFactory
     client = LLMFactory.get_client("groq", "openai/gpt-oss-120b")
     response = await client.chat.completions.create(
         model="openai/gpt-oss-120b",
@@ -50,10 +50,10 @@ class LLMFactory:
         """
         match provider:
             case "groq":
-                groq_mod = importlib.import_module(".groq_client", package="project")
+                groq_mod = importlib.import_module(".groq_client", package=__package__)
                 return groq_mod.get_groq_client(model)
             case "nvidia":
-                nim_mod = importlib.import_module(".nim_client", package="project")
+                nim_mod = importlib.import_module(".nim_client", package=__package__)
                 return nim_mod.get_nim_client(model)
             case _:
                 raise ValueError(f"Unsupported LLM provider: {provider!r}")

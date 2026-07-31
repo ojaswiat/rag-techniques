@@ -37,7 +37,7 @@ from pathlib import Path
 import tiktoken
 from groq import APIStatusError
 
-import config
+import llm_client.config as config
 import database_manager as dbm
 from dataset_generation.async_critic import critique_query
 from dataset_generation.async_generator import generate_query

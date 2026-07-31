@@ -20,10 +20,10 @@ from llama_index.core import TreeIndex
 from llama_index.core.callbacks import CallbackManager, TokenCountingHandler
 from llama_index.llms.groq import Groq
 
-import config
 import database_manager as dbm
 import loop_template
 from pipelines.structural.node_convert import nodes_to_llama_nodes
+from llm_client.llm_factory import LLMFactory
 
 STORAGE_ROOT = Path("storage/summary_index")
 DB_PATH = "benchmark.db"
@@ -59,14 +59,9 @@ async def build_index_for_document(document_id: str) -> dict:
     llama_nodes = nodes_to_llama_nodes(nodes)
 
     token_counter = TokenCountingHandler()
-    llm = Groq(
-        model=config.MODEL_ROUTING["p3_index_build"],
-        api_key=config.GROQ_API_KEY or "placeholder-key-for-import-only",
-        callback_manager=CallbackManager([token_counter]),
-    )
-
+    summary_agent = LLMFactory.get_client_for_stage("p3_index_build")
     start = time.monotonic()
-    index = TreeIndex(nodes=llama_nodes, llm=llm, build_tree=True)
+    index = TreeIndex(nodes=llama_nodes, llm=summary_agent, build_tree=True)
     wall_clock_sec = time.monotonic() - start
 
     temp_dir = _temp_dir(document_id)

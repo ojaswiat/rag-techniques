@@ -4,11 +4,11 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-load_dotenv(Path(__file__).parent / ".env")
+load_dotenv(Path(__file__).parent.parent / ".env")
 
 GROQ_API_KEY: str | None = os.getenv("GROQ_API_KEY")
 LLAMA_CLOUD_API_KEY: str | None = os.getenv("LLAMA_CLOUD_API_KEY")
-NVIDIA_API_KEY: str | None = os.getenv("NVIDIA_NIM_API_KEY")  # <-- changed
+NIM_API_KEY: str | None = os.getenv("NIM_API_KEY")
 SEC_EDGAR_USER_AGENT: str = os.getenv("SEC_EDGAR_USER_AGENT", "rag-techniques-benchmark unknown@example.com")
 
 LOCAL_TEST_THROTTLE: bool = os.getenv("LOCAL_TEST_THROTTLE", "true").lower() == "true"
@@ -25,4 +25,4 @@ MODEL_ROUTING: dict[str, dict] = {
 }
 
 GROQ_MAX_CONCURRENCY: int = 5
-NVIDIA_MAX_CONCURRENCY: int = 5
+NIM_MAX_CONCURRENCY: int = 5

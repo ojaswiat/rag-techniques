@@ -3,8 +3,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from project.dataset_generation.async_generator import generate_query
-from project.llm_client import LLMFactory
+from dataset_generation.async_generator import generate_query
+from llm_client.llm_factory import LLMFactory
 
 
 class _FakeChoice:
@@ -36,7 +36,7 @@ class _DummyClient:
 
 @pytest.mark.asyncio
 async def test_generate_query_parses_generator_response(monkeypatch):
-    monkeypatch.setattr("project.config.GROQ_API_KEY", "dummy-key")
+    monkeypatch.setattr("llm_client.config.GROQ_API_KEY", "dummy-key")
     section = {
         "document_id": "SEC_10K_TEST_2025",
         "section_header": "Item 7. MD&A",
@@ -62,7 +62,7 @@ async def test_generate_query_parses_generator_response(monkeypatch):
     capturing_client = _CapturingClient(_fake_response(payload))
 
     monkeypatch.setattr(
-        "project.llm_client.LLMFactory.get_client_for_stage",
+        "llm_client.LLMFactory.get_client_for_stage",
         lambda stage: capturing_client,
     )
 
@@ -83,7 +83,7 @@ async def test_generate_query_parses_generator_response(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_generate_query_first_attempt_has_no_feedback_in_prompt(monkeypatch):
-    monkeypatch.setattr("project.config.GROQ_API_KEY", "dummy-key")
+    monkeypatch.setattr("llm_client.config.GROQ_API_KEY", "dummy-key")
     section = {
         "document_id": "SEC_10K_TEST_2025",
         "section_header": "Item 7. MD&A",
@@ -109,7 +109,7 @@ async def test_generate_query_first_attempt_has_no_feedback_in_prompt(monkeypatc
     capturing_client = _CapturingClient(_fake_response(payload))
 
     monkeypatch.setattr(
-        "project.llm_client.LLMFactory.get_client_for_stage",
+        "llm_client.LLMFactory.get_client_for_stage",
         lambda stage: capturing_client,
     )
 
@@ -124,7 +124,7 @@ async def test_generate_query_first_attempt_has_no_feedback_in_prompt(monkeypatc
 
 @pytest.mark.asyncio
 async def test_generate_query_retry_includes_previous_attempt_feedback_in_prompt(monkeypatch):
-    monkeypatch.setattr("project.config.GROQ_API_KEY", "dummy-key")
+    monkeypatch.setattr("llm_client.config.GROQ_API_KEY", "dummy-key")
     section = {
         "document_id": "SEC_10K_TEST_2025",
         "section_header": "Item 7. MD&A",
@@ -154,7 +154,7 @@ async def test_generate_query_retry_includes_previous_attempt_feedback_in_prompt
     logging_client = _LoggingClient(_fake_response(payload))
 
     monkeypatch.setattr(
-        "project.llm_client.LLMFactory.get_client_for_stage",
+        "llm_client.LLMFactory.get_client_for_stage",
         lambda stage: logging_client,
     )
 

@@ -4,8 +4,8 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from project.dataset_generation.async_critic import critique_query
-from project.llm_client import LLMFactory
+from dataset_generation.async_critic import critique_query
+from llm_client.llm_factory import LLMFactory
 
 
 def _tool_call_response():
@@ -26,7 +26,7 @@ def _final_response(payload: dict):
 
 @pytest.mark.asyncio
 async def test_critique_query_uses_search_tool_then_answers(monkeypatch):
-    monkeypatch.setattr("project.config.GROQ_API_KEY", "dummy-key")
+    monkeypatch.setattr("llm_client.config.GROQ_API_KEY", "dummy-key")
     final_payload = {"cited_node_ids": ["n1"], "computed_answer": "$100 million"}
 
     captured = {}
@@ -52,7 +52,7 @@ async def test_critique_query_uses_search_tool_then_answers(monkeypatch):
     mock_client.chat.completions.create = mock_create
 
     monkeypatch.setattr(
-        "project.llm_client.LLMFactory.get_client_for_stage",
+        "llm_client.LLMFactory.get_client_for_stage",
         lambda stage: mock_client,
     )
 
@@ -69,7 +69,7 @@ async def test_critique_query_uses_search_tool_then_answers(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_critique_query_raises_after_max_rounds_without_final_answer(monkeypatch):
-    monkeypatch.setattr("project.config.GROQ_API_KEY", "dummy-key")
+    monkeypatch.setattr("llm_client.config.GROQ_API_KEY", "dummy-key")
     async def mock_create(*args, **kwargs):
         return _tool_call_response()
 
@@ -77,7 +77,7 @@ async def test_critique_query_raises_after_max_rounds_without_final_answer(monke
     mock_client.chat.completions.create = mock_create
 
     monkeypatch.setattr(
-        "project.llm_client.LLMFactory.get_client_for_stage",
+        "llm_client.LLMFactory.get_client_for_stage",
         lambda stage: mock_client,
     )
 
@@ -92,7 +92,7 @@ async def test_critique_query_raises_after_max_rounds_without_final_answer(monke
 
 @pytest.mark.asyncio
 async def test_critique_query_default_return_shape_is_unchanged(monkeypatch):
-    monkeypatch.setattr("project.config.GROQ_API_KEY", "dummy-key")
+    monkeypatch.setattr("llm_client.config.GROQ_API_KEY", "dummy-key")
     final_payload = {"cited_node_ids": ["n1"], "computed_answer": "$100 million"}
 
     call_count = {"n": 0}
@@ -108,7 +108,7 @@ async def test_critique_query_default_return_shape_is_unchanged(monkeypatch):
     mock_client.chat.completions.create = mock_create
 
     monkeypatch.setattr(
-        "project.llm_client.LLMFactory.get_client_for_stage",
+        "llm_client.LLMFactory.get_client_for_stage",
         lambda stage: mock_client,
     )
 
@@ -125,7 +125,7 @@ async def test_critique_query_default_return_shape_is_unchanged(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_critique_query_return_messages_includes_full_history(monkeypatch):
-    monkeypatch.setattr("project.config.GROQ_API_KEY", "dummy-key")
+    monkeypatch.setattr("llm_client.config.GROQ_API_KEY", "dummy-key")
     final_payload = {"cited_node_ids": ["n1"], "computed_answer": "$100 million"}
 
     call_count = {"n": 0}
@@ -141,7 +141,7 @@ async def test_critique_query_return_messages_includes_full_history(monkeypatch)
     mock_client.chat.completions.create = mock_create
 
     monkeypatch.setattr(
-        "project.llm_client.LLMFactory.get_client_for_stage",
+        "llm_client.LLMFactory.get_client_for_stage",
         lambda stage: mock_client,
     )
 

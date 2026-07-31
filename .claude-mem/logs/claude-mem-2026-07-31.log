@@ -60563,3 +60563,6 @@
 [2026-07-31 13:22:34.150] [INFO ] [WORKER] Broadcasting processing status {isProcessing=true, queueDepth=397, activeSessions=1}
 [2026-07-31 13:22:34.602] [WARN ] [SDK_SPAWN] [session-2] Claude process exited {code=1, signal=null, pid=46217}
 [2026-07-31 13:22:34.602] [WARN ] [SESSION] [session-2] Generator paused for quota; preserving buffered work {pendingCount=397}
+[2026-07-31 15:53:13.420] [INFO ] [HTTP  ] SessionRoutes: handleSessionInitByClaudeId called {contentSessionId=ses_04755bed8ffeyvHBB4JRWwFe4x, project=rag-techniques, platformSource=opencode, prompt_length=3132, customTitle=undefined}
+[2026-07-31 15:53:13.420] [ERROR] [WORKER] ✗ Request failed disk I/O error
+[2026-07-31 15:53:13.528] [ERROR] [WORKER] ✗ Request failed disk I/O error

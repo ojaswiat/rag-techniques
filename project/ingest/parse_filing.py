@@ -11,7 +11,7 @@ import time
 
 from llama_cloud_services import LlamaParse
 
-import config
+import llm_client.config as config
 
 _CACHE_FRESH_SECONDS = 48 * 3600
 
