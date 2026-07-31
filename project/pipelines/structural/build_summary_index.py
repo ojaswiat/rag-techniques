@@ -2,12 +2,8 @@
 Guardrails.md §1 -- the only index build permitted to call an LLM, and it
 must run once and be cached, never per query).
 
-Deliberately uses llama_index.llms.groq.Groq directly rather than routing
-through groq_client.call_groq() -- see
-docs/superpowers/specs/2026-07-22-phase3-summary-index-design.md for why
-(Phase 5's P3 pipeline needs a real TreeIndex.as_retriever(), which a
-custom-built tree wouldn't provide) and the scoped, mitigated risk this
-carries (documented in resources/artifacts/Changes.md).
+Deliberately routes LLM calls through LLMFactory to support multi-provider
+routing and custom rate limiting/semaphore execution.
 """
 import asyncio
 import json
@@ -18,7 +14,6 @@ from pathlib import Path
 
 from llama_index.core import TreeIndex
 from llama_index.core.callbacks import CallbackManager, TokenCountingHandler
-from llama_index.llms.groq import Groq
 
 import database_manager as dbm
 import loop_template
@@ -59,9 +54,16 @@ async def build_index_for_document(document_id: str) -> dict:
     llama_nodes = nodes_to_llama_nodes(nodes)
 
     token_counter = TokenCountingHandler()
+    callback_manager = CallbackManager([token_counter])
+
     summary_agent = LLMFactory.get_client_for_stage("p3_index_build")
     start = time.monotonic()
-    index = TreeIndex(nodes=llama_nodes, llm=summary_agent, build_tree=True)
+    index = TreeIndex(
+        nodes=llama_nodes,
+        llm=summary_agent,
+        callback_manager=callback_manager,
+        build_tree=True,
+    )
     wall_clock_sec = time.monotonic() - start
 
     temp_dir = _temp_dir(document_id)

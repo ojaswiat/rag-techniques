@@ -60575,3 +60575,54 @@
 [2026-07-31 15:55:01.239] [ERROR] [WORKER] ✗ Request failed disk I/O error
 [2026-07-31 15:55:01.837] [ERROR] [WORKER] ✗ Request failed disk I/O error
 [2026-07-31 15:55:25.511] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=ses_0475419a7ffeJjyBkJmzuTv0jZ, toolName=bash} disk I/O error
+[2026-07-31 16:14:00.577] [INFO ] [HTTP  ] SessionRoutes: handleSessionInitByClaudeId called {contentSessionId=ses_04742b71bffeEteHcvBBCxT2KS, project=rag-techniques, platformSource=opencode, prompt_length=93, customTitle=undefined}
+[2026-07-31 16:14:00.578] [ERROR] [WORKER] ✗ Request failed disk I/O error
+[2026-07-31 16:14:00.689] [ERROR] [WORKER] ✗ Request failed disk I/O error
+[2026-07-31 16:14:07.525] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=ses_04742b71bffeEteHcvBBCxT2KS, toolName=assistant_message} disk I/O error
+[2026-07-31 16:14:07.538] [ERROR] [WORKER] ✗ Request failed disk I/O error
+[2026-07-31 16:14:07.747] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=ses_04742b71bffeEteHcvBBCxT2KS, toolName=assistant_message} disk I/O error
+[2026-07-31 16:17:28.162] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=ses_04742b71bffeEteHcvBBCxT2KS, toolName=assistant_message} disk I/O error
+[2026-07-31 16:17:28.168] [ERROR] [WORKER] ✗ Request failed disk I/O error
+[2026-07-31 16:17:28.385] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=ses_04742b71bffeEteHcvBBCxT2KS, toolName=assistant_message} disk I/O error
+[2026-07-31 16:18:00.911] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=ses_04742b71bffeEteHcvBBCxT2KS, toolName=read} disk I/O error
+[2026-07-31 16:18:33.896] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=ses_04742b71bffeEteHcvBBCxT2KS, toolName=assistant_message} disk I/O error
+[2026-07-31 16:18:34.036] [ERROR] [WORKER] ✗ Request failed disk I/O error
+[2026-07-31 16:18:34.229] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=ses_04742b71bffeEteHcvBBCxT2KS, toolName=assistant_message} disk I/O error
+[2026-07-31 16:18:56.524] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=ses_04742b71bffeEteHcvBBCxT2KS, toolName=assistant_message} disk I/O error
+[2026-07-31 16:18:56.611] [ERROR] [WORKER] ✗ Request failed disk I/O error
+[2026-07-31 16:18:56.760] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=ses_04742b71bffeEteHcvBBCxT2KS, toolName=assistant_message} disk I/O error
+[2026-07-31 16:21:22.821] [INFO ] [HTTP  ] SessionRoutes: handleSessionInitByClaudeId called {contentSessionId=ses_0473bf799ffeks4EBXw0e1o5MR, project=rag-techniques, platformSource=opencode, prompt_length=2, customTitle=undefined}
+[2026-07-31 16:21:22.821] [ERROR] [WORKER] ✗ Request failed disk I/O error
+[2026-07-31 16:21:22.944] [ERROR] [WORKER] ✗ Request failed disk I/O error
+[2026-07-31 16:21:30.658] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=ses_0473bf799ffeks4EBXw0e1o5MR, toolName=assistant_message} disk I/O error
+[2026-07-31 16:21:30.665] [ERROR] [WORKER] ✗ Request failed disk I/O error
+[2026-07-31 16:21:30.881] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=ses_0473bf799ffeks4EBXw0e1o5MR, toolName=assistant_message} disk I/O error
+[2026-07-31 16:23:31.069] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=ses_0473bf799ffeks4EBXw0e1o5MR, toolName=read} disk I/O error
+[2026-07-31 16:23:34.100] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=ses_0473bf799ffeks4EBXw0e1o5MR, toolName=read} disk I/O error
+[2026-07-31 16:23:38.136] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=ses_0473bf799ffeks4EBXw0e1o5MR, toolName=glob} disk I/O error
+[2026-07-31 16:23:40.335] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=ses_0473bf799ffeks4EBXw0e1o5MR, toolName=read} disk I/O error
+[2026-07-31 16:23:48.435] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=ses_0473bf799ffeks4EBXw0e1o5MR, toolName=glob} disk I/O error
+[2026-07-31 16:23:54.211] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=ses_0473bf799ffeks4EBXw0e1o5MR, toolName=read} disk I/O error
+[2026-07-31 16:23:56.230] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=ses_0473bf799ffeks4EBXw0e1o5MR, toolName=glob} disk I/O error
+[2026-07-31 16:23:58.313] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=ses_0473bf799ffeks4EBXw0e1o5MR, toolName=read} disk I/O error
+[2026-07-31 16:24:01.903] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=ses_0473bf799ffeks4EBXw0e1o5MR, toolName=read} disk I/O error
+[2026-07-31 16:24:13.919] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=ses_0473bf799ffeks4EBXw0e1o5MR, toolName=file_edit} disk I/O error
+[2026-07-31 16:24:13.979] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=ses_0473bf799ffeks4EBXw0e1o5MR, toolName=edit} disk I/O error
+[2026-07-31 16:24:18.029] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=ses_0473bf799ffeks4EBXw0e1o5MR, toolName=file_edit} disk I/O error
+[2026-07-31 16:24:18.089] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=ses_0473bf799ffeks4EBXw0e1o5MR, toolName=edit} disk I/O error
+[2026-07-31 16:24:22.195] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=ses_0473bf799ffeks4EBXw0e1o5MR, toolName=read} disk I/O error
+[2026-07-31 16:24:25.987] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=ses_0473bf799ffeks4EBXw0e1o5MR, toolName=file_edit} disk I/O error
+[2026-07-31 16:24:26.048] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=ses_0473bf799ffeks4EBXw0e1o5MR, toolName=edit} disk I/O error
+[2026-07-31 16:26:28.546] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=ses_0473bf799ffeks4EBXw0e1o5MR, toolName=bash} disk I/O error
+[2026-07-31 16:26:32.465] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=ses_0473bf799ffeks4EBXw0e1o5MR, toolName=bash} disk I/O error
+[2026-07-31 16:26:35.286] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=ses_0473bf799ffeks4EBXw0e1o5MR, toolName=bash} disk I/O error
+[2026-07-31 16:26:38.221] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=ses_0473bf799ffeks4EBXw0e1o5MR, toolName=bash} disk I/O error
+[2026-07-31 16:28:54.994] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=ses_0473bf799ffeks4EBXw0e1o5MR, toolName=bash} disk I/O error
+[2026-07-31 16:29:10.723] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=ses_0473bf799ffeks4EBXw0e1o5MR, toolName=file_edit} disk I/O error
+[2026-07-31 16:29:10.822] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=ses_0473bf799ffeks4EBXw0e1o5MR, toolName=edit} disk I/O error
+[2026-07-31 16:29:23.057] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=ses_0473bf799ffeks4EBXw0e1o5MR, toolName=bash} disk I/O error
+[2026-07-31 16:29:28.890] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=ses_0473bf799ffeks4EBXw0e1o5MR, toolName=file_edit} disk I/O error
+[2026-07-31 16:29:28.985] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=ses_0473bf799ffeks4EBXw0e1o5MR, toolName=edit} disk I/O error
+[2026-07-31 16:30:14.859] [ERROR] [WORKER] ✗ Request failed disk I/O error
+[2026-07-31 16:30:14.956] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=ses_0473bf799ffeks4EBXw0e1o5MR, toolName=bash} disk I/O error
+[2026-07-31 16:30:15.374] [ERROR] [WORKER] ✗ Request failed disk I/O error

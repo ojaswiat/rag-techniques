@@ -39,14 +39,6 @@ Whenever asked about an issue or problem, you must format your response using th
 
 1. **No per-hour or scale-to-non-zero infrastructure** — all local or free-tier
 2. **Fixed model routing** (enforced in `config.MODEL_ROUTING`):
-   - Generator/Dataset generation: `openai/gpt-oss-120b`
-   - Critic/Dataset critique (+ search): `qwen/qwen3.6-27b`
-   - **P3 Index Build**: `llama-3.1-8b-instant` (one-time, cached) *[NOTE: config.py currently shows openai/gpt-oss-20b - this is an error; follow Guardrails.md]*
-   - Answerer (P1/P2/P3): `llama-3.3-70b-versatile` (shared)
-   - Judge: `qwen/qwen3.6-27b` (no search tool)
-   - Embeddings: `bge-small-en-v1.5` (local CPU)
-   - BM25: `rank_bm25` (local CPU)
-   - Debugging: `llama-3.1-8b-instant`
 3. **Anti-leakage**: Three query sets disjoint (100 PQ / 20 GQ / 20 JEQ). Pipelines receive only query + own retrieved nodes.
 4. **Loop safety**: Every loop script has hardcoded `LOCAL_TEST_THROTTLE` boolean forcing `LIMIT 3`. Never centralised.
 5. **Determinism**: All LLM calls `temperature=0`, each cell runs once. SQLite WAL mode mandatory.
@@ -73,7 +65,9 @@ uv run python -m dataset_generation.run_dataset_generation
 graphify update .
 ```
 
-## Key Files to Know
+## Key Files and Directories to Know
+* **Root Directory (`./`)**: Harness environment containing research notes, documentation, findings, and harness-level configurations.
+* **Project Directory (`./project`)**: The active codebase. **All actual application code, pipelines, and executable modules live here.**
 
 | File | Purpose |
 |------|---------|
@@ -95,6 +89,7 @@ graphify update .
 - `Architecture.md` (v2) wins when docs disagree
 
 ## Environment
+* **Environment Variables**: Use the local `./project/.env` for application runtime configuration and API keys (distinct from any harness-level `.env` in the root).
 
 ```bash
 # Required env vars (in project/.env)

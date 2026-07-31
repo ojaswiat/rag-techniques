@@ -6,6 +6,9 @@ from dotenv import load_dotenv
 
 load_dotenv(Path(__file__).parent.parent / ".env")
 
+GROQ_API_ENDPOINT: str = os.getenv("GROQ_API_ENDPOINT", "https://api.groq.com/openai/v1")
+NIM_API_ENDPOINT: str = os.getenv("NIM_API_ENDPOINT", "https://integrate.api.nvidia.com/v1")
+
 GROQ_API_KEY: str | None = os.getenv("GROQ_API_KEY")
 LLAMA_CLOUD_API_KEY: str | None = os.getenv("LLAMA_CLOUD_API_KEY")
 NIM_API_KEY: str | None = os.getenv("NIM_API_KEY")
