@@ -248,3 +248,31 @@ Simple running list of changes made to the project after the proposal was submit
   `project/dataset_generation/run_dataset_generation.py`,
   `project/tests/test_run_dataset_generation.py`,
   `resources/specs/Architecture.md`, `resources/specs/Project Idea.md`.
+- 2026-07-29: Fixed Doubt #12 in the Critic's local search tool,
+  `project/dataset_generation/search_tool.py`'s `search_filing_nodes()`.
+  It scored nodes by raw query-term occurrence count with no length
+  normalization, which biases toward long/wordy nodes over short precise
+  ones -- a short node with a single exact hit could rank below a long
+  node that happens to repeat a term several times across far more
+  surrounding text. Fixed with plain length-normalized TF:
+  `score = raw_count / len(node_tokens)` instead of `score = raw_count`,
+  with a `not node_tokens: continue` guard so an empty-content node can't
+  raise `ZeroDivisionError`. Considered and rejected adding IDF (i.e.
+  real TF-IDF) or pulling in a library (`rank_bm25` or any TF-IDF
+  package): this tool isn't just incidental plumbing -- the Critic uses
+  it to independently re-derive an answer and verify Generator queries
+  before they're accepted into `queries`/`golden_queries`/
+  `judge_validation`. IDF is BM25's core differentiator, and P2's real
+  benchmarked pipeline in Phase 5 *is* BM25 (`rank_bm25`); any resemblance
+  between this verification tool's ranking and real BM25 scoring would
+  mean queries whose evidence BM25-like scoring finds easily are more
+  likely to survive into the dataset, an unearned advantage for P2 baked
+  into the dataset's composition before the benchmark even runs. Plain
+  length-normalized TF (no IDF, no library) fixes the actual bug without
+  reintroducing that risk. Regression-tested with the concrete case that
+  motivated the fix: a 7-token node with one "revenue" hit
+  (score ~=0.143) now correctly outranks a 60-token node mentioning
+  "revenue" five times (score ~=0.083) for the query "revenue" -- under
+  the old raw-count scoring the 60-token node would have won 5-to-1.
+  Updated: `project/dataset_generation/search_tool.py` (function +
+  module docstring), `project/tests/test_search_tool.py`.

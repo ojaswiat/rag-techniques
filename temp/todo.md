@@ -1,4 +1,4 @@
-
+Can you confirm that the summary tree is actually built? Don't just look into directory. Confirm with the contents (just skim, don't read the entire files).
 
 Change the models and build summary again refer to model-selection.md file.
 Build the node tables again.
@@ -30,10 +30,8 @@ Minor (nice-to-have, not urgent):
 13. Empty list treated as "give me everything." If you pass in zero filings by accident, the code treats that the same as "use all 9 filings" instead of "use none." Surprising behavior.
 14. No duplicate-question check. Nothing stops two very similar questions both getting into the final set, though it's unlikely given how the sections are split up.
 
-
-
-
-
+## Daily Cap Limit
+Qwen for building summary tree is hitting daily cap of groq without even generating a summary. Need to change it.
 
 ## Research
 **In a fresh session**
