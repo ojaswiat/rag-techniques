@@ -10,10 +10,9 @@ from __future__ import annotations
 import asyncio
 import logging
 import time
-from typing import Any
 
 from . import config
-from ._llm_utils import _is_rate_limit_error, _retry_decorator
+from .utils import _retry_decorator
 from openai import AsyncOpenAI
 
 logger = logging.getLogger(__name__)
@@ -30,13 +29,13 @@ def get_nim_client(model: str) -> AsyncOpenAI:
     The returned object's chat.completions.create method includes retry
     logic, semaphore limiting, and a 40 RPM rate limiter.
     """
-    if not config.NVIDIA_API_KEY:
-        raise ValueError("NVIDIA_API_KEY must be set in environment")
+    if not config.NIM_API_KEY:
+        raise ValueError("NIM_API_KEY must be set in environment")
     _client = AsyncOpenAI(
         base_url="https://integrate.api.nvidia.com/v1",
-        api_key=config.NVIDIA_API_KEY,
+        api_key=config.NIM_API_KEY,
     )
-    _semaphore = asyncio.Semaphore(getattr(config, "NVIDIA_MAX_CONCURRENCY", 5))
+    _semaphore = asyncio.Semaphore(getattr(config, "NIM_MAX_CONCURRENCY", 5))
 
     # Wrap the create method with retry, semaphore, and rate limiting
     original_create = _client.chat.completions.create

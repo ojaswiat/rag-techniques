@@ -1,4 +1,4 @@
-import config
+import llm_client.config as config
 
 def test_model_routing_has_all_stages():
     expected_stages = {"generator", "critic", "p3_index_build", "answerer", "judge", "debug"}

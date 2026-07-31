@@ -11,7 +11,7 @@ import asyncio
 from typing import Any
 
 from . import config
-from ._llm_utils import _is_rate_limit_error, _retry_decorator
+from .utils import _retry_decorator
 from groq import APIStatusError, AsyncGroq
 
 logger = __import__('logging').getLogger(__name__)

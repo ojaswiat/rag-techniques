@@ -6,7 +6,7 @@ this exact pattern — a hardcoded LOCAL_TEST_THROTTLE boolean that forces a
 3-item cap. Run the full workflow under throttle=True once, end to end,
 before flipping to False for the real batch.
 """
-import config
+import llm_client.config as config
 
 LOCAL_TEST_THROTTLE: bool = config.LOCAL_TEST_THROTTLE
 

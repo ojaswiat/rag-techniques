@@ -5,8 +5,8 @@ model family from the Critic (Task 6), per the anti-self-grading invariant.
 """
 import json
 
-from project.llm_client import LLMFactory
-from project import config
+from llm_client.llm_factory import LLMFactory
+from llm_client import config
 
 _QUADRANT_GUIDANCE = {
     "Q1_Direct_Text": "Ask a direct fact-retrieval question answerable from a single explicit statement in continuous prose.",
