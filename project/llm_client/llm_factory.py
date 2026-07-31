@@ -1,23 +1,9 @@
-"""Factory for obtaining LLM clients.
-
-The factory reads the model name and provider from config.MODEL_ROUTING
-and returns a ready‑to‑use client object (AsyncGroq or AsyncOpenAI) that
-already includes retry‑on‑429 and semaphore logic.
-
-Usage:
-    from llm_client import LLMFactory
-    client = LLMFactory.get_client("groq", "openai/gpt-oss-120b")
-    response = await client.chat.completions.create(
-        model="openai/gpt-oss-120b",
-        messages=[...],
-        temperature=0.0,
-    )
-"""
-
 from __future__ import annotations
 
 import importlib
 from typing import Any
+
+from llama_index.llms.openai_like import OpenAILike
 
 from . import config
 
@@ -25,11 +11,11 @@ logger = __import__('logging').getLogger(__name__)
 
 
 class LLMFactory:
-    """Static factory that returns a configured LLM client."""
+    """Static factory that returns LlamaIndex-compatible LLM client objects."""
 
     @staticmethod
     def get_client(provider: str, model: str) -> Any:
-        """Return a client instance for the given provider and model.
+        """Return a LlamaIndex LLM instance for the given provider and model.
 
         Parameters
         ----------
@@ -40,21 +26,36 @@ class LLMFactory:
 
         Returns
         -------
-        An object that implements the provider's chat.completions.create method
-        with retry and semaphore logic applied.
-
-        Raises
-        ------
-        ValueError
-            If provider is not supported.
+        A LlamaIndex LLM object (subclass of BaseLLM) ready for use in 
+        TreeIndex, VectorStoreIndex, etc.
         """
         match provider:
             case "groq":
                 groq_mod = importlib.import_module(".groq_client", package=__package__)
-                return groq_mod.get_groq_client(model)
+                raw_client = groq_mod.get_groq_client(model)
+
+                api_base = getattr(config, "GROQ_API_ENDPOINT", "https://api.groq.com/openai/v1")
+                return OpenAILike(
+                    model=model,
+                    api_base=api_base,
+                    api_key=config.GROQ_API_KEY,
+                    async_client=raw_client,
+                    is_chat_model=True,
+                )
+
             case "nvidia":
                 nim_mod = importlib.import_module(".nim_client", package=__package__)
-                return nim_mod.get_nim_client(model)
+                raw_client = nim_mod.get_nim_client(model)
+
+                api_base = getattr(config, "NIM_API_ENDPOINT", "https://integrate.api.nvidia.com/v1")
+                return OpenAILike(
+                    model=model,
+                    api_base=api_base,
+                    api_key=config.NIM_API_KEY,
+                    async_client=raw_client,
+                    is_chat_model=True,
+                )
+
             case _:
                 raise ValueError(f"Unsupported LLM provider: {provider!r}")
 
@@ -70,5 +71,4 @@ class LLMFactory:
         return LLMFactory.get_client(provider, model)
 
 
-# Explicit public API
 __all__ = ["LLMFactory"]
