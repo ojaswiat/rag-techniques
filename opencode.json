@@ -4,8 +4,5 @@
     "@ephemushroom/opencode-claude-mem",
     "superpowers@git+https://github.com/obra/superpowers.git",
     "https://github.com/anthonystepvoy/caveman-opencode.git"
-  ],
-  "env": {
-    "CLAUDE_MEM_DATA_DIR": "./.claude-mem"
-  }
+  ]
 }
