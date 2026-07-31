@@ -1,0 +1,80 @@
+[2026-07-31 10:10:23.397] [INFO ] [OPENCODE] Plugin installed {destination=/Users/ojaswi/.config/opencode/plugins/claude-mem.js}
+[2026-07-31 10:10:23.398] [INFO ] [OPENCODE] Plugin registered in config {path=/Users/ojaswi/.config/opencode/opencode.json}
+[2026-07-31 10:10:23.401] [INFO ] [OPENCODE] Context injected into AGENTS.md {path=/Users/ojaswi/.config/opencode/AGENTS.md}
+[2026-07-31 10:10:43.016] [INFO ] [SYSTEM] Starting worker daemon {workerScriptPath=/Users/ojaswi/.claude/plugins/marketplaces/thedotmack/plugin/scripts/worker-service.cjs}
+[2026-07-31 10:10:43.841] [INFO ] [SYSTEM] Cached SKILL.md at boot {path=/Users/ojaswi/.claude/plugins/marketplaces/thedotmack/plugin/skills/mem-search/SKILL.md, bytes=4081}
+[2026-07-31 10:10:43.898] [INFO ] [SYSTEM] Cached viewer.html at boot {path=/Users/ojaswi/.claude/plugins/marketplaces/thedotmack/plugin/ui/viewer.html, bytes=59236}
+[2026-07-31 10:10:43.901] [INFO ] [SYSTEM] Cached onboarding explainer at boot {path=/Users/ojaswi/.claude/plugins/marketplaces/thedotmack/plugin/skills/how-it-works/onboarding-explainer.md, bytes=1009}
+[2026-07-31 10:10:43.966] [INFO ] [SYSTEM] HTTP server started {host=127.0.0.1, port=37701, pid=17457}
+[2026-07-31 10:10:43.981] [INFO ] [SYSTEM] Worker started {host=127.0.0.1, port=37701, pid=17457}
+[2026-07-31 10:10:43.982] [INFO ] [WORKER] Background initialization starting...
+[2026-07-31 10:10:43.983] [INFO ] [SYSTEM] Mode loaded: code
+[2026-07-31 10:10:43.986] [INFO ] [SYSTEM] Dependency preflight passed
+[2026-07-31 10:10:43.986] [INFO ] [WORKER] Checking for one-time CWD remap...
+[2026-07-31 10:10:43.986] [INFO ] [SYSTEM] ChromaMcpManager initialized (lazy - connects on first use)
+[2026-07-31 10:10:43.986] [INFO ] [WORKER] Initializing database manager...
+[2026-07-31 10:10:44.036] [INFO ] [DB    ] Creating FTS5 tables
+[2026-07-31 10:10:44.039] [INFO ] [DB    ] FTS5 tables created successfully
+[2026-07-31 10:10:44.039] [INFO ] [DB    ] Database initialized (shared connection)
+[2026-07-31 10:10:44.039] [WARN ] [SYSTEM] Running one-time v12.4.3 pollution cleanup {dbPath=/Users/ojaswi/Projects/rag-techniques/.claude-mem/claude-mem.db}
+[2026-07-31 10:10:44.040] [WARN ] [SYSTEM] statfsSync returned non-credible values; proceeding without disk-space pre-flight {bsize=0, bavail=61202533, runtime=bun 1.3.14, platform=darwin-x64, hint=see https://github.com/oven-sh/bun/issues/31133 for the darwin-x64 case}
+[2026-07-31 10:10:44.048] [INFO ] [SYSTEM] v12.4.3 backup created via VACUUM INTO {backupPath=/Users/ojaswi/Projects/rag-techniques/.claude-mem/backups/claude-mem-pre-12.4.3-2026-07-31T09-10-44-040Z.db, dbSize=4096}
+[2026-07-31 10:10:44.050] [INFO ] [SYSTEM] v12.4.3: observer-sessions purge committed {sessions=0, cascadeRows=0}
+[2026-07-31 10:10:44.050] [INFO ] [SYSTEM] v12.4.3: stuck pending_messages purge committed {rows=0}
+[2026-07-31 10:10:44.051] [INFO ] [SYSTEM] v12.4.3 cleanup complete {backupPath=/Users/ojaswi/Projects/rag-techniques/.claude-mem/backups/claude-mem-pre-12.4.3-2026-07-31T09-10-44-040Z.db, chromaWiped=false, observerSessions=0, observerCascadeRows=0, stuckPendingMessages=0}
+[2026-07-31 10:10:44.051] [INFO ] [SYSTEM] To restore: cp '/Users/ojaswi/Projects/rag-techniques/.claude-mem/backups/claude-mem-pre-12.4.3-2026-07-31T09-10-44-040Z.db' '/Users/ojaswi/Projects/rag-techniques/.claude-mem/claude-mem.db'
+[2026-07-31 10:10:44.051] [INFO ] [WORKER] Adopting merged worktrees (background)...
+[2026-07-31 10:10:44.052] [INFO ] [WORKER] Initializing search services...
+[2026-07-31 10:10:44.053] [INFO ] [WORKER] SearchManager initialized and search routes registered
+[2026-07-31 10:10:44.054] [INFO ] [WORKER] CorpusRoutes registered
+[2026-07-31 10:10:44.054] [INFO ] [WORKER] CloudSyncRoutes registered
+[2026-07-31 10:10:44.054] [INFO ] [SYSTEM] Core initialization complete (DB + search ready)
+[2026-07-31 10:10:44.065] [INFO ] [TRANSCRIPT] Transcript watcher config not found; skipping automatic transcript capture {configPath=/Users/ojaswi/.claude-mem/transcript-watch.json}
+[2026-07-31 10:10:44.066] [INFO ] [CHROMA_SYNC] Backfill check for 0 projects
+[2026-07-31 10:10:44.066] [INFO ] [CHROMA_SYNC] Watermark cache missing — bootstrapping from Chroma (one-time)
+[2026-07-31 10:10:44.067] [INFO ] [CHROMA_SYNC] Bootstrap complete — incremental backfills will use watermarks
+[2026-07-31 10:10:44.073] [INFO ] [CHROMA_SYNC] Backfill check complete for all projects
+[2026-07-31 10:10:44.102] [INFO ] [SYSTEM] Worker started successfully
+[2026-07-31 10:10:44.223] [INFO ] [SYSTEM] Claude-mem search server started
+[2026-07-31 10:10:44.243] [INFO ] [WORKER] MCP loopback self-check connected successfully
+[2026-07-31 10:10:44.247] [INFO ] [SYSTEM] MCP server shutting down {reason=stdio-closed}
+[2026-07-31 10:24:28.505] [INFO ] [HTTP  ] SessionRoutes: handleSessionInitByClaudeId called {contentSessionId=ses_0488cce11ffeoAq5mXRg8SxlUm, project=rag-techniques, platformSource=opencode, prompt_length=168, customTitle=undefined}
+[2026-07-31 10:24:28.506] [INFO ] [SESSION] [session-1] CREATED | contentSessionId=ses_0488cce11ffeoAq5mXRg8SxlUm → sessionDbId=1 | isNew=true | project=rag-techniques
+[2026-07-31 10:24:28.508] [INFO ] [SESSION] [session-1] Session initialized {project=rag-techniques, contentSessionId=ses_0488cce11ffeoAq5mXRg8SxlUm, queueDepth=0, hasGenerator=false}
+[2026-07-31 10:24:28.508] [INFO ] [CHROMA_SYNC] Syncing user prompt {promptId=1, project=rag-techniques}
+[2026-07-31 10:24:28.512] [INFO ] [SESSION] [session-1] Generator auto-starting (init) using OpenRouter {queueDepth=0, historyLength=0}
+[2026-07-31 10:24:28.515] [INFO ] [SESSION] MEMORY_ID_GENERATED | sessionDbId=1 | provider=OpenRouter
+[2026-07-31 10:24:29.312] [INFO ] [CHROMA_MCP] Prewarming chroma-mcp uvx environment {command=uvx, args=--python 3.13 --with onnxruntime>=1.20 --with protobuf<7 --from chroma-mcp==0.2.6 chroma-mcp --help, timeoutMs=120000}
+[2026-07-31 10:24:29.316] [ERROR] [SDK   ] [session-1] OpenRouter init query failed {model=xiaomi/mimo-v2-flash:free} OpenRouter bad request (status 404)
+[2026-07-31 10:24:29.316] [ERROR] [SDK   ] ✗ OpenRouter agent error {sessionDbId=1} OpenRouter bad request (status 404)
+[2026-07-31 10:24:29.317] [ERROR] [SESSION] [session-1] Generator failed {provider=openrouter, error=OpenRouter bad request (status 404)} OpenRouter bad request (status 404)
+[2026-07-31 10:24:29.317] [INFO ] [SESSION] [session-1] Generator exited — finalizing session {reason=null}
+[2026-07-31 10:24:29.318] [INFO ] [SESSION] [session-1] Session finalized
+[2026-07-31 10:24:29.318] [INFO ] [SESSION] [session-1] Session removed from active sessions {project=rag-techniques}
+[2026-07-31 10:24:41.102] [WARN ] [SESSION] Discarding stale memory_session_id from previous worker instance (Issue #817) {sessionDbId=1, staleMemorySessionId=openrouter-ses_0488cce11ffeoAq5mXRg8SxlUm-1785489868513, reason=SDK context lost on worker restart - will capture new ID}
+[2026-07-31 10:24:41.103] [INFO ] [SESSION] [session-1] Session initialized {project=rag-techniques, contentSessionId=ses_0488cce11ffeoAq5mXRg8SxlUm, queueDepth=0, hasGenerator=false}
+[2026-07-31 10:24:41.103] [INFO ] [QUEUE ] [session-1] ENQUEUED | sessionDbId=1 | messageId=1 | type=observation | tool=assistant_message | depth=1
+[2026-07-31 10:24:41.104] [INFO ] [WORKER] Broadcasting processing status {isProcessing=true, queueDepth=1, activeSessions=1}
+[2026-07-31 10:24:41.104] [INFO ] [SESSION] [session-1] Generator auto-starting (observation) using OpenRouter {queueDepth=1, historyLength=0}
+[2026-07-31 10:24:41.105] [INFO ] [SESSION] MEMORY_ID_GENERATED | sessionDbId=1 | provider=OpenRouter
+[2026-07-31 10:24:41.139] [INFO ] [QUEUE ] [session-1] ENQUEUED | sessionDbId=1 | messageId=2 | type=summarize | depth=2
+[2026-07-31 10:24:41.139] [INFO ] [WORKER] Broadcasting processing status {isProcessing=true, queueDepth=2, activeSessions=1}
+[2026-07-31 10:24:41.140] [INFO ] [WORKER] Broadcasting processing status {isProcessing=true, queueDepth=2, activeSessions=1}
+[2026-07-31 10:24:41.145] [ERROR] [SDK   ] [session-1] OpenRouter init query failed {model=xiaomi/mimo-v2-flash:free} OpenRouter bad request (status 404)
+[2026-07-31 10:24:41.146] [ERROR] [SDK   ] ✗ OpenRouter agent error {sessionDbId=1} OpenRouter bad request (status 404)
+[2026-07-31 10:24:41.146] [ERROR] [SESSION] [session-1] Generator failed {provider=openrouter, error=OpenRouter bad request (status 404)} OpenRouter bad request (status 404)
+[2026-07-31 10:24:41.146] [INFO ] [SESSION] [session-1] Generator exited — finalizing session {reason=null}
+[2026-07-31 10:24:41.147] [INFO ] [SESSION] [session-1] Session removed from active sessions {project=rag-techniques}
+[2026-07-31 10:24:41.327] [WARN ] [SESSION] Discarding stale memory_session_id from previous worker instance (Issue #817) {sessionDbId=1, staleMemorySessionId=openrouter-ses_0488cce11ffeoAq5mXRg8SxlUm-1785489881104, reason=SDK context lost on worker restart - will capture new ID}
+[2026-07-31 10:24:41.328] [INFO ] [SESSION] [session-1] Session initialized {project=rag-techniques, contentSessionId=ses_0488cce11ffeoAq5mXRg8SxlUm, queueDepth=0, hasGenerator=false}
+[2026-07-31 10:24:41.328] [INFO ] [QUEUE ] [session-1] ENQUEUED | sessionDbId=1 | messageId=3 | type=observation | tool=assistant_message | depth=1
+[2026-07-31 10:24:41.328] [INFO ] [WORKER] Broadcasting processing status {isProcessing=true, queueDepth=1, activeSessions=1}
+[2026-07-31 10:24:41.328] [INFO ] [SESSION] [session-1] Generator auto-starting (observation) using OpenRouter {queueDepth=1, historyLength=0}
+[2026-07-31 10:24:41.329] [INFO ] [SESSION] MEMORY_ID_GENERATED | sessionDbId=1 | provider=OpenRouter
+[2026-07-31 10:24:41.353] [ERROR] [SDK   ] [session-1] OpenRouter init query failed {model=xiaomi/mimo-v2-flash:free} OpenRouter bad request (status 404)
+[2026-07-31 10:24:41.353] [ERROR] [SDK   ] ✗ OpenRouter agent error {sessionDbId=1} OpenRouter bad request (status 404)
+[2026-07-31 10:24:41.353] [ERROR] [SESSION] [session-1] Generator failed {provider=openrouter, error=OpenRouter bad request (status 404)} OpenRouter bad request (status 404)
+[2026-07-31 10:24:41.353] [INFO ] [SESSION] [session-1] Generator exited — finalizing session {reason=null}
+[2026-07-31 10:24:41.354] [INFO ] [SESSION] [session-1] Session removed from active sessions {project=rag-techniques}
+[2026-07-31 10:24:44.228] [INFO ] [CHROMA_MCP] Connecting to chroma-mcp via MCP stdio {command=uvx, args=--python 3.13 --with onnxruntime>=1.20 --with protobuf<7 --from chroma-mcp==0.2.6 chroma-mcp --client-type persistent --data-dir /Users/ojaswi/Projects/rag-techniques/.claude-mem/chroma}
+[2026-07-31 10:24:46.234] [INFO ] [CHROMA_MCP] Connected to chroma-mcp successfully

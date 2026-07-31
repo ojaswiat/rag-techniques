@@ -1,0 +1,4 @@
+{
+  "CLAUDE_MEM_RUNTIME": "worker",
+  "CLAUDE_MEM_PROVIDER": "openrouter"
+}
