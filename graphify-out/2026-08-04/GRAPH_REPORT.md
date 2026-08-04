@@ -1,16 +1,16 @@
-# Graph Report - rag-techniques  (2026-08-04)
+# Graph Report - rag-techniques  (2026-07-31)
 
 ## Corpus Check
-- 178 files · ~7,314,443 words
+- 123 files · ~4,945,574 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 8253 nodes · 8281 edges · 231 communities (86 shown, 145 thin omitted)
+- 8253 nodes · 8281 edges · 235 communities (89 shown, 146 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 108 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `b26b78f1`
+- Built from commit: `55de3d7d`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -207,6 +207,7 @@
 - test_node_builder.py
 - test_parsing_audit.py
 - Working in this repo
+- parse_filing.py
 - 4. Implementation Guardrails (Binding)
 - Quickstart
 - fetch_filings.py
@@ -214,6 +215,7 @@
 - Monitor Skill
 - gq_label_export.py
 - _migrate_golden_queries_schema
+- _DummyClient
 - dependencies
 - Note 7 – Interest income and interest expense
 - test_run_dataset_generation.py
@@ -263,7 +265,7 @@
 - **Zero-spend quota safety pattern (throttle, WAL resume, disjoint sets, Groq free tier)** — resources_artifacts_proposal_v1_0_0_groq_free_tier, resources_artifacts_proposal_v1_0_0_local_throttle, resources_artifacts_proposal_v1_0_0_sqlite_wal_store, resources_artifacts_proposal_v1_0_0_risk_management_plan [INFERRED 0.85]
 - **Guidelines and template constrain the submitted proposal** — resources_docs_proposalguidelines_required_structure, resources_docs_proposaltemplate_section_skeleton, resources_artifacts_proposal_v1_0_0_document, resources_artifacts_projectproposal_document [INFERRED 0.85]
 
-## Communities (231 total, 145 thin omitted)
+## Communities (235 total, 146 thin omitted)
 
 ### Community 2 - "Proposal Compliance and Benchmark Design"
 Cohesion: 0.05
@@ -354,8 +356,8 @@ Cohesion: 0.00
 Nodes (429): Accounting Principles, Activity for All Stock Plans, Advertising, professional, marketplace, and gaming platform abuses, Assets Recognized from Costs to Obtain a Contract with a Customer, AVAILABLE INFORMATION, BALANCE SHEETS, Basis for Opinion, Basis for Opinion (+421 more)
 
 ### Community 167 - "todo.md"
-Cohesion: 0.20
-Nodes (9): Daily Cap Limit, Doubts, Final Run, Organise information, Plan a code base search, Planning Research, Research, Using information (+1 more)
+Cohesion: 0.22
+Nodes (8): Daily Cap Limit, Doubts, Final Run, Organise information, Plan a code base search, Planning Research, Research, Using information
 
 ### Community 168 - "TODO.md"
 Cohesion: 0.01
@@ -370,8 +372,8 @@ Cohesion: 0.15
 Nodes (12): Execution Handoff, Global Constraints, Human Intervention Ledger (read this before starting), Phase 2 — Ingestion & Parsing Pipeline Implementation Plan, Self-Review Notes, Task 1: Filings manifest + Phase 2 dependencies, Task 2: `ingest/fetch_filings.py` — download filings from SEC EDGAR, Task 3: `ingest/parse_filing.py` — LlamaParse atomic-table parsing (+4 more)
 
 ### Community 171 - "run_ingestion.py"
-Cohesion: 0.15
-Nodes (12): build_nodes(), _is_table_block(), Splits parsed Markdown into atomic TextNode-shaped dicts.  A Markdown table is o, _is_cache_fresh(), parse_filing(), Parses raw filings into clean Markdown via LlamaParse (Cost-effective tier, atom, ingest_one(), main() (+4 more)
+Cohesion: 0.24
+Nodes (6): build_nodes(), _is_table_block(), Splits parsed Markdown into atomic TextNode-shaped dicts.  A Markdown table is o, ingest_one(), main(), Orchestrates fetch -> parse -> node_builder -> database_manager.insert_node for
 
 ### Community 172 - "JNJ_2024.md"
 Cohesion: 0.01
@@ -438,28 +440,28 @@ Cohesion: 0.10
 Nodes (19): author, bugs, url, dependencies, claude-mem, description, directories, doc (+11 more)
 
 ### Community 190 - "groq_client.py"
-Cohesion: 0.18
-Nodes (11): BaseException, Groq client provider.  Returns a ready-to-use AsyncOpenAI instance configured fo, get_nim_client(), AsyncOpenAI, NVIDIA NIM client provider.  Returns a ready-to-use AsyncOpenAI instance pointed, Return an AsyncOpenAI client configured for NIM endpoint.      The returned obje, _is_rate_limit_error(), Shared utilities for LLM clients. (+3 more)
+Cohesion: 0.14
+Nodes (14): AsyncOpenAI, BaseException, call_groq(), Any, Groq client provider.  Returns a ready-to-use AsyncGroq instance with retry and, Drop‑in replacement for the original groq_client.call_groq.      Uses the Groq p, get_nim_client(), NVIDIA NIM client provider.  Returns a ready-to-use AsyncOpenAI instance pointed (+6 more)
 
 ### Community 191 - "LLMFactory"
 Cohesion: 0.16
-Nodes (13): LLMFactory, Any, Static factory that returns LlamaIndex-compatible LLM client objects., Return a LlamaIndex LLM instance for the given provider and model.          Para, Convenience: fetch client using config.MODEL_ROUTING for a stage., _FakeChoice, _FakeCompletion, Tests for the LLM client abstraction (NIM provider). (+5 more)
+Nodes (13): LLMFactory, Any, Static factory that returns a configured LLM client., Return a client instance for the given provider and model.          Parameters, Convenience: fetch client using config.MODEL_ROUTING for a stage., _FakeChoice, _FakeCompletion, Tests for the LLM client abstraction (NIM provider). (+5 more)
 
 ### Community 192 - "test_groq_client_backoff.py"
-Cohesion: 0.17
-Nodes (15): call_groq(), get_groq_client(), Any, AsyncOpenAI, Return an AsyncOpenAI client configured for Groq with retries and concurrency li, Drop‑in replacement for the original groq_client.call_groq., _FakeResponse, _FakeResult (+7 more)
+Cohesion: 0.22
+Nodes (12): AsyncGroq, get_groq_client(), Return an AsyncGroq client configured with retries and concurrency limit., _FakeResponse, _FakeResult, Tests for the Groq client provider (backward‑compatible shim)., Ensure the module‑level call_groq still works (used by legacy code)., test_call_groq_backward_compatibility() (+4 more)
 
 ### Community 193 - "database_manager.py"
 Cohesion: 0.20
 Nodes (8): _dumps(), get_golden_queries(), insert_golden_query(), insert_judge_validation(), insert_query(), _loads(), SQLite access layer: five isolated tables, WAL mode, JSON-in-TEXT convention.  S, upsert_result()
 
 ### Community 194 - "llm_factory.py"
-Cohesion: 0.18
-Nodes (10): generate_query(), Generator: proposes a query + ground truth + citations for one filing section., _DummyClient, _fake_response(), _FakeChoice, _FakeResponse, Async client with a configurable return value for create., test_generate_query_first_attempt_has_no_feedback_in_prompt() (+2 more)
+Cohesion: 0.24
+Nodes (9): generate_query(), Generator: proposes a query + ground truth + citations for one filing section., Factory for obtaining LLM clients.  The factory reads the model name and provide, _fake_response(), _FakeChoice, _FakeResponse, test_generate_query_first_attempt_has_no_feedback_in_prompt(), test_generate_query_parses_generator_response() (+1 more)
 
 ### Community 195 - "search_filing_nodes"
-Cohesion: 0.26
-Nodes (12): Critic: independently re-derives an answer using a local search tool.  Uses qwen, Local, dependency-free keyword search the Critic uses to find evidence.  Not a r, search_filing_nodes(), _tokenize(), _node(), test_degenerate_tiny_node_does_not_outrank_real_node(), test_empty_content_node_skipped_without_zero_division(), test_excludes_zero_overlap_nodes() (+4 more)
+Cohesion: 0.31
+Nodes (11): Local, dependency-free keyword search the Critic uses to find evidence.  Not a r, search_filing_nodes(), _tokenize(), _node(), test_degenerate_tiny_node_does_not_outrank_real_node(), test_empty_content_node_skipped_without_zero_division(), test_excludes_zero_overlap_nodes(), test_ranks_by_keyword_overlap() (+3 more)
 
 ### Community 196 - "Benchmark design"
 Cohesion: 0.18
@@ -468,6 +470,10 @@ Nodes (11): Benchmark design, Evaluation: three pillars, How queries get made: g
 ### Community 200 - "Working in this repo"
 Cohesion: 0.25
 Nodes (8): Document and styling rules, Known stale or unresolved content, Rebuilding a `.docx` on macOS, The knowledge graph, The two-layer split, Verifying a PDF, Version drift, Working in this repo
+
+### Community 201 - "parse_filing.py"
+Cohesion: 0.39
+Nodes (6): _is_cache_fresh(), parse_filing(), Parses raw filings into clean Markdown via LlamaParse (Cost-effective tier, atom, test_parse_filing_calls_llamaparse_and_caches(), test_parse_filing_reparses_if_cache_older_than_48h(), test_parse_filing_skips_reparse_within_48h()
 
 ### Community 202 - "4. Implementation Guardrails (Binding)"
 Cohesion: 0.29
@@ -478,7 +484,7 @@ Cohesion: 0.29
 Nodes (7): Current state and open items, Quickstart, Reading order for the specs, Repository layout, The one thing to know first, The shape of the project in one paragraph, Where to go next
 
 ### Community 204 - "fetch_filings.py"
-Cohesion: 0.23
+Cohesion: 0.57
 Nodes (6): _download_bytes(), fetch_filing(), _get_json(), _headers(), Downloads SEC 10-K filings, resolving real URLs from SEC EDGAR's public JSON API, resolve_cik()
 
 ### Community 205 - "Guardrails are binding, not advisory"
@@ -510,8 +516,8 @@ Cohesion: 0.11
 Nodes (29): Encoding, _accept_query(), append_failure_log(), _attempt_fill(), build_pools(), chunk_section(), _company_of(), _configure_logging() (+21 more)
 
 ### Community 260 - "async_critic.py"
-Cohesion: 0.19
-Nodes (9): critique_query(), Run the Critic's search-then-answer loop and return the parsed final     answer, ONE live, throttled smoke test proving async_critic.critique_query() actually sp, Exercises the REAL Groq function-calling protocol end to end -- no mocking     o, test_critique_query_live_round_trip_against_real_groq_api(), test_critique_query_default_return_shape_is_unchanged(), test_critique_query_raises_after_max_rounds_without_final_answer(), test_critique_query_return_messages_includes_full_history() (+1 more)
+Cohesion: 0.18
+Nodes (10): critique_query(), Critic: independently re-derives an answer using a local search tool.  Uses qwen, Run the Critic's search-then-answer loop and return the parsed final     answer, ONE live, throttled smoke test proving async_critic.critique_query() actually sp, Exercises the REAL Groq function-calling protocol end to end -- no mocking     o, test_critique_query_live_round_trip_against_real_groq_api(), test_critique_query_default_return_shape_is_unchanged(), test_critique_query_raises_after_max_rounds_without_final_answer() (+2 more)
 
 ### Community 261 - "test_gq_labeling.py"
 Cohesion: 0.27
@@ -548,12 +554,14 @@ Nodes (4): Design, Open question before implementation, Phase 5/7 Loop Executor:
 ## Knowledge Gaps
 - **7622 isolated node(s):** `$schema`, `plugin`, `@opencode-ai/plugin`, `$schema`, `plugin` (+7617 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **145 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **146 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `next_target()` connect `test_run_dataset_generation.py` to `run_dataset_generation.py`?**
+- **Why does `test_chunk_section_single_oversized_node_logged_and_skipped_rest_packed()` connect `test_config.py` to `test_run_dataset_generation.py`, `run_dataset_generation.py`?**
+  _High betweenness centrality (0.000) - this node is a cross-community bridge._
+- **Why does `chunk_section()` connect `run_dataset_generation.py` to `test_config.py`?**
   _High betweenness centrality (0.000) - this node is a cross-community bridge._
 - **Are the 7 inferred relationships involving `values_match()` (e.g. with `test_values_match_exact_after_normalization()` and `test_values_match_falls_back_to_text_equality_with_no_numbers()`) actually correct?**
   _`values_match()` has 7 INFERRED edges - model-reasoned connections that need verification._
@@ -562,8 +570,6 @@ _Questions this graph is uniquely positioned to answer:_
 - **Are the 7 inferred relationships involving `search_filing_nodes()` (e.g. with `test_degenerate_tiny_node_does_not_outrank_real_node()` and `test_empty_content_node_skipped_without_zero_division()`) actually correct?**
   _`search_filing_nodes()` has 7 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `$schema`, `plugin`, `@opencode-ai/plugin` to the rest of the system?**
-  _7753 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _7754 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Proposal Compliance and Benchmark Design` be split into smaller, more focused modules?**
   _Cohesion score 0.04931972789115646 - nodes in this community are weakly interconnected._
-- **Should `Research Question and Literature Base` be split into smaller, more focused modules?**
-  _Cohesion score 0.002369668246445498 - nodes in this community are weakly interconnected._

@@ -2,7 +2,7 @@
 
 How the benchmark is meant to be built. Primary source: `resources/specs/Architecture.md` (v2), with the schedule in `resources/specs/Phase Plan.md` and the throughput maths in `resources/specs/Budget.md`.
 
-Phases 1–2 exist in code under `project/` (not `src/` — see [Working in this repo](working-in-this-repo.md)); Phases 3–8 below are still the design to build against.
+Phases 1–4 exist in code under `project/` (not `src/` — see [Working in this repo](working-in-this-repo.md)); Phase 4 is coded and tested but hasn't been run against the full corpus yet. Phases 5–8 below are still the design to build against.
 
 ## Shape of the system
 
@@ -90,13 +90,13 @@ The answerer's prompt instructs the model to append `[[node:<node_id>]]` immedia
 
 ## Model routing
 
-Fixed per stage (`Guardrails.md` §2). This table is not a suggestion; the family separations encoded in it are what make the evaluation defensible.
+Fixed per stage (`Guardrails.md` §2). This table is not a suggestion; the family separations encoded in it are what make the evaluation defensible. Each stage's `config.MODEL_ROUTING` entry is now a `{model, provider}` pair — `LLMFactory.get_client_for_stage(stage)` (`project/llm_client/llm_factory.py`) reads it and dispatches to `groq_client.py` or `nim_client.py` accordingly, so a stage can move providers (as P3's index build did, to NVIDIA NIM) without touching call sites.
 
 | Stage | Model | Where |
 |---|---|---|
 | Dataset generation | `openai/gpt-oss-120b` | Groq free |
 | Dataset critique (with search tool) | `Qwen3.6-27B` | Groq free |
-| P3 summary-index build (one-time) | `llama-3.1-8b-instant` | Groq free |
+| P3 summary-index build (one-time) | `nvidia/nemotron-3-super-120b-a12b` | NVIDIA NIM free (via `LLMFactory`) |
 | Pipeline answers, all of P1/P2/P3 | `Llama 3.3 70B` (shared) | Groq free |
 | Judge / scoring (no search tool) | `Qwen3.6-27B` | Groq free |
 | Embeddings (P1) | `bge-small-en-v1.5` | Local CPU, $0 |
@@ -130,10 +130,10 @@ Ten weeks total, with active build work (Phases 1–6) wrapping by end of Week 7
 
 | Phase | Weeks | What gets built | Key modules |
 |---|---|---|---|
-| **1 — Infrastructure** ✅ built | 1 | SQLite state layer, resilient Groq wrapper, throttle scaffolding | `project/config.py`, `project/database_manager.py`, `project/groq_client.py`, `project/loop_template.py` |
+| **1 — Infrastructure** ✅ built | 1 | SQLite state layer, multi-provider LLM client factory, throttle scaffolding | `project/llm_client/` (`config.py`, `llm_factory.py`, `groq_client.py`, `nim_client.py`), `project/database_manager.py`, `project/loop_template.py` |
 | **2 — Ingestion & parsing** ✅ built | 1–3 | Filings → clean, metadata-rich nodes (all 18 filings ingested, 26,050 nodes) | `project/ingest/fetch_filings.py`, `parse_filing.py`, `node_builder.py`, `parsing_audit.py`, `run_ingestion.py` |
-| **3 — P3 summary index** | 3 | One-time LLM-built summary tree per filing, cached | `pipelines/structural/build_summary_index.py` |
-| **4 — Dataset generation** | 4–5 | 140 verified queries, split into three disjoint sets, GQ hand-labelled | `dataset_gen/async_generator.py`, `async_critic.py`, `cross_check.py`, `split_and_label.py` |
+| **3 — P3 summary index** ✅ built | 3 | One-time LLM-built summary tree per filing, cached, NVIDIA NIM | `project/pipelines/structural/build_summary_index.py`, `node_convert.py` |
+| **4 — Dataset generation** ✅ coded, not yet run | 4–5 | 140 verified queries, split into three disjoint sets, GQ hand-labelled — `queries`/`golden_queries`/`judge_validation` still empty | `project/dataset_generation/async_generator.py`, `async_critic.py`, `cross_check.py`, `search_tool.py`, `run_dataset_generation.py`, `gq_label_export.py`, `gq_label_import.py` |
 | **5 — Pipelines** | 5–6 | P1, P2, P3 plus the shared answerer and the executor | `pipelines/*`, `loop_executor.py` |
 | **6 — Judge & gate** | 6–7 | Judge with quadrant-routed few-shot, code metrics, the 80% gate | `judge/async_judge.py`, `metrics.py`, `validation_gate.py` |
 | **7 — Full benchmark** | 7–9 | The 900-cell matrix, TPD-paced, resumable, in the background | `run_benchmark.py` |

@@ -60626,3 +60626,189 @@
 [2026-07-31 16:30:14.859] [ERROR] [WORKER] ✗ Request failed disk I/O error
 [2026-07-31 16:30:14.956] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=ses_0473bf799ffeks4EBXw0e1o5MR, toolName=bash} disk I/O error
 [2026-07-31 16:30:15.374] [ERROR] [WORKER] ✗ Request failed disk I/O error
+[2026-08-02 12:09:35.326] [ERROR] [WORKER] ✗ Request failed disk I/O error
+[2026-08-02 12:15:47.948] [INFO ] [HTTP  ] SessionRoutes: handleSessionInitByClaudeId called {contentSessionId=8da806e4-f256-4e40-ad8c-d62da21a2b42, project=ojaswiat-com, platformSource=claude, prompt_length=33, customTitle=undefined}
+[2026-08-02 12:15:47.952] [ERROR] [WORKER] ✗ Request failed disk I/O error
+[2026-08-02 12:16:24.729] [INFO ] [HTTP  ] SessionRoutes: handleSessionInitByClaudeId called {contentSessionId=8da806e4-f256-4e40-ad8c-d62da21a2b42, project=ojaswiat-com, platformSource=claude, prompt_length=6, customTitle=undefined}
+[2026-08-02 12:16:24.731] [ERROR] [WORKER] ✗ Request failed disk I/O error
+[2026-08-02 12:16:33.829] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=8da806e4-f256-4e40-ad8c-d62da21a2b42, toolName=Bash} disk I/O error
+[2026-08-02 12:16:33.917] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=8da806e4-f256-4e40-ad8c-d62da21a2b42, toolName=Bash} disk I/O error
+[2026-08-02 12:16:39.161] [ERROR] [HTTP  ] Route handler error {path=/api/observations/by-file} disk I/O error
+[2026-08-02 12:16:39.161] [ERROR] [WORKER] ✗ Request failed disk I/O error
+[2026-08-02 12:16:39.354] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=8da806e4-f256-4e40-ad8c-d62da21a2b42, toolName=Read} disk I/O error
+[2026-08-02 12:16:39.388] [ERROR] [HTTP  ] Route handler error {path=/api/observations/by-file} disk I/O error
+[2026-08-02 12:16:39.388] [ERROR] [WORKER] ✗ Request failed disk I/O error
+[2026-08-02 12:16:39.507] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=8da806e4-f256-4e40-ad8c-d62da21a2b42, toolName=Read} disk I/O error
+[2026-08-02 12:16:39.898] [ERROR] [HTTP  ] Route handler error {path=/api/observations/by-file} disk I/O error
+[2026-08-02 12:16:39.898] [ERROR] [WORKER] ✗ Request failed disk I/O error
+[2026-08-02 12:16:39.953] [ERROR] [HTTP  ] Route handler error {path=/api/observations/by-file} disk I/O error
+[2026-08-02 12:16:39.954] [ERROR] [WORKER] ✗ Request failed disk I/O error
+[2026-08-02 12:16:40.053] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=8da806e4-f256-4e40-ad8c-d62da21a2b42, toolName=Read} disk I/O error
+[2026-08-02 12:16:40.129] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=8da806e4-f256-4e40-ad8c-d62da21a2b42, toolName=Read} disk I/O error
+[2026-08-02 12:17:06.656] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=8da806e4-f256-4e40-ad8c-d62da21a2b42, toolName=Edit} disk I/O error
+[2026-08-02 12:17:10.859] [ERROR] [WORKER] ✗ Request failed disk I/O error
+[2026-08-02 13:16:27.065] [ERROR] [WORKER] ✗ Request failed disk I/O error
+[2026-08-02 13:26:18.472] [INFO ] [HTTP  ] SessionRoutes: handleSessionInitByClaudeId called {contentSessionId=838959e2-2767-4f40-b365-0cb98121b7e5, project=ojaswiat-cyberpunk, platformSource=claude, prompt_length=21, customTitle=undefined}
+[2026-08-02 13:26:18.473] [ERROR] [WORKER] ✗ Request failed disk I/O error
+[2026-08-02 13:26:22.388] [ERROR] [WORKER] ✗ Request failed disk I/O error
+[2026-08-02 13:34:25.236] [ERROR] [WORKER] ✗ Request failed disk I/O error
+[2026-08-02 13:37:19.695] [INFO ] [HTTP  ] SessionRoutes: handleSessionInitByClaudeId called {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, project=ojaswiat-cyberpunk, platformSource=claude, prompt_length=83, customTitle=undefined}
+[2026-08-02 13:37:19.695] [ERROR] [WORKER] ✗ Request failed disk I/O error
+[2026-08-02 13:37:46.307] [ERROR] [WORKER] ✗ Request failed disk I/O error
+[2026-08-02 13:37:50.709] [ERROR] [WORKER] ✗ Request failed disk I/O error
+[2026-08-02 13:40:02.629] [INFO ] [HTTP  ] SessionRoutes: handleSessionInitByClaudeId called {contentSessionId=838959e2-2767-4f40-b365-0cb98121b7e5, project=ojaswiat-cyberpunk, platformSource=claude, prompt_length=349, customTitle=undefined}
+[2026-08-02 13:40:02.630] [ERROR] [WORKER] ✗ Request failed disk I/O error
+[2026-08-02 13:40:09.344] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=838959e2-2767-4f40-b365-0cb98121b7e5, toolName=Bash} disk I/O error
+[2026-08-02 13:40:13.771] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=838959e2-2767-4f40-b365-0cb98121b7e5, toolName=Bash} disk I/O error
+[2026-08-02 13:40:15.283] [ERROR] [WORKER] ✗ Request failed disk I/O error
+[2026-08-02 13:42:33.066] [INFO ] [HTTP  ] SessionRoutes: handleSessionInitByClaudeId called {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, project=ojaswiat-cyberpunk, platformSource=claude, prompt_length=4121, customTitle=undefined}
+[2026-08-02 13:42:33.066] [ERROR] [WORKER] ✗ Request failed disk I/O error
+[2026-08-02 13:42:44.656] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Bash} disk I/O error
+[2026-08-02 13:42:44.734] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Bash} disk I/O error
+[2026-08-02 13:42:47.986] [ERROR] [HTTP  ] Route handler error {path=/api/observations/by-file} disk I/O error
+[2026-08-02 13:42:47.986] [ERROR] [WORKER] ✗ Request failed disk I/O error
+[2026-08-02 13:42:48.105] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Read} disk I/O error
+[2026-08-02 13:43:00.579] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Bash} disk I/O error
+[2026-08-02 13:43:00.678] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Bash} disk I/O error
+[2026-08-02 13:43:03.464] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Bash} disk I/O error
+[2026-08-02 13:43:06.771] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Bash} disk I/O error
+[2026-08-02 13:43:15.785] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Bash} disk I/O error
+[2026-08-02 13:43:19.736] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Bash} disk I/O error
+[2026-08-02 13:43:55.623] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Bash} disk I/O error
+[2026-08-02 13:43:57.837] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Read} disk I/O error
+[2026-08-02 13:43:57.847] [ERROR] [HTTP  ] Route handler error {path=/api/observations/by-file} disk I/O error
+[2026-08-02 13:43:57.847] [ERROR] [WORKER] ✗ Request failed disk I/O error
+[2026-08-02 13:44:03.069] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Bash} disk I/O error
+[2026-08-02 13:44:07.003] [ERROR] [HTTP  ] Route handler error {path=/api/observations/by-file} disk I/O error
+[2026-08-02 13:44:07.003] [ERROR] [WORKER] ✗ Request failed disk I/O error
+[2026-08-02 13:44:07.284] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Read} disk I/O error
+[2026-08-02 13:44:32.759] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=ToolSearch} disk I/O error
+[2026-08-02 13:44:41.376] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Bash} disk I/O error
+[2026-08-02 13:44:53.664] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Write} disk I/O error
+[2026-08-02 13:46:01.663] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Bash} disk I/O error
+[2026-08-02 13:46:07.870] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Bash} disk I/O error
+[2026-08-02 13:46:14.658] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Bash} disk I/O error
+[2026-08-02 13:47:23.852] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Write} disk I/O error
+[2026-08-02 13:47:45.140] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Write} disk I/O error
+[2026-08-02 13:48:01.285] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Write} disk I/O error
+[2026-08-02 13:48:28.276] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Write} disk I/O error
+[2026-08-02 13:49:39.204] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Write} disk I/O error
+[2026-08-02 13:50:04.332] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Bash} disk I/O error
+[2026-08-02 13:50:48.754] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Write} disk I/O error
+[2026-08-02 13:50:59.571] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Edit} disk I/O error
+[2026-08-02 13:51:07.400] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Edit} disk I/O error
+[2026-08-02 13:54:57.433] [INFO ] [HTTP  ] SessionRoutes: handleSessionInitByClaudeId called {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, project=ojaswiat-cyberpunk, platformSource=claude, prompt_length=8, customTitle=undefined}
+[2026-08-02 13:54:57.433] [ERROR] [WORKER] ✗ Request failed disk I/O error
+[2026-08-02 13:55:12.115] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Write} disk I/O error
+[2026-08-02 13:56:56.800] [INFO ] [HTTP  ] SessionRoutes: handleSessionInitByClaudeId called {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, project=ojaswiat-cyberpunk, platformSource=claude, prompt_length=164, customTitle=undefined}
+[2026-08-02 13:56:56.800] [ERROR] [WORKER] ✗ Request failed disk I/O error
+[2026-08-02 13:57:01.341] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Bash} disk I/O error
+[2026-08-02 13:58:27.216] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Write} disk I/O error
+[2026-08-02 13:59:23.931] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Write} disk I/O error
+[2026-08-02 13:59:34.414] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Edit} disk I/O error
+[2026-08-02 14:00:08.443] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Write} disk I/O error
+[2026-08-02 14:00:35.438] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Write} disk I/O error
+[2026-08-02 14:01:06.554] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Write} disk I/O error
+[2026-08-02 14:02:00.892] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Write} disk I/O error
+[2026-08-02 14:02:09.450] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Edit} disk I/O error
+[2026-08-02 14:02:14.103] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Edit} disk I/O error
+[2026-08-02 14:02:19.237] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Edit} disk I/O error
+[2026-08-02 14:02:26.337] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Edit} disk I/O error
+[2026-08-02 14:02:45.363] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Write} disk I/O error
+[2026-08-02 14:02:58.240] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Write} disk I/O error
+[2026-08-02 14:03:30.961] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Write} disk I/O error
+[2026-08-02 14:04:00.208] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Write} disk I/O error
+[2026-08-02 14:04:33.120] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Write} disk I/O error
+[2026-08-02 14:05:09.949] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Write} disk I/O error
+[2026-08-02 14:05:26.557] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Write} disk I/O error
+[2026-08-02 14:05:34.724] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Write} disk I/O error
+[2026-08-02 14:05:41.999] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Bash} disk I/O error
+[2026-08-02 14:05:54.728] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Bash} disk I/O error
+[2026-08-02 14:06:05.137] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Bash} disk I/O error
+[2026-08-02 14:06:16.223] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Bash} disk I/O error
+[2026-08-02 14:06:21.669] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Bash} disk I/O error
+[2026-08-02 14:06:24.911] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=ToolSearch} disk I/O error
+[2026-08-02 14:06:30.252] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Bash} disk I/O error
+[2026-08-02 14:06:34.528] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=ToolSearch} disk I/O error
+[2026-08-02 14:06:40.956] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=mcp__plugin_playwright_playwright__browser_resize} disk I/O error
+[2026-08-02 14:06:47.118] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=mcp__plugin_playwright_playwright__browser_navigate} disk I/O error
+[2026-08-02 14:06:53.618] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=mcp__plugin_playwright_playwright__browser_take_screenshot} disk I/O error
+[2026-08-02 14:06:58.712] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Bash} disk I/O error
+[2026-08-02 14:07:04.093] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Bash} disk I/O error
+[2026-08-02 14:07:12.263] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=mcp__plugin_playwright_playwright__browser_evaluate} disk I/O error
+[2026-08-02 14:07:37.543] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=mcp__plugin_playwright_playwright__browser_console_messages} disk I/O error
+[2026-08-02 14:07:44.432] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=mcp__plugin_playwright_playwright__browser_evaluate} disk I/O error
+[2026-08-02 14:08:07.088] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Edit} disk I/O error
+[2026-08-02 14:08:11.644] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Edit} disk I/O error
+[2026-08-02 14:08:19.094] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=mcp__plugin_playwright_playwright__browser_navigate} disk I/O error
+[2026-08-02 14:08:23.054] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Bash} disk I/O error
+[2026-08-02 14:08:50.867] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Edit} disk I/O error
+[2026-08-02 14:09:00.255] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Edit} disk I/O error
+[2026-08-02 14:09:05.638] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Edit} disk I/O error
+[2026-08-02 14:09:15.240] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=mcp__plugin_playwright_playwright__browser_navigate} disk I/O error
+[2026-08-02 14:09:28.373] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Bash} disk I/O error
+[2026-08-02 14:09:42.855] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=mcp__plugin_playwright_playwright__browser_take_screenshot} disk I/O error
+[2026-08-02 14:09:46.000] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Bash} disk I/O error
+[2026-08-02 14:09:49.512] [ERROR] [HTTP  ] Route handler error {path=/api/observations/by-file} disk I/O error
+[2026-08-02 14:09:49.512] [ERROR] [WORKER] ✗ Request failed disk I/O error
+[2026-08-02 14:09:50.216] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Read} disk I/O error
+[2026-08-02 14:10:09.309] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Bash} disk I/O error
+[2026-08-02 14:10:12.934] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Bash} disk I/O error
+[2026-08-02 14:10:38.631] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Bash} disk I/O error
+[2026-08-02 14:10:44.716] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Edit} disk I/O error
+[2026-08-02 14:10:50.762] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Edit} disk I/O error
+[2026-08-02 14:11:00.536] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Edit} disk I/O error
+[2026-08-02 14:11:05.233] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Edit} disk I/O error
+[2026-08-02 14:11:10.946] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Edit} disk I/O error
+[2026-08-02 14:11:15.869] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Edit} disk I/O error
+[2026-08-02 14:11:23.970] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Edit} disk I/O error
+[2026-08-02 14:11:36.472] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Edit} disk I/O error
+[2026-08-02 14:11:51.052] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Edit} disk I/O error
+[2026-08-02 14:12:01.592] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=mcp__plugin_playwright_playwright__browser_navigate} disk I/O error
+[2026-08-02 14:12:12.408] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Bash} disk I/O error
+[2026-08-02 14:12:20.181] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=mcp__plugin_playwright_playwright__browser_take_screenshot} disk I/O error
+[2026-08-02 14:12:22.185] [ERROR] [HTTP  ] Route handler error {path=/api/observations/by-file} disk I/O error
+[2026-08-02 14:12:22.186] [ERROR] [WORKER] ✗ Request failed disk I/O error
+[2026-08-02 14:12:22.274] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Read} disk I/O error
+[2026-08-02 14:12:38.347] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=mcp__plugin_playwright_playwright__browser_click} disk I/O error
+[2026-08-02 14:12:41.453] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Bash} disk I/O error
+[2026-08-02 14:12:55.613] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=mcp__plugin_playwright_playwright__browser_evaluate} disk I/O error
+[2026-08-02 14:13:02.223] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=mcp__plugin_playwright_playwright__browser_take_screenshot} disk I/O error
+[2026-08-02 14:13:05.801] [ERROR] [HTTP  ] Route handler error {path=/api/observations/by-file} disk I/O error
+[2026-08-02 14:13:05.802] [ERROR] [WORKER] ✗ Request failed disk I/O error
+[2026-08-02 14:13:05.907] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Read} disk I/O error
+[2026-08-02 14:13:28.497] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Edit} disk I/O error
+[2026-08-02 14:13:36.568] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=mcp__plugin_playwright_playwright__browser_navigate} disk I/O error
+[2026-08-02 14:13:51.578] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=mcp__plugin_playwright_playwright__browser_evaluate} disk I/O error
+[2026-08-02 14:14:10.172] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Edit} disk I/O error
+[2026-08-02 14:15:08.828] [INFO ] [HTTP  ] SessionRoutes: handleSessionInitByClaudeId called {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, project=ojaswiat-cyberpunk, platformSource=claude, prompt_length=69, customTitle=undefined}
+[2026-08-02 14:15:08.829] [ERROR] [WORKER] ✗ Request failed disk I/O error
+[2026-08-02 14:15:17.636] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Bash} disk I/O error
+[2026-08-02 14:15:56.881] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Bash} disk I/O error
+[2026-08-02 14:16:09.388] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Edit} disk I/O error
+[2026-08-02 14:16:20.516] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Edit} disk I/O error
+[2026-08-02 14:16:30.390] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=6aca3a8c-d431-4282-8982-9b1703ed31ba, toolName=Bash} disk I/O error
+[2026-08-02 14:16:46.479] [ERROR] [WORKER] ✗ Request failed disk I/O error
+[2026-08-03 05:10:38.061] [ERROR] [WORKER] ✗ Request failed disk I/O error
+[2026-08-03 05:10:42.246] [ERROR] [WORKER] ✗ Request failed disk I/O error
+[2026-08-03 05:11:11.933] [INFO ] [HTTP  ] SessionRoutes: handleSessionInitByClaudeId called {contentSessionId=b041f4f3-006d-4a34-8577-c733f8e1fd55, project=vixuals-mac-visualiser, platformSource=claude, prompt_length=30, customTitle=undefined}
+[2026-08-03 05:11:11.934] [ERROR] [WORKER] ✗ Request failed disk I/O error
+[2026-08-03 05:13:56.090] [INFO ] [HTTP  ] SessionRoutes: handleSessionInitByClaudeId called {contentSessionId=b041f4f3-006d-4a34-8577-c733f8e1fd55, project=vixuals-mac-visualiser, platformSource=claude, prompt_length=315, customTitle=undefined}
+[2026-08-03 05:13:56.091] [ERROR] [WORKER] ✗ Request failed disk I/O error
+[2026-08-03 05:14:49.007] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=b041f4f3-006d-4a34-8577-c733f8e1fd55, toolName=Bash} disk I/O error
+[2026-08-03 05:14:58.257] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=b041f4f3-006d-4a34-8577-c733f8e1fd55, toolName=Bash} disk I/O error
+[2026-08-03 05:15:26.887] [ERROR] [HTTP  ] Route handler error {path=/api/observations/by-file} disk I/O error
+[2026-08-03 05:15:26.887] [ERROR] [WORKER] ✗ Request failed disk I/O error
+[2026-08-03 05:15:27.068] [ERROR] [INGEST] Observation session resolution failed {contentSessionId=b041f4f3-006d-4a34-8577-c733f8e1fd55, toolName=Read} disk I/O error
+[2026-08-03 06:14:49.610] [INFO ] [SYSTEM] Received SIGTERM, shutting down...
+[2026-08-03 06:14:49.620] [INFO ] [SYSTEM] Shutdown initiated
+[2026-08-03 06:14:49.622] [WARN ] [SYSTEM] Server was already stopped when close was requested Server is not running.
+[2026-08-03 06:14:49.623] [INFO ] [SYSTEM] HTTP server closed
+[2026-08-03 06:14:49.626] [INFO ] [SESSION] [session-2] Session deleted {duration=242315.6s, project=rag-techniques}
+[2026-08-03 06:14:49.627] [INFO ] [SYSTEM] MCP client closed
+[2026-08-03 06:14:49.627] [INFO ] [SHUTDOWN] Stopping Chroma MCP connection...
+[2026-08-03 06:14:49.627] [INFO ] [CHROMA_MCP] Stopping chroma-mcp MCP connection
+[2026-08-03 06:14:50.154] [INFO ] [CHROMA_MCP] chroma-mcp MCP connection stopped
+[2026-08-03 06:14:50.154] [INFO ] [SHUTDOWN] Chroma MCP connection stopped
+[2026-08-03 06:14:50.156] [INFO ] [DB    ] Database closed
+[2026-08-03 06:14:50.159] [INFO ] [SYSTEM] Worker shutdown complete

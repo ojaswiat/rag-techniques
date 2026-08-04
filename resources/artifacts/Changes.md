@@ -2,6 +2,30 @@
 
 Simple running list of changes made to the project after the proposal was submitted.
 
+- 2026-08-04: Corrects/expands the reasoning behind the 2026-07-31 entry below.
+   `nim_client.py` and `LLMFactory`'s provider dispatch were added, and P3's
+   index-build model was moved to NVIDIA NIM's `nemotron-3-super-120b-a12b`,
+   because Groq's free tier was repeatedly getting exhausted during P3 builds
+   and Phase 4 testing -- daily/per-minute limits ran out too fast to get a
+   clean run, not purely a provider "evaluation" as the original entry implied.
+   NVIDIA NIM was added as a second provider specifically to give P3's build
+   headroom outside Groq's shared quota. No files changed by this entry --
+   text-only clarification of prior reasoning.
+- 2026-08-04: Added `project/scripts/backup_data.sh` and
+   `project/scripts/reload_backup.sh`. Reason: downloaded/generated project
+   state (`benchmark.db` + its WAL/SHM files, `storage/`, `.env`, `data/raw`,
+   `data/parsed`, `logs`) is gitignored and expensive to reproduce -- it comes
+   from SEC EDGAR fetches, LlamaParse credits, and Groq/NIM-billed index
+   builds -- so a crash, bad experiment, or accidental overwrite could mean
+   redoing hours of work and re-spending free-tier quota. `backup_data.sh`
+   snapshots those paths into `backups/backup-<timestamp>/`, skipping any
+   that don't exist and reporting what was/wasn't backed up. `reload_backup.sh`
+   lists available snapshots, restores the chosen one only after explicit
+   confirmation, takes a safety snapshot of current state first, and verifies
+   the restore via SHA-256 checksum comparison rather than assuming success.
+   Already used in practice: the 2026-07-29 P3 model-swap rebuild backed up
+   the 9 pre-existing `storage/summary_index/` directories through this
+   mechanism before forcing the clean rebuild.
 - 2026-07-31: Added LLM provider abstraction supporting both Groq and NVIDIA NIM.
    Reason: To enable evaluation of NVIDIA Nemotron 3 Super for P3 index build while preserving existing Groq‑based workflows.
    Updated files: project/config.py, project/llm_client.py, project/groq_client.py (shim), resources/specs/Guardrails.md.
