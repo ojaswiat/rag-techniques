@@ -17,7 +17,7 @@ What to watch out for when changing anything here. Sources: `CLAUDE.md`, `resour
 
 No managed vector databases, no hosted search APIs, no paid embedding or reranking APIs, no premium parse tiers. All retrieval and indexing run locally; all LLM calls run on a free tier with rate limits rather than spend.
 
-P3's one-time summary build is the one LLM-driven index build permitted, and it is not an exception to the rule: hierarchical summarisation is *the paradigm under test*, so its LLM use is legitimate and disclosed. It must use `llama-3.1-8b-instant`, run once, and be cached to disk — never rebuilt per query.
+P3's one-time summary build is the one LLM-driven index build permitted, and it is not an exception to the rule: hierarchical summarisation is *the paradigm under test*, so its LLM use is legitimate and disclosed. It currently uses NVIDIA NIM's `nvidia/nemotron-3-super-120b-a12b` (routed via `project/llm_client/llm_factory.py`'s `LLMFactory`, not the original Groq-only `llama-3.1-8b-instant` — see `resources/artifacts/Changes.md`'s 2026-07-29 and 2026-07-31 entries for why), run once, and be cached to disk — never rebuilt per query.
 
 ### Anti-leakage
 
@@ -106,7 +106,7 @@ Where two documents disagree, `Architecture.md` (v2) wins — it was written spe
 
 ## The knowledge graph
 
-`graphify-out/` holds a generated knowledge graph over this corpus — 1321 nodes across 185 communities as of the Phase 2 update, built from the specs, proposals, design assets, and now the Phase 1/2 source code. `CLAUDE.md` directs agents to query it before grepping raw files:
+`graphify-out/` holds a generated knowledge graph over this corpus — 8253 nodes across 231 communities as of the Phase 4 update, built from the specs, proposals, design assets, and the Phase 1–4 source code. `CLAUDE.md` directs agents to query it before grepping raw files:
 
 ```bash
 graphify query "<question>"        # scoped subgraph

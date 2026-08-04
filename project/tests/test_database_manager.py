@@ -389,6 +389,46 @@ async def test_update_golden_query_labels_persists_valid_is_good():
 
 
 @pytest.mark.asyncio
+async def test_get_all_query_texts_returns_rows_from_all_three_tables():
+    await dbm.init_db(TEST_DB)
+    await dbm.insert_query(TEST_DB, {
+        "query_id": "Q1_PQ_001",
+        "quadrant": "Q1_Direct_Text",
+        "query_text": "What is the total revenue?",
+        "ground_truth_answer": "$100 million",
+        "gt_citations": ["TEST_2025_n0001"],
+        "document_id": "SEC_10K_TEST_2025",
+    })
+    await dbm.insert_golden_query(TEST_DB, {
+        "query_id": "Q1_GQ_001",
+        "quadrant": "Q1_Direct_Text",
+        "query_text": "What was net income?",
+        "ground_truth_answer": "$50 million",
+        "gt_citations": ["TEST_2025_n0001"],
+        "example_output": "$50 million",
+        "human_score": 1,
+        "human_reasoning": "PENDING_HUMAN_LABEL",
+        "document_id": "SEC_10K_TEST_2025",
+    })
+    await dbm.insert_judge_validation(TEST_DB, {
+        "query_id": "Q1_JEQ_001",
+        "quadrant": "Q1_Direct_Text",
+        "query_text": "What was total assets?",
+        "ground_truth_answer": "$200 million",
+        "gt_citations": ["TEST_2025_n0001"],
+        "document_id": "SEC_10K_TEST_2025",
+    })
+
+    all_texts = await dbm.get_all_query_texts(TEST_DB)
+
+    assert set(all_texts) == {
+        ("Q1_PQ_001", "What is the total revenue?"),
+        ("Q1_GQ_001", "What was net income?"),
+        ("Q1_JEQ_001", "What was total assets?"),
+    }
+
+
+@pytest.mark.asyncio
 async def test_insert_judge_validation():
     await dbm.init_db(TEST_DB)
     await dbm.insert_judge_validation(TEST_DB, {

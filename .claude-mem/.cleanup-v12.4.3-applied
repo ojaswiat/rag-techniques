@@ -1,0 +1,10 @@
+{
+  "appliedAt": "2026-07-31T09:10:44.050Z",
+  "backupPath": "/Users/ojaswi/Projects/rag-techniques/.claude-mem/backups/claude-mem-pre-12.4.3-2026-07-31T09-10-44-040Z.db",
+  "chromaWiped": false,
+  "counts": {
+    "observerSessions": 0,
+    "observerCascadeRows": 0,
+    "stuckPendingMessages": 0
+  }
+}

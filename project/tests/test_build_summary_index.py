@@ -123,6 +123,44 @@ async def test_build_index_for_document_raises_on_no_nodes(tmp_path, monkeypatch
     assert not (tmp_path / "MSFT_2025.tmp").exists()
 
 
+@pytest.mark.asyncio
+async def test_build_index_for_document_shares_callback_manager_with_llm_and_tree(tmp_path, monkeypatch):
+    """Regression test: the CallbackManager (holding the TokenCountingHandler)
+    built in build_index_for_document() must be passed both to
+    LLMFactory.get_client_for_stage() and to TreeIndex(). Before the fix,
+    LLMFactory.get_client_for_stage() was called with no callback_manager at
+    all, so the LLM's own callback_manager stayed an empty default one and
+    token-usage events (fired by llama_index's llm_chat_callback() decorator
+    on the LLM object itself) never reached the TokenCountingHandler."""
+    monkeypatch.setattr(bsi, "STORAGE_ROOT", tmp_path)
+
+    fake_nodes = [{"node_id": "AAPL_2025_n0001", "document_id": "AAPL_2025",
+                   "parent_item_header": None, "node_type": "text",
+                   "source_page_num": None, "content": "hello", "token_count": 1}]
+
+    fake_index = MagicMock()
+
+    def fake_persist(persist_dir):
+        Path(persist_dir).mkdir(parents=True, exist_ok=True)
+        (Path(persist_dir) / "docstore.json").write_text("{}")
+
+    fake_index.storage_context.persist.side_effect = fake_persist
+
+    with patch.object(bsi.dbm, "get_nodes_by_document", new=AsyncMock(return_value=fake_nodes)), \
+         patch.object(bsi, "TreeIndex", return_value=fake_index) as mock_tree, \
+         patch.object(bsi.LLMFactory, "get_client_for_stage") as mock_get_client:
+        await bsi.build_index_for_document("AAPL_2025")
+
+    # The callback_manager passed to get_client_for_stage(...) must be the
+    # same object passed to TreeIndex(...).
+    mock_get_client.assert_called_once()
+    _, get_client_kwargs = mock_get_client.call_args
+    assert get_client_kwargs["callback_manager"] is not None
+
+    _, tree_kwargs = mock_tree.call_args
+    assert tree_kwargs["callback_manager"] is get_client_kwargs["callback_manager"]
+
+
 def test_append_cost_log_creates_and_appends(tmp_path):
     log_path = tmp_path / "logs" / "index_build_costs.json"
     bsi.append_cost_log(

@@ -24,7 +24,7 @@ import os
 
 import pytest
 
-import config
+import llm_client.config as config
 from dataset_generation.async_critic import critique_query
 
 _RUN_LIVE = os.getenv("RUN_LIVE_GROQ_TESTS") == "1"

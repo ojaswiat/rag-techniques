@@ -100,6 +100,10 @@ async def test_main_smoke_runs_under_throttle(monkeypatch):
         ),
         patch("dataset_generation.run_dataset_generation.dbm.insert_query", new=AsyncMock()) as mock_insert,
         patch(
+            "dataset_generation.run_dataset_generation.dbm.get_all_query_texts",
+            new=AsyncMock(return_value=[]),
+        ),
+        patch(
             "dataset_generation.run_dataset_generation.generate_query",
             new=AsyncMock(return_value={
                 "query_text": "What was total revenue?",
@@ -156,6 +160,10 @@ async def test_resume_after_restart_does_not_collide_with_existing_query_ids(mon
         ),
         patch("dataset_generation.run_dataset_generation.dbm.insert_query", new=AsyncMock()) as mock_insert,
         patch(
+            "dataset_generation.run_dataset_generation.dbm.get_all_query_texts",
+            new=AsyncMock(return_value=[]),
+        ),
+        patch(
             "dataset_generation.run_dataset_generation.generate_query",
             new=AsyncMock(return_value={
                 "query_text": "What was total revenue?",
@@ -177,6 +185,74 @@ async def test_resume_after_restart_does_not_collide_with_existing_query_ids(mon
     assert inserted_row["query_id"] == "QT1_PQ_003"
 
 
+# --- Doubt #13: empty document_ids tuple must not fall back to _ALL_FILINGS -
+
+
+@pytest.mark.asyncio
+async def test_main_with_empty_document_ids_tuple_stays_empty_not_all_filings(monkeypatch):
+    """document_ids=() means 'restrict to zero filings' -- a distinct intent
+    from document_ids=None ('not provided'). Before the fix,
+    `document_ids or _ALL_FILINGS` collapsed both into 'use all filings'
+    because an empty tuple is falsy. After the fix, an explicitly empty
+    tuple must stay empty: get_nodes_by_document must never be called, and
+    build_pools must receive an empty documents list."""
+    monkeypatch.setattr("dataset_generation.run_dataset_generation.config.LOCAL_TEST_THROTTLE", True)
+    monkeypatch.setattr("dataset_generation.run_dataset_generation.config.THROTTLE_LIMIT", 1)
+
+    with (
+        patch("dataset_generation.run_dataset_generation.dbm.init_db", new=AsyncMock()),
+        patch(
+            "dataset_generation.run_dataset_generation.dbm.get_quadrant_counts",
+            new=AsyncMock(return_value={q: 0 for q in _QUADRANTS}),
+        ),
+        patch(
+            "dataset_generation.run_dataset_generation.dbm.get_nodes_by_document",
+            new=AsyncMock(),
+        ) as mock_get_nodes,
+        patch(
+            "dataset_generation.run_dataset_generation.build_pools",
+            return_value=([], []),
+        ) as mock_build_pools,
+    ):
+        await main(db_path="unused.db", document_ids=())
+
+    mock_get_nodes.assert_not_awaited()
+    mock_build_pools.assert_called_once_with([])
+
+
+@pytest.mark.asyncio
+async def test_main_with_document_ids_none_defaults_to_all_filings(monkeypatch):
+    """Guards the unaffected case: document_ids=None (or omitted entirely)
+    must still default to _ALL_FILINGS after the Doubt #13 fix."""
+    monkeypatch.setattr("dataset_generation.run_dataset_generation.config.LOCAL_TEST_THROTTLE", True)
+    monkeypatch.setattr("dataset_generation.run_dataset_generation.config.THROTTLE_LIMIT", 1)
+
+    with (
+        patch("dataset_generation.run_dataset_generation.dbm.init_db", new=AsyncMock()),
+        patch(
+            "dataset_generation.run_dataset_generation.dbm.get_quadrant_counts",
+            new=AsyncMock(return_value={q: 0 for q in _QUADRANTS}),
+        ),
+        patch(
+            "dataset_generation.run_dataset_generation.dbm.get_nodes_by_document",
+            new=AsyncMock(return_value=[]),
+        ) as mock_get_nodes,
+        patch(
+            "dataset_generation.run_dataset_generation.build_pools",
+            return_value=([], []),
+        ) as mock_build_pools,
+    ):
+        await main(db_path="unused.db", document_ids=None)
+
+    assert mock_get_nodes.await_count == len(rdg._ALL_FILINGS)
+    called_document_ids = {call.args[1] for call in mock_get_nodes.await_args_list}
+    assert called_document_ids == set(rdg._ALL_FILINGS)
+
+    mock_build_pools.assert_called_once()
+    documents_arg = mock_build_pools.call_args.args[0]
+    assert {doc_id for doc_id, _nodes in documents_arg} == set(rdg._ALL_FILINGS)
+
+
 _FAKE_NODES = [
     {
         "node_id": "n1",
@@ -196,6 +272,121 @@ _FAKE_GENERATED = {
     "quadrant": "Q1_Direct_Text",
     "document_id": "DOC_A",
 }
+
+
+# --- Doubt #14: duplicate-question check before acceptance ------------------
+
+
+@pytest.mark.asyncio
+async def test_duplicate_check_below_threshold_accepted_normally(monkeypatch, tmp_path):
+    """A candidate whose embedding_similarity score against an existing
+    accepted query is below _DUPLICATE_QUESTION_SIMILARITY_THRESHOLD must be
+    accepted exactly as before the Doubt #14 fix -- no behaviour change for
+    the non-duplicate case."""
+    monkeypatch.setattr("dataset_generation.run_dataset_generation.config.LOCAL_TEST_THROTTLE", True)
+    monkeypatch.setattr("dataset_generation.run_dataset_generation.config.THROTTLE_LIMIT", 1)
+    monkeypatch.setattr(
+        "dataset_generation.run_dataset_generation.FAILURE_LOG_PATH", tmp_path / "failures.json"
+    )
+
+    with (
+        patch("dataset_generation.run_dataset_generation.dbm.init_db", new=AsyncMock()),
+        patch(
+            "dataset_generation.run_dataset_generation.dbm.get_quadrant_counts",
+            new=AsyncMock(return_value={q: 0 for q in _QUADRANTS}),
+        ),
+        patch(
+            "dataset_generation.run_dataset_generation.dbm.get_nodes_by_document",
+            new=AsyncMock(return_value=_FAKE_NODES),
+        ),
+        patch("dataset_generation.run_dataset_generation.dbm.insert_query", new=AsyncMock()) as mock_insert,
+        patch(
+            "dataset_generation.run_dataset_generation.dbm.get_all_query_texts",
+            new=AsyncMock(return_value=[("QT1_PQ_001", "What was net income last year?")]),
+        ),
+        patch(
+            "dataset_generation.run_dataset_generation.generate_query",
+            new=AsyncMock(return_value=_FAKE_GENERATED),
+        ) as mock_generate,
+        patch(
+            "dataset_generation.run_dataset_generation.critique_query",
+            new=AsyncMock(return_value={"cited_node_ids": ["n1"], "computed_answer": "$100 million"}),
+        ),
+        patch(
+            "dataset_generation.run_dataset_generation.embedding_similarity",
+            return_value=0.5,
+        ) as mock_similarity,
+    ):
+        await main(db_path="unused.db", document_ids=["DOC_A"])
+
+    mock_similarity.assert_called_once_with(_FAKE_GENERATED["query_text"], "What was net income last year?")
+    mock_insert.assert_awaited_once()
+    mock_generate.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_duplicate_check_at_or_above_threshold_rejected_and_retried(monkeypatch, tmp_path, caplog):
+    """A candidate whose embedding_similarity score against an existing
+    accepted query is >= _DUPLICATE_QUESTION_SIMILARITY_THRESHOLD (0.92) must
+    NOT be inserted via _accept_query, must be logged/handled as a duplicate
+    (not silently dropped), and the attempt loop must continue to the next
+    attempt rather than crashing or accepting anyway."""
+    monkeypatch.setattr("dataset_generation.run_dataset_generation.config.LOCAL_TEST_THROTTLE", True)
+    monkeypatch.setattr("dataset_generation.run_dataset_generation.config.THROTTLE_LIMIT", 1)
+    monkeypatch.setattr(
+        "dataset_generation.run_dataset_generation.FAILURE_LOG_PATH", tmp_path / "failures.json"
+    )
+
+    existing = [("QT1_PQ_001", "What was total revenue last fiscal year?")]
+
+    with (
+        patch("dataset_generation.run_dataset_generation.dbm.init_db", new=AsyncMock()),
+        patch(
+            "dataset_generation.run_dataset_generation.dbm.get_quadrant_counts",
+            new=AsyncMock(return_value={q: 0 for q in _QUADRANTS}),
+        ),
+        patch(
+            "dataset_generation.run_dataset_generation.dbm.get_nodes_by_document",
+            new=AsyncMock(return_value=_FAKE_NODES),
+        ),
+        patch("dataset_generation.run_dataset_generation.dbm.insert_query", new=AsyncMock()) as mock_insert,
+        patch(
+            "dataset_generation.run_dataset_generation.dbm.get_all_query_texts",
+            new=AsyncMock(return_value=existing),
+        ),
+        patch(
+            "dataset_generation.run_dataset_generation.generate_query",
+            new=AsyncMock(return_value=_FAKE_GENERATED),
+        ) as mock_generate,
+        patch(
+            "dataset_generation.run_dataset_generation.critique_query",
+            new=AsyncMock(return_value={"cited_node_ids": ["n1"], "computed_answer": "$100 million"}),
+        ),
+        patch(
+            "dataset_generation.run_dataset_generation.embedding_similarity",
+            return_value=0.95,
+        ),
+        caplog.at_level(logging.INFO, logger="dataset_generation.run_dataset_generation"),
+    ):
+        await main(db_path="unused.db", document_ids=["DOC_A"])
+
+    # Every attempt is a duplicate -> never inserted, all _MAX_ATTEMPTS_PER_SECTION
+    # attempts exhausted.
+    mock_insert.assert_not_awaited()
+    assert mock_generate.await_count == rdg._MAX_ATTEMPTS_PER_SECTION
+
+    duplicate_records = [r for r in caplog.records if "DUPLICATE" in r.message]
+    assert len(duplicate_records) == rdg._MAX_ATTEMPTS_PER_SECTION
+    assert "QT1_PQ_001" in duplicate_records[0].message
+    assert "0.950" in duplicate_records[0].message
+
+    # The retry feedback must steer the next attempt away from the duplicate,
+    # not just repeat -- same retry-feedback mechanism as the citation/value
+    # mismatch rejection paths (Doubt #3).
+    second_call_feedback = mock_generate.await_args_list[1].kwargs.get("previous_attempt_feedback")
+    assert second_call_feedback is not None
+    assert "too similar" in second_call_feedback.lower()
+    assert "QT1_PQ_001" in second_call_feedback
 
 
 @pytest.mark.asyncio
@@ -224,6 +415,10 @@ async def test_first_attempt_rejected_second_attempt_receives_rejection_feedback
             new=AsyncMock(return_value=_FAKE_NODES),
         ),
         patch("dataset_generation.run_dataset_generation.dbm.insert_query", new=AsyncMock()) as mock_insert,
+        patch(
+            "dataset_generation.run_dataset_generation.dbm.get_all_query_texts",
+            new=AsyncMock(return_value=[]),
+        ),
         patch(
             "dataset_generation.run_dataset_generation.generate_query",
             new=AsyncMock(return_value=_FAKE_GENERATED),
@@ -280,6 +475,10 @@ async def test_first_attempt_accepted_no_feedback_passed(monkeypatch, tmp_path):
         ),
         patch("dataset_generation.run_dataset_generation.dbm.insert_query", new=AsyncMock()) as mock_insert,
         patch(
+            "dataset_generation.run_dataset_generation.dbm.get_all_query_texts",
+            new=AsyncMock(return_value=[]),
+        ),
+        patch(
             "dataset_generation.run_dataset_generation.generate_query",
             new=AsyncMock(return_value=_FAKE_GENERATED),
         ) as mock_generate,
@@ -319,6 +518,10 @@ async def test_critic_runtime_error_on_first_attempt_recovers_on_second(monkeypa
             new=AsyncMock(return_value=_FAKE_NODES),
         ),
         patch("dataset_generation.run_dataset_generation.dbm.insert_query", new=AsyncMock()) as mock_insert,
+        patch(
+            "dataset_generation.run_dataset_generation.dbm.get_all_query_texts",
+            new=AsyncMock(return_value=[]),
+        ),
         patch(
             "dataset_generation.run_dataset_generation.generate_query",
             new=AsyncMock(return_value=_FAKE_GENERATED),
@@ -787,6 +990,10 @@ async def test_main_pool_cycling_is_capped_and_terminates(monkeypatch, tmp_path)
         ),
         patch("dataset_generation.run_dataset_generation.dbm.insert_query", new=AsyncMock()) as mock_insert,
         patch(
+            "dataset_generation.run_dataset_generation.dbm.get_all_query_texts",
+            new=AsyncMock(return_value=[]),
+        ),
+        patch(
             "dataset_generation.run_dataset_generation.generate_query",
             new=AsyncMock(return_value={
                 "query_text": "What was total revenue?",
@@ -865,6 +1072,10 @@ async def test_main_routes_table_sections_only_to_table_quadrants(monkeypatch, t
             new=AsyncMock(return_value=fake_nodes),
         ),
         patch("dataset_generation.run_dataset_generation.dbm.insert_query", new=fake_insert_query),
+        patch(
+            "dataset_generation.run_dataset_generation.dbm.get_all_query_texts",
+            new=AsyncMock(return_value=[]),
+        ),
         patch("dataset_generation.run_dataset_generation.generate_query", new=fake_generate_query),
         patch(
             "dataset_generation.run_dataset_generation.critique_query",
@@ -899,6 +1110,10 @@ async def test_accepted_attempt_logs_document_id_quadrant_and_accepted(monkeypat
             new=AsyncMock(return_value=_FAKE_NODES),
         ),
         patch("dataset_generation.run_dataset_generation.dbm.insert_query", new=AsyncMock()),
+        patch(
+            "dataset_generation.run_dataset_generation.dbm.get_all_query_texts",
+            new=AsyncMock(return_value=[]),
+        ),
         patch(
             "dataset_generation.run_dataset_generation.generate_query",
             new=AsyncMock(return_value=_FAKE_GENERATED),
@@ -941,6 +1156,10 @@ async def test_rejected_attempt_logs_diagnose_rejection_reason(monkeypatch, capl
             new=AsyncMock(return_value=_FAKE_NODES),
         ),
         patch("dataset_generation.run_dataset_generation.dbm.insert_query", new=AsyncMock()),
+        patch(
+            "dataset_generation.run_dataset_generation.dbm.get_all_query_texts",
+            new=AsyncMock(return_value=[]),
+        ),
         patch(
             "dataset_generation.run_dataset_generation.generate_query",
             new=AsyncMock(return_value=_FAKE_GENERATED),
@@ -1023,6 +1242,10 @@ async def test_calling_main_twice_does_not_duplicate_log_handlers(monkeypatch, c
             new=AsyncMock(return_value=_FAKE_NODES),
         ),
         patch("dataset_generation.run_dataset_generation.dbm.insert_query", new=AsyncMock()),
+        patch(
+            "dataset_generation.run_dataset_generation.dbm.get_all_query_texts",
+            new=AsyncMock(return_value=[]),
+        ),
         patch(
             "dataset_generation.run_dataset_generation.generate_query",
             new=AsyncMock(return_value=_FAKE_GENERATED),

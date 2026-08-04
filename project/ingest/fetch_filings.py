@@ -9,7 +9,7 @@ import os
 
 import requests
 
-import config
+import llm_client.config as config
 
 _TICKERS_URL = "https://www.sec.gov/files/company_tickers.json"
 _SUBMISSIONS_URL = "https://data.sec.gov/submissions/CIK{cik}.json"

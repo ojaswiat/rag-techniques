@@ -1,6 +1,6 @@
 import importlib
 
-import config
+import llm_client.config as config
 import loop_template
 
 

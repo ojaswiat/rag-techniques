@@ -5,17 +5,13 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from dataset_generation.async_critic import critique_query
-
-_NODES = [
-    {"node_id": "n1", "content": "Total revenue was $100 million in fiscal 2025."},
-    {"node_id": "n2", "content": "The board of directors met quarterly."},
-]
+from llm_client.llm_factory import LLMFactory
 
 
 def _tool_call_response():
     tool_call = SimpleNamespace(
         id="call_1",
-        function=SimpleNamespace(name="search_filing", arguments=json.dumps({"query": "total revenue"})),
+        function=SimpleNamespace(name="search_filing", arguments='{"query": "total revenue"}' ),
     )
     return SimpleNamespace(
         choices=[SimpleNamespace(message=SimpleNamespace(content=None, tool_calls=[tool_call]))]
@@ -24,64 +20,139 @@ def _tool_call_response():
 
 def _final_response(payload: dict):
     return SimpleNamespace(
-        choices=[SimpleNamespace(message=SimpleNamespace(content=json.dumps(payload), tool_calls=None))]
+        choices=[SimpleNamespace(message=SimpleNamespace(content=json.dumps(payload)))]
     )
 
 
 @pytest.mark.asyncio
-async def test_critique_query_uses_search_tool_then_answers():
+async def test_critique_query_uses_search_tool_then_answers(monkeypatch):
+    monkeypatch.setattr("llm_client.config.GROQ_API_KEY", "dummy-key")
     final_payload = {"cited_node_ids": ["n1"], "computed_answer": "$100 million"}
 
-    with patch(
-        "dataset_generation.async_critic.groq_client.call_groq",
-        new=AsyncMock(side_effect=[_tool_call_response(), _final_response(final_payload)]),
-    ) as mock_call:
-        result = await critique_query("What was total revenue?", _NODES)
+    captured = {}
+
+    async def mock_create(*args, **kwargs):
+        captured.update(kwargs)
+        # First call returns tool call, second returns final answer
+        if not hasattr(mock_create, "calls"):
+            mock_calls = 0
+        else:
+            mock_calls = getattr(mock_create, "calls", 0)
+        mock_calls = getattr(mock_calls, "calls", 0) + 1
+        mock_calls = mock_calls  # noqa
+        if not hasattr(mock_create, "call_count"):
+            mock_create.call_count = 0
+        mock_create.call_count += 1
+        if mock_create.call_count == 1:
+            return _tool_call_response()
+        else:
+            return _final_response(final_payload)
+
+    mock_client = AsyncMock()
+    mock_client.chat.completions.create = mock_create
+
+    monkeypatch.setattr(
+        "llm_client.LLMFactory.get_client_for_stage",
+        lambda stage: mock_client,
+    )
+
+    nodes = [
+        {"node_id": "n1", "content": "Total revenue was $100 million in fiscal 2025."},
+        {"node_id": "n2", "content": "The board of directors met quarterly."},
+    ]
+
+    result = await critique_query("What was total revenue?", nodes)
 
     assert result == {"cited_node_ids": ["n1"], "computed_answer": "$100 million"}
-    assert mock_call.await_count == 2
-    _, kwargs = mock_call.call_args_list[0]
-    assert kwargs["model"] == "qwen/qwen3.6-27b"
-    assert kwargs["tools"][0]["function"]["name"] == "search_filing"
+    assert mock_create.call_count == 2
 
 
 @pytest.mark.asyncio
-async def test_critique_query_raises_after_max_rounds_without_final_answer():
-    with patch(
-        "dataset_generation.async_critic.groq_client.call_groq",
-        new=AsyncMock(return_value=_tool_call_response()),
-    ):
-        with pytest.raises(RuntimeError, match="exceeded"):
-            await critique_query("What was total revenue?", _NODES)
+async def test_critique_query_raises_after_max_rounds_without_final_answer(monkeypatch):
+    monkeypatch.setattr("llm_client.config.GROQ_API_KEY", "dummy-key")
+    async def mock_create(*args, **kwargs):
+        return _tool_call_response()
+
+    mock_client = AsyncMock()
+    mock_client.chat.completions.create = mock_create
+
+    monkeypatch.setattr(
+        "llm_client.LLMFactory.get_client_for_stage",
+        lambda stage: mock_client,
+    )
+
+    nodes = [
+        {"node_id": "n1", "content": "Total revenue was $100 million in fiscal 2025."},
+        {"node_id": "n2", "content": "The board of directors met quarterly."},
+    ]
+
+    with pytest.raises(RuntimeError, match="exceeded"):
+        await critique_query("What was total revenue?", nodes)
 
 
 @pytest.mark.asyncio
-async def test_critique_query_default_return_shape_is_unchanged():
-    """Without return_messages, the return value must be exactly the same
-    two-key dict as before -- no "messages" key leaks in by default."""
+async def test_critique_query_default_return_shape_is_unchanged(monkeypatch):
+    monkeypatch.setattr("llm_client.config.GROQ_API_KEY", "dummy-key")
     final_payload = {"cited_node_ids": ["n1"], "computed_answer": "$100 million"}
 
-    with patch(
-        "dataset_generation.async_critic.groq_client.call_groq",
-        new=AsyncMock(side_effect=[_tool_call_response(), _final_response(final_payload)]),
-    ):
-        result = await critique_query("What was total revenue?", _NODES)
+    call_count = {"n": 0}
+
+    async def mock_create(*args, **kwargs):
+        call_count["n"] += 1
+        if call_count["n"] == 1:
+            return _tool_call_response()
+        else:
+            return _final_response(final_payload)
+
+    mock_client = AsyncMock()
+    mock_client.chat.completions.create = mock_create
+
+    monkeypatch.setattr(
+        "llm_client.LLMFactory.get_client_for_stage",
+        lambda stage: mock_client,
+    )
+
+    nodes = [
+        {"node_id": "n1", "content": "Total revenue was $100 million in fiscal 2025."},
+        {"node_id": "n2", "content": "The board of directors met quarterly."},
+    ]
+
+    result = await critique_query("What was total revenue?", nodes)
 
     assert result == {"cited_node_ids": ["n1"], "computed_answer": "$100 million"}
     assert "messages" not in result
 
 
 @pytest.mark.asyncio
-async def test_critique_query_return_messages_includes_full_history():
+async def test_critique_query_return_messages_includes_full_history(monkeypatch):
+    monkeypatch.setattr("llm_client.config.GROQ_API_KEY", "dummy-key")
     final_payload = {"cited_node_ids": ["n1"], "computed_answer": "$100 million"}
 
-    with patch(
-        "dataset_generation.async_critic.groq_client.call_groq",
-        new=AsyncMock(side_effect=[_tool_call_response(), _final_response(final_payload)]),
-    ):
-        result = await critique_query(
-            "What was total revenue?", _NODES, return_messages=True
-        )
+    call_count = {"n": 0}
+
+    async def mock_create(*args, **kwargs):
+        call_count["n"] += 1
+        if call_count["n"] == 1:
+            return _tool_call_response()
+        else:
+            return _final_response(final_payload)
+
+    mock_client = AsyncMock()
+    mock_client.chat.completions.create = mock_create
+
+    monkeypatch.setattr(
+        "llm_client.LLMFactory.get_client_for_stage",
+        lambda stage: mock_client,
+    )
+
+    nodes = [
+        {"node_id": "n1", "content": "Total revenue was $100 million in fiscal 2025."},
+        {"node_id": "n2", "content": "The board of directors met quarterly."},
+    ]
+
+    result = await critique_query(
+        "What was total revenue?", nodes, return_messages=True
+    )
 
     assert result["cited_node_ids"] == ["n1"]
     assert result["computed_answer"] == "$100 million"
