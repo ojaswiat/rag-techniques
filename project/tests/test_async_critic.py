@@ -52,7 +52,7 @@ async def test_critique_query_uses_search_tool_then_answers(monkeypatch):
     mock_client.chat.completions.create = mock_create
 
     monkeypatch.setattr(
-        "llm_client.LLMFactory.get_client_for_stage",
+        "llm_client.llm_factory.LLMFactory.get_client_for_stage",
         lambda stage: mock_client,
     )
 
@@ -77,7 +77,7 @@ async def test_critique_query_raises_after_max_rounds_without_final_answer(monke
     mock_client.chat.completions.create = mock_create
 
     monkeypatch.setattr(
-        "llm_client.LLMFactory.get_client_for_stage",
+        "llm_client.llm_factory.LLMFactory.get_client_for_stage",
         lambda stage: mock_client,
     )
 
@@ -108,7 +108,7 @@ async def test_critique_query_default_return_shape_is_unchanged(monkeypatch):
     mock_client.chat.completions.create = mock_create
 
     monkeypatch.setattr(
-        "llm_client.LLMFactory.get_client_for_stage",
+        "llm_client.llm_factory.LLMFactory.get_client_for_stage",
         lambda stage: mock_client,
     )
 
@@ -141,7 +141,7 @@ async def test_critique_query_return_messages_includes_full_history(monkeypatch)
     mock_client.chat.completions.create = mock_create
 
     monkeypatch.setattr(
-        "llm_client.LLMFactory.get_client_for_stage",
+        "llm_client.llm_factory.LLMFactory.get_client_for_stage",
         lambda stage: mock_client,
     )
 
