@@ -99,17 +99,17 @@ async def test_get_llm_client_returns_equivalent_client_nim(monkeypatch):
     """Repeated LLMFactory.get_client("nvidia", ...) calls must each produce a
     correctly and identically configured client for the given model.
 
-    NOTE: this used to assert `client1 is client2` (singleton identity), a
-    holdover from a pre-LLMFactory design (see git history: the pre-refactor
-    `llm_client.py`/`nim_client.py` module, superseded by commits
-    6007c32/a2e7caf/b26b78f). The current LLMFactory.get_client()/
-    get_nim_client() construct a brand-new AsyncOpenAI client and a brand-new
-    OpenAILike wrapper on every call -- there is no caching anywhere in the
-    current implementation, so identity does not hold (and forcing a
-    singleton into production code just to satisfy this test would be
-    scope creep unrelated to the actual bug this task is fixing). What
-    genuinely matters -- and is still true -- is that separate calls yield
-    equivalently-configured clients.
+    NOTE: this used to assert `client1 is client2` (singleton identity).
+    Git history shows that assertion was never actually true at any commit --
+    it was written against an aspirational/never-implemented singleton design
+    in the commit that introduced this test (2a5276c), not a regression from
+    working behaviour. LLMFactory.get_client()/get_nim_client() construct a
+    brand-new AsyncOpenAI client and a brand-new OpenAILike wrapper on every
+    call -- there is no caching anywhere in the current implementation, so
+    identity does not hold (and forcing a singleton into production code just
+    to satisfy this test would be scope creep unrelated to the actual bug
+    this task is fixing). What genuinely matters -- and is still true -- is
+    that separate calls yield equivalently-configured clients.
     """
     monkeypatch.setattr("llm_client.config.NIM_API_KEY", "dummy-key")
     client1 = LLMFactory.get_client("nvidia", "test-model")
