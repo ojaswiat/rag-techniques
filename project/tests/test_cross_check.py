@@ -48,8 +48,8 @@ def test_values_match_false_on_mismatched_number_count():
 
 
 def test_values_match_true_when_critic_has_extra_unrelated_number():
-    # Doubt #4 fix: an equally-correct critic answer with an extra,
-    # unrelated number (e.g. a year) must no longer be rejected purely on
+    # An equally-correct critic answer with an extra,
+    # unrelated number (e.g. a year) must not be rejected purely on
     # count mismatch.
     assert values_match("$100 million", "$100 million in 2025") is True
 
@@ -114,7 +114,7 @@ def test_diagnose_rejection_reports_value_mismatch():
     assert "$100 million" in reason
 
 
-# -- Embedding similarity gate (Doubt #4 fix, third gate) --------------------
+# -- Embedding similarity gate (third gate) -----------------------------------
 
 _SEMANTICALLY_SIMILAR_A = (
     "Net revenue increased to $100 million in fiscal 2025."

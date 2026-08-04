@@ -125,13 +125,12 @@ async def test_build_index_for_document_raises_on_no_nodes(tmp_path, monkeypatch
 
 @pytest.mark.asyncio
 async def test_build_index_for_document_shares_callback_manager_with_llm_and_tree(tmp_path, monkeypatch):
-    """Regression test: the CallbackManager (holding the TokenCountingHandler)
+    """The CallbackManager (holding the TokenCountingHandler)
     built in build_index_for_document() must be passed both to
-    LLMFactory.get_client_for_stage() and to TreeIndex(). Before the fix,
-    LLMFactory.get_client_for_stage() was called with no callback_manager at
-    all, so the LLM's own callback_manager stayed an empty default one and
-    token-usage events (fired by llama_index's llm_chat_callback() decorator
-    on the LLM object itself) never reached the TokenCountingHandler."""
+    LLMFactory.get_client_for_stage() and to TreeIndex() -- llama_index's
+    llm_chat_callback() decorator fires token-usage events into the LLM
+    object's own callback_manager, not the index's, so the LLM must be
+    wired to the same CallbackManager for token counting to work."""
     monkeypatch.setattr(bsi, "STORAGE_ROOT", tmp_path)
 
     fake_nodes = [{"node_id": "AAPL_2025_n0001", "document_id": "AAPL_2025",

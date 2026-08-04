@@ -23,8 +23,8 @@ import re
 
 _WORD_RE = re.compile(r"[a-z0-9]+")
 
-# Floor for the length-normalization denominator (Doubt #12 follow-up fix,
-# found by /code-review). Plain division by node token length lets a
+# Floor for the length-normalization denominator. Plain division by node
+# token length lets a
 # degenerate tiny node (e.g. a 1-token block like "Revenue") score close to
 # 1.0 and beat a longer, substantive node containing the same term with real
 # context -- node_builder.py splits filing markdown on blank lines with no
