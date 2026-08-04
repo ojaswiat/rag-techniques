@@ -8,7 +8,6 @@ Can we double just the JEQ and GQ since we have more data to work with now? What
 ## Issues
 
 ## Final Run
-0. Scan and remove the development history related comments and docstrings in the code files.
 2. Create a script called main.py to run all the 3 pipelines in parallel (ignore if already done).
 3. The script should return all the metrics, numbers and information in an understandable manner (tables, data, stats, etc) in the ./resources/research/results.md file.
 4. Using this information and ui-ux-skill-pro-max create a standalone HTML file with suitable graph and charts to compare the 3 pipelines in different metrics.
