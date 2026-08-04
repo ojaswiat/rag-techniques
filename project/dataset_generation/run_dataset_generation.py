@@ -560,7 +560,7 @@ async def _attempt_fill(
 async def main(db_path: str = "benchmark.db", document_ids: tuple[str, ...] | None = None) -> None:
     _configure_logging()
     await dbm.init_db(db_path)
-    document_ids = document_ids or _ALL_FILINGS
+    document_ids = _ALL_FILINGS if document_ids is None else document_ids
     max_sections = config.THROTTLE_LIMIT if config.LOCAL_TEST_THROTTLE else None
 
     nodes_by_document: dict[str, list[dict]] = {}
