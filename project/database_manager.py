@@ -229,6 +229,24 @@ async def get_quadrant_counts(db_path: str, table: str) -> dict[str, int]:
     return counts
 
 
+async def get_all_query_texts(db_path: str) -> list[tuple[str, str]]:
+    """(query_id, query_text) pairs from all three quadrant-fill tables --
+    queries, golden_queries, judge_validation -- combined. Used by the
+    Doubt #14 duplicate-question check: a duplicate between a PQ and a GQ is
+    just as real a problem as a duplicate within one table, so the check
+    must see the whole 140-query set, not just one table at a time."""
+    async with aiosqlite.connect(db_path) as conn:
+        cursor = await conn.execute(
+            """SELECT query_id, query_text FROM queries
+               UNION ALL
+               SELECT query_id, query_text FROM golden_queries
+               UNION ALL
+               SELECT query_id, query_text FROM judge_validation"""
+        )
+        rows = await cursor.fetchall()
+    return [(r[0], r[1]) for r in rows]
+
+
 async def get_golden_queries(db_path: str) -> list[dict]:
     async with aiosqlite.connect(db_path) as conn:
         conn.row_factory = aiosqlite.Row

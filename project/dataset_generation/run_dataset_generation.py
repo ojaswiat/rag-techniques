@@ -41,7 +41,7 @@ import llm_client.config as config
 import database_manager as dbm
 from dataset_generation.async_critic import critique_query
 from dataset_generation.async_generator import generate_query
-from dataset_generation.cross_check import check_query, diagnose_rejection
+from dataset_generation.cross_check import check_query, diagnose_rejection, embedding_similarity
 from dataset_generation.section_grouper import group_sections
 
 _QUADRANTS = ("Q1_Direct_Text", "Q2_Implicit_Text", "Q3_Direct_Table", "Q4_Implicit_Table")
@@ -50,6 +50,28 @@ _TABLE_QUADRANTS = ("Q3_Direct_Table", "Q4_Implicit_Table")
 _TABLE_ORDER = ("queries", "golden_queries", "judge_validation")
 _TARGETS = {"queries": 25, "golden_queries": 5, "judge_validation": 5}
 _MAX_ATTEMPTS_PER_SECTION = 3
+
+# Doubt #14 fix: minimum question-text embedding similarity (via
+# cross_check.embedding_similarity, same local bge-small-en-v1.5 model
+# already used for the Generator/Critic answer-equivalence gate) above which
+# a candidate query is treated as a near-verbatim restatement of an
+# already-accepted one and rejected as a duplicate.
+#
+# Deliberately a separate, higher constant from cross_check's
+# EMBEDDING_SIMILARITY_THRESHOLD (0.75) rather than a reuse of it: that
+# threshold was tuned for "these two answers describe the same fact"
+# (semantically loose on purpose -- different phrasings of the same number
+# should still match). Question-duplication needs a stricter bar, because
+# two different, both-legitimate questions about the same general topic
+# (e.g. two different revenue-related questions about the same filing, one
+# direct, one implicit -- exactly the Q1/Q2 quadrant design) can still land
+# at moderate cosine similarity without being actual duplicates. 0.92 is a
+# deliberately conservative starting point for near-verbatim-restatement
+# detection, not a tuned value -- unlike EMBEDDING_SIMILARITY_THRESHOLD,
+# there is no existing corpus of accepted-vs-rejected duplicate-question
+# pairs to calibrate against yet; this is a judgement call to revisit once
+# real duplicate/non-duplicate examples are observed.
+_DUPLICATE_QUESTION_SIMILARITY_THRESHOLD = 0.92
 
 # Safety cap on how many full passes ("cycles") a content pool (the
 # table-section pool feeding Q3/Q4, or the text-section pool feeding Q1/Q2)
@@ -540,6 +562,26 @@ async def _attempt_fill(
             continue
 
         if accepted:
+            existing_queries = await dbm.get_all_query_texts(db_path)
+            duplicate = None
+            for dup_id, dup_text in existing_queries:
+                score = embedding_similarity(generated["query_text"], dup_text)
+                if score >= _DUPLICATE_QUESTION_SIMILARITY_THRESHOLD:
+                    duplicate = (dup_id, dup_text, score)
+                    break
+
+            if duplicate is not None:
+                dup_id, dup_text, score = duplicate
+                feedback = (
+                    f"too similar to already-accepted query {dup_id!r} "
+                    f"({dup_text!r}, similarity {score:.3f}) -- ask about a "
+                    "different aspect/section"
+                )
+                _log_attempt_outcome(
+                    document_id, table, quadrant, attempt_num, "DUPLICATE", feedback, _total_accepted(counts)
+                )
+                continue
+
             next_seq = counts[table][quadrant] + 1
             await _accept_query(db_path, table, generated, next_seq)
             _log_attempt_outcome(
