@@ -2,6 +2,49 @@
 
 Simple running list of changes made to the project after the proposal was submitted.
 
+- 2026-08-04: Fixed silent token-cost logging failure in the P3 index build.
+   `logs/index_build_costs.json` recorded `input_tokens: 0, output_tokens: 0`
+   for every P3 build since the `LLMFactory` refactor (`b26b78f`/`a2e7caf`) --
+   real wall-clock time spent, real summary trees generated, but the token
+   cost silently unrecorded. Root cause: `build_index_for_document()`
+   (`project/pipelines/structural/build_summary_index.py`) built a
+   `TokenCountingHandler` inside a `CallbackManager` and passed it to
+   `TreeIndex(callback_manager=...)`, but `LLMFactory.get_client_for_stage()`
+   (`project/llm_client/llm_factory.py`) built the actual LLM object
+   (`OpenAILike`) with no `callback_manager` at all. `llama_index`'s
+   `llm_chat_callback()` decorator fires token-usage events into the LLM
+   object's *own* `callback_manager` attribute, not the index's -- `TreeIndex`
+   only forwards its callback_manager to an LLM inside `as_query_engine()`/
+   `as_chat_engine()` (query time, not the build path). So every real
+   summarization call's usage event landed on an empty, unrelated bus.
+   Confirmed live, no network call: `LLMFactory.get_client('groq',
+   'placeholder-model').callback_manager.handlers == []`. Confirmed via git
+   history that the pre-refactor code (`git show 6007c32~1:...`) passed
+   `callback_manager=CallbackManager([token_counter])` straight into the old
+   `Groq(...)` LLM constructor -- that's what made the first build wave's
+   token counts real; the refactor moved that wiring to the index instead of
+   the LLM and dropped it from the LLM. Not NIM-specific: the post-refactor
+   Groq rebuild wave (`AAPL/MSFT/TSLA`, model `gpt-oss-20b`) shows the same
+   zero-token pattern as the NIM builds (`JPM_2023/2024`, `nemotron-3-super`).
+   Fix: `LLMFactory.get_client()`/`get_client_for_stage()` now accept an
+   optional `callback_manager` parameter, forwarded into `OpenAILike(...)` in
+   both the `groq` and `nvidia` branches; `build_index_for_document()` passes
+   the same `CallbackManager` instance to both `LLMFactory.get_client_for_stage`
+   and `TreeIndex` (one shared bus, one `TokenCountingHandler`, no
+   double-counting risk). Purely additive -- defaults to `None`, so the three
+   unaffected call sites (`async_critic.py`, `async_generator.py`, and tests
+   omitting the new param) are unchanged. Regression-tested: new tests in
+   `test_llm_client_nim.py` assert the LLM's `callback_manager` is the same
+   object the caller passed in (and that omitting it still constructs fine),
+   and a new test in `test_build_summary_index.py` asserts
+   `get_client_for_stage` and `TreeIndex` receive the identical
+   `CallbackManager` instance. Updated: `project/llm_client/llm_factory.py`,
+   `project/pipelines/structural/build_summary_index.py`,
+   `project/tests/test_llm_client_nim.py`,
+   `project/tests/test_build_summary_index.py`. Not yet done: rebuilding cost
+   data for the filings already built with zero-recorded tokens (`AAPL/MSFT/
+   TSLA` x3, `JPM_2023/2024`) -- their real token cost is lost, only
+   recoverable by re-running the build.
 - 2026-08-04: Corrects/expands the reasoning behind the 2026-07-31 entry below.
    `nim_client.py` and `LLMFactory`'s provider dispatch were added, and P3's
    index-build model was moved to NVIDIA NIM's `nemotron-3-super-120b-a12b`,

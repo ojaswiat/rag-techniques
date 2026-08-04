@@ -56,7 +56,9 @@ async def build_index_for_document(document_id: str) -> dict:
     token_counter = TokenCountingHandler()
     callback_manager = CallbackManager([token_counter])
 
-    summary_agent = LLMFactory.get_client_for_stage("p3_index_build")
+    summary_agent = LLMFactory.get_client_for_stage(
+        "p3_index_build", callback_manager=callback_manager
+    )
     start = time.monotonic()
     index = TreeIndex(
         nodes=llama_nodes,
