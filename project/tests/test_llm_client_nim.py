@@ -6,6 +6,7 @@ from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
 import pytest
+from llama_index.core.callbacks import CallbackManager, TokenCountingHandler
 
 from llm_client.llm_factory import LLMFactory
 
@@ -93,3 +94,35 @@ async def test_get_llm_client_returns_singleton_nim(monkeypatch):
 async def test_get_llm_client_unknown_provider_raises():
     with pytest.raises(ValueError):
         LLMFactory.get_client("unknown", "test-model")
+
+
+def test_get_client_wires_callback_manager_when_provided(monkeypatch):
+    """Regression test: LLMFactory.get_client must forward a caller-supplied
+    callback_manager to the OpenAILike LLM it constructs, so that events
+    fired by llama_index's llm_chat_callback() decorator (e.g. token-usage
+    tracking) land on the caller's bus rather than an empty default one.
+
+    Before the fix, OpenAILike(...) was constructed without a
+    callback_manager kwarg at all, so this would be False.
+    """
+    monkeypatch.setattr("llm_client.config.GROQ_API_KEY", "dummy-key")
+
+    token_counter = TokenCountingHandler()
+    callback_manager = CallbackManager([token_counter])
+
+    client = LLMFactory.get_client("groq", "some-model", callback_manager=callback_manager)
+
+    assert client.callback_manager is callback_manager
+    assert token_counter in client.callback_manager.handlers
+
+
+def test_get_client_omitting_callback_manager_still_constructs(monkeypatch):
+    """The other three unchanged call sites (critic/generator stages) call
+    get_client_for_stage() with no callback_manager arg -- confirm the new
+    parameter defaults to None and does not break construction."""
+    monkeypatch.setattr("llm_client.config.GROQ_API_KEY", "dummy-key")
+
+    client = LLMFactory.get_client("groq", "some-model")
+
+    assert client is not None
+    assert client.model == "some-model"
