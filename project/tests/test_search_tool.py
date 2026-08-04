@@ -45,11 +45,11 @@ def test_tool_schema_shape():
 
 
 def test_short_precise_node_outranks_long_wordy_node():
-    # Doubt #12 regression: a short node with fewer raw hits but a higher
+    # A short node with fewer raw hits but a higher
     # hits/length ratio must outrank a long node with more raw hits but a
     # lower ratio (length-normalized TF, not raw count). Both nodes are
-    # kept >= _MIN_NODE_LENGTH_FOR_SCORING (25 tokens) so the floor added
-    # for the degenerate-node fix does not mask this ratio comparison.
+    # kept >= _MIN_NODE_LENGTH_FOR_SCORING (25 tokens) so the floor does
+    # not mask this ratio comparison.
     # Node A: 26 tokens, 1 "revenue" hit -> score 1/26 ~= 0.0385.
     node_a = _node(
         "nA",
@@ -83,10 +83,10 @@ def test_empty_content_node_skipped_without_zero_division():
 
 
 def test_degenerate_tiny_node_does_not_outrank_real_node():
-    # /code-review finding on the Doubt #12 fix: without a length floor, a
+    # Without a length floor, a
     # 1-token node with a single exact hit scores raw_count/len == 1/1 ==
     # 1.0 and beats any longer, substantive node mentioning the same term
-    # once in real context. This must fail against the pre-floor scoring
+    # once in real context. This must fail against unfloored scoring
     # (score = raw_count / len(node_tokens)) and pass with the floor
     # (score = raw_count / max(len(node_tokens), _MIN_NODE_LENGTH_FOR_SCORING)).
     tiny_node = _node("tiny", "Revenue")  # 1 token, 1 hit -> pre-floor score 1.0

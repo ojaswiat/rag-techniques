@@ -185,15 +185,13 @@ async def test_resume_after_restart_does_not_collide_with_existing_query_ids(mon
     assert inserted_row["query_id"] == "QT1_PQ_003"
 
 
-# --- Doubt #13: empty document_ids tuple must not fall back to _ALL_FILINGS -
+# --- Empty document_ids tuple must not fall back to _ALL_FILINGS ------------
 
 
 @pytest.mark.asyncio
 async def test_main_with_empty_document_ids_tuple_stays_empty_not_all_filings(monkeypatch):
     """document_ids=() means 'restrict to zero filings' -- a distinct intent
-    from document_ids=None ('not provided'). Before the fix,
-    `document_ids or _ALL_FILINGS` collapsed both into 'use all filings'
-    because an empty tuple is falsy. After the fix, an explicitly empty
+    from document_ids=None ('not provided'). An explicitly empty
     tuple must stay empty: get_nodes_by_document must never be called, and
     build_pools must receive an empty documents list."""
     monkeypatch.setattr("dataset_generation.run_dataset_generation.config.LOCAL_TEST_THROTTLE", True)
@@ -223,7 +221,7 @@ async def test_main_with_empty_document_ids_tuple_stays_empty_not_all_filings(mo
 @pytest.mark.asyncio
 async def test_main_with_document_ids_none_defaults_to_all_filings(monkeypatch):
     """Guards the unaffected case: document_ids=None (or omitted entirely)
-    must still default to _ALL_FILINGS after the Doubt #13 fix."""
+    must still default to _ALL_FILINGS."""
     monkeypatch.setattr("dataset_generation.run_dataset_generation.config.LOCAL_TEST_THROTTLE", True)
     monkeypatch.setattr("dataset_generation.run_dataset_generation.config.THROTTLE_LIMIT", 1)
 
@@ -274,15 +272,14 @@ _FAKE_GENERATED = {
 }
 
 
-# --- Doubt #14: duplicate-question check before acceptance ------------------
+# --- Duplicate-question check before acceptance ------------------------------
 
 
 @pytest.mark.asyncio
 async def test_duplicate_check_below_threshold_accepted_normally(monkeypatch, tmp_path):
     """A candidate whose embedding_similarity score against an existing
     accepted query is below _DUPLICATE_QUESTION_SIMILARITY_THRESHOLD must be
-    accepted exactly as before the Doubt #14 fix -- no behaviour change for
-    the non-duplicate case."""
+    accepted normally -- no behaviour change for the non-duplicate case."""
     monkeypatch.setattr("dataset_generation.run_dataset_generation.config.LOCAL_TEST_THROTTLE", True)
     monkeypatch.setattr("dataset_generation.run_dataset_generation.config.THROTTLE_LIMIT", 1)
     monkeypatch.setattr(
@@ -382,7 +379,7 @@ async def test_duplicate_check_at_or_above_threshold_rejected_and_retried(monkey
 
     # The retry feedback must steer the next attempt away from the duplicate,
     # not just repeat -- same retry-feedback mechanism as the citation/value
-    # mismatch rejection paths (Doubt #3).
+    # mismatch rejection paths.
     second_call_feedback = mock_generate.await_args_list[1].kwargs.get("previous_attempt_feedback")
     assert second_call_feedback is not None
     assert "too similar" in second_call_feedback.lower()
@@ -723,7 +720,7 @@ async def test_null_computed_answer_raises_attribute_error_caught_and_logged(mon
     assert all(entry["exception_type"] == "AttributeError" for entry in logged)
 
 
-# --- Doubt #2: content-aware, company-balanced pool routing -----------------
+# --- Content-aware, company-balanced pool routing ----------------------------
 
 
 def _node(node_id, document_id, header, node_type="text", content="text", token_count=10):
@@ -1091,7 +1088,7 @@ async def test_main_routes_table_sections_only_to_table_quadrants(monkeypatch, t
     assert table_calls and all(q in _TABLE_QUADRANTS for q in table_calls)
 
 
-# --- Doubt #6: per-attempt progress logging ---------------------------------
+# --- Per-attempt progress logging ---------------------------------------------
 
 
 @pytest.mark.asyncio

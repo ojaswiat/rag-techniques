@@ -12,8 +12,8 @@ accepted rows in a (table, quadrant) slot means the next process's first
 accepted row for that same slot gets suffix N+1, never colliding with
 already-committed rows.
 
-Content-aware, company-balanced fill order (Doubt #2 fix)
------------------------------------------------------------
+Content-aware, company-balanced fill order
+-------------------------------------------
 Sections are classified as table-type or text-type (see classify_section)
 and routed to whichever quadrants that content can actually support:
 table sections -> Q3/Q4 (table-extraction/table-math), text sections ->
@@ -51,7 +51,7 @@ _TABLE_ORDER = ("queries", "golden_queries", "judge_validation")
 _TARGETS = {"queries": 25, "golden_queries": 5, "judge_validation": 5}
 _MAX_ATTEMPTS_PER_SECTION = 3
 
-# Doubt #14 fix: minimum question-text embedding similarity (via
+# Minimum question-text embedding similarity (via
 # cross_check.embedding_similarity, same local bge-small-en-v1.5 model
 # already used for the Generator/Critic answer-equivalence gate) above which
 # a candidate query is treated as a near-verbatim restatement of an
@@ -85,7 +85,7 @@ _DUPLICATE_QUESTION_SIMILARITY_THRESHOLD = 0.92
 # doesn't have enough table sections).
 _MAX_POOL_CYCLES = 5
 
-# Doubt #8 fix: a hard cap on how many tokens' worth of section content
+# Hard cap on how many tokens' worth of section content
 # generate_query() is ever handed in one Generator call. gpt-oss-120b's
 # context window is 128K tokens, but the raw window isn't the right budget
 # to chunk against -- the system prompt, per-quadrant guidance, the
@@ -133,10 +133,10 @@ PROGRESS_LOG_PATH = Path("logs/dataset_generation_progress.log")
 # hardcoded so it stays correct if either changes.
 _TOTAL_TARGET = sum(_TARGETS.values()) * len(_QUADRANTS)
 
-# Doubt #6 fix: per-attempt human-readable progress commentary, additive to
+# Per-attempt progress commentary, additive to
 # (not a replacement for) the structured JSON logs above (append_failure_log,
 # _write_summary_log). A run can take hours across up to 140 questions with
-# retries and previously printed nothing until the very end -- this gives
+# retries, so this gives
 # live console visibility plus a durable transcript in
 # logs/dataset_generation_progress.log. Uses stdlib `logging` (timestamps and
 # levels for free, no new dependency) rather than print().
@@ -311,11 +311,11 @@ def _get_encoding() -> tiktoken.Encoding:
 
 
 def _log_oversized_node_skipped(document_id: str, node_id: str, node_tokens: int) -> None:
-    """Doubt #8 fix: mirrors _log_attempt_outcome's structured-logging style
+    """Mirrors _log_attempt_outcome's structured-logging style
     (module logger, one line, key facts in the message) for the rare edge
     case where a single node -- almost always one enormous table -- exceeds
     _MAX_SECTION_TOKENS entirely on its own and can't be chunked further
-    without breaking table atomicity (classify_section/Doubt #2 depend on
+    without breaking table atomicity (classify_section depends on
     tables staying intact, single nodes). That node is skipped; the rest of
     its section is still packed normally around it."""
     logger.warning(
@@ -440,7 +440,7 @@ def build_pools(documents: list[tuple[str, list[dict]]]) -> tuple[list[dict], li
 
     `documents` is a list of (document_id, nodes) pairs for every filing in
     the run. Each group_sections() section is first run through
-    chunk_section (Doubt #8 fix) -- a section under _MAX_SECTION_TOKENS
+    chunk_section -- a section under _MAX_SECTION_TOKENS
     produces itself unchanged, an oversized one produces multiple
     chunk dicts, each entering the pools as its own independent candidate
     "section". Returns (text_pool, table_pool): each a list of
