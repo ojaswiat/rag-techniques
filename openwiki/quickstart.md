@@ -6,7 +6,7 @@ The research question, from `README.md`: *which retrieval paradigm — semantic 
 
 ## The one thing to know first
 
-**Phase 1 and Phase 2 of the build are done; Phases 3–8 are not.** Implementation code lives under `project/`, not the `src/` that `CLAUDE.md` describes — that's a real discrepancy, see [Working in this repo](working-in-this-repo.md). Phase 1 built the infrastructure layer (`config.py`, `database_manager.py`, `groq_client.py`, `loop_template.py`); Phase 2 built the SEC EDGAR → LlamaParse → `nodes` ingestion pipeline (`project/ingest/`). Both are tested (39 passing tests) and verified against real, live SEC EDGAR and LlamaParse data, not just mocks.
+**Phases 1–3 are built and tested; Phase 4 is built and tested but hasn't been run to produce real data yet; Phases 5–8 are not built.** Implementation code lives under `project/`, not the `src/` that `CLAUDE.md` describes — that's a real discrepancy, see [Working in this repo](working-in-this-repo.md). Phase 1 built the infrastructure layer (`project/llm_client/` — multi-provider Groq/NVIDIA NIM client factory, `database_manager.py`, `loop_template.py`); Phase 2 built the SEC EDGAR → LlamaParse → `nodes` ingestion pipeline (`project/ingest/`); Phase 3 built the per-filing `TreeIndex` summary build (`project/pipelines/structural/`). Phase 4's dataset-generation subsystem (`project/dataset_generation/` — Generator, Critic, cross-check, search tool, GQ hand-labelling tooling) is fully coded and unit-tested, but `queries`/`golden_queries`/`judge_validation` are still empty — it has not yet been run end-to-end against the corpus. See [System architecture](system-architecture.md) for the phase-by-phase build table.
 
 The specs in `resources/specs/` remain the binding design for everything not yet built (Phases 3–8: P3 summary index, dataset generation, the three retrieval pipelines, the judge, the full benchmark, analysis). Treat them as the contract for that remaining work.
 
@@ -21,11 +21,16 @@ The specs in `resources/specs/` remain the binding design for everything not yet
 ## Repository layout
 
 ```
-project/                   # All application code (Phases 1-2 built, see below)
-  config.py, database_manager.py, groq_client.py, loop_template.py  # Phase 1
+project/                   # All application code (Phases 1-4 built, see below)
+  llm_client/              # Phase 1: config.py, llm_factory.py (LLMFactory), groq_client.py,
+                           # nim_client.py, utils.py -- multi-provider LLM client (Groq + NVIDIA NIM)
+  database_manager.py, loop_template.py  # Phase 1
   ingest/                  # Phase 2: fetch_filings.py, parse_filing.py, node_builder.py,
                            # parsing_audit.py, run_ingestion.py
-  tests/                   # 39 passing tests
+  pipelines/structural/    # Phase 3: build_summary_index.py (per-filing TreeIndex), node_convert.py
+  dataset_generation/      # Phase 4: async_generator.py, async_critic.py, search_tool.py,
+                           # cross_check.py, run_dataset_generation.py, gq_label_export.py/gq_label_import.py
+  tests/                   # passing tests across all four phases
   benchmark.db             # SQLite state (gitignored)
 resources/                 # User files and assets: the steering and reference layer
   specs/                   # Authoritative design docs (read these in the order below)
@@ -59,7 +64,9 @@ Six to nine SEC 10-K filings are parsed with LlamaParse into `TextNode`s, each c
 
 ## Current state and open items
 
-Phase 1 (infrastructure) and Phase 2 (ingestion) are built and tested. Phase 3 onward (P3 summary index, dataset generation, pipelines, judge, benchmark, analysis) follow the specs as designed. Several things remain genuinely unresolved:
+Phases 1–3 (infrastructure, ingestion, P3 summary index) are built and tested. Phase 4 (dataset generation) is built and tested but has not yet been run against the full corpus — its three query tables are still empty. Phase 5 onward (P1/P2/P3 retrieval pipelines, judge, benchmark, analysis) follow the specs as designed but are not yet built. Several things remain genuinely unresolved:
+
+- **LLM calls now route through a multi-provider factory.** `project/llm_client/llm_factory.py`'s `LLMFactory.get_client_for_stage(stage)` reads `config.MODEL_ROUTING[stage]` (now `{model, provider}` pairs) and dispatches to either `groq_client.py` or `nim_client.py`. P3's index build uses this to call NVIDIA NIM (`nvidia/nemotron-3-super-120b-a12b`) instead of Groq. See `resources/artifacts/Changes.md` (2026-07-31 entry).
 
 - **The filing corpus has since expanded to 18 filings and is fully ingested.** Original corpus was AAPL/MSFT/TSLA × FY2023–2025 (9 filings); expanded to 6 companies (added JPM, JNJ, WMT) × FY2023–2025 = 18 filings, all fetched/parsed (26,050 nodes in `benchmark.db`, confirmed 2026-07-29). See `resources/artifacts/Changes.md` and `project/data/filings_manifest.json` for the authoritative current list.
 - **Context-mass standardisation is asserted but not enforced.** `Project Idea.md` §10 principle 1 requires context mass held constant across pipelines, but K is standardised as node *count*, not token count, and node sizes vary. `Architecture.md` §11 item 4 recommends accepting and documenting the variance rather than adding a truncation step. Flagged for the researcher to confirm. Not yet relevant — no pipeline exists yet to standardise.

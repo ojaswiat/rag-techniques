@@ -1,15 +1,3 @@
 {
-  "processes": {
-    "worker": {
-      "pid": 17457,
-      "type": "worker",
-      "startedAt": "2026-07-31T09:10:43.980Z"
-    },
-    "chroma-mcp": {
-      "pid": 19674,
-      "type": "chroma",
-      "startedAt": "2026-07-31T09:24:46.233Z",
-      "pgid": 19674
-    }
-  }
+  "processes": {}
 }

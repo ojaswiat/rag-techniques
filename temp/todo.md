@@ -7,6 +7,10 @@ Full corpus ingestion required before any data related development.
 - Phase 3 reads it to build P3's summary tree (a separate, one-time step).
 - Phase 4 reads it to write benchmark questions and cite exact pieces of evidence.
 
+Can we double JEQ and GQ? What will be the impact? What if download some more data?
+
+# Verify each of the file line-by-line for AI statements and understand the code flow
+
 ## Doubts
 1. One hiccup kills everything. If the Critic robot ever gets stuck (can't answer in 5 tries) or sends back broken text, the whole program crashes instead of just skipping that one question and moving to the next. Imagine your dishwasher stopping forever because one plate was dirty, instead of just re-washing that plate.
 2. Questions get grouped by company by accident. Because of how the code picks questions, "hard math questions" mostly end up coming from Tesla, "simple fact questions" mostly from Apple. So later, when the dissertation says "Tesla questions were harder," nobody can tell if that's true because they're hard questions, or just because they're Tesla. Two things got mixed together that need to stay separate.
