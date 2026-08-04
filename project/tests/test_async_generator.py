@@ -62,7 +62,7 @@ async def test_generate_query_parses_generator_response(monkeypatch):
     capturing_client = _CapturingClient(_fake_response(payload))
 
     monkeypatch.setattr(
-        "llm_client.LLMFactory.get_client_for_stage",
+        "llm_client.llm_factory.LLMFactory.get_client_for_stage",
         lambda stage: capturing_client,
     )
 
@@ -109,7 +109,7 @@ async def test_generate_query_first_attempt_has_no_feedback_in_prompt(monkeypatc
     capturing_client = _CapturingClient(_fake_response(payload))
 
     monkeypatch.setattr(
-        "llm_client.LLMFactory.get_client_for_stage",
+        "llm_client.llm_factory.LLMFactory.get_client_for_stage",
         lambda stage: capturing_client,
     )
 
@@ -154,7 +154,7 @@ async def test_generate_query_retry_includes_previous_attempt_feedback_in_prompt
     logging_client = _LoggingClient(_fake_response(payload))
 
     monkeypatch.setattr(
-        "llm_client.LLMFactory.get_client_for_stage",
+        "llm_client.llm_factory.LLMFactory.get_client_for_stage",
         lambda stage: logging_client,
     )
 

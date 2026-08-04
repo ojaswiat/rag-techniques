@@ -36,8 +36,11 @@ async def test_groq_client_retries_on_429_then_succeeds():
             )
         return success_result
 
-    # Patch the class where it is used in this module
-    with patch("llm_client.groq_client.AsyncGroq") as mock_ctor:
+    # Patch the class where it is used in this module. get_groq_client()
+    # captures the constructed client's chat.completions.create as
+    # original_create and wraps it with retry+semaphore, so the mock's
+    # create method must be configured before get_groq_client() runs.
+    with patch("llm_client.groq_client.AsyncOpenAI") as mock_ctor:
         mock_client = AsyncMock()
         mock_client.chat.completions.create = AsyncMock(side_effect=flaky_create)
         mock_ctor.return_value = mock_client
@@ -68,7 +71,7 @@ async def test_groq_client_passes_tools_through_when_given():
         captured.update(kwargs)
         return success_result
 
-    with patch("llm_client.groq_client.AsyncGroq") as mock_ctor:
+    with patch("llm_client.groq_client.AsyncOpenAI") as mock_ctor:
         mock_client = AsyncMock()
         mock_client.chat.completions.create = AsyncMock(side_effect=capture_create)
         mock_ctor.return_value = mock_client
@@ -93,7 +96,7 @@ async def test_groq_client_omits_tools_when_not_given():
         captured.update(kwargs)
         return success_result
 
-    with patch("llm_client.groq_client.AsyncGroq") as mock_ctor:
+    with patch("llm_client.groq_client.AsyncOpenAI") as mock_ctor:
         mock_client = AsyncMock()
         mock_client.chat.completions.create = AsyncMock(side_effect=capture_create)
         mock_ctor.return_value = mock_client
