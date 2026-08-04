@@ -4,7 +4,39 @@ Each entry: what was originally intended, what deviation/gap occurred, what was 
 
 ---
 
-### 1. P3 token-cost logging silently recorded zero (2026-08-04)
+### 1. Dataset generation had no duplicate-question check (2026-08-04)
+
+1. **Originally proposed:** The Generator/Critic/cross-check pipeline should produce 140 unique benchmark questions.
+2. **Deviation:** Nothing stopped two near-identical questions, generated from different sections or documents, from both being accepted into the final set.
+3. **What we did:** Rejected any candidate question too similar to one already accepted.
+4. **How we did it:** Added `database_manager.get_all_query_texts()`, pulling `(query_id, query_text)` across all three quadrant-fill tables; `_attempt_fill()` now rejects a candidate scoring ≥0.92 `bge-small-en-v1.5` embedding similarity against any accepted query, retrying with feedback naming the duplicate.
+5. **Why we did it:** Duplicate questions in the evaluation set would inflate or bias the pipeline comparison results.
+
+### 2. Dataset generation could silently fall short of its 140-question target (2026-08-04)
+
+1. **Originally proposed:** Each run should produce the full 140-question dataset (100 PQ / 20 GQ / 20 JEQ).
+2. **Deviation:** If a run couldn't fill every target, it stopped quietly with no indication of how far short it fell.
+3. **What we did:** Added an end-of-run underfill report.
+4. **How we did it:** `format_underfill_summary()` builds a per-quadrant/per-table fill-vs-target summary, printed and durably logged at the end of every run.
+5. **Why we did it:** A reported dataset size of "140 questions" needs to be verifiable at face value, not silently short, for the methodology write-up.
+
+### 3. Empty filing-list argument was indistinguishable from "not provided" (2026-08-04)
+
+1. **Originally proposed:** Dataset generation should be restrictable to an explicit subset of filings, including an explicitly empty subset.
+2. **Deviation:** `document_ids or _ALL_FILINGS` treated an explicitly empty tuple the same as `None`, since both are falsy in Python — both defaulted to all filings.
+3. **What we did:** Made "not provided" the only case that defaults to all filings.
+4. **How we did it:** Changed to `document_ids = _ALL_FILINGS if document_ids is None else document_ids`.
+5. **Why we did it:** A silent "use everything" default when zero filings was intended could run a dataset generation pass against the wrong scope with no error or warning.
+
+### 4. Questions clustered by company instead of by quadrant difficulty (2026-08-04)
+
+1. **Originally proposed:** Quadrant difficulty (direct/implicit, text/table) should be the dataset's only structural axis.
+2. **Deviation:** Sections were filled into quadrants in encounter order, so one company's filings could dominate a quadrant simply because they were processed first.
+3. **What we did:** Interleaved sections across companies within each content pool.
+4. **How we did it:** Added `_round_robin_interleave()`, cycling through companies one section at a time in `build_pools()`, instead of exhausting one company's sections before moving to the next.
+5. **Why we did it:** Without this, an observed "pipeline X struggles on hard questions" result could really mean "pipeline X struggles on Company Y's filings" — no way to separate the two explanations.
+
+### 5. P3 token-cost logging silently recorded zero (2026-08-04)
 
 1. **Originally proposed:** Every P3 build should log real input/output token counts via `TokenCountingHandler`, so build cost is auditable.
 2. **Deviation:** After the `LLMFactory` refactor, every P3 build logged `input_tokens: 0, output_tokens: 0` — real summaries were generated, but cost went unrecorded.

@@ -35,8 +35,9 @@ Add proper description to each thing.
 
 ### Organise information
 1. Plan a storage mechanism to store all the information in a contextual manner - don't mess up. Spawn sub-agents if you have to.
-2. Create a new directory called `./research/information` and store all the information in different standalone html files linked to each other and give me a report. Use ui-ux-pro-max skills to generate the report - minimal, modern, no rounded corners.
-3. Create a skill in this project for claude and opencode to tell an AI agent how to use this information (your way of oranising reports in different files and linking them will be the key here).
+2. Go through all the files that generated in step 1. Remove the facts you don't want to include in the dissertation for example (The token counting failed when genrating the summary).
+3. Create a new directory called `./research/information` and store all the information in different standalone html files linked to each other and give me a report. Use ui-ux-pro-max skills to generate the report - minimal, modern, no rounded corners.
+4. Create a skill in this project for claude and opencode to tell an AI agent how to use this information (your way of oranising reports in different files and linking them will be the key here).
 
 ### Using information
 Plan a IEEE level research paper for this project using the information you just gathered with references.
