@@ -38,7 +38,10 @@ class LLMFactory:
         Returns
         -------
         A LlamaIndex LLM object (subclass of BaseLLM) ready for use in
-        TreeIndex, VectorStoreIndex, etc.
+        TreeIndex, VectorStoreIndex, etc. Constructed with `temperature=0`
+        (Guardrails.md: "All LLM calls at temperature = 0") -- OpenAILike's
+        own default is 0.1, not 0, so this must be set explicitly rather than
+        relying on the library default.
         """
         match provider:
             case "groq":
@@ -53,6 +56,7 @@ class LLMFactory:
                     async_client=raw_client,
                     is_chat_model=True,
                     callback_manager=callback_manager,
+                    temperature=0,
                 )
 
             case "nvidia":
@@ -67,6 +71,7 @@ class LLMFactory:
                     async_client=raw_client,
                     is_chat_model=True,
                     callback_manager=callback_manager,
+                    temperature=0,
                 )
 
             case _:

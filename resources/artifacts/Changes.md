@@ -2,6 +2,31 @@
 
 Simple running list of changes made to the project after the proposal was submitted.
 
+- 2026-08-04: Pinned `temperature=0` explicitly in `LLMFactory.get_client()`
+   (`project/llm_client/llm_factory.py`, both `groq` and `nvidia` branches).
+   `OpenAILike(...)` was constructed with no `temperature` kwarg at all,
+   so it silently fell back to `llama_index`'s own default,
+   `DEFAULT_TEMPERATURE = 0.1` -- not the `0` Guardrails.md mandates
+   project-wide ("All LLM calls at temperature = 0"). This specifically
+   affects the P3 index build (`build_summary_index.py`'s `TreeIndex`
+   drives summarization calls through the LLM object's own default
+   temperature, with no per-call override); the Generator and Critic
+   (`async_generator.py`, `async_critic.py`) were already unaffected in
+   practice since both pass `temperature=0.0` explicitly on every
+   `chat.completions.create()` call, overriding whatever the object-level
+   default was. At `0.1`, sampling is stochastic -- rerunning the same
+   model against the same document, even on the same machine, could
+   already produce a different-length summary and a different output-token
+   count purely from sampling noise, on top of the much larger variance
+   from switching P3's model/provider entirely (measured live: `AAPL_2023`
+   built on two different models moved from 33,333 to 66,035 output tokens
+   for the same source document -- see the token-cost-logging fix entry
+   above for the full number). Not yet done: the 11 filings already built
+   under the unpinned default (temperature never recorded per-build, so
+   there's no way to tell after the fact whether a given past build ran at
+   0.1 or something else) would need a rebuild to be temperature=0-clean;
+   left as-is for now since a rebuild is the same expensive
+   re-summarization cost already tracked as outstanding work.
 - 2026-08-04: Fixed silent token-cost logging failure in the P3 index build.
    `logs/index_build_costs.json` recorded `input_tokens: 0, output_tokens: 0`
    for every P3 build since the `LLMFactory` refactor (`b26b78f`/`a2e7caf`) --
