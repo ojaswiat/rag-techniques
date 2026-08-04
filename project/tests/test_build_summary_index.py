@@ -35,7 +35,7 @@ async def test_build_index_for_document_builds_and_persists(tmp_path, monkeypatc
 
     with patch.object(bsi.dbm, "get_nodes_by_document", new=AsyncMock(return_value=fake_nodes)), \
          patch.object(bsi, "TreeIndex", return_value=fake_index) as mock_tree, \
-         patch.object(bsi, "Groq"):
+         patch.object(bsi.LLMFactory, "get_client_for_stage"):
         result = await bsi.build_index_for_document("AAPL_2025")
 
     assert result["document_id"] == "AAPL_2025"
@@ -64,7 +64,7 @@ async def test_build_index_for_document_crash_leaves_only_temp_dir(tmp_path, mon
 
     with patch.object(bsi.dbm, "get_nodes_by_document", new=AsyncMock(return_value=fake_nodes)), \
          patch.object(bsi, "TreeIndex", return_value=fake_index), \
-         patch.object(bsi, "Groq"), \
+         patch.object(bsi.LLMFactory, "get_client_for_stage"), \
          patch.object(bsi.os, "rename", side_effect=OSError("simulated crash")):
         with pytest.raises(OSError):
             await bsi.build_index_for_document("AAPL_2025")
@@ -96,7 +96,7 @@ async def test_build_index_for_document_cleans_stale_temp_dir_before_retry(tmp_p
 
     with patch.object(bsi.dbm, "get_nodes_by_document", new=AsyncMock(return_value=fake_nodes)), \
          patch.object(bsi, "TreeIndex", return_value=fake_index), \
-         patch.object(bsi, "Groq"):
+         patch.object(bsi.LLMFactory, "get_client_for_stage"):
         result = await bsi.build_index_for_document("AAPL_2025")
 
     assert result["skipped"] is False
@@ -113,7 +113,7 @@ async def test_build_index_for_document_raises_on_no_nodes(tmp_path, monkeypatch
 
     with patch.object(bsi.dbm, "get_nodes_by_document", new=AsyncMock(return_value=[])), \
          patch.object(bsi, "TreeIndex") as mock_tree, \
-         patch.object(bsi, "Groq"):
+         patch.object(bsi.LLMFactory, "get_client_for_stage"):
         with pytest.raises(ValueError):
             await bsi.build_index_for_document("MSFT_2025")
 
