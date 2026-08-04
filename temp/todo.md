@@ -1,46 +1,17 @@
-Can you confirm that the summary tree is actually built? Don't just look into directory. Confirm with the contents (just skim, don't read the entire files).
 
-Change the models and build summary again refer to model-selection.md file.
-Build the node tables again.
-Full corpus ingestion required before any data related development.
 
 - Phase 3 reads it to build P3's summary tree (a separate, one-time step).
 - Phase 4 reads it to write benchmark questions and cite exact pieces of evidence.
 
-Can we double JEQ and GQ? What will be the impact? What if download some more data?
+Can we double just the JEQ and GQ since we have more data to work with now? What will be the impact? What if download some more data?
 
-# Verify each of the file line-by-line for AI statements and understand the code flow
-
-## Doubts
-1. One hiccup kills everything. If the Critic robot ever gets stuck (can't answer in 5 tries) or sends back broken text, the whole program crashes instead of just skipping that one question and moving to the next. Imagine your dishwasher stopping forever because one plate was dirty, instead of just re-washing that plate.
-2. Questions get grouped by company by accident. Because of how the code picks questions, "hard math questions" mostly end up coming from Tesla, "simple fact questions" mostly from Apple. So later, when the dissertation says "Tesla questions were harder," nobody can tell if that's true because they're hard questions, or just because they're Tesla. Two things got mixed together that need to stay separate.
-
-Important (should fix, real problems but not run-killing):
-
-3. Asking the same question the same way and expecting a different answer. When a question gets rejected, the code just asks the robot again with the exact same information, same "creativity setting" (temperature 0 = no randomness). Like asking a calculator "2+2" again after it said 5 — it'll say 5 again. Wastes tries.
-4. Grading too strict. The checker compares numbers between two robots' answers. If one says "$100 million" and other says "$100 million in 2025," it counts the extra year as an extra number and marks it WRONG, even though the actual answer matches. Too picky.
-
-5. Might not make enough questions and nobody would know. There's only enough raw material (sections) to maybe get 65 out of 100 questions if things go well. If it comes up short, the program just quietly stops without telling you "hey, I only got 90 out of 140."
-6. No progress updates at all. While it's running for possibly hours and spending your free API credits, it prints literally nothing. No "working on question 5 of 140," no "this one got rejected." You're flying blind.
-7. The robot-to-robot "tool calling" handshake was never actually tested for real. The tests use fake stand-in objects, not real robot responses, so nobody's proven the actual message-passing works when it's the real AI talking.
-8. Some sections are huge and might get rejected outright. A couple sections are ~29,000 words worth of tokens. If Groq's free plan has a smaller per-question limit than that, those sections would just fail with an error the code doesn't even try to recover from (since it's not the "try again" kind of error).
-
-Minor (nice-to-have, not urgent):
-
-9. Typo protection missing. If you mistype a question's ID while filling in your 20 hand-graded examples, the program silently updates nothing and still says "success!" — you'd never know your grade didn't save.
-10. No sanity check on your 1-10 score. You could accidentally type "99" as a score and it'd just accept it, even though scores should only be 1 through 10.
-11. Naming is a little clunky — the ID names are longer than they need to be, just cosmetic.
-12. Search tool slightly biased toward wordy answers. The "find the right paragraph" helper counts how many times a word repeats, so a long paragraph that says "revenue" five times beats a short paragraph that's actually more relevant. Minor.
-13. Empty list treated as "give me everything." If you pass in zero filings by accident, the code treats that the same as "use all 9 filings" instead of "use none." Surprising behavior.
-14. No duplicate-question check. Nothing stops two very similar questions both getting into the final set, though it's unlikely given how the sections are split up.
-
-## Daily Cap Limit
-Qwen for building summary tree is hitting daily cap of groq without even generating a summary. Need to change it.
+## Issues
 
 ## Final Run
-1. Create a script called main.py to run all the 3 pipelines in parallel (ignore if already done).
-2. The script should return all the metrics, numbers and information in an understandable manner (tables, data, stats, etc) in the artifacts/results.md file.
-3. Using this information and ui-ux-skill-pro-max create a standalone HTML file with suitable graph and charts to compare the 3 pipelines in different metrics.
+0. Scan and remove the development history related comments and docstrings in the code files.
+2. Create a script called main.py to run all the 3 pipelines in parallel (ignore if already done).
+3. The script should return all the metrics, numbers and information in an understandable manner (tables, data, stats, etc) in the ./resources/research/results.md file.
+4. Using this information and ui-ux-skill-pro-max create a standalone HTML file with suitable graph and charts to compare the 3 pipelines in different metrics.
 
 ## Research
 **In a fresh session**
