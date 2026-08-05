@@ -160,6 +160,41 @@ async def test_build_index_for_document_shares_callback_manager_with_llm_and_tre
     assert tree_kwargs["callback_manager"] is get_client_kwargs["callback_manager"]
 
 
+def test_confirm_build_prints_node_count_and_accepts_y(monkeypatch, capsys):
+    monkeypatch.setattr("builtins.input", lambda _: "y")
+    assert bsi.confirm_build("JPM_2025", 42) is True
+    assert "JPM_2025 contains 42 nodes" in capsys.readouterr().out
+
+
+def test_confirm_build_rejects_n(monkeypatch):
+    monkeypatch.setattr("builtins.input", lambda _: "n")
+    assert bsi.confirm_build("JPM_2025", 42) is False
+
+
+def test_confirm_build_reprompts_on_invalid_input(monkeypatch):
+    answers = iter(["maybe", "y"])
+    monkeypatch.setattr("builtins.input", lambda _: next(answers))
+    assert bsi.confirm_build("JPM_2025", 42) is True
+
+
+@pytest.mark.asyncio
+async def test_main_skips_document_when_user_declines(tmp_path, monkeypatch):
+    manifest = [{"document_id": "JPM_2025", "ticker": "JPM", "fiscal_year": 2025}]
+    monkeypatch.setattr(bsi, "STORAGE_ROOT", tmp_path)
+    monkeypatch.setattr(bsi.loop_template, "apply_throttle", lambda items: items)
+
+    with patch("builtins.open", create=True) as mock_open, \
+         patch.object(bsi.dbm, "get_nodes_by_document", new=AsyncMock(return_value=[{"node_id": "n1"}])), \
+         patch.object(bsi, "confirm_build", return_value=False), \
+         patch.object(bsi, "build_index_for_document", new=AsyncMock()) as mock_build, \
+         patch.object(bsi, "append_cost_log") as mock_log:
+        mock_open.return_value.__enter__.return_value.read.return_value = json.dumps(manifest)
+        await bsi.main()
+
+    mock_build.assert_not_called()
+    mock_log.assert_not_called()
+
+
 def test_append_cost_log_creates_and_appends(tmp_path):
     log_path = tmp_path / "logs" / "index_build_costs.json"
     bsi.append_cost_log(
@@ -185,12 +220,18 @@ async def test_main_builds_each_manifest_entry_sequentially(tmp_path, monkeypatc
     monkeypatch.setattr(bsi.loop_template, "apply_throttle", lambda items: items)
 
     with patch("builtins.open", create=True) as mock_open, \
+         patch.object(bsi.dbm, "get_nodes_by_document", new=AsyncMock(return_value=[{"node_id": "n1"}])), \
+         patch.object(bsi, "confirm_build", return_value=True) as mock_confirm, \
          patch.object(bsi, "build_index_for_document", new=AsyncMock(
              side_effect=[{"document_id": "AAPL_2023", "skipped": False},
                           {"document_id": "AAPL_2024", "skipped": True}])) as mock_build, \
          patch.object(bsi, "append_cost_log") as mock_log:
         mock_open.return_value.__enter__.return_value.read.return_value = json.dumps(manifest)
         await bsi.main()
+
+    assert mock_confirm.call_count == 2
+    mock_confirm.assert_any_call("AAPL_2023", 1)
+    mock_confirm.assert_any_call("AAPL_2024", 1)
 
     assert mock_build.call_count == 2
     mock_build.assert_any_call("AAPL_2023")

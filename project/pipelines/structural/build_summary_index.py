@@ -91,6 +91,17 @@ def append_cost_log(cost_row: dict, log_path: Path = COST_LOG_PATH) -> None:
     log_path.write_text(json.dumps(rows, indent=2))
 
 
+def confirm_build(document_id: str, node_count: int) -> bool:
+    print(f"The document {document_id} contains {node_count} nodes")
+    while True:
+        answer = input("Y: Build it\nN: Skip it\n> ").strip().lower()
+        if answer == "y":
+            return True
+        if answer == "n":
+            return False
+        print("Please enter Y or N.")
+
+
 async def main():
     STORAGE_ROOT.mkdir(parents=True, exist_ok=True)
     with open(MANIFEST_PATH) as f:
@@ -98,10 +109,23 @@ async def main():
     manifest = loop_template.apply_throttle(manifest)
 
     for entry in manifest:
-        cost_row = await build_index_for_document(entry["document_id"])
+        document_id = entry["document_id"]
+
+        if is_built(document_id):
+            cost_row = await build_index_for_document(document_id)
+            append_cost_log(cost_row)
+            print(f"{document_id}: skipped (cached)")
+            continue
+
+        nodes = await dbm.get_nodes_by_document(DB_PATH, document_id)
+        if nodes and not confirm_build(document_id, len(nodes)):
+            print(f"{document_id}: skipped (declined)")
+            continue
+
+        cost_row = await build_index_for_document(document_id)
         append_cost_log(cost_row)
         status = "skipped (cached)" if cost_row.get("skipped") else "built"
-        print(f"{entry['document_id']}: {status}")
+        print(f"{document_id}: {status}")
 
 
 if __name__ == "__main__":
