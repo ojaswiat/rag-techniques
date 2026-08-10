@@ -25,17 +25,18 @@ async def test_build_index_for_document_builds_and_pickles_corpus(tmp_path, monk
     fake_nodes = [
         _fake_node("AAPL_2025_n0001", "AAPL_2025", "Total net sales were $394.3 billion."),
         _fake_node("AAPL_2025_n0002", "AAPL_2025", "Gross margin was 44 percent.", 2),
+        _fake_node("AAPL_2025_n0003", "AAPL_2025", "Operating expenses increased slightly.", 3),
     ]
 
     with patch.object(bbi.dbm, "get_nodes_by_document", new=AsyncMock(return_value=fake_nodes)):
         result = await bbi.build_index_for_document("AAPL_2025")
 
-    assert result == {"document_id": "AAPL_2025", "skipped": False, "node_count": 2}
+    assert result == {"document_id": "AAPL_2025", "skipped": False, "node_count": 3}
     assert bbi.is_document_indexed("AAPL_2025", storage_root=tmp_path) is True
 
     with open(tmp_path / "AAPL_2025.pkl", "rb") as f:
         payload = pickle.load(f)
-    assert payload["node_ids"] == ["AAPL_2025_n0001", "AAPL_2025_n0002"]
+    assert payload["node_ids"] == ["AAPL_2025_n0001", "AAPL_2025_n0002", "AAPL_2025_n0003"]
     assert payload["bm25"].get_scores(["sales"])[0] > 0
 
 
