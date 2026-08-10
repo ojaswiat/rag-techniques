@@ -9,7 +9,6 @@ machinery P1/P3 use, keeping P2 a genuinely raw statistical baseline.
 """
 import asyncio
 import pickle
-from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 from llama_index.core.schema import NodeWithScore, TextNode
@@ -18,24 +17,6 @@ import database_manager as dbm
 import pipelines.bm25.build_bm25_index as bbi
 from pipelines.base import Retriever
 from pipelines.bm25.tokenizer import tokenize
-
-
-def _run_sync(coro):
-    """Run coro to completion from a sync call site.
-
-    retrieve() must stay sync to satisfy the Retriever ABC, so it drives
-    the async database_manager call itself. asyncio.run() is the normal
-    path; if a loop is already running on this thread (e.g. a caller that
-    is itself async), the coroutine is driven from a fresh loop on a
-    worker thread instead, since asyncio.run() cannot nest inside a
-    running loop.
-    """
-    try:
-        asyncio.get_running_loop()
-    except RuntimeError:
-        return asyncio.run(coro)
-    with ThreadPoolExecutor(max_workers=1) as pool:
-        return pool.submit(asyncio.run, coro).result()
 
 
 class P2BM25Retriever(Retriever):
@@ -61,24 +42,12 @@ class P2BM25Retriever(Retriever):
         tokenized_query = tokenize(query_text)
         scores = bm25.get_scores(tokenized_query)
 
-        # A node with no query term at all is not relevant, and must not be
-        # used to pad results up to k -- but BM25 score alone can't tell
-        # relevance from irrelevance here: when a term appears in most/all
-        # of a small corpus its IDF (and so its score) goes negative, so a
-        # real match can score lower than zero (see build_bm25_index's IDF
-        # note). Filter on lexical overlap via doc_freqs instead of on the
-        # sign of the score.
-        matched_query_terms = set(tokenized_query)
         ranked = sorted(
-            (
-                item
-                for item in zip(scores, range(len(node_ids)), node_ids)
-                if matched_query_terms & bm25.doc_freqs[item[1]].keys()
-            ),
+            zip(scores, range(len(node_ids)), node_ids),
             key=lambda item: (-item[0], item[1]),
         )[:k]
 
-        nodes = _run_sync(dbm.get_nodes_by_document(self._db_path, document_id))
+        nodes = asyncio.run(dbm.get_nodes_by_document(self._db_path, document_id))
         nodes_by_id = {node["node_id"]: node for node in nodes}
 
         results = []
