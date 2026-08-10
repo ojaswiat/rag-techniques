@@ -10,7 +10,7 @@ BAAI/bge-reranker-base.
 from fastembed.rerank.cross_encoder import TextCrossEncoder
 from llama_index.core.bridge.pydantic import PrivateAttr
 from llama_index.core.postprocessor.types import BaseNodePostprocessor
-from llama_index.core.schema import NodeWithScore, QueryBundle
+from llama_index.core.schema import MetadataMode, NodeWithScore, QueryBundle
 
 
 class FastEmbedReranker(BaseNodePostprocessor):
@@ -35,7 +35,10 @@ class FastEmbedReranker(BaseNodePostprocessor):
         if not nodes or query_bundle is None:
             return nodes
 
-        texts = [node.node.get_content() for node in nodes]
+        # get_content() already defaults to MetadataMode.NONE (raw content
+        # only); stated explicitly here so the reranker's input can't
+        # silently start including metadata if that default ever changes.
+        texts = [node.node.get_content(metadata_mode=MetadataMode.NONE) for node in nodes]
         scores = list(self._model.rerank(query_bundle.query_str, texts))
 
         for node, score in zip(nodes, scores):
