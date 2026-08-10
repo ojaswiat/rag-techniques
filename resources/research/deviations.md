@@ -147,3 +147,11 @@ Each entry: what was originally intended, what deviation/gap occurred, what was 
 3. **What we did:** Switched to length-normalised term frequency.
 4. **How we did it:** `score = raw_count / len(node_tokens)` instead of raw count, with a floor on the denominator so a degenerate 1–2 token node can't win purely by being tiny.
 5. **Why we did it:** Deliberately avoided adding IDF or a BM25 library — this tool gatekeeps which questions enter the dataset, and resembling P2's real BM25 scoring too closely would bias the dataset toward questions P2 finds easy, an unearned advantage in the later benchmark.
+
+### 19. P2 BM25 storage granularity unspecified (2026-08-10)
+
+1. **Originally proposed:** `Architecture.md` names `storage/bm25/` "pickled corpora" without specifying per-document vs. combined-file granularity.
+2. **Deviation:** No single-file structure was defined, so the build/resumability contract was ambiguous going into implementation.
+3. **What we did:** One pickle per `document_id` (`storage/bm25/<document_id>.pkl`), each holding `{"node_ids": [...], "bm25": BM25Okapi}` for that filing only.
+4. **How we did it:** `build_bm25_index.py` mirrors P1's (`build_vector_index.py`) and P3's (`build_summary_index.py`) skip-if-already-built pattern, keyed on document id, with an atomic temp-file-plus-rename write.
+5. **Why we did it:** Per-document resumability is crash-safe and `LOCAL_TEST_THROTTLE`-friendly, and matches the rest of the codebase's per-filing granularity — a single combined pickle would lose per-document resumability and put the whole corpus at risk on a mid-build crash.
