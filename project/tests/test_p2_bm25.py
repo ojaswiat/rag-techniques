@@ -35,8 +35,7 @@ def _seed_index(tmp_path, monkeypatch, nodes_by_document: dict[str, list[dict]])
 # A 3rd node is required, not 2: with a 2-doc corpus a query term present in
 # exactly 1 of 2 docs has BM25 IDF log((2-1+0.5)/(1+0.5)) == log(1) == 0
 # exactly, so every AAPL query term below would score 0 across the board and
-# "correct top-k" would pass only via the tie-break, not real ranking (the
-# same edge case that broke Task 2's original test corpus).
+# "correct top-k" would pass only via the tie-break, not real ranking.
 _AAPL_NODES = [
     _fake_node("AAPL_2025_n0001", "AAPL_2025", "Apple's total net sales were $394.3 billion in fiscal 2025.", 1),
     _fake_node("AAPL_2025_n0002", "AAPL_2025", "Apple's research and development expense grew 10 percent.", 2),
@@ -61,7 +60,12 @@ def test_retrieve_returns_correct_top_k(tmp_path, monkeypatch):
 def test_retrieve_filters_to_given_document_id(tmp_path, monkeypatch):
     _seed_index(tmp_path, monkeypatch, {"AAPL_2025": _AAPL_NODES, "MSFT_2025": _MSFT_NODES})
 
-    with patch.object(bbi.dbm, "get_nodes_by_document", new=AsyncMock(return_value=_AAPL_NODES)):
+    # The node lookup returns both filings' nodes, so document_id scoping has
+    # to come from retrieve() itself rather than from a narrowed mock: if it
+    # ever ranked against the wrong document's node ids, the MSFT node could
+    # genuinely surface here.
+    combined = _AAPL_NODES + _MSFT_NODES
+    with patch.object(bbi.dbm, "get_nodes_by_document", new=AsyncMock(return_value=combined)):
         retriever = P2BM25Retriever(storage_root=tmp_path)
         results = retriever.retrieve("total revenue", document_id="AAPL_2025", k=5)
 

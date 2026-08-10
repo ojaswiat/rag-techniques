@@ -27,7 +27,7 @@ class P2BM25Retriever(Retriever):
         self._db_path = db_path
 
     def retrieve(self, query_text: str, document_id: str, k: int) -> list[NodeWithScore]:
-        index_path = bbi._index_path(document_id, self._storage_root)
+        index_path = bbi.index_path(document_id, self._storage_root)
         if not index_path.exists():
             raise FileNotFoundError(
                 f"No BM25 index found for document_id={document_id!r} at "
@@ -47,6 +47,14 @@ class P2BM25Retriever(Retriever):
             key=lambda item: (-item[0], item[1]),
         )[:k]
 
+        # retrieve() is sync because the shared Retriever ABC requires it, so
+        # this async DB read is driven by asyncio.run(). asyncio.run() raises
+        # RuntimeError if called while an event loop is already running, so a
+        # future async caller (an `async def main()` loop script, as used
+        # elsewhere in this repo) must not call retrieve() directly on its own
+        # loop. Such a caller should either wrap the call in
+        # asyncio.to_thread(retriever.retrieve, ...), or drop the DB round-trip
+        # entirely by carrying node text inside the pickled index payload.
         nodes = asyncio.run(dbm.get_nodes_by_document(self._db_path, document_id))
         nodes_by_id = {node["node_id"]: node for node in nodes}
 

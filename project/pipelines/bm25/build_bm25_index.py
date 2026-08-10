@@ -23,14 +23,14 @@ DB_PATH = "benchmark.db"
 MANIFEST_PATH = "data/filings_manifest.json"
 
 
-def _index_path(document_id: str, storage_root: Path) -> Path:
+def index_path(document_id: str, storage_root: Path) -> Path:
     return storage_root / f"{document_id}.pkl"
 
 
 def is_document_indexed(document_id: str, storage_root: Path | None = None) -> bool:
     if storage_root is None:
         storage_root = STORAGE_ROOT
-    return _index_path(document_id, storage_root).exists()
+    return index_path(document_id, storage_root).exists()
 
 
 async def build_index_for_document(
@@ -56,7 +56,7 @@ async def build_index_for_document(
     payload = {"node_ids": [node["node_id"] for node in nodes], "bm25": bm25}
 
     storage_root.mkdir(parents=True, exist_ok=True)
-    final_path = _index_path(document_id, storage_root)
+    final_path = index_path(document_id, storage_root)
     temp_path = storage_root / f"{document_id}.pkl.tmp"
     with open(temp_path, "wb") as f:
         pickle.dump(payload, f)
