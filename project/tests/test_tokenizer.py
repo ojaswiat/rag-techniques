@@ -19,6 +19,11 @@ def test_strips_table_pipes_but_keeps_cell_values():
     assert tokenize("| Revenue | $500 million |") == ["revenue", "$500", "million"]
 
 
+def test_trailing_comma_not_absorbed_into_number():
+    assert tokenize("In 2025, revenue grew") == ["in", "2025", "revenue", "grew"]
+    assert tokenize("Revenue of $1,234, up 5%.") == ["revenue", "of", "$1,234", "up", "5%"]
+
+
 def test_no_stemming_applied():
     assert tokenize("sales sales") == ["sales", "sales"]
 

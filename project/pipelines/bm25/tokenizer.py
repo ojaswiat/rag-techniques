@@ -6,7 +6,7 @@ never computed against mismatched vocabularies.
 """
 import re
 
-_TOKEN_PATTERN = re.compile(r"[$£€]?\d[\d,]*(?:\.\d+)?%?|[A-Za-z]+")
+_TOKEN_PATTERN = re.compile(r"[$£€]?\d+(?:,\d{3})*(?:\.\d+)?%?|[A-Za-z]+")
 
 
 def tokenize(text: str) -> list[str]:
