@@ -52,7 +52,7 @@ P2 skips the LlamaIndex/embedding stack entirely — `BM25Okapi` operates on tok
     - tokenizes `query_text` with the *same* `tokenizer.tokenize`
     - `scores = bm25.get_scores(tokenized_query)`
     - top-k selection: stable sort descending by score, ties broken by original node order (document reading order) — Python's `sorted()` is stable, so sorting the zipped `(score, original_index, node_id)` list by `(-score, original_index)` gets this for free, no extra logic
-    - fetches node content for the top-k `node_ids` from `nodes` table (`dbm.get_nodes_by_document` already available, or a lighter targeted fetch — decide at implementation time) and returns `list[NodeWithScore]`
+    - node content for the top-k `node_ids` comes from `dbm.get_nodes_by_document(document_id)`, called once per `retrieve()` invocation (one retriever instance serves any `document_id`, matching P1VectorRetriever's shape — nothing about the target document is known until `retrieve()` receives it), then filtered down to just the top-k ids
 
 ## Testing
 
