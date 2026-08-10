@@ -16,12 +16,8 @@ from llama_index.core.vector_stores import (
 from llama_index.embeddings.fastembed import FastEmbedEmbedding
 from llama_index.vector_stores.chroma import ChromaVectorStore
 
+import pipelines.vector.build_vector_index as bvi
 from pipelines.base import Retriever
-from pipelines.vector.build_vector_index import (
-    STORAGE_ROOT,
-    _EMBED_MODEL_NAME,
-    _get_collection,
-)
 from pipelines.vector.fastembed_reranker import FastEmbedReranker
 
 _PREFETCH_MULTIPLIER = 4
@@ -29,10 +25,16 @@ _MIN_PREFETCH = 20
 
 
 class P1VectorRetriever(Retriever):
-    def __init__(self, storage_root: Path = STORAGE_ROOT):
-        collection = _get_collection(storage_root)
+    def __init__(self, storage_root: Path | None = None):
+        # storage_root defaults to bvi.STORAGE_ROOT resolved here, at call
+        # time, not bound as a def-time default -- so tests that
+        # monkeypatch bvi.STORAGE_ROOT are honoured even when the caller
+        # omits storage_root, matching build_vector_index.py's pattern.
+        if storage_root is None:
+            storage_root = bvi.STORAGE_ROOT
+        collection = bvi.get_collection(storage_root)
         vector_store = ChromaVectorStore(chroma_collection=collection)
-        embed_model = FastEmbedEmbedding(model_name=_EMBED_MODEL_NAME)
+        embed_model = FastEmbedEmbedding(model_name=bvi.EMBED_MODEL_NAME)
         self._index = VectorStoreIndex.from_vector_store(vector_store, embed_model=embed_model)
         self._reranker = FastEmbedReranker()
 

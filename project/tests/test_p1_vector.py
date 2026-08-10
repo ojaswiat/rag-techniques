@@ -1,53 +1,46 @@
-import chromadb
-import pytest
-from llama_index.core import StorageContext, VectorStoreIndex
-from llama_index.core.schema import NodeRelationship, RelatedNodeInfo, TextNode
-from llama_index.embeddings.fastembed import FastEmbedEmbedding
-from llama_index.vector_stores.chroma import ChromaVectorStore
+from unittest.mock import AsyncMock, patch
 
+import pytest
+
+import pipelines.vector.build_vector_index as bvi
 from pipelines.vector.p1_vector import P1VectorRetriever
 
 
-def _seed_collection(storage_root, collection_name):
-    client = chromadb.PersistentClient(path=str(storage_root))
-    collection = client.get_or_create_collection(collection_name)
-    vector_store = ChromaVectorStore(chroma_collection=collection)
-    storage_context = StorageContext.from_defaults(vector_store=vector_store)
-    embed_model = FastEmbedEmbedding(model_name="BAAI/bge-small-en-v1.5")
-
-    nodes = [
-        TextNode(
-            id_="AAPL_2025_n0001",
-            text="Apple's total net sales were $394.3 billion in fiscal 2025.",
-            metadata={"document_id": "AAPL_2025"},
-        ),
-        TextNode(
-            id_="AAPL_2025_n0002",
-            text="Apple's research and development expense grew 10 percent.",
-            metadata={"document_id": "AAPL_2025"},
-        ),
-        TextNode(
-            id_="MSFT_2025_n0001",
-            text="Microsoft's total revenue was $245 billion in fiscal 2025.",
-            metadata={"document_id": "MSFT_2025"},
-        ),
-    ]
-    # Chroma's node_to_metadata_dict overwrites metadata["document_id"] with
-    # node.ref_doc_id ("None" when unset), independent of the custom
-    # document_id key -- mirror build_vector_index.py's fix by setting the
-    # SOURCE relationship so both agree, matching the real ingested data
-    # shape this retriever queries against.
-    for node in nodes:
-        node.relationships[NodeRelationship.SOURCE] = RelatedNodeInfo(
-            node_id=node.metadata["document_id"]
-        )
-    VectorStoreIndex(nodes=nodes, storage_context=storage_context, embed_model=embed_model)
-
-
-def test_retrieve_filters_to_given_document_id(tmp_path, monkeypatch):
-    import pipelines.vector.build_vector_index as bvi
+async def _seed_collection(tmp_path, monkeypatch, nodes_by_document: dict[str, list[dict]]):
+    # Seed via the real build path (build_index_for_document) rather than
+    # hand-constructing TextNodes + VectorStoreIndex, so this test fixture
+    # can't drift from how the index is actually built in production --
+    # matching the pattern used in tests/test_build_vector_index.py.
     monkeypatch.setattr(bvi, "STORAGE_ROOT", tmp_path)
-    _seed_collection(tmp_path, bvi.COLLECTION_NAME)
+    for document_id, fake_nodes in nodes_by_document.items():
+        with patch.object(bvi.dbm, "get_nodes_by_document", new=AsyncMock(return_value=fake_nodes)):
+            await bvi.build_index_for_document(document_id)
+
+
+def _fake_node(node_id, document_id, content, page_num=1):
+    return {
+        "node_id": node_id,
+        "document_id": document_id,
+        "parent_item_header": None,
+        "node_type": "text",
+        "source_page_num": page_num,
+        "content": content,
+        "token_count": len(content.split()),
+    }
+
+
+_AAPL_NODES = [
+    _fake_node("AAPL_2025_n0001", "AAPL_2025", "Apple's total net sales were $394.3 billion in fiscal 2025.", 1),
+    _fake_node("AAPL_2025_n0002", "AAPL_2025", "Apple's research and development expense grew 10 percent.", 2),
+]
+_MSFT_NODES = [
+    _fake_node("MSFT_2025_n0001", "MSFT_2025", "Microsoft's total revenue was $245 billion in fiscal 2025.", 1),
+]
+
+
+@pytest.mark.asyncio
+async def test_retrieve_filters_to_given_document_id(tmp_path, monkeypatch):
+    await _seed_collection(tmp_path, monkeypatch, {"AAPL_2025": _AAPL_NODES, "MSFT_2025": _MSFT_NODES})
 
     retriever = P1VectorRetriever(storage_root=tmp_path)
     results = retriever.retrieve("What were total net sales?", document_id="AAPL_2025", k=5)
@@ -58,10 +51,9 @@ def test_retrieve_filters_to_given_document_id(tmp_path, monkeypatch):
     assert "MSFT_2025_n0001" not in node_ids
 
 
-def test_retrieve_respects_k(tmp_path, monkeypatch):
-    import pipelines.vector.build_vector_index as bvi
-    monkeypatch.setattr(bvi, "STORAGE_ROOT", tmp_path)
-    _seed_collection(tmp_path, bvi.COLLECTION_NAME)
+@pytest.mark.asyncio
+async def test_retrieve_respects_k(tmp_path, monkeypatch):
+    await _seed_collection(tmp_path, monkeypatch, {"AAPL_2025": _AAPL_NODES, "MSFT_2025": _MSFT_NODES})
 
     retriever = P1VectorRetriever(storage_root=tmp_path)
     results = retriever.retrieve("What were total net sales?", document_id="AAPL_2025", k=1)
@@ -69,12 +61,24 @@ def test_retrieve_respects_k(tmp_path, monkeypatch):
     assert len(results) == 1
 
 
-def test_retrieve_returns_most_relevant_node_first(tmp_path, monkeypatch):
-    import pipelines.vector.build_vector_index as bvi
-    monkeypatch.setattr(bvi, "STORAGE_ROOT", tmp_path)
-    _seed_collection(tmp_path, bvi.COLLECTION_NAME)
+@pytest.mark.asyncio
+async def test_retrieve_returns_most_relevant_node_first(tmp_path, monkeypatch):
+    await _seed_collection(tmp_path, monkeypatch, {"AAPL_2025": _AAPL_NODES, "MSFT_2025": _MSFT_NODES})
 
     retriever = P1VectorRetriever(storage_root=tmp_path)
     results = retriever.retrieve("What were Apple's total net sales?", document_id="AAPL_2025", k=2)
 
     assert results[0].node.node_id == "AAPL_2025_n0001"
+
+
+@pytest.mark.asyncio
+async def test_retrieve_returns_empty_list_for_unindexed_document_id(tmp_path, monkeypatch):
+    # An unindexed or misspelled document_id has no rows to filter to; this
+    # is a normal "no results" case, not an error condition, so retrieve()
+    # must return an empty list rather than raising.
+    await _seed_collection(tmp_path, monkeypatch, {"AAPL_2025": _AAPL_NODES})
+
+    retriever = P1VectorRetriever(storage_root=tmp_path)
+    results = retriever.retrieve("What were total net sales?", document_id="NOT_A_REAL_DOC", k=5)
+
+    assert results == []
