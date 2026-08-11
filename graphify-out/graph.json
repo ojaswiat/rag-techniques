@@ -1676,7 +1676,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "project_llm_client_config",
-      "community": 192,
+      "community": 260,
       "norm_label": "config.py"
     },
     {
@@ -1686,7 +1686,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "project_llm_client_config_rationale_1",
-      "community": 192,
+      "community": 260,
       "norm_label": "model routing, throttle flag, and env loading for the whole benchmark build."
     },
     {
@@ -2106,7 +2106,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "project_loop_template",
-      "community": 244,
+      "community": 260,
       "norm_label": "loop_template.py"
     },
     {
@@ -2116,7 +2116,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "project_loop_template_throttle_limit_clause",
-      "community": 244,
+      "community": 260,
       "norm_label": "throttle_limit_clause()"
     },
     {
@@ -2126,7 +2126,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "project_loop_template_apply_throttle",
-      "community": 244,
+      "community": 260,
       "norm_label": "apply_throttle()"
     },
     {
@@ -2136,7 +2136,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "project_loop_template_rationale_1",
-      "community": 244,
+      "community": 260,
       "norm_label": "reusable local_test_throttle pattern for every phase 2-7 loop script.  guardrail"
     },
     {
@@ -2526,7 +2526,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "project_pipelines_structural_build_summary_index",
-      "community": 173,
+      "community": 282,
       "norm_label": "build_summary_index.py"
     },
     {
@@ -2536,7 +2536,7 @@
       "source_location": "L29",
       "_origin": "ast",
       "id": "project_pipelines_structural_build_summary_index_final_dir",
-      "community": 173,
+      "community": 282,
       "norm_label": "_final_dir()"
     },
     {
@@ -2546,7 +2546,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "project_pipelines_structural_build_summary_index_py_path",
-      "community": 173,
+      "community": 282,
       "norm_label": "path"
     },
     {
@@ -2556,7 +2556,7 @@
       "source_location": "L33",
       "_origin": "ast",
       "id": "project_pipelines_structural_build_summary_index_temp_dir",
-      "community": 173,
+      "community": 282,
       "norm_label": "_temp_dir()"
     },
     {
@@ -2566,7 +2566,7 @@
       "source_location": "L37",
       "_origin": "ast",
       "id": "project_pipelines_structural_build_summary_index_is_built",
-      "community": 173,
+      "community": 282,
       "norm_label": "is_built()"
     },
     {
@@ -2576,7 +2576,7 @@
       "source_location": "L41",
       "_origin": "ast",
       "id": "project_pipelines_structural_build_summary_index_build_index_for_document",
-      "community": 173,
+      "community": 282,
       "norm_label": "build_index_for_document()"
     },
     {
@@ -2586,7 +2586,7 @@
       "source_location": "L87",
       "_origin": "ast",
       "id": "project_pipelines_structural_build_summary_index_append_cost_log",
-      "community": 173,
+      "community": 282,
       "norm_label": "append_cost_log()"
     },
     {
@@ -2596,7 +2596,7 @@
       "source_location": "L94",
       "_origin": "ast",
       "id": "project_pipelines_structural_build_summary_index_confirm_build",
-      "community": 173,
+      "community": 282,
       "norm_label": "confirm_build()"
     },
     {
@@ -2606,7 +2606,7 @@
       "source_location": "L105",
       "_origin": "ast",
       "id": "project_pipelines_structural_build_summary_index_main",
-      "community": 173,
+      "community": 282,
       "norm_label": "main()"
     },
     {
@@ -2616,7 +2616,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "project_pipelines_structural_build_summary_index_rationale_1",
-      "community": 173,
+      "community": 282,
       "norm_label": "builds and persists one hierarchical treeindex per filing (phase 3, guardrails.m"
     },
     {
@@ -2646,7 +2646,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "textnode",
-      "community": 246,
+      "community": 173,
       "norm_label": "textnode"
     },
     {
@@ -2926,7 +2926,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "project_pipelines_vector_p1_vector",
-      "community": 246,
+      "community": 244,
       "norm_label": "p1_vector.py"
     },
     {
@@ -2936,7 +2936,7 @@
       "source_location": "L27",
       "_origin": "ast",
       "id": "project_pipelines_vector_p1_vector_p1vectorretriever",
-      "community": 246,
+      "community": 244,
       "norm_label": "p1vectorretriever"
     },
     {
@@ -2966,7 +2966,7 @@
       "source_location": "L41",
       "_origin": "ast",
       "id": "project_pipelines_vector_p1_vector_p1vectorretriever_retrieve",
-      "community": 246,
+      "community": 244,
       "norm_label": ".retrieve()"
     },
     {
@@ -2976,7 +2976,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "project_pipelines_vector_p1_vector_py_nodewithscore",
-      "community": 246,
+      "community": 244,
       "norm_label": "nodewithscore"
     },
     {
@@ -2986,7 +2986,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "project_pipelines_vector_p1_vector_rationale_1",
-      "community": 246,
+      "community": 244,
       "norm_label": "p1: semantic vector retrieval (architecture.md \u00a76 phase 5).  filters to the quer"
     },
     {
@@ -4025,7 +4025,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "project_tests_test_config",
-      "community": 192,
+      "community": 260,
       "norm_label": "test_config.py"
     },
     {
@@ -4035,7 +4035,7 @@
       "source_location": "L3",
       "_origin": "ast",
       "id": "project_tests_test_config_test_model_routing_has_all_stages",
-      "community": 192,
+      "community": 260,
       "norm_label": "test_model_routing_has_all_stages()"
     },
     {
@@ -4045,7 +4045,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "project_tests_test_config_test_generator_and_critic_are_different_families",
-      "community": 192,
+      "community": 260,
       "norm_label": "test_generator_and_critic_are_different_families()"
     },
     {
@@ -4055,7 +4055,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "project_tests_test_config_test_answerer_and_judge_are_different_families",
-      "community": 192,
+      "community": 260,
       "norm_label": "test_answerer_and_judge_are_different_families()"
     },
     {
@@ -4065,7 +4065,7 @@
       "source_location": "L22",
       "_origin": "ast",
       "id": "project_tests_test_config_test_throttle_limit_is_three",
-      "community": 192,
+      "community": 260,
       "norm_label": "test_throttle_limit_is_three()"
     },
     {
@@ -4075,7 +4075,7 @@
       "source_location": "L25",
       "_origin": "ast",
       "id": "project_tests_test_config_test_concurrency_cap_is_five",
-      "community": 192,
+      "community": 260,
       "norm_label": "test_concurrency_cap_is_five()"
     },
     {
@@ -5135,7 +5135,7 @@
       "source_location": "L44",
       "_origin": "ast",
       "id": "project_tests_test_loop_executor_stubretriever_retrieve",
-      "community": 246,
+      "community": 173,
       "norm_label": ".retrieve()"
     },
     {
@@ -5145,7 +5145,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "project_tests_test_loop_executor_py_nodewithscore",
-      "community": 246,
+      "community": 173,
       "norm_label": "nodewithscore"
     },
     {
@@ -5405,7 +5405,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "project_tests_test_loop_template",
-      "community": 192,
+      "community": 260,
       "norm_label": "test_loop_template.py"
     },
     {
@@ -5415,7 +5415,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "project_tests_test_loop_template_test_throttle_limit_clause_matches_config",
-      "community": 192,
+      "community": 260,
       "norm_label": "test_throttle_limit_clause_matches_config()"
     },
     {
@@ -5425,7 +5425,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "project_tests_test_loop_template_test_apply_throttle_caps_at_three_when_enabled",
-      "community": 192,
+      "community": 260,
       "norm_label": "test_apply_throttle_caps_at_three_when_enabled()"
     },
     {
@@ -5435,7 +5435,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "project_tests_test_loop_template_test_apply_throttle_passthrough_when_disabled",
-      "community": 192,
+      "community": 260,
       "norm_label": "test_apply_throttle_passthrough_when_disabled()"
     },
     {
@@ -5585,7 +5585,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "project_tests_test_p1_vector",
-      "community": 246,
+      "community": 244,
       "norm_label": "test_p1_vector.py"
     },
     {
@@ -5595,7 +5595,7 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "project_tests_test_p1_vector_seed_collection",
-      "community": 246,
+      "community": 244,
       "norm_label": "_seed_collection()"
     },
     {
@@ -5605,7 +5605,7 @@
       "source_location": "L20",
       "_origin": "ast",
       "id": "project_tests_test_p1_vector_fake_node",
-      "community": 246,
+      "community": 244,
       "norm_label": "_fake_node()"
     },
     {
@@ -5615,7 +5615,7 @@
       "source_location": "L42",
       "_origin": "ast",
       "id": "project_tests_test_p1_vector_test_retrieve_filters_to_given_document_id",
-      "community": 246,
+      "community": 244,
       "norm_label": "test_retrieve_filters_to_given_document_id()"
     },
     {
@@ -5625,7 +5625,7 @@
       "source_location": "L55",
       "_origin": "ast",
       "id": "project_tests_test_p1_vector_test_retrieve_respects_k",
-      "community": 246,
+      "community": 244,
       "norm_label": "test_retrieve_respects_k()"
     },
     {
@@ -5635,7 +5635,7 @@
       "source_location": "L65",
       "_origin": "ast",
       "id": "project_tests_test_p1_vector_test_retrieve_returns_most_relevant_node_first",
-      "community": 246,
+      "community": 244,
       "norm_label": "test_retrieve_returns_most_relevant_node_first()"
     },
     {
@@ -5645,7 +5645,7 @@
       "source_location": "L75",
       "_origin": "ast",
       "id": "project_tests_test_p1_vector_test_retrieve_returns_empty_list_for_unindexed_document_id",
-      "community": 246,
+      "community": 244,
       "norm_label": "test_retrieve_returns_empty_list_for_unindexed_document_id()"
     },
     {
@@ -227287,6 +227287,136 @@
       "id": "resources_specs_guardrails",
       "community": 24,
       "norm_label": "guardrails.md"
+    },
+    {
+      "label": "Guardrails.md",
+      "file_type": "document",
+      "source_file": "resources/specs/Guardrails.md",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "resources_specs_guardrails_guardrails_md",
+      "community": 24,
+      "norm_label": "guardrails.md"
+    },
+    {
+      "label": "1. Absolute Infrastructure Ban: No Per-Hour or Scale-to-Non-Zero Infrastructure",
+      "file_type": "document",
+      "source_file": "resources/specs/Guardrails.md",
+      "source_location": "L9",
+      "_origin": "ast",
+      "id": "resources_specs_guardrails_1_absolute_infrastructure_ban_no_per_hour_or_scale_to_non_zero_infrastructure",
+      "community": 24,
+      "norm_label": "1. absolute infrastructure ban: no per-hour or scale-to-non-zero infrastructure"
+    },
+    {
+      "label": "2. Model Routing Matrix and Local Compute (per-stage LLM assignment)",
+      "file_type": "document",
+      "source_file": "resources/specs/Guardrails.md",
+      "source_location": "L20",
+      "_origin": "ast",
+      "id": "resources_specs_guardrails_2_model_routing_matrix_and_local_compute_per_stage_llm_assignment",
+      "community": 24,
+      "norm_label": "2. model routing matrix and local compute (per-stage llm assignment)"
+    },
+    {
+      "label": "Mandatory role-separation rules",
+      "file_type": "document",
+      "source_file": "resources/specs/Guardrails.md",
+      "source_location": "L43",
+      "_origin": "ast",
+      "id": "resources_specs_guardrails_mandatory_role_separation_rules",
+      "community": 24,
+      "norm_label": "mandatory role-separation rules"
+    },
+    {
+      "label": "Local-compute and context rules",
+      "file_type": "document",
+      "source_file": "resources/specs/Guardrails.md",
+      "source_location": "L49",
+      "_origin": "ast",
+      "id": "resources_specs_guardrails_local_compute_and_context_rules",
+      "community": 24,
+      "norm_label": "local-compute and context rules"
+    },
+    {
+      "label": "3. Anti-Leakage: What Each Model May and May Not See",
+      "file_type": "document",
+      "source_file": "resources/specs/Guardrails.md",
+      "source_location": "L56",
+      "_origin": "ast",
+      "id": "resources_specs_guardrails_3_anti_leakage_what_each_model_may_and_may_not_see",
+      "community": 24,
+      "norm_label": "3. anti-leakage: what each model may and may not see"
+    },
+    {
+      "label": "4. Judge Few-Shot Filtering and the Mandatory Validation Gate",
+      "file_type": "document",
+      "source_file": "resources/specs/Guardrails.md",
+      "source_location": "L68",
+      "_origin": "ast",
+      "id": "resources_specs_guardrails_4_judge_few_shot_filtering_and_the_mandatory_validation_gate",
+      "community": 24,
+      "norm_label": "4. judge few-shot filtering and the mandatory validation gate"
+    },
+    {
+      "label": "4a. Dynamic few-shot filtering",
+      "file_type": "document",
+      "source_file": "resources/specs/Guardrails.md",
+      "source_location": "L70",
+      "_origin": "ast",
+      "id": "resources_specs_guardrails_4a_dynamic_few_shot_filtering",
+      "community": 24,
+      "norm_label": "4a. dynamic few-shot filtering"
+    },
+    {
+      "label": "4b. The judge-validation gate (hard prerequisite for the full run)",
+      "file_type": "document",
+      "source_file": "resources/specs/Guardrails.md",
+      "source_location": "L77",
+      "_origin": "ast",
+      "id": "resources_specs_guardrails_4b_the_judge_validation_gate_hard_prerequisite_for_the_full_run",
+      "community": 24,
+      "norm_label": "4b. the judge-validation gate (hard prerequisite for the full run)"
+    },
+    {
+      "label": "5. Concurrency and Rate-Limiting Enforcement",
+      "file_type": "document",
+      "source_file": "resources/specs/Guardrails.md",
+      "source_location": "L86",
+      "_origin": "ast",
+      "id": "resources_specs_guardrails_5_concurrency_and_rate_limiting_enforcement",
+      "community": 24,
+      "norm_label": "5. concurrency and rate-limiting enforcement"
+    },
+    {
+      "label": "6. Relational Data Management and State Persistence",
+      "file_type": "document",
+      "source_file": "resources/specs/Guardrails.md",
+      "source_location": "L97",
+      "_origin": "ast",
+      "id": "resources_specs_guardrails_6_relational_data_management_and_state_persistence",
+      "community": 24,
+      "norm_label": "6. relational data management and state persistence"
+    },
+    {
+      "label": "7. Execution Loops and Local Safety Throttling",
+      "file_type": "document",
+      "source_file": "resources/specs/Guardrails.md",
+      "source_location": "L109",
+      "_origin": "ast",
+      "id": "resources_specs_guardrails_7_execution_loops_and_local_safety_throttling",
+      "community": 24,
+      "norm_label": "7. execution loops and local safety throttling"
+    },
+    {
+      "label": "8. Single Hard Rule",
+      "file_type": "document",
+      "source_file": "resources/specs/Guardrails.md",
+      "source_location": "L119",
+      "_origin": "ast",
+      "id": "resources_specs_guardrails_8_single_hard_rule",
+      "community": 24,
+      "norm_label": "8. single hard rule"
     },
     {
       "label": "Phase Plan.md",
@@ -462285,6 +462415,136 @@
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
+      "source_file": "resources/specs/Guardrails.md",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "resources_specs_guardrails",
+      "target": "resources_specs_guardrails_guardrails_md",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "resources/specs/Guardrails.md",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "resources_specs_guardrails_guardrails_md",
+      "target": "resources_specs_guardrails_1_absolute_infrastructure_ban_no_per_hour_or_scale_to_non_zero_infrastructure",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "resources/specs/Guardrails.md",
+      "source_location": "L20",
+      "weight": 1.0,
+      "source": "resources_specs_guardrails_guardrails_md",
+      "target": "resources_specs_guardrails_2_model_routing_matrix_and_local_compute_per_stage_llm_assignment",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "resources/specs/Guardrails.md",
+      "source_location": "L56",
+      "weight": 1.0,
+      "source": "resources_specs_guardrails_guardrails_md",
+      "target": "resources_specs_guardrails_3_anti_leakage_what_each_model_may_and_may_not_see",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "resources/specs/Guardrails.md",
+      "source_location": "L68",
+      "weight": 1.0,
+      "source": "resources_specs_guardrails_guardrails_md",
+      "target": "resources_specs_guardrails_4_judge_few_shot_filtering_and_the_mandatory_validation_gate",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "resources/specs/Guardrails.md",
+      "source_location": "L86",
+      "weight": 1.0,
+      "source": "resources_specs_guardrails_guardrails_md",
+      "target": "resources_specs_guardrails_5_concurrency_and_rate_limiting_enforcement",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "resources/specs/Guardrails.md",
+      "source_location": "L97",
+      "weight": 1.0,
+      "source": "resources_specs_guardrails_guardrails_md",
+      "target": "resources_specs_guardrails_6_relational_data_management_and_state_persistence",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "resources/specs/Guardrails.md",
+      "source_location": "L109",
+      "weight": 1.0,
+      "source": "resources_specs_guardrails_guardrails_md",
+      "target": "resources_specs_guardrails_7_execution_loops_and_local_safety_throttling",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "resources/specs/Guardrails.md",
+      "source_location": "L119",
+      "weight": 1.0,
+      "source": "resources_specs_guardrails_guardrails_md",
+      "target": "resources_specs_guardrails_8_single_hard_rule",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "resources/specs/Guardrails.md",
+      "source_location": "L49",
+      "weight": 1.0,
+      "source": "resources_specs_guardrails_2_model_routing_matrix_and_local_compute_per_stage_llm_assignment",
+      "target": "resources_specs_guardrails_local_compute_and_context_rules",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "resources/specs/Guardrails.md",
+      "source_location": "L43",
+      "weight": 1.0,
+      "source": "resources_specs_guardrails_2_model_routing_matrix_and_local_compute_per_stage_llm_assignment",
+      "target": "resources_specs_guardrails_mandatory_role_separation_rules",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "resources/specs/Guardrails.md",
+      "source_location": "L70",
+      "weight": 1.0,
+      "source": "resources_specs_guardrails_4_judge_few_shot_filtering_and_the_mandatory_validation_gate",
+      "target": "resources_specs_guardrails_4a_dynamic_few_shot_filtering",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "resources/specs/Guardrails.md",
+      "source_location": "L77",
+      "weight": 1.0,
+      "source": "resources_specs_guardrails_4_judge_few_shot_filtering_and_the_mandatory_validation_gate",
+      "target": "resources_specs_guardrails_4b_the_judge_validation_gate_hard_prerequisite_for_the_full_run",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
       "source_file": "resources/specs/Phase Plan.md",
       "source_location": "L14",
       "weight": 1.0,
@@ -464208,5 +464468,5 @@
       "source_file": "resources/docs/ProposalGuidelines.pdf"
     }
   ],
-  "built_at_commit": "6aa4231abfed13f9aa1c321bf00df62b1b5303ce"
+  "built_at_commit": "e50353835ab0e00e496b87e9a30104a61461b87c"
 }

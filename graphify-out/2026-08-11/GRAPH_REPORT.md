@@ -1,16 +1,16 @@
-# Graph Report - rag-techniques  (2026-08-10)
+# Graph Report - rag-techniques  (2026-08-11)
 
 ## Corpus Check
-- 363 files · ~22,106,818 words
+- 371 files · ~22,113,017 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 22907 nodes · 22947 edges · 282 communities (135 shown, 147 thin omitted)
-- Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 140 edges (avg confidence: 0.79)
+- 23042 nodes · 23238 edges · 281 communities (136 shown, 145 thin omitted)
+- Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 180 edges (avg confidence: 0.78)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `11e5c8a0`
+- Built from commit: `6aa4231a`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -262,7 +262,6 @@
 - test_run_dataset_generation.py
 - test_cross_check.py
 - run_dataset_generation.py
-- async_critic.py
 - test_gq_labeling.py
 - Challenges Encountered
 - Global Constraints
@@ -280,28 +279,28 @@
 - reload_backup.sh
 
 ## God Nodes (most connected - your core abstractions)
-1. `Ingestion Corpus Sample Reference` - 22 edges
-2. `Deviations from Original Proposed Idea` - 20 edges
-3. `AGENTS.md — OpenCode Agent Instructions for rag-techniques` - 15 edges
-4. `values_match()` - 12 edges
-5. `_attempt_fill()` - 12 edges
-6. `search_filing_nodes()` - 11 edges
-7. `tokenize()` - 11 edges
-8. `_node()` - 11 edges
-9. `critique_query()` - 10 edges
-10. `check_query()` - 10 edges
+1. `Deviations from Original Proposed Idea` - 22 edges
+2. `Ingestion Corpus Sample Reference` - 22 edges
+3. `P3StructuralRetriever` - 15 edges
+4. `StubRetriever` - 15 edges
+5. `StubAnswerer` - 15 edges
+6. `AGENTS.md — OpenCode Agent Instructions for rag-techniques` - 15 edges
+7. `critique_query()` - 12 edges
+8. `values_match()` - 12 edges
+9. `_attempt_fill()` - 12 edges
+10. `Retriever` - 12 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `test_format_underfill_summary_marks_only_below_target_quadrants()` --calls--> `format_underfill_summary()`  [INFERRED]
   project/tests/test_run_dataset_generation.py → project/dataset_generation/run_dataset_generation.py
 - `_attempt_fill()` --calls--> `critique_query()`  [INFERRED]
   project/dataset_generation/run_dataset_generation.py → project/dataset_generation/async_critic.py
-- `test_critique_query_default_return_shape_is_unchanged()` --calls--> `critique_query()`  [INFERRED]
-  project/tests/test_async_critic.py → project/dataset_generation/async_critic.py
-- `test_critique_query_raises_after_max_rounds_without_final_answer()` --calls--> `critique_query()`  [INFERRED]
-  project/tests/test_async_critic.py → project/dataset_generation/async_critic.py
-- `test_critique_query_return_messages_includes_full_history()` --calls--> `critique_query()`  [INFERRED]
-  project/tests/test_async_critic.py → project/dataset_generation/async_critic.py
+- `_attempt_fill()` --calls--> `generate_query()`  [INFERRED]
+  project/dataset_generation/run_dataset_generation.py → project/dataset_generation/async_generator.py
+- `test_citations_overlap_false_on_disjoint_sets()` --calls--> `citations_overlap()`  [INFERRED]
+  project/tests/test_cross_check.py → project/dataset_generation/cross_check.py
+- `test_citations_overlap_true_on_any_shared_node()` --calls--> `citations_overlap()`  [INFERRED]
+  project/tests/test_cross_check.py → project/dataset_generation/cross_check.py
 
 ## Import Cycles
 - None detected.
@@ -311,7 +310,7 @@
 - **Zero-spend quota safety pattern (throttle, WAL resume, disjoint sets, Groq free tier)** — resources_artifacts_proposal_v1_0_0_groq_free_tier, resources_artifacts_proposal_v1_0_0_local_throttle, resources_artifacts_proposal_v1_0_0_sqlite_wal_store, resources_artifacts_proposal_v1_0_0_risk_management_plan [INFERRED 0.85]
 - **Guidelines and template constrain the submitted proposal** — resources_docs_proposalguidelines_required_structure, resources_docs_proposaltemplate_section_skeleton, resources_artifacts_proposal_v1_0_0_document, resources_artifacts_projectproposal_document [INFERRED 0.85]
 
-## Communities (282 total, 147 thin omitted)
+## Communities (281 total, 145 thin omitted)
 
 ### Community 2 - "Proposal Compliance and Benchmark Design"
 Cohesion: 0.05
@@ -422,16 +421,16 @@ Cohesion: 0.15
 Nodes (12): Execution Handoff, Global Constraints, Human Intervention Ledger (read this before starting), Phase 2 — Ingestion & Parsing Pipeline Implementation Plan, Self-Review Notes, Task 1: Filings manifest + Phase 2 dependencies, Task 2: `ingest/fetch_filings.py` — download filings from SEC EDGAR, Task 3: `ingest/parse_filing.py` — LlamaParse atomic-table parsing (+4 more)
 
 ### Community 171 - "run_ingestion.py"
-Cohesion: 0.15
-Nodes (12): build_nodes(), _is_table_block(), Splits parsed Markdown into atomic TextNode-shaped dicts.  A Markdown table is o, _is_cache_fresh(), parse_filing(), Parses raw filings into clean Markdown via LlamaParse (Cost-effective tier, atom, ingest_one(), main() (+4 more)
+Cohesion: 0.09
+Nodes (18): _download_bytes(), fetch_filing(), _get_json(), _headers(), Downloads SEC 10-K filings, resolving real URLs from SEC EDGAR's public JSON API, resolve_cik(), build_nodes(), _is_table_block() (+10 more)
 
 ### Community 172 - "JNJ_2024.md"
 Cohesion: 0.01
 Nodes (321): 108 Jhonson&#x26;Jhonson, 10 Directors, executive officers and corporate governance, 10. Pensions and other benefit plans, 10 Year Shareholder Return Performance J&#x26;J vs. Indices, 11 Executive compensation, 11. Savings plan, 12. Capital and treasury stock, 12 Security ownership of certain beneficial owners and management and related stockholder matters (+313 more)
 
 ### Community 173 - "groq_client.py"
-Cohesion: 0.42
-Nodes (9): append_cost_log(), build_index_for_document(), confirm_build(), _final_dir(), is_built(), main(), Path, Builds and persists one hierarchical TreeIndex per filing (Phase 3, Guardrails.m (+1 more)
+Cohesion: 0.18
+Nodes (17): append_cost_log(), build_index_for_document(), confirm_build(), _final_dir(), is_built(), main(), Path, Builds and persists one hierarchical TreeIndex per filing (Phase 3, Guardrails.m (+9 more)
 
 ### Community 174 - "JNJ_2023.md"
 Cohesion: 0.01
@@ -494,28 +493,36 @@ Cohesion: 0.00
 Nodes (833): 10.10, 10.11, 10.12, 10.13, 10.14, 10.15, 10.15, 10.16 (+825 more)
 
 ### Community 191 - "LLMFactory"
-Cohesion: 0.13
-Nodes (18): CallbackManager, LLMFactory, Any, Static factory that returns LlamaIndex-compatible LLM client objects., Return a LlamaIndex LLM instance for the given provider and model.          Para, Convenience: fetch client using config.MODEL_ROUTING for a stage., _FakeChoice, _FakeCompletion (+10 more)
+Cohesion: 0.08
+Nodes (32): CallbackManager, generate_query(), Generator: proposes a query + ground truth + citations for one filing section., LLMFactory, Any, Static factory that returns LlamaIndex-compatible LLM client objects., Return a LlamaIndex LLM instance for the given provider and model.          Para, Convenience: fetch client using config.MODEL_ROUTING for a stage. (+24 more)
 
 ### Community 192 - "test_groq_client_backoff.py"
-Cohesion: 0.09
-Nodes (26): BaseException, call_groq(), get_groq_client(), Any, AsyncOpenAI, Groq client provider.  Returns a ready-to-use AsyncOpenAI instance configured fo, Return an AsyncOpenAI client configured for Groq with retries and concurrency li, Drop‑in replacement for the original groq_client.call_groq. (+18 more)
+Cohesion: 0.06
+Nodes (27): BaseException, Model routing, throttle flag, and env loading for the whole benchmark build., call_groq(), get_groq_client(), Any, AsyncOpenAI, Groq client provider.  Returns a ready-to-use AsyncOpenAI instance configured fo, Return an AsyncOpenAI client configured for Groq with retries and concurrency li (+19 more)
 
 ### Community 193 - "database_manager.py"
-Cohesion: 0.13
-Nodes (14): Connection, _dumps(), get_all_query_texts(), get_golden_queries(), init_db(), insert_golden_query(), insert_judge_validation(), insert_query() (+6 more)
+Cohesion: 0.08
+Nodes (17): Connection, _dumps(), get_all_query_texts(), get_golden_queries(), get_queries(), init_db(), insert_golden_query(), insert_judge_validation() (+9 more)
 
 ### Community 194 - "llm_factory.py"
-Cohesion: 0.18
-Nodes (10): generate_query(), Generator: proposes a query + ground truth + citations for one filing section., _DummyClient, _fake_response(), _FakeChoice, _FakeResponse, Async client with a configurable return value for create., test_generate_query_first_attempt_has_no_feedback_in_prompt() (+2 more)
+Cohesion: 0.10
+Nodes (33): Answerer, build_prompt(), parse_citations(), NodeWithScore, Shared Answerer: turns (query, retrieved nodes) into a cited answer.  One Answer, Node ids cited in `raw_text`, deduplicated, first-appearance order., The user-role message: retrieved sources, then the question.      Each node cont, _fake_llm_client() (+25 more)
 
 ### Community 195 - "search_filing_nodes"
-Cohesion: 0.31
-Nodes (11): Local, dependency-free keyword search the Critic uses to find evidence.  Not a r, search_filing_nodes(), _tokenize(), _node(), test_degenerate_tiny_node_does_not_outrank_real_node(), test_empty_content_node_skipped_without_zero_division(), test_excludes_zero_overlap_nodes(), test_ranks_by_keyword_overlap() (+3 more)
+Cohesion: 0.09
+Nodes (40): BaseModel, FunctionTool, _build_search_tool(), critique_query(), Critic: independently re-derives an answer using a local search tool.  Uses qwen, Wrap search_filing_nodes as a LlamaIndex tool bound to one filing.      The fili, Run the Critic's search-then-answer loop and return the parsed final     answer, Local, dependency-free keyword search the Critic uses to find evidence.  Not a r (+32 more)
 
 ### Community 196 - "Benchmark design"
 Cohesion: 0.18
 Nodes (11): Benchmark design, Evaluation: three pillars, How queries get made: generator versus critic, Scale and honesty, The 140-query dataset, The coincidental-correctness trap, The four quadrants, The judge-validation gate (+3 more)
+
+### Community 197 - "config.py"
+Cohesion: 0.15
+Nodes (24): AnswerResult, _query(), loop_executor: cell construction, resume-skip, throttle, row shape.  Uses a stub, P2 drives its DB read with asyncio.run() inside sync retrieve(), which     raise, Default the suite to unthrottled; the throttle tests opt back in., golden_queries is the Judge's exemplar set and must stay unreachable     from an, _seed(), StubAnswerer (+16 more)
+
+### Community 199 - "test_parsing_audit.py"
+Cohesion: 0.15
+Nodes (17): MockLLM, P3StructuralRetriever, NodeWithScore, Path, P3: structural summary-tree retrieval (Architecture.md §6 Phase 5).  Loads the p, _ForbiddenLLM, Fails loudly if the query path ever calls an LLM., _seed_index() (+9 more)
 
 ### Community 200 - "Working in this repo"
 Cohesion: 0.25
@@ -534,8 +541,8 @@ Cohesion: 0.29
 Nodes (7): Current state and open items, Quickstart, Reading order for the specs, Repository layout, The one thing to know first, The shape of the project in one paragraph, Where to go next
 
 ### Community 204 - "fetch_filings.py"
-Cohesion: 0.23
-Nodes (6): _download_bytes(), fetch_filing(), _get_json(), _headers(), Downloads SEC 10-K filings, resolving real URLs from SEC EDGAR's public JSON API, resolve_cik()
+Cohesion: 0.11
+Nodes (22): classify_section(), _node(), End-to-end content-aware routing check: a document with one text     section and, A single table node among mostly-text nodes is still enough material     for a Q, Two companies, each with one text section and one table section.     Pools must, `n` single-token words: tiktoken's cl100k_base encoding tokenizes     the bare w, The overwhelmingly common case: a section under _MAX_SECTION_TOKENS     must pro, Naive greedy packing would close the chunk right before n2 (the     6-token text (+14 more)
 
 ### Community 205 - "Guardrails are binding, not advisory"
 Cohesion: 0.33
@@ -674,28 +681,28 @@ Cohesion: 0.01
 Nodes (202): 2022 Employee Stock Plan, 2023, 2024, 2024, 2025, 2025, Accounts Receivable, Advertising (+194 more)
 
 ### Community 244 - "P1VectorRetriever"
-Cohesion: 0.13
-Nodes (13): ABC, NodeWithScore, Shared retriever interface for P1/P2/P3 (Architecture.md §4.1).  Every retrieval, Retriever, P1VectorRetriever, NodeWithScore, P1: semantic vector retrieval (Architecture.md §6 Phase 5).  Filters to the quer, test_retriever_is_abstract_and_cannot_be_instantiated() (+5 more)
+Cohesion: 0.10
+Nodes (18): ABC, Namespace, build_cells(), build_retrievers(), main(), _parse_args(), Benchmark cell orchestrator (Architecture.md §4.5a).  One "cell" is a single (so, Construct only the requested retrievers, importing each module     lazily so an (+10 more)
 
 ### Community 245 - "Deviations from Original Proposed Idea"
-Cohesion: 0.10
-Nodes (20): 10. P3 index build bypasses the shared Groq client wrapper (2026-07-22), 11. LlamaParse table-header extraction defect (2026-07-26), 12. Dataset-generation retry and grading were too rigid (2026-07-28), 13. Embedding library unavailable on this platform (2026-07-28), 14. No token-size guard on Generator prompts (2026-07-29), 15. P3 summariser model judged too weak (2026-07-29), 16. GQ hand-labelling scale had no validation (2026-07-29), 17. Query ID format was long and quadrant-label-ambiguous (2026-07-29) (+12 more)
+Cohesion: 0.09
+Nodes (22): 10. P3 index build bypasses the shared Groq client wrapper (2026-07-22), 11. LlamaParse table-header extraction defect (2026-07-26), 12. Dataset-generation retry and grading were too rigid (2026-07-28), 13. Embedding library unavailable on this platform (2026-07-28), 14. No token-size guard on Generator prompts (2026-07-29), 15. P3 summariser model judged too weak (2026-07-29), 16. GQ hand-labelling scale had no validation (2026-07-29), 17. Query ID format was long and quadrant-label-ambiguous (2026-07-29) (+14 more)
 
 ### Community 246 - "FastEmbedReranker"
-Cohesion: 0.15
-Nodes (11): BaseNodePostprocessor, FastEmbedReranker, NodeWithScore, Cross-encoder reranker for P1, backed by fastembed's ONNX TextCrossEncoder.  No, Path, _node(), NodeWithScore, test_empty_nodes_returns_empty() (+3 more)
+Cohesion: 0.09
+Nodes (21): BaseNodePostprocessor, FastEmbedReranker, NodeWithScore, Cross-encoder reranker for P1, backed by fastembed's ONNX TextCrossEncoder.  No, P1VectorRetriever, NodeWithScore, Path, P1: semantic vector retrieval (Architecture.md §6 Phase 5).  Filters to the quer (+13 more)
 
 ### Community 247 - "build_vector_index.py"
-Cohesion: 0.23
-Nodes (10): NodeWithScore, nodes_to_llama_nodes(), Converts nodes-table rows into LlamaIndex TextNode objects for Phase 3's TreeInd, build_index_for_document(), get_collection(), is_document_indexed(), main(), Path (+2 more)
+Cohesion: 0.33
+Nodes (5): A real bug found and fixed this session, Build Progress — Phase 1 through Phase 5 Status Snapshot, Next steps, in dependency order, Phase-by-phase status, What needs attention (priority order)
 
 ### Community 248 - "P2BM25Retriever"
-Cohesion: 0.27
-Nodes (9): P2BM25Retriever, Path, P2: BM25 statistical retrieval (Architecture.md §6 Phase 5).  Loads the per-docu, _fake_node(), _seed_index(), test_retrieve_filters_to_given_document_id(), test_retrieve_raises_clearly_when_index_not_built(), test_retrieve_returns_correct_top_k() (+1 more)
+Cohesion: 0.22
+Nodes (10): P2BM25Retriever, NodeWithScore, Path, P2: BM25 statistical retrieval (Architecture.md §6 Phase 5).  Loads the per-docu, _fake_node(), _seed_index(), test_retrieve_filters_to_given_document_id(), test_retrieve_raises_clearly_when_index_not_built() (+2 more)
 
 ### Community 249 - "tokenize"
-Cohesion: 0.27
-Nodes (10): Custom BM25 tokenizer (Project Idea.md §6): preserves numbers, decimals, percent, tokenize(), test_empty_string_returns_empty_list(), test_no_stemming_applied(), test_preserves_currency_symbol(), test_preserves_numbers_and_decimals(), test_preserves_percent_sign(), test_strips_table_pipes_but_keeps_cell_values() (+2 more)
+Cohesion: 0.18
+Nodes (16): build_index_for_document(), index_path(), is_document_indexed(), main(), Path, Builds the per-document P2 BM25 index (Phase 5) -- one pickled BM25Okapi corpus, Custom BM25 tokenizer (Project Idea.md §6): preserves numbers, decimals, percent, tokenize() (+8 more)
 
 ### Community 250 - "File Structure"
 Cohesion: 0.18
@@ -714,28 +721,24 @@ Cohesion: 0.39
 Nodes (5): _fake_node(), test_build_index_for_document_atomic_write_survives_interruption(), test_build_index_for_document_builds_and_pickles_corpus(), test_build_index_for_document_isolates_nodes_across_documents(), test_build_index_for_document_skips_if_already_indexed()
 
 ### Community 255 - "build_bm25_index.py"
-Cohesion: 0.57
-Nodes (6): build_index_for_document(), index_path(), is_document_indexed(), main(), Path, Builds the per-document P2 BM25 index (Phase 5) -- one pickled BM25Okapi corpus
+Cohesion: 0.50
+Nodes (4): Flattens per-company section lists into one list by taking one     section from, _round_robin_interleave(), test_round_robin_interleave_alternates_companies_per_round(), test_round_robin_interleave_shorter_bucket_stops_contributing_without_breaking_order()
 
 ### Community 256 - "Format"
 Cohesion: 0.29
 Nodes (6): 1. Empty filing-list argument silently meant "use all filings", 2. No duplicate-question check before acceptance, 3. Questions clustered by company by accident, 4. Silent shortfall -- no warning if the dataset came up short, Development History, Format
 
 ### Community 257 - "test_run_dataset_generation.py"
-Cohesion: 0.04
-Nodes (61): classify_section(), next_target(), First still-unfilled (table, quadrant) slot, searched quadrant-major     then ta, _empty_counts(), _isolate_progress_log(), _node(), End-to-end content-aware routing check: a document with one text     section and, Attempt 1 is rejected via a citation mismatch (Critic cites an     unrelated nod (+53 more)
+Cohesion: 0.05
+Nodes (39): next_target(), First still-unfilled (table, quadrant) slot, searched quadrant-major     then ta, _empty_counts(), _isolate_progress_log(), Attempt 1 is rejected via a citation mismatch (Critic cites an     unrelated nod, main() calls _configure_logging() on every entry; a process that (in     theory), Simulates process A having already committed 2 accepted queries into     (querie, document_ids=() means 'restrict to zero filings' -- a distinct intent     from d (+31 more)
 
 ### Community 258 - "test_cross_check.py"
 Cohesion: 0.10
 Nodes (36): check_query(), citations_overlap(), diagnose_rejection(), embedding_similarity(), embedding_similarity_ok(), extract_numbers(), _get_embedding_model(), Deterministic accept/reject logic for the Generator/Critic adversarial loop.  Pl (+28 more)
 
 ### Community 259 - "run_dataset_generation.py"
-Cohesion: 0.09
-Nodes (33): Encoding, _accept_query(), append_failure_log(), _attempt_fill(), build_pools(), chunk_section(), _company_of(), _configure_logging() (+25 more)
-
-### Community 260 - "async_critic.py"
-Cohesion: 0.18
-Nodes (10): critique_query(), Critic: independently re-derives an answer using a local search tool.  Uses qwen, Run the Critic's search-then-answer loop and return the parsed final     answer, ONE live, throttled smoke test proving async_critic.critique_query() actually sp, Exercises the REAL Groq function-calling protocol end to end -- no mocking     o, test_critique_query_live_round_trip_against_real_groq_api(), test_critique_query_default_return_shape_is_unchanged(), test_critique_query_raises_after_max_rounds_without_final_answer() (+2 more)
+Cohesion: 0.11
+Nodes (29): Encoding, _accept_query(), append_failure_log(), _attempt_fill(), build_pools(), chunk_section(), _company_of(), _configure_logging() (+21 more)
 
 ### Community 261 - "test_gq_labeling.py"
 Cohesion: 0.18
@@ -778,24 +781,24 @@ Cohesion: 0.40
 Nodes (4): Design, Open question before implementation, Phase 5/7 Loop Executor: Retry-Queue Design (for future implementation), Problem it solves
 
 ## Knowledge Gaps
-- **22101 isolated node(s):** `$schema`, `plugin`, `@opencode-ai/plugin`, `$schema`, `plugin` (+22096 more)
+- **22107 isolated node(s):** `$schema`, `plugin`, `@opencode-ai/plugin`, `$schema`, `plugin` (+22102 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **147 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **145 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `build_index_for_document()` connect `build_bm25_index.py` to `tokenize`?**
+- **Why does `System architecture` connect `System architecture` to `quickstart.md`?**
   _High betweenness centrality (0.000) - this node is a cross-community bridge._
-- **Why does `P2BM25Retriever` connect `P2BM25Retriever` to `P1VectorRetriever`, `build_vector_index.py`?**
+- **Why does `build_retrievers()` connect `P1VectorRetriever` to `P2BM25Retriever`, `FastEmbedReranker`, `test_parsing_audit.py`?**
   _High betweenness centrality (0.000) - this node is a cross-community bridge._
-- **Are the 7 inferred relationships involving `values_match()` (e.g. with `test_values_match_exact_after_normalization()` and `test_values_match_falls_back_to_text_equality_with_no_numbers()`) actually correct?**
-  _`values_match()` has 7 INFERRED edges - model-reasoned connections that need verification._
-- **Are the 5 inferred relationships involving `_attempt_fill()` (e.g. with `critique_query()` and `generate_query()`) actually correct?**
-  _`_attempt_fill()` has 5 INFERRED edges - model-reasoned connections that need verification._
+- **Are the 11 inferred relationships involving `P3StructuralRetriever` (e.g. with `build_retrievers()` and `Retriever`) actually correct?**
+  _`P3StructuralRetriever` has 11 INFERRED edges - model-reasoned connections that need verification._
+- **Are the 2 inferred relationships involving `StubRetriever` (e.g. with `AnswerResult` and `Retriever`) actually correct?**
+  _`StubRetriever` has 2 INFERRED edges - model-reasoned connections that need verification._
+- **Are the 2 inferred relationships involving `StubAnswerer` (e.g. with `AnswerResult` and `Retriever`) actually correct?**
+  _`StubAnswerer` has 2 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `$schema`, `plugin`, `@opencode-ai/plugin` to the rest of the system?**
-  _22248 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _22280 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Proposal Compliance and Benchmark Design` be split into smaller, more focused modules?**
   _Cohesion score 0.04931972789115646 - nodes in this community are weakly interconnected._
-- **Should `Research Question and Literature Base` be split into smaller, more focused modules?**
-  _Cohesion score 0.002369668246445498 - nodes in this community are weakly interconnected._
