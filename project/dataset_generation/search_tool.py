@@ -21,6 +21,8 @@ same reason this stays a hand-rolled formula rather than a library
 """
 import re
 
+from pydantic import BaseModel, Field
+
 _WORD_RE = re.compile(r"[a-z0-9]+")
 
 # Floor for the length-normalization denominator. Plain division by node
@@ -41,23 +43,38 @@ _WORD_RE = re.compile(r"[a-z0-9]+")
 # legitimate short-but-real nodes toward zero.
 _MIN_NODE_LENGTH_FOR_SCORING = 24
 
+SEARCH_TOOL_NAME = "search_filing"
+
+SEARCH_TOOL_DESCRIPTION = (
+    "Search this filing's nodes for content matching a query. "
+    "Returns up to 5 of the most relevant nodes with their node_id and content."
+)
+
+
+class SearchFilingArgs(BaseModel):
+    """Argument schema for the search_filing tool offered to the Critic.
+
+    Held as a pydantic model rather than a hand-written JSON blob because
+    LlamaIndex tools carry their argument schema as a pydantic class
+    (`ToolMetadata.fn_schema`), and SEARCH_TOOL_SCHEMA below is derived
+    from it so the two can never drift apart.
+    """
+
+    query: str = Field(description="Keywords to search for in the filing")
+
+
 SEARCH_TOOL_SCHEMA = {
     "type": "function",
     "function": {
-        "name": "search_filing",
-        "description": (
-            "Search this filing's nodes for content matching a query. "
-            "Returns up to 5 of the most relevant nodes with their node_id and content."
-        ),
+        "name": SEARCH_TOOL_NAME,
+        "description": SEARCH_TOOL_DESCRIPTION,
+        # Mirrors LlamaIndex's own ToolMetadata.get_parameters_dict(): keep
+        # only the JSON-Schema keys a provider's function definition accepts,
+        # dropping pydantic's "title" and similar decoration.
         "parameters": {
-            "type": "object",
-            "properties": {
-                "query": {
-                    "type": "string",
-                    "description": "Keywords to search for in the filing",
-                },
-            },
-            "required": ["query"],
+            key: value
+            for key, value in SearchFilingArgs.model_json_schema().items()
+            if key in ("type", "properties", "required", "definitions", "$defs")
         },
     },
 }

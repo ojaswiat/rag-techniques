@@ -247,6 +247,36 @@ async def get_all_query_texts(db_path: str) -> list[tuple[str, str]]:
     return [(r[0], r[1]) for r in rows]
 
 
+_SOURCE_SET_TABLES = {"PQ": "queries", "JEQ": "judge_validation"}
+
+
+async def get_queries(db_path: str, source_set: str) -> list[dict]:
+    """Benchmark queries for one results.source_set value.
+
+    Only 'PQ' and 'JEQ' are addressable here: those are the two values the
+    results table's CHECK constraint permits, so golden_queries ('GQ' --
+    the Judge's few-shot exemplar pool) is deliberately unreachable. That
+    keeps the exemplar set out of any code path that feeds a pipeline.
+    """
+    try:
+        table = _SOURCE_SET_TABLES[source_set]
+    except KeyError as exc:
+        raise ValueError(
+            f"source_set must be one of {sorted(_SOURCE_SET_TABLES)}, got {source_set!r}"
+        ) from exc
+
+    async with aiosqlite.connect(db_path) as conn:
+        conn.row_factory = aiosqlite.Row
+        cursor = await conn.execute(f"SELECT * FROM {table} ORDER BY query_id")
+        rows = await cursor.fetchall()
+    result = []
+    for row in rows:
+        d = dict(row)
+        d["gt_citations"] = _loads(d["gt_citations"])
+        result.append(d)
+    return result
+
+
 async def get_golden_queries(db_path: str) -> list[dict]:
     async with aiosqlite.connect(db_path) as conn:
         conn.row_factory = aiosqlite.Row

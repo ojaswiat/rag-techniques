@@ -23,6 +23,7 @@ var to run it.
 import os
 
 import pytest
+from llama_index.core.base.llms.types import MessageRole, ToolCallBlock
 
 import llm_client.config as config
 from dataset_generation.async_critic import critique_query
@@ -214,17 +215,19 @@ async def test_critique_query_live_round_trip_against_real_groq_api():
     assert "JNJ_2023_n1169" in result["cited_node_ids"]
 
     # Direct proof: the real message history must actually contain a
-    # tool-call turn -- an assistant message with a non-empty tool_calls
-    # list -- rather than inferring tool use only from the cited node above.
+    # tool-call turn -- an assistant message carrying a ToolCallBlock --
+    # rather than inferring tool use only from the cited node above.
     assert "messages" in result
     assert isinstance(result["messages"], list) and result["messages"]
-    tool_call_messages = [
-        m
-        for m in result["messages"]
-        if m.get("role") == "assistant" and m.get("tool_calls")
+    tool_call_blocks = [
+        block
+        for message in result["messages"]
+        if message.role == MessageRole.ASSISTANT
+        for block in message.blocks
+        if isinstance(block, ToolCallBlock)
     ]
-    assert tool_call_messages, (
-        "Expected at least one assistant message with a non-empty tool_calls "
-        "list in the real Groq message history, proving the Critic actually "
-        "invoked search_filing rather than answering directly."
+    assert tool_call_blocks, (
+        "Expected at least one assistant message carrying a ToolCallBlock in "
+        "the real Groq message history, proving the Critic actually invoked "
+        "search_filing rather than answering directly."
     )
