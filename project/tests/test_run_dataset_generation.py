@@ -251,6 +251,17 @@ async def test_main_with_document_ids_none_defaults_to_all_filings(monkeypatch):
     assert {doc_id for doc_id, _nodes in documents_arg} == set(rdg._ALL_FILINGS)
 
 
+def test_all_filings_derived_from_manifest_includes_all_13_current_filings():
+    """_ALL_FILINGS must track data/filings_manifest.json, not a stale
+    hardcoded list -- a mismatch here silently excludes filings from
+    every future Phase 4 run with no error or warning."""
+    assert len(rdg._ALL_FILINGS) == 13
+    assert "JPM_2023" in rdg._ALL_FILINGS
+    assert "JPM_2024" in rdg._ALL_FILINGS
+    assert "JNJ_2023" in rdg._ALL_FILINGS
+    assert "JNJ_2024" in rdg._ALL_FILINGS
+
+
 _FAKE_NODES = [
     {
         "node_id": "n1",

@@ -215,11 +215,16 @@ def _log_attempt_outcome(
     )
 
 
-_ALL_FILINGS = (
-    "AAPL_2023", "AAPL_2024", "AAPL_2025",
-    "MSFT_2023", "MSFT_2024", "MSFT_2025",
-    "TSLA_2023", "TSLA_2024", "TSLA_2025",
-)
+MANIFEST_PATH = "data/filings_manifest.json"
+
+
+def _load_all_filings() -> tuple[str, ...]:
+    with open(MANIFEST_PATH) as f:
+        manifest = json.load(f)
+    return tuple(entry["document_id"] for entry in manifest)
+
+
+_ALL_FILINGS = _load_all_filings()
 
 _INSERTER_NAMES = {
     "queries": "insert_query",
