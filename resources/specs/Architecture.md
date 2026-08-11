@@ -65,7 +65,7 @@ A ninth point is a flagged ambiguity rather than a fix — see §12, item 3 (con
    |  dataset_gen/*.py           |               |  pipelines/*                  |
    |  external: Groq             |               |  P1: ChromaDB + bge embed     |
    |  (gpt-oss-120b, Qwen3.6-27B)  |               |  P2: rank_bm25 (per document) |
-   +---------------+-----------------+           |  P3: SummaryIndex (1x build,  |
+   +---------------+-----------------+           |  P3: TreeIndex (1x build,     |
                    | queries / golden_queries /  |      llama-3.1-8b-instant)    |
                    | judge_validation            +---------------+---------------+
                    v                                             |
@@ -441,7 +441,7 @@ async_generator.py        search_tool.py          async_critic.py       cross_ch
 * **`aiosqlite` for the async write path** over the `sqlite3`-defined schema in §3.2 — commits never block the event loop.
 * **`LOCAL_TEST_THROTTLE` stays hardcoded per script**, never centralized — `Guardrails.md` §7 requires it be consciously toggled in each file individually.
 * **Filing manifest instead of a discovery package** — `data/filings_manifest.json` lists the ~6–9 known filings; `requests` downloads them. No `sec-edgar-downloader`-style package is needed for a fixed, small, known list.
-* **P3 retrieval stays local** — `SummaryIndex.as_retriever(retriever_mode="embedding", similarity_top_k=k)` scores summary nodes by embedding similarity (reusing `bge-small-en-v1.5`), never calling Groq at query time, per `Guardrails.md` §1 ("P3 retrieval at query time is local"). This is also how K∈{3,5,10} applies to P3, matching `Project_Idea.md` §7's requirement that all three pipelines are tested at all three K values.
+* **P3 retrieval stays local** — `TreeIndex.as_retriever(retriever_mode="select_leaf_embedding")` scores summary nodes by embedding similarity (reusing `bge-small-en-v1.5`), never calling Groq at query time, per `Guardrails.md` §1 ("P3 retrieval at query time is local"). This is also how K∈{3,5,10} applies to P3, matching `Project_Idea.md` §7's requirement that all three pipelines are tested at all three K values.
 * **The Critic's search tool is self-contained** — a standalone `rank_bm25` instance scoped to one document, not a forward import of Phase 5's P2 module (Phase 4 runs before Phase 5 per the week numbers in §8).
 
 ---
@@ -484,7 +484,7 @@ async_generator.py        search_tool.py          async_critic.py       cross_ch
 
 | Module | Responsibility |
 |---|---|
-| `pipelines/structural/build_summary_index.py` | Per `document_id`, builds a `SummaryIndex` over that document's nodes using `llama-3.1-8b-instant`; persists to `storage/summary_index/{document_id}/`; directory-existence check is the cache test. |
+| `pipelines/structural/build_summary_index.py` | Per `document_id`, builds a `TreeIndex` over that document's nodes using `llama-3.1-8b-instant`; persists to `storage/summary_index/{document_id}/`; directory-existence check is the cache test. |
 | `logs/index_build_costs.json` | One row per filing: wall-clock + token cost (Pillar 3 metric). Flat-file is acceptable here — 13 rows, no crash-resume requirement, unlike `results`. |
 
 **Packages:** `llama-index-core`, `llama-index-llms-groq`.
@@ -516,7 +516,7 @@ async_generator.py        search_tool.py          async_critic.py       cross_ch
 | `pipelines/vector/p1_vector.py` | One Chroma collection (`storage/chroma/`), metadata-tagged by `document_id`; `VectorIndexRetriever` → `FlagEmbeddingReranker` narrows to K; `where={"document_id": ...}` filter (§0.2). |
 | `pipelines/keyword/tokenizer.py` | Custom regex tokenizer (§5, identical at index/query time). |
 | `pipelines/keyword/p2_bm25.py` | One `BM25Okapi` corpus per `document_id`, cached to `storage/bm25/{document_id}.pkl`. |
-| `pipelines/structural/p3_structural.py` | Loads the Phase 3 `SummaryIndex` for the query's `document_id`; retrieves via `as_retriever(retriever_mode="embedding")` (§5). |
+| `pipelines/structural/p3_structural.py` | Loads the Phase 3 `TreeIndex` for the query's `document_id`; retrieves via `as_retriever(retriever_mode="select_leaf_embedding")` (§5). |
 | `pipelines/answerer.py` | Shared `Llama 3.3 70B` answerer (§4.1/§4.2) — citation-marker parsing lives here. |
 | `loop_executor.py` | Orchestrator (§4.5a); resumes via `get_completed_keys` against the `UNIQUE` constraint in §3.2. |
 | `tests/test_tokenizer_consistency.py` | Tokenizer is byte-identical at index/query time. |
