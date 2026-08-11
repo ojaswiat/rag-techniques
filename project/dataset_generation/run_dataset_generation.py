@@ -217,6 +217,8 @@ def _log_attempt_outcome(
 
 MANIFEST_PATH = "data/filings_manifest.json"
 
+_all_filings_cache: tuple[str, ...] | None = None
+
 
 def _load_all_filings() -> tuple[str, ...]:
     with open(MANIFEST_PATH) as f:
@@ -224,7 +226,24 @@ def _load_all_filings() -> tuple[str, ...]:
     return tuple(entry["document_id"] for entry in manifest)
 
 
-_ALL_FILINGS = _load_all_filings()
+def _get_all_filings() -> tuple[str, ...]:
+    """Returns _ALL_FILINGS, loading from manifest on first call."""
+    global _all_filings_cache
+    if _all_filings_cache is None:
+        _all_filings_cache = _load_all_filings()
+    return _all_filings_cache
+
+
+def __getattr__(name: str) -> tuple[str, ...]:
+    # Reads data/filings_manifest.json on first access rather than at
+    # import time, so importing this module from a cwd where that
+    # relative path doesn't resolve (e.g. the repo root instead of
+    # project/) doesn't crash before any function is even called --
+    # matching the lazy-load convention build_bm25_index.py /
+    # build_summary_index.py / build_vector_index.py already use.
+    if name == "_ALL_FILINGS":
+        return _get_all_filings()
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 _INSERTER_NAMES = {
     "queries": "insert_query",
@@ -607,7 +626,7 @@ async def _attempt_fill(
 async def main(db_path: str = "benchmark.db", document_ids: tuple[str, ...] | None = None) -> None:
     _configure_logging()
     await dbm.init_db(db_path)
-    document_ids = _ALL_FILINGS if document_ids is None else document_ids
+    document_ids = _get_all_filings() if document_ids is None else document_ids
     max_sections = config.THROTTLE_LIMIT if config.LOCAL_TEST_THROTTLE else None
 
     nodes_by_document: dict[str, list[dict]] = {}
