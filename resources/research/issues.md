@@ -28,7 +28,9 @@ Each entry:
    data row/value in the table, are correct and correctly aligned.
 3. **Scope:** Found in 31 tables across 5 of the original 9 filings audited
    (Microsoft's three filings, and two of Tesla's three). Not yet re-checked
-   on the later-added filings (JPMorgan, Johnson & Johnson, Walmart).
+   on the later-added filings (JPMorgan, Johnson & Johnson). Walmart was
+   dropped from the corpus before this re-check happened -- see
+   `deviations.md` entry 20 -- so no re-check is needed there.
 4. **Impact on research:** Neutral. The defect originates in LlamaParse's
    own PDF-to-Markdown conversion, upstream of all three retrieval
    pipelines equally -- every pipeline sees the same parsed text, so it

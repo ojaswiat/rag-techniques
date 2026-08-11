@@ -10,11 +10,6 @@
   {"document_id": "TSLA_2025", "ticker": "TSLA", "fiscal_year": 2025},
   {"document_id": "JPM_2023", "ticker": "JPM", "fiscal_year": 2023},
   {"document_id": "JPM_2024", "ticker": "JPM", "fiscal_year": 2024},
-  {"document_id": "JPM_2025", "ticker": "JPM", "fiscal_year": 2025},
   {"document_id": "JNJ_2023", "ticker": "JNJ", "fiscal_year": 2023},
-  {"document_id": "JNJ_2024", "ticker": "JNJ", "fiscal_year": 2024},
-  {"document_id": "JNJ_2025", "ticker": "JNJ", "fiscal_year": 2025},
-  {"document_id": "WMT_2023", "ticker": "WMT", "fiscal_year": 2023},
-  {"document_id": "WMT_2024", "ticker": "WMT", "fiscal_year": 2024},
-  {"document_id": "WMT_2025", "ticker": "WMT", "fiscal_year": 2025}
+  {"document_id": "JNJ_2024", "ticker": "JNJ", "fiscal_year": 2024}
 ]

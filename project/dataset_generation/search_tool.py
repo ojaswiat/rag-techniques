@@ -29,16 +29,17 @@ _WORD_RE = re.compile(r"[a-z0-9]+")
 # 1.0 and beat a longer, substantive node containing the same term with real
 # context -- node_builder.py splits filing markdown on blank lines with no
 # minimum block-length check, so real 10-K filings contain many such tiny
-# blocks (table headers, stray captions, isolated lines). 25 is not
+# blocks (table headers, stray captions, isolated lines). 24 is not
 # arbitrary: it is the median token_count across the live corpus (queried
-# benchmark.db's nodes table, 26,050 real nodes: min=1, p5=2, p10=3, p25=5,
-# median=25, p75=75, max=1243). Using the median means any node shorter than
-# "typical" is scored as if it were typical-length, so it must compete on
-# the same denominator as a normal-sized node rather than getting an
-# inflated score just by being tiny. p25 (5) was rejected as too small to
-# meaningfully dent the bug; p75 (75) was rejected as too aggressive, since
-# it would flatten scoring for legitimate short-but-real nodes toward zero.
-_MIN_NODE_LENGTH_FOR_SCORING = 25
+# benchmark.db's nodes table, restricted to the 13-filing manifest, 18,297
+# real nodes: min=1, p5=2, p10=3, p25=5, median=24, p75=75, max=1243). Using
+# the median means any node shorter than "typical" is scored as if it were
+# typical-length, so it must compete on the same denominator as a
+# normal-sized node rather than getting an inflated score just by being
+# tiny. p25 (5) was rejected as too small to meaningfully dent the bug; p75
+# (75) was rejected as too aggressive, since it would flatten scoring for
+# legitimate short-but-real nodes toward zero.
+_MIN_NODE_LENGTH_FOR_SCORING = 24
 
 SEARCH_TOOL_SCHEMA = {
     "type": "function",
