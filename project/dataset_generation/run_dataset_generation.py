@@ -35,7 +35,7 @@ from functools import lru_cache
 from pathlib import Path
 
 import tiktoken
-from openai import APIStatusError
+from openai import APIError
 
 import llm_client.config as config
 import database_manager as dbm
@@ -114,14 +114,17 @@ _MAX_SECTION_TOKENS = 60_000
 # Exceptions that can propagate out of a single generate/critique attempt
 # without indicating a bug worth crashing the whole 140-query batch for:
 # Critic tool-round exhaustion, malformed/incomplete JSON from either LLM,
-# any non-429 Groq API error (429s are already retried inside
-# groq_client.call_groq via tenacity), and null-valued fields in an
-# otherwise-valid LLM response (e.g. Generator's gt_citications: null ->
-# TypeError in cross_check.citations_overlap's set(None); Critic's
-# computed_answer: null -> AttributeError in cross_check.values_match's
-# None.strip()) -- these are malformed responses, not accept/reject
-# decisions, so they're treated the same as a rejected attempt.
-_ATTEMPT_EXCEPTIONS = (RuntimeError, json.JSONDecodeError, KeyError, APIStatusError, TypeError, AttributeError)
+# any error from the OpenAI-compatible client, whether or not a response
+# arrived (covers rate limits/4xx/5xx via APIStatusError, and connection
+# drops/timeouts via APIConnectionError/APITimeoutError -- APIError is their
+# common parent; 429s are already retried inside groq_client.call_groq via
+# tenacity), and null-valued fields in an otherwise-valid LLM response (e.g.
+# Generator's gt_citications: null -> TypeError in
+# cross_check.citations_overlap's set(None); Critic's computed_answer: null
+# -> AttributeError in cross_check.values_match's None.strip()) -- these are
+# malformed responses, not accept/reject decisions, so they're treated the
+# same as a rejected attempt.
+_ATTEMPT_EXCEPTIONS = (RuntimeError, json.JSONDecodeError, KeyError, APIError, TypeError, AttributeError)
 
 FAILURE_LOG_PATH = Path("logs/dataset_generation_failures.json")
 SUMMARY_LOG_PATH = Path("logs/dataset_generation_summary.json")
@@ -244,6 +247,7 @@ def __getattr__(name: str) -> tuple[str, ...]:
     if name == "_ALL_FILINGS":
         return _get_all_filings()
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
 
 _INSERTER_NAMES = {
     "queries": "insert_query",

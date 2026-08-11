@@ -3,16 +3,11 @@
 import logging
 from typing import Any
 
-from groq import APIStatusError
-
 logger = logging.getLogger(__name__)
 
 
 def _is_rate_limit_error(exc: BaseException) -> bool:
     """Return True if the exception is a HTTP 429 rate‑limit error."""
-    # Groq uses APIStatusError with status_code
-    if isinstance(exc, APIStatusError):
-        return getattr(exc, "status_code", None) == 429
     # OpenAI compatible clients raise errors with status_code attribute
     return hasattr(exc, "status_code") and getattr(exc, "status_code") == 429
 

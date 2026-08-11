@@ -601,7 +601,7 @@ async def test_all_attempts_raise_json_decode_error_section_skipped_not_crashed(
 
 
 @pytest.mark.asyncio
-async def test_groq_api_status_error_is_caught_and_logged(monkeypatch, tmp_path):
+async def test_api_status_error_is_caught_and_logged(monkeypatch, tmp_path):
     """A non-429 openai.APIStatusError bubbling out of generate_query/
     critique_query must be caught per-attempt, logged, and must not crash
     main()."""
