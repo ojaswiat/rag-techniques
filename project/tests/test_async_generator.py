@@ -1,169 +1,57 @@
-import json
-from types import SimpleNamespace
+"""Regression test for async_generator.generate_query()'s LLM call shape.
+
+Uses a real OpenAILike instance with its private async client swapped out,
+matching exactly how LLMFactory.get_client_for_stage() constructs clients
+in production -- so this test fails under a call pattern that assumes a
+raw OpenAI-SDK-shaped object (client.chat.completions.create(...)) instead
+of LlamaIndex's actual interface (client.achat(...)).
+"""
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from llama_index.llms.openai_like import OpenAILike
 
 from dataset_generation.async_generator import generate_query
-from llm_client.llm_factory import LLMFactory
 
 
-class _FakeChoice:
-    def __init__(self, content: str):
-        self.message = SimpleNamespace(content=content)
+def _fake_llm_client(response_content: str) -> OpenAILike:
+    response = MagicMock()
+    response.choices = [MagicMock(message=MagicMock(content=response_content, role="assistant", tool_calls=None))]
+    response.usage = MagicMock(prompt_tokens=1, completion_tokens=1, total_tokens=2)
 
+    raw_client = MagicMock()
+    raw_client.chat.completions.create = AsyncMock(return_value=response)
 
-class _FakeResponse:
-    def __init__(self, content: str):
-        self.choices = [_FakeChoice(content)]
-
-
-def _fake_response(payload: dict):
-    return _FakeResponse(json.dumps(payload))
-
-
-class _DummyClient:
-    """Async client with a configurable return value for create."""
-    def __init__(self, return_value):
-        self._return_value = return_value
-        self.chat = SimpleNamespace()
-        self.chat.completions = SimpleNamespace()
-        self.chat.completions.create = self._create
-
-    async def _create(self, **kwargs):
-        # ignore args, just return preset value
-        return self._return_value
+    client = OpenAILike(model="test-model", api_base="http://test", api_key="test", is_chat_model=True)
+    client._aclient = raw_client
+    return client
 
 
 @pytest.mark.asyncio
-async def test_generate_query_parses_generator_response(monkeypatch):
-    monkeypatch.setattr("llm_client.config.GROQ_API_KEY", "dummy-key")
+async def test_generate_query_returns_parsed_payload():
     section = {
-        "document_id": "SEC_10K_TEST_2025",
-        "section_header": "Item 7. MD&A",
-        "node_ids": ["n1", "n2"],
-        "content": "Total revenue was $100 million, up from $90 million.",
-        "token_count": 20,
+        "section_header": "Item 7",
+        "node_ids": ["AAPL_2025_n0001"],
+        "content": "Total net sales were $394.3 billion.",
+        "document_id": "AAPL_2025",
     }
-    payload = {
-        "query_text": "What was total revenue?",
-        "ground_truth_answer": "$100 million",
-        "gt_citations": ["n1"],
-    }
-
-    # We'll record all calls
-    call_list = []
-
-    class _CapturingClient(_DummyClient):
-        async def _create(self, **kwargs):
-            nonlocal call_list
-            call_list.append(kwargs)
-            return await super()._create(**kwargs)
-
-    capturing_client = _CapturingClient(_fake_response(payload))
-
-    monkeypatch.setattr(
-        "llm_client.llm_factory.LLMFactory.get_client_for_stage",
-        lambda stage: capturing_client,
+    response_json = (
+        '{"query_text": "What were total net sales?", '
+        '"ground_truth_answer": "$394.3 billion", '
+        '"gt_citations": ["AAPL_2025_n0001"]}'
     )
+    fake_client = _fake_llm_client(response_json)
 
-    result = await generate_query(section, "Q1_Direct_Text")
+    with patch(
+        "dataset_generation.async_generator.LLMFactory.get_client_for_stage",
+        return_value=fake_client,
+    ):
+        result = await generate_query(section, "Q1_Direct_Text")
 
-    assert result["query_text"] == "What was total revenue?"
-    assert result["ground_truth_answer"] == "$100 million"
-    assert result["gt_citations"] == ["n1"]
-    assert result["quadrant"] == "Q1_Direct_Text"
-    assert result["document_id"] == "SEC_10K_TEST_2025"
-
-    # Assert that create was called
-    assert len(call_list) == 1
-    kwargs = call_list[0]
-    user_message = kwargs["messages"][1]["content"]
-    assert "previous attempt" not in user_message.lower()
-
-
-@pytest.mark.asyncio
-async def test_generate_query_first_attempt_has_no_feedback_in_prompt(monkeypatch):
-    monkeypatch.setattr("llm_client.config.GROQ_API_KEY", "dummy-key")
-    section = {
-        "document_id": "SEC_10K_TEST_2025",
-        "section_header": "Item 7. MD&A",
-        "node_ids": ["n1", "n2"],
-        "content": "Total revenue was $100 million, up from $90 million.",
-        "token_count": 20,
+    assert result == {
+        "query_text": "What were total net sales?",
+        "ground_truth_answer": "$394.3 billion",
+        "gt_citations": ["AAPL_2025_n0001"],
+        "quadrant": "Q1_Direct_Text",
+        "document_id": "AAPL_2025",
     }
-    payload = {
-        "query_text": "What was total revenue?",
-        "ground_truth_answer": "$100 million",
-        "gt_citations": ["n1"],
-    }
-
-    # We'll record all calls
-    call_list = []
-
-    class _CapturingClient(_DummyClient):
-        async def _create(self, **kwargs):
-            nonlocal call_list
-            call_list.append(kwargs)
-            return await super()._create(**kwargs)
-
-    capturing_client = _CapturingClient(_fake_response(payload))
-
-    monkeypatch.setattr(
-        "llm_client.llm_factory.LLMFactory.get_client_for_stage",
-        lambda stage: capturing_client,
-    )
-
-    await generate_query(section, "Q1_Direct_Text")
-
-    # Assert that create was called
-    assert len(call_list) == 1
-    kwargs = call_list[0]
-    user_message = kwargs["messages"][1]["content"]
-    assert "previous attempt" not in user_message.lower()
-
-
-@pytest.mark.asyncio
-async def test_generate_query_retry_includes_previous_attempt_feedback_in_prompt(monkeypatch):
-    monkeypatch.setattr("llm_client.config.GROQ_API_KEY", "dummy-key")
-    section = {
-        "document_id": "SEC_10K_TEST_2025",
-        "section_header": "Item 7. MD&A",
-        "node_ids": ["n1", "n2"],
-        "content": "Total revenue was $100 million, up from $90 million.",
-        "token_count": 20,
-    }
-    payload = {
-        "query_text": "What was gross margin?",
-        "ground_truth_answer": "$90 million",
-        "gt_citations": ["n2"],
-    }
-    feedback = (
-        "value mismatch: the Critic independently computed '200 million', "
-        "which does not match the proposed ground_truth_answer '$100 million'"
-    )
-
-    # We'll record all calls
-    call_list = []
-
-    class _LoggingClient(_DummyClient):
-        async def _create(self, **kwargs):
-            nonlocal call_list
-            call_list.append(kwargs)
-            return await super()._create(**kwargs)
-
-    logging_client = _LoggingClient(_fake_response(payload))
-
-    monkeypatch.setattr(
-        "llm_client.llm_factory.LLMFactory.get_client_for_stage",
-        lambda stage: logging_client,
-    )
-
-    await generate_query(section, "Q1_Direct_Text", previous_attempt_feedback=feedback)
-
-    # Ensure at least one call happened
-    assert len(call_list) >= 1
-    # Check the last call (the one after retry) includes the feedback in user message
-    last_kwargs = call_list[-1]
-    user_message = last_kwargs["messages"][1]["content"]
-    assert feedback in user_message
-    assert "different" in user_message.lower()

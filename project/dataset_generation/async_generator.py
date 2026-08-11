@@ -5,8 +5,9 @@ model family from the Critic (Task 6), per the anti-self-grading invariant.
 """
 import json
 
+from llama_index.core.base.llms.types import ChatMessage, MessageRole
+
 from llm_client.llm_factory import LLMFactory
-from llm_client import config
 
 _QUADRANT_GUIDANCE = {
     "Q1_Direct_Text": "Ask a direct fact-retrieval question answerable from a single explicit statement in continuous prose.",
@@ -51,16 +52,16 @@ async def generate_query(
     # Get client for the generator stage
     client = LLMFactory.get_client_for_stage("generator")
 
-    response = await client.chat.completions.create(
-        model=config.MODEL_ROUTING["generator"]["model"],
-        messages=[
-            {"role": "system", "content": _SYSTEM_PROMPT},
-            {"role": "user", "content": user_content},
-        ],
-        temperature=0.0,
-    )
+    # client is a LlamaIndex LLM (OpenAILike), not a raw OpenAI SDK client --
+    # it exposes achat(messages), not chat.completions.create(...). Model
+    # and temperature=0 are already fixed at construction (LLMFactory.
+    # get_client_for_stage), so they aren't passed again here.
+    response = await client.achat([
+        ChatMessage(role=MessageRole.SYSTEM, content=_SYSTEM_PROMPT),
+        ChatMessage(role=MessageRole.USER, content=user_content),
+    ])
 
-    payload = json.loads(response.choices[0].message.content)
+    payload = json.loads(response.message.content)
 
     return {
         "query_text": payload["query_text"],

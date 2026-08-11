@@ -49,30 +49,42 @@ class LLMFactory:
                 raw_client = groq_mod.get_groq_client(model)
 
                 api_base = getattr(config, "GROQ_API_ENDPOINT", "https://api.groq.com/openai/v1")
-                return OpenAILike(
+                llm = OpenAILike(
                     model=model,
                     api_base=api_base,
                     api_key=config.GROQ_API_KEY,
-                    async_client=raw_client,
                     is_chat_model=True,
                     callback_manager=callback_manager,
                     temperature=0,
                 )
+                # OpenAILike/OpenAI has no `async_client` field -- passing one
+                # as a kwarg is silently dropped (arbitrary_types_allowed
+                # model config accepts and discards unknown kwargs), so the
+                # retry+semaphore-wrapped client above would otherwise never
+                # be used. `_get_aclient()` only builds its own AsyncOpenAI
+                # when `self._aclient` is unset (with `reuse_client=True`,
+                # the default), so setting it directly here makes every
+                # achat()/acomplete() call route through raw_client's retry
+                # and concurrency-limit wrapping instead.
+                llm._aclient = raw_client
+                return llm
 
             case "nvidia":
                 nim_mod = importlib.import_module(".nim_client", package=__package__)
                 raw_client = nim_mod.get_nim_client(model)
 
                 api_base = getattr(config, "NIM_API_ENDPOINT", "https://integrate.api.nvidia.com/v1")
-                return OpenAILike(
+                llm = OpenAILike(
                     model=model,
                     api_base=api_base,
                     api_key=config.NIM_API_KEY,
-                    async_client=raw_client,
                     is_chat_model=True,
                     callback_manager=callback_manager,
                     temperature=0,
                 )
+                # See the groq branch above -- same fix, same reason.
+                llm._aclient = raw_client
+                return llm
 
             case _:
                 raise ValueError(f"Unsupported LLM provider: {provider!r}")
