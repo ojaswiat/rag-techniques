@@ -1,16 +1,16 @@
-# Graph Report - rag-techniques  (2026-08-10)
+# Graph Report - rag-techniques  (2026-08-04)
 
 ## Corpus Check
-- 363 files · ~22,106,818 words
+- 178 files · ~7,314,443 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 22907 nodes · 22947 edges · 282 communities (135 shown, 147 thin omitted)
-- Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 140 edges (avg confidence: 0.79)
+- 8253 nodes · 8281 edges · 231 communities (86 shown, 145 thin omitted)
+- Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 108 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `11e5c8a0`
+- Built from commit: `b26b78f1`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -207,89 +207,41 @@
 - test_node_builder.py
 - test_parsing_audit.py
 - Working in this repo
-- JPM_2025.md
 - 4. Implementation Guardrails (Binding)
 - Quickstart
 - fetch_filings.py
 - Guardrails are binding, not advisory
-- JPM_2023.md
-- JPM_2023.md
 - Monitor Skill
 - gq_label_export.py
 - _migrate_golden_queries_schema
-- MSFT_2023.md
 - dependencies
 - Note 7 – Interest income and interest expense
-- MSFT_2023.md
-- MSFT_2025.md
-- MSFT_2025.md
-- TSLA_2024.md
-- TSLA_2024.md
-- TSLA_2023.md
-- TSLA_2023.md
-- JNJ_2024.md
-- JNJ_2024.md
-- JNJ_2023.md
-- JNJ_2023.md
-- JNJ_2025.md
-- JNJ_2025.md
-- TSLA_2025.md
-- TSLA_2025.md
-- WMT_2023.md
-- WMT_2024.md
-- WMT_2023.md
-- WMT_2024.md
-- WMT_2025.md
-- WMT_2025.md
-- AAPL_2023.md
-- AAPL_2023.md
-- AAPL_2024.md
-- AAPL_2024.md
-- AAPL_2025.md
-- AAPL_2025.md
-- P1VectorRetriever
-- Deviations from Original Proposed Idea
-- FastEmbedReranker
-- build_vector_index.py
-- P2BM25Retriever
-- tokenize
-- File Structure
-- P2 BM25 Pipeline — Design
-- File Layout
-- test_build_bm25_index.py
-- build_bm25_index.py
-- Format
 - test_run_dataset_generation.py
 - test_cross_check.py
 - run_dataset_generation.py
 - async_critic.py
 - test_gq_labeling.py
-- Challenges Encountered
 - Global Constraints
 - test_build_summary_index.py
-- Research Issues Log
 - Global Constraints
 - group_sections
 - Phase 3 — P3 Summary-Index Build: Design
-- Note 7 – Interest income and interest expense
 - Deferred Items Log
 - Phase 5/7 Loop Executor: Retry-Queue Design (for future implementation)
-- Note 7 – Interest income and interest expense
-- conftest.py
 - backup_data.sh
 - reload_backup.sh
 
 ## God Nodes (most connected - your core abstractions)
 1. `Ingestion Corpus Sample Reference` - 22 edges
-2. `Deviations from Original Proposed Idea` - 20 edges
-3. `AGENTS.md — OpenCode Agent Instructions for rag-techniques` - 15 edges
-4. `values_match()` - 12 edges
-5. `_attempt_fill()` - 12 edges
-6. `search_filing_nodes()` - 11 edges
-7. `tokenize()` - 11 edges
-8. `_node()` - 11 edges
-9. `critique_query()` - 10 edges
-10. `check_query()` - 10 edges
+2. `AGENTS.md — OpenCode Agent Instructions for rag-techniques` - 15 edges
+3. `values_match()` - 12 edges
+4. `_attempt_fill()` - 11 edges
+5. `search_filing_nodes()` - 11 edges
+6. `_node()` - 11 edges
+7. `critique_query()` - 10 edges
+8. `check_query()` - 10 edges
+9. `diagnose_rejection()` - 10 edges
+10. `System architecture` - 10 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `test_format_underfill_summary_marks_only_below_target_quadrants()` --calls--> `format_underfill_summary()`  [INFERRED]
@@ -311,7 +263,7 @@
 - **Zero-spend quota safety pattern (throttle, WAL resume, disjoint sets, Groq free tier)** — resources_artifacts_proposal_v1_0_0_groq_free_tier, resources_artifacts_proposal_v1_0_0_local_throttle, resources_artifacts_proposal_v1_0_0_sqlite_wal_store, resources_artifacts_proposal_v1_0_0_risk_management_plan [INFERRED 0.85]
 - **Guidelines and template constrain the submitted proposal** — resources_docs_proposalguidelines_required_structure, resources_docs_proposaltemplate_section_skeleton, resources_artifacts_proposal_v1_0_0_document, resources_artifacts_projectproposal_document [INFERRED 0.85]
 
-## Communities (282 total, 147 thin omitted)
+## Communities (231 total, 145 thin omitted)
 
 ### Community 2 - "Proposal Compliance and Benchmark Design"
 Cohesion: 0.05
@@ -346,8 +298,8 @@ Cohesion: 0.07
 Nodes (29): 10. Academic Rigor and Methodological Principles, 1. Research Overview and Core Objectives, 2. Data Strategy and Ingestion Parsing Architecture, 3. The 140-Query Benchmark Dataset: Three Disjoint Sets, 4. Open-Model Generation and Adversarial Verification Architecture, 5. The Human Anchor: Two Roles, Two Sets, 6. Multi-Pipeline Architectural Registry, 7. Tri-Pillar Evaluation, the Judge-Validation Gate, and the Full Benchmark (+21 more)
 
 ### Community 14 - "test_config.py"
-Cohesion: 0.00
-Nodes (843): 101.CAL XBRL Taxonomy Extension Calculation Linkbase Document.(b), 101.DEF XBRL Taxonomy Extension Definition Linkbase Document.(b), 101.INS The instance document does not appear in the interactive data file because its XBRL tags are embedded within the Inline XBRL document.(d), 101.LAB XBRL Taxonomy Extension Label Linkbase Document.(b), 101.PRE XBRL Taxonomy Extension Presentation Linkbase Document.(b), 101.SCH XBRL Taxonomy Extension Schema Document.(b), 10.1, 10.10 (+835 more)
+Cohesion: 0.11
+Nodes (22): classify_section(), _node(), A single table node among mostly-text nodes is still enough material     for a Q, Two companies, each with one text section and one table section.     Pools must, `n` single-token words: tiktoken's cl100k_base encoding tokenizes     the bare w, The overwhelmingly common case: a section under _MAX_SECTION_TOKENS     must pro, Naive greedy packing would close the chunk right before n2 (the     6-token text, A single node (almost always one huge table) that alone exceeds     _MAX_SECTION (+14 more)
 
 ### Community 15 - "monitor_lib.py"
 Cohesion: 0.00
@@ -397,17 +349,13 @@ Nodes (5): Fonts, Paragraph and layout rules, Sizes (Word / PDF, A4, 2.5cm margi
 Cohesion: 0.00
 Nodes (453): Accounting Principles, Activity for All Stock Plans, Addressing Racial Injustice and Inequity, Assets Recognized from Costs to Obtain a Contract with a Customer, AVAILABLE INFORMATION, BALANCE SHEETS, Basis for Opinion, Basis for Opinion (+445 more)
 
-### Community 33 - "Changes.md"
-Cohesion: 0.00
-Nodes (843): 101.CAL XBRL Taxonomy Extension Calculation Linkbase Document.(b), 101.DEF XBRL Taxonomy Extension Definition Linkbase Document.(b), 101.INS The instance document does not appear in the interactive data file because its XBRL tags are embedded within the Inline XBRL document.(d), 101.LAB XBRL Taxonomy Extension Label Linkbase Document.(b), 101.PRE XBRL Taxonomy Extension Presentation Linkbase Document.(b), 101.SCH XBRL Taxonomy Extension Schema Document.(b), 10.1, 10.10 (+835 more)
-
 ### Community 65 - "MSFT_2025.md"
 Cohesion: 0.00
 Nodes (429): Accounting Principles, Activity for All Stock Plans, Advertising, professional, marketplace, and gaming platform abuses, Assets Recognized from Costs to Obtain a Contract with a Customer, AVAILABLE INFORMATION, BALANCE SHEETS, Basis for Opinion, Basis for Opinion (+421 more)
 
 ### Community 167 - "todo.md"
-Cohesion: 0.25
-Nodes (7): Final Run, Issues, Organise information, Plan a code base search, Planning Research, Research, Using information
+Cohesion: 0.20
+Nodes (9): Daily Cap Limit, Doubts, Final Run, Organise information, Plan a code base search, Planning Research, Research, Using information (+1 more)
 
 ### Community 168 - "TODO.md"
 Cohesion: 0.01
@@ -430,8 +378,8 @@ Cohesion: 0.01
 Nodes (321): 108 Jhonson&#x26;Jhonson, 10 Directors, executive officers and corporate governance, 10. Pensions and other benefit plans, 10 Year Shareholder Return Performance J&#x26;J vs. Indices, 11 Executive compensation, 11. Savings plan, 12. Capital and treasury stock, 12 Security ownership of certain beneficial owners and management and related stockholder matters (+313 more)
 
 ### Community 173 - "groq_client.py"
-Cohesion: 0.42
-Nodes (9): append_cost_log(), build_index_for_document(), confirm_build(), _final_dir(), is_built(), main(), Path, Builds and persists one hierarchical TreeIndex per filing (Phase 3, Guardrails.m (+1 more)
+Cohesion: 0.26
+Nodes (11): append_cost_log(), build_index_for_document(), _final_dir(), is_built(), main(), Path, Builds and persists one hierarchical TreeIndex per filing (Phase 3, Guardrails.m, _temp_dir() (+3 more)
 
 ### Community 174 - "JNJ_2023.md"
 Cohesion: 0.01
@@ -490,28 +438,28 @@ Cohesion: 0.10
 Nodes (19): author, bugs, url, dependencies, claude-mem, description, directories, doc (+11 more)
 
 ### Community 190 - "groq_client.py"
-Cohesion: 0.00
-Nodes (833): 10.10, 10.11, 10.12, 10.13, 10.14, 10.15, 10.15, 10.16 (+825 more)
+Cohesion: 0.18
+Nodes (11): BaseException, Groq client provider.  Returns a ready-to-use AsyncOpenAI instance configured fo, get_nim_client(), AsyncOpenAI, NVIDIA NIM client provider.  Returns a ready-to-use AsyncOpenAI instance pointed, Return an AsyncOpenAI client configured for NIM endpoint.      The returned obje, _is_rate_limit_error(), Shared utilities for LLM clients. (+3 more)
 
 ### Community 191 - "LLMFactory"
-Cohesion: 0.13
-Nodes (18): CallbackManager, LLMFactory, Any, Static factory that returns LlamaIndex-compatible LLM client objects., Return a LlamaIndex LLM instance for the given provider and model.          Para, Convenience: fetch client using config.MODEL_ROUTING for a stage., _FakeChoice, _FakeCompletion (+10 more)
+Cohesion: 0.16
+Nodes (13): LLMFactory, Any, Static factory that returns LlamaIndex-compatible LLM client objects., Return a LlamaIndex LLM instance for the given provider and model.          Para, Convenience: fetch client using config.MODEL_ROUTING for a stage., _FakeChoice, _FakeCompletion, Tests for the LLM client abstraction (NIM provider). (+5 more)
 
 ### Community 192 - "test_groq_client_backoff.py"
-Cohesion: 0.09
-Nodes (26): BaseException, call_groq(), get_groq_client(), Any, AsyncOpenAI, Groq client provider.  Returns a ready-to-use AsyncOpenAI instance configured fo, Return an AsyncOpenAI client configured for Groq with retries and concurrency li, Drop‑in replacement for the original groq_client.call_groq. (+18 more)
+Cohesion: 0.17
+Nodes (15): call_groq(), get_groq_client(), Any, AsyncOpenAI, Return an AsyncOpenAI client configured for Groq with retries and concurrency li, Drop‑in replacement for the original groq_client.call_groq., _FakeResponse, _FakeResult (+7 more)
 
 ### Community 193 - "database_manager.py"
-Cohesion: 0.13
-Nodes (14): Connection, _dumps(), get_all_query_texts(), get_golden_queries(), init_db(), insert_golden_query(), insert_judge_validation(), insert_query() (+6 more)
+Cohesion: 0.20
+Nodes (8): _dumps(), get_golden_queries(), insert_golden_query(), insert_judge_validation(), insert_query(), _loads(), SQLite access layer: five isolated tables, WAL mode, JSON-in-TEXT convention.  S, upsert_result()
 
 ### Community 194 - "llm_factory.py"
 Cohesion: 0.18
 Nodes (10): generate_query(), Generator: proposes a query + ground truth + citations for one filing section., _DummyClient, _fake_response(), _FakeChoice, _FakeResponse, Async client with a configurable return value for create., test_generate_query_first_attempt_has_no_feedback_in_prompt() (+2 more)
 
 ### Community 195 - "search_filing_nodes"
-Cohesion: 0.31
-Nodes (11): Local, dependency-free keyword search the Critic uses to find evidence.  Not a r, search_filing_nodes(), _tokenize(), _node(), test_degenerate_tiny_node_does_not_outrank_real_node(), test_empty_content_node_skipped_without_zero_division(), test_excludes_zero_overlap_nodes(), test_ranks_by_keyword_overlap() (+3 more)
+Cohesion: 0.26
+Nodes (12): Critic: independently re-derives an answer using a local search tool.  Uses qwen, Local, dependency-free keyword search the Critic uses to find evidence.  Not a r, search_filing_nodes(), _tokenize(), _node(), test_degenerate_tiny_node_does_not_outrank_real_node(), test_empty_content_node_skipped_without_zero_division(), test_excludes_zero_overlap_nodes() (+4 more)
 
 ### Community 196 - "Benchmark design"
 Cohesion: 0.18
@@ -520,10 +468,6 @@ Nodes (11): Benchmark design, Evaluation: three pillars, How queries get made: g
 ### Community 200 - "Working in this repo"
 Cohesion: 0.25
 Nodes (8): Document and styling rules, Known stale or unresolved content, Rebuilding a `.docx` on macOS, The knowledge graph, The two-layer split, Verifying a PDF, Version drift, Working in this repo
-
-### Community 201 - "JPM_2025.md"
-Cohesion: 0.00
-Nodes (833): 10.10, 10.11, 10.12, 10.13, 10.14, 10.15, 10.15, 10.16 (+825 more)
 
 ### Community 202 - "4. Implementation Guardrails (Binding)"
 Cohesion: 0.29
@@ -541,221 +485,45 @@ Nodes (6): _download_bytes(), fetch_filing(), _get_json(), _headers(), Downloads
 Cohesion: 0.33
 Nodes (6): Anti-leakage, Determinism and state, Guardrails are binding, not advisory, Loop safety, The judge gate, The single hard rule
 
-### Community 206 - "JPM_2023.md"
-Cohesion: 0.00
-Nodes (783): 101.CAL XBRL Taxonomy Extension Calculation Linkbase Document.(b), 101.DEF XBRL Taxonomy Extension Definition Linkbase Document.(b), 101.INS The instance document does not appear in the interactive data file because its XBRL tags are embedded within the Inline XBRL document.(d), 101.LAB XBRL Taxonomy Extension Label Linkbase Document.(b), 101.PRE XBRL Taxonomy Extension Presentation Linkbase Document.(b), 101.SCH XBRL Taxonomy Extension Schema Document.(b), 104 Cover Page Interactive Data File (embedded within the Inline XBRL document and included in Exhibit 101)., 10.1 (+775 more)
-
-### Community 207 - "JPM_2023.md"
-Cohesion: 0.00
-Nodes (783): 101.CAL XBRL Taxonomy Extension Calculation Linkbase Document.(b), 101.DEF XBRL Taxonomy Extension Definition Linkbase Document.(b), 101.INS The instance document does not appear in the interactive data file because its XBRL tags are embedded within the Inline XBRL document.(d), 101.LAB XBRL Taxonomy Extension Label Linkbase Document.(b), 101.PRE XBRL Taxonomy Extension Presentation Linkbase Document.(b), 101.SCH XBRL Taxonomy Extension Schema Document.(b), 104 Cover Page Interactive Data File (embedded within the Inline XBRL document and included in Exhibit 101)., 10.1 (+775 more)
-
 ### Community 208 - "Monitor Skill"
 Cohesion: 0.40
 Nodes (4): Commands, Monitor Skill, Notes, Usage
 
 ### Community 209 - "gq_label_export.py"
-Cohesion: 0.00
-Nodes (517): 10. Environmental Risks, 1. Economic Conditions, 2. Competition, 3. Regulatory Risks, 4. Technology Risks, 5. Supply Chain Risks, 6. Financial Risks, 7. Legal Risks (+509 more)
+Cohesion: 0.50
+Nodes (4): main(), Writes golden_queries_to_label.md so the researcher can hand-write the 'why this, render_label_markdown(), test_render_label_markdown_includes_query_and_blank_fields()
 
 ### Community 210 - "_migrate_golden_queries_schema"
-Cohesion: 0.00
-Nodes (517): 10. Environmental Risks, 1. Economic Conditions, 2. Competition, 3. Regulatory Risks, 4. Technology Risks, 5. Supply Chain Risks, 6. Financial Risks, 7. Legal Risks (+509 more)
-
-### Community 212 - "MSFT_2023.md"
-Cohesion: 0.00
-Nodes (453): Accounting Principles, Activity for All Stock Plans, Addressing Racial Injustice and Inequity, Assets Recognized from Costs to Obtain a Contract with a Customer, AVAILABLE INFORMATION, BALANCE SHEETS, Basis for Opinion, Basis for Opinion (+445 more)
-
-### Community 217 - "MSFT_2023.md"
-Cohesion: 0.00
-Nodes (453): Accounting Principles, Activity for All Stock Plans, Addressing Racial Injustice and Inequity, Assets Recognized from Costs to Obtain a Contract with a Customer, AVAILABLE INFORMATION, BALANCE SHEETS, Basis for Opinion, Basis for Opinion (+445 more)
-
-### Community 218 - "MSFT_2025.md"
-Cohesion: 0.00
-Nodes (429): Accounting Principles, Activity for All Stock Plans, Advertising, professional, marketplace, and gaming platform abuses, Assets Recognized from Costs to Obtain a Contract with a Customer, AVAILABLE INFORMATION, BALANCE SHEETS, Basis for Opinion, Basis for Opinion (+421 more)
-
-### Community 219 - "MSFT_2025.md"
-Cohesion: 0.00
-Nodes (429): Accounting Principles, Activity for All Stock Plans, Advertising, professional, marketplace, and gaming platform abuses, Assets Recognized from Costs to Obtain a Contract with a Customer, AVAILABLE INFORMATION, BALANCE SHEETS, Basis for Opinion, Basis for Opinion (+421 more)
-
-### Community 220 - "TSLA_2024.md"
-Cohesion: 0.01
-Nodes (330): 2024 compared to 2023, 2024 compared to 2023, 2024 Notes, Accounts Receivable and Allowance for Doubtful Accounts, ANNUAL REPORT ON FORM 10-K FOR THE YEAR ENDED DECEMBER 31, 2024, Apprenticeships, As of December 31, 2024, the maturities of our operating and finance lease liabilities (excluding short-term leases) are as follows (in millions):, Automobile Manufacturer and Dealer Regulation (+322 more)
-
-### Community 221 - "TSLA_2024.md"
-Cohesion: 0.01
-Nodes (330): 2024 compared to 2023, 2024 compared to 2023, 2024 Notes, Accounts Receivable and Allowance for Doubtful Accounts, ANNUAL REPORT ON FORM 10-K FOR THE YEAR ENDED DECEMBER 31, 2024, Apprenticeships, As of December 31, 2024, the maturities of our operating and finance lease liabilities (excluding short-term leases) are as follows (in millions):, Automobile Manufacturer and Dealer Regulation (+322 more)
-
-### Community 222 - "TSLA_2023.md"
-Cohesion: 0.01
-Nodes (326): 2018 CEO Performance Award, 2023 compared to 2022, 2023 compared to 2022, 2023 compared to 2022, 2024 Notes, Accounts Receivable and Allowance for Doubtful Accounts, ANNUAL REPORT ON FORM 10-K FOR THE YEAR ENDED DECEMBER 31, 2023, ANNUAL REPORT PURSUANT TO SECTION 13 OR 15(d) OF THE SECURITIES EXCHANGE ACT OF 1934 (+318 more)
-
-### Community 223 - "TSLA_2023.md"
-Cohesion: 0.01
-Nodes (326): 2018 CEO Performance Award, 2023 compared to 2022, 2023 compared to 2022, 2023 compared to 2022, 2024 Notes, Accounts Receivable and Allowance for Doubtful Accounts, ANNUAL REPORT ON FORM 10-K FOR THE YEAR ENDED DECEMBER 31, 2023, ANNUAL REPORT PURSUANT TO SECTION 13 OR 15(d) OF THE SECURITIES EXCHANGE ACT OF 1934 (+318 more)
-
-### Community 224 - "JNJ_2024.md"
-Cohesion: 0.01
-Nodes (321): 108 Jhonson&#x26;Jhonson, 10 Directors, executive officers and corporate governance, 10. Pensions and other benefit plans, 10 Year Shareholder Return Performance J&#x26;J vs. Indices, 11 Executive compensation, 11. Savings plan, 12. Capital and treasury stock, 12 Security ownership of certain beneficial owners and management and related stockholder matters (+313 more)
-
-### Community 225 - "JNJ_2024.md"
-Cohesion: 0.01
-Nodes (321): 108 Jhonson&#x26;Jhonson, 10 Directors, executive officers and corporate governance, 10. Pensions and other benefit plans, 10 Year Shareholder Return Performance J&#x26;J vs. Indices, 11 Executive compensation, 11. Savings plan, 12. Capital and treasury stock, 12 Security ownership of certain beneficial owners and management and related stockholder matters (+313 more)
-
-### Community 226 - "JNJ_2023.md"
-Cohesion: 0.01
-Nodes (320): 108 Jhonson&#x26;Jhonson, 10. Directors, executive officers and corporate governance, 10-year CAGR, 10 Year Shareholder Return Performance J&#x26;J vs. Indices, 11. Executive compensation, 11. Savings plan, 12. Capital and treasury stock, 12. Security ownership of certain beneficial owners and management and related stockholder matters (+312 more)
-
-### Community 227 - "JNJ_2023.md"
-Cohesion: 0.01
-Nodes (320): 108 Jhonson&#x26;Jhonson, 10. Directors, executive officers and corporate governance, 10-year CAGR, 10 Year Shareholder Return Performance J&#x26;J vs. Indices, 11. Executive compensation, 11. Savings plan, 12. Capital and treasury stock, 12. Security ownership of certain beneficial owners and management and related stockholder matters (+312 more)
-
-### Community 228 - "JNJ_2025.md"
-Cohesion: 0.01
-Nodes (317): 10 Directors, executive officers and corporate governance, 10. Pensions and other benefit plans, 10 Year Shareholder Return Performance J&#x26;J vs. Indices, 11 Executive compensation, 11. Savings plan, 12. Capital and treasury stock, 12 Security ownership of certain beneficial owners and management and related stockholder matters, 13. Accumulated other comprehensive income (loss) (+309 more)
-
-### Community 229 - "JNJ_2025.md"
-Cohesion: 0.01
-Nodes (317): 10 Directors, executive officers and corporate governance, 10. Pensions and other benefit plans, 10 Year Shareholder Return Performance J&#x26;J vs. Indices, 11 Executive compensation, 11. Savings plan, 12. Capital and treasury stock, 12 Security ownership of certain beneficial owners and management and related stockholder matters, 13. Accumulated other comprehensive income (loss) (+309 more)
-
-### Community 230 - "TSLA_2025.md"
-Cohesion: 0.01
-Nodes (311): 2025 CEO Interim Award, 2025 CEO Performance Award, 2025 CEO Performance Award, 2025 compared to 2024, 2025 compared to 2024, 2025 compared to 2024, 2025 compared to 2024, Accounts Receivable and Allowance for Doubtful Accounts (+303 more)
-
-### Community 231 - "TSLA_2025.md"
-Cohesion: 0.01
-Nodes (311): 2025 CEO Interim Award, 2025 CEO Performance Award, 2025 CEO Performance Award, 2025 compared to 2024, 2025 compared to 2024, 2025 compared to 2024, 2025 compared to 2024, Accounts Receivable and Allowance for Doubtful Accounts (+303 more)
-
-### Community 232 - "WMT_2023.md"
-Cohesion: 0.01
-Nodes (279): 10.1, 10.10, 10.11, 10.12, 10.13, 10.14, 10.15, 10.16 (+271 more)
-
-### Community 233 - "WMT_2024.md"
-Cohesion: 0.01
-Nodes (279): 101.CAL, 101.DEF, 101.INS, 101.LAB, 101.PRE, 101.SCH, 104, 10.1 (+271 more)
-
-### Community 234 - "WMT_2023.md"
-Cohesion: 0.01
-Nodes (279): 10.1, 10.10, 10.11, 10.12, 10.13, 10.14, 10.15, 10.16 (+271 more)
-
-### Community 235 - "WMT_2024.md"
-Cohesion: 0.01
-Nodes (279): 101.CAL, 101.DEF, 101.INS, 101.LAB, 101.PRE, 101.SCH, 104, 10.1 (+271 more)
-
-### Community 236 - "WMT_2025.md"
-Cohesion: 0.01
-Nodes (244): 10. Exhibits, A reconciliation of gross unrecognized tax benefits from continuing operations is as follows:, Accumulated Other Comprehensive Income (Loss), Advertising Costs, Annual maturities of long-term debt during the next five years and thereafter are as follows:, ANNUAL REPORT ON FORM 10-K, As of January 31,, As of January 31, (+236 more)
-
-### Community 237 - "WMT_2025.md"
-Cohesion: 0.01
-Nodes (244): 10. Exhibits, A reconciliation of gross unrecognized tax benefits from continuing operations is as follows:, Accumulated Other Comprehensive Income (Loss), Advertising Costs, Annual maturities of long-term debt during the next five years and thereafter are as follows:, ANNUAL REPORT ON FORM 10-K, As of January 31,, As of January 31, (+236 more)
-
-### Community 238 - "AAPL_2023.md"
-Cohesion: 0.01
-Nodes (216): 2014 Employee Stock Plan, 2022, 2022 Employee Stock Plan, 2023, A reconciliation of the Company’s segment operating income to the Consolidated Statements of Operations for 2023, 2022 and 2021 is as follows (in millions):, Accounts Receivable, Advertising, Americas (+208 more)
-
-### Community 239 - "AAPL_2023.md"
-Cohesion: 0.01
-Nodes (216): 2014 Employee Stock Plan, 2022, 2022 Employee Stock Plan, 2023, A reconciliation of the Company’s segment operating income to the Consolidated Statements of Operations for 2023, 2022 and 2021 is as follows (in millions):, Accounts Receivable, Advertising, Americas (+208 more)
-
-### Community 240 - "AAPL_2024.md"
-Cohesion: 0.01
-Nodes (213): 15,115,823,000 shares of common stock were issued and outstanding as of October 18, 2024., 2014 Employee Stock Plan, 2022 Employee Stock Plan, Accounts Receivable, Advertising, Americas, Apple Inc., AppleCare (+205 more)
-
-### Community 241 - "AAPL_2024.md"
-Cohesion: 0.01
-Nodes (213): 15,115,823,000 shares of common stock were issued and outstanding as of October 18, 2024., 2014 Employee Stock Plan, 2022 Employee Stock Plan, Accounts Receivable, Advertising, Americas, Apple Inc., AppleCare (+205 more)
-
-### Community 242 - "AAPL_2025.md"
-Cohesion: 0.01
-Nodes (202): 2022 Employee Stock Plan, 2023, 2024, 2024, 2025, 2025, Accounts Receivable, Advertising (+194 more)
-
-### Community 243 - "AAPL_2025.md"
-Cohesion: 0.01
-Nodes (202): 2022 Employee Stock Plan, 2023, 2024, 2024, 2025, 2025, Accounts Receivable, Advertising (+194 more)
-
-### Community 244 - "P1VectorRetriever"
-Cohesion: 0.13
-Nodes (13): ABC, NodeWithScore, Shared retriever interface for P1/P2/P3 (Architecture.md §4.1).  Every retrieval, Retriever, P1VectorRetriever, NodeWithScore, P1: semantic vector retrieval (Architecture.md §6 Phase 5).  Filters to the quer, test_retriever_is_abstract_and_cannot_be_instantiated() (+5 more)
-
-### Community 245 - "Deviations from Original Proposed Idea"
-Cohesion: 0.10
-Nodes (20): 10. P3 index build bypasses the shared Groq client wrapper (2026-07-22), 11. LlamaParse table-header extraction defect (2026-07-26), 12. Dataset-generation retry and grading were too rigid (2026-07-28), 13. Embedding library unavailable on this platform (2026-07-28), 14. No token-size guard on Generator prompts (2026-07-29), 15. P3 summariser model judged too weak (2026-07-29), 16. GQ hand-labelling scale had no validation (2026-07-29), 17. Query ID format was long and quadrant-label-ambiguous (2026-07-29) (+12 more)
-
-### Community 246 - "FastEmbedReranker"
-Cohesion: 0.15
-Nodes (11): BaseNodePostprocessor, FastEmbedReranker, NodeWithScore, Cross-encoder reranker for P1, backed by fastembed's ONNX TextCrossEncoder.  No, Path, _node(), NodeWithScore, test_empty_nodes_returns_empty() (+3 more)
-
-### Community 247 - "build_vector_index.py"
-Cohesion: 0.23
-Nodes (10): NodeWithScore, nodes_to_llama_nodes(), Converts nodes-table rows into LlamaIndex TextNode objects for Phase 3's TreeInd, build_index_for_document(), get_collection(), is_document_indexed(), main(), Path (+2 more)
-
-### Community 248 - "P2BM25Retriever"
-Cohesion: 0.27
-Nodes (9): P2BM25Retriever, Path, P2: BM25 statistical retrieval (Architecture.md §6 Phase 5).  Loads the per-docu, _fake_node(), _seed_index(), test_retrieve_filters_to_given_document_id(), test_retrieve_raises_clearly_when_index_not_built(), test_retrieve_returns_correct_top_k() (+1 more)
-
-### Community 249 - "tokenize"
-Cohesion: 0.27
-Nodes (10): Custom BM25 tokenizer (Project Idea.md §6): preserves numbers, decimals, percent, tokenize(), test_empty_string_returns_empty_list(), test_no_stemming_applied(), test_preserves_currency_symbol(), test_preserves_numbers_and_decimals(), test_preserves_percent_sign(), test_strips_table_pipes_but_keeps_cell_values() (+2 more)
-
-### Community 250 - "File Structure"
-Cohesion: 0.18
-Nodes (10): File Structure, Global Constraints, P1 Vector Pipeline Implementation Plan, Task 1: Add dependencies, Task 2: `Retriever` ABC, Task 3: `FastEmbedReranker` postprocessor, Task 4: Vector index build script, Task 5: `P1VectorRetriever` (+2 more)
-
-### Community 251 - "P2 BM25 Pipeline — Design"
-Cohesion: 0.22
-Nodes (8): Architecture, Deviation to log post-implementation, Files, Goal, Out of scope, P2 BM25 Pipeline — Design, Spec constraints (binding, copied verbatim from source docs), Testing
-
-### Community 252 - "File Layout"
-Cohesion: 0.25
-Nodes (7): File Layout, Global Constraints, P2 BM25 Pipeline Implementation Plan, Post-implementation (not a task — do after Task 3 is reviewed clean), Task 1: Tokenizer, Task 2: BM25 Index Builder, Task 3: P2 BM25 Retriever
-
-### Community 253 - "test_build_bm25_index.py"
-Cohesion: 0.39
-Nodes (5): _fake_node(), test_build_index_for_document_atomic_write_survives_interruption(), test_build_index_for_document_builds_and_pickles_corpus(), test_build_index_for_document_isolates_nodes_across_documents(), test_build_index_for_document_skips_if_already_indexed()
-
-### Community 255 - "build_bm25_index.py"
-Cohesion: 0.57
-Nodes (6): build_index_for_document(), index_path(), is_document_indexed(), main(), Path, Builds the per-document P2 BM25 index (Phase 5) -- one pickled BM25Okapi corpus
-
-### Community 256 - "Format"
-Cohesion: 0.29
-Nodes (6): 1. Empty filing-list argument silently meant "use all filings", 2. No duplicate-question check before acceptance, 3. Questions clustered by company by accident, 4. Silent shortfall -- no warning if the dataset came up short, Development History, Format
+Cohesion: 0.50
+Nodes (4): Connection, init_db(), _migrate_golden_queries_schema(), CREATE TABLE IF NOT EXISTS never alters an already-existing table, so     a gold
 
 ### Community 257 - "test_run_dataset_generation.py"
-Cohesion: 0.04
-Nodes (61): classify_section(), next_target(), First still-unfilled (table, quadrant) slot, searched quadrant-major     then ta, _empty_counts(), _isolate_progress_log(), _node(), End-to-end content-aware routing check: a document with one text     section and, Attempt 1 is rejected via a citation mismatch (Critic cites an     unrelated nod (+53 more)
+Cohesion: 0.06
+Nodes (35): next_target(), First still-unfilled (table, quadrant) slot, searched quadrant-major     then ta, Flattens per-company section lists into one list by taking one     section from, _round_robin_interleave(), _empty_counts(), _isolate_progress_log(), main() calls _configure_logging() on every entry; a process that (in     theory), Simulates process A having already committed 2 accepted queries into     (querie (+27 more)
 
 ### Community 258 - "test_cross_check.py"
 Cohesion: 0.10
 Nodes (36): check_query(), citations_overlap(), diagnose_rejection(), embedding_similarity(), embedding_similarity_ok(), extract_numbers(), _get_embedding_model(), Deterministic accept/reject logic for the Generator/Critic adversarial loop.  Pl (+28 more)
 
 ### Community 259 - "run_dataset_generation.py"
-Cohesion: 0.09
-Nodes (33): Encoding, _accept_query(), append_failure_log(), _attempt_fill(), build_pools(), chunk_section(), _company_of(), _configure_logging() (+25 more)
+Cohesion: 0.11
+Nodes (29): Encoding, _accept_query(), append_failure_log(), _attempt_fill(), build_pools(), chunk_section(), _company_of(), _configure_logging() (+21 more)
 
 ### Community 260 - "async_critic.py"
-Cohesion: 0.18
-Nodes (10): critique_query(), Critic: independently re-derives an answer using a local search tool.  Uses qwen, Run the Critic's search-then-answer loop and return the parsed final     answer, ONE live, throttled smoke test proving async_critic.critique_query() actually sp, Exercises the REAL Groq function-calling protocol end to end -- no mocking     o, test_critique_query_live_round_trip_against_real_groq_api(), test_critique_query_default_return_shape_is_unchanged(), test_critique_query_raises_after_max_rounds_without_final_answer() (+2 more)
+Cohesion: 0.19
+Nodes (9): critique_query(), Run the Critic's search-then-answer loop and return the parsed final     answer, ONE live, throttled smoke test proving async_critic.critique_query() actually sp, Exercises the REAL Groq function-calling protocol end to end -- no mocking     o, test_critique_query_live_round_trip_against_real_groq_api(), test_critique_query_default_return_shape_is_unchanged(), test_critique_query_raises_after_max_rounds_without_final_answer(), test_critique_query_return_messages_includes_full_history() (+1 more)
 
 ### Community 261 - "test_gq_labeling.py"
-Cohesion: 0.18
-Nodes (14): main(), Writes golden_queries_to_label.md so the researcher can hand-write the 'why this, render_label_markdown(), main(), parse_label_markdown(), Reads the filled-in golden_queries_to_label.md back into golden_queries., An entry from an older-format golden_queries_to_label.md (exported     before th, test_parse_label_markdown_handles_entry_missing_good_example_line() (+6 more)
-
-### Community 262 - "Challenges Encountered"
-Cohesion: 0.50
-Nodes (3): 1. NIM API limits still throttling P3, now the longest-running phase (2026-08-05), 2. Groq free tier could not sustain the P3 summary build (2026-07-31), Challenges Encountered
+Cohesion: 0.27
+Nodes (10): main(), parse_label_markdown(), Reads the filled-in golden_queries_to_label.md back into golden_queries., An entry from an older-format golden_queries_to_label.md (exported     before th, test_parse_label_markdown_handles_entry_missing_good_example_line(), test_parse_label_markdown_handles_multiple_entries_without_bleeding(), test_parse_label_markdown_raises_on_non_integer_score(), test_parse_label_markdown_raises_on_unrecognized_is_good_value() (+2 more)
 
 ### Community 263 - "Global Constraints"
 Cohesion: 0.17
 Nodes (11): After All Tasks: Full Test Suite + Throttled Live Smoke Run, Global Constraints, Phase 4: Dataset Generation & Adversarial Verification Implementation Plan, Task 1: Database helpers for queries / golden_queries / judge_validation, Task 2: Section grouper, Task 3: Cross-check (deterministic accept/reject), Task 4: Local search tool for the Critic, Task 5: `call_groq` tools param + async Generator (+3 more)
 
 ### Community 264 - "test_build_summary_index.py"
-Cohesion: 0.12
-Nodes (8): A document_id with zero ingested nodes must fail loudly, not silently     build/, The CallbackManager (holding the TokenCountingHandler)     built in build_index_, A crash between persist() and the atomic rename must never leave a     false-pos, A leftover temp dir from a prior crashed build must not break the next attempt., test_build_index_for_document_cleans_stale_temp_dir_before_retry(), test_build_index_for_document_crash_leaves_only_temp_dir(), test_build_index_for_document_raises_on_no_nodes(), test_build_index_for_document_shares_callback_manager_with_llm_and_tree()
-
-### Community 265 - "Research Issues Log"
-Cohesion: 0.50
-Nodes (3): 1. LlamaParse table header misalignment, Format, Research Issues Log
+Cohesion: 0.18
+Nodes (6): A document_id with zero ingested nodes must fail loudly, not silently     build/, A crash between persist() and the atomic rename must never leave a     false-pos, A leftover temp dir from a prior crashed build must not break the next attempt., test_build_index_for_document_cleans_stale_temp_dir_before_retry(), test_build_index_for_document_crash_leaves_only_temp_dir(), test_build_index_for_document_raises_on_no_nodes()
 
 ### Community 266 - "Global Constraints"
 Cohesion: 0.20
@@ -778,23 +546,23 @@ Cohesion: 0.40
 Nodes (4): Design, Open question before implementation, Phase 5/7 Loop Executor: Retry-Queue Design (for future implementation), Problem it solves
 
 ## Knowledge Gaps
-- **22101 isolated node(s):** `$schema`, `plugin`, `@opencode-ai/plugin`, `$schema`, `plugin` (+22096 more)
+- **7622 isolated node(s):** `$schema`, `plugin`, `@opencode-ai/plugin`, `$schema`, `plugin` (+7617 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **147 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **145 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `build_index_for_document()` connect `build_bm25_index.py` to `tokenize`?**
-  _High betweenness centrality (0.000) - this node is a cross-community bridge._
-- **Why does `P2BM25Retriever` connect `P2BM25Retriever` to `P1VectorRetriever`, `build_vector_index.py`?**
+- **Why does `next_target()` connect `test_run_dataset_generation.py` to `run_dataset_generation.py`?**
   _High betweenness centrality (0.000) - this node is a cross-community bridge._
 - **Are the 7 inferred relationships involving `values_match()` (e.g. with `test_values_match_exact_after_normalization()` and `test_values_match_falls_back_to_text_equality_with_no_numbers()`) actually correct?**
   _`values_match()` has 7 INFERRED edges - model-reasoned connections that need verification._
-- **Are the 5 inferred relationships involving `_attempt_fill()` (e.g. with `critique_query()` and `generate_query()`) actually correct?**
-  _`_attempt_fill()` has 5 INFERRED edges - model-reasoned connections that need verification._
+- **Are the 4 inferred relationships involving `_attempt_fill()` (e.g. with `critique_query()` and `generate_query()`) actually correct?**
+  _`_attempt_fill()` has 4 INFERRED edges - model-reasoned connections that need verification._
+- **Are the 7 inferred relationships involving `search_filing_nodes()` (e.g. with `test_degenerate_tiny_node_does_not_outrank_real_node()` and `test_empty_content_node_skipped_without_zero_division()`) actually correct?**
+  _`search_filing_nodes()` has 7 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `$schema`, `plugin`, `@opencode-ai/plugin` to the rest of the system?**
-  _22248 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _7753 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Proposal Compliance and Benchmark Design` be split into smaller, more focused modules?**
   _Cohesion score 0.04931972789115646 - nodes in this community are weakly interconnected._
 - **Should `Research Question and Literature Base` be split into smaller, more focused modules?**
