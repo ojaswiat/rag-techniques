@@ -602,11 +602,11 @@ async def test_all_attempts_raise_json_decode_error_section_skipped_not_crashed(
 
 @pytest.mark.asyncio
 async def test_groq_api_status_error_is_caught_and_logged(monkeypatch, tmp_path):
-    """A non-429 groq.APIStatusError bubbling out of generate_query/
+    """A non-429 openai.APIStatusError bubbling out of generate_query/
     critique_query must be caught per-attempt, logged, and must not crash
     main()."""
     import httpx
-    from groq import APIStatusError
+    from openai import APIStatusError
 
     monkeypatch.setattr("dataset_generation.run_dataset_generation.config.LOCAL_TEST_THROTTLE", True)
     monkeypatch.setattr("dataset_generation.run_dataset_generation.config.THROTTLE_LIMIT", 1)
@@ -644,6 +644,45 @@ async def test_groq_api_status_error_is_caught_and_logged(monkeypatch, tmp_path)
     logged = json.loads(failure_log.read_text())
     assert len(logged) == 3
     assert all(entry["exception_type"] == "APIStatusError" for entry in logged)
+
+
+@pytest.mark.asyncio
+async def test_openai_api_status_error_is_caught_and_logged(monkeypatch, tmp_path):
+    """The real Groq call path raises openai.APIStatusError (via LlamaIndex's
+    OpenAILike -> openai.AsyncOpenAI), not groq.APIStatusError -- a genuine
+    rate-limit/status failure must be caught and logged like any other
+    per-attempt failure, not crash the whole orchestrator."""
+    import httpx
+    import openai
+
+    failure_log = tmp_path / "failures.json"
+    monkeypatch.setattr(rdg, "FAILURE_LOG_PATH", failure_log)
+
+    fake_response = httpx.Response(
+        status_code=429,
+        request=httpx.Request("POST", "https://api.groq.com/openai/v1/chat/completions"),
+        json={"error": {"message": "rate limited", "type": "tokens", "code": "rate_limit_exceeded"}},
+    )
+    api_error = openai.APIStatusError(
+        message="rate limited", response=fake_response, body={"error": {"message": "rate limited"}}
+    )
+
+    async def fake_generate_query(section, quadrant, previous_attempt_feedback=None):
+        raise api_error
+
+    monkeypatch.setattr(rdg, "generate_query", fake_generate_query)
+
+    section = {"document_id": "DOC_A", "section_header": "Item 1A", "node_ids": ["n1"], "content": "x"}
+    counts = {table: {q: 0 for q in _QUADRANTS} for table in _TABLE_ORDER}
+
+    result = await rdg._attempt_fill(
+        "unused.db", section, "queries", "Q1_Direct_Text", [], counts, "DOC_A"
+    )
+
+    assert result is False
+    logged = json.loads(failure_log.read_text())
+    assert logged[-1]["exception_type"] == "APIStatusError"
+    assert logged[-1]["document_id"] == "DOC_A"
 
 
 @pytest.mark.asyncio

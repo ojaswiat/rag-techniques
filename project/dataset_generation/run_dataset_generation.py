@@ -35,7 +35,7 @@ from functools import lru_cache
 from pathlib import Path
 
 import tiktoken
-from groq import APIStatusError
+from openai import APIStatusError
 
 import llm_client.config as config
 import database_manager as dbm
