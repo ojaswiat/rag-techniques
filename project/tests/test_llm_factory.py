@@ -42,3 +42,16 @@ async def test_get_client_nvidia_routes_achat_through_injected_client():
 
     assert response.message.content == "hi"
     fake_raw_client.chat.completions.create.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_get_client_openrouter_routes_achat_through_injected_client():
+    fake_raw_client = MagicMock()
+    fake_raw_client.chat.completions.create = AsyncMock(return_value=_fake_response("hi"))
+
+    with patch("llm_client.openrouter_client.get_openrouter_client", return_value=fake_raw_client):
+        client = LLMFactory.get_client("openrouter", "some-model")
+        response = await client.achat([ChatMessage(role=MessageRole.USER, content="hello")])
+
+    assert response.message.content == "hi"
+    fake_raw_client.chat.completions.create.assert_awaited_once()

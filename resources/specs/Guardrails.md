@@ -27,7 +27,7 @@ All LLM calls run on **Groq's free tier** (open-source models, no credit card, r
 +------------------------------------------------------------------------+
 |  STAGE                          MODEL                      WHERE        |
 |  -----------------------------  -------------------------  ----------   |
-|  Dataset generation             openai/gpt-oss-120b        Groq free    |
+|  Dataset generation             nvidia/nemotron-3-super-120b-a12b:free  OpenRouter |
 |  Dataset critique (+ search)    Qwen3.6-27B                  Groq free    |
 |  P3 summary-index build (1x)    llama-3.1-8b-instant       Groq free    |
 |  Pipeline answers (P1/P2/P3)    Llama 3.3 70B  (SHARED)    Groq free    |

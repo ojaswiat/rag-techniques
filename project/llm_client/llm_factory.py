@@ -25,7 +25,7 @@ class LLMFactory:
         Parameters
         ----------
         provider: str
-            Either "groq" or "nvidia".
+            One of "groq", "nvidia", or "openrouter".
         model: str
             Model identifier as expected by the provider API.
         callback_manager: Optional[CallbackManager]
@@ -78,6 +78,23 @@ class LLMFactory:
                     model=model,
                     api_base=api_base,
                     api_key=config.NIM_API_KEY,
+                    is_chat_model=True,
+                    callback_manager=callback_manager,
+                    temperature=0,
+                )
+                # See the groq branch above -- same fix, same reason.
+                llm._aclient = raw_client
+                return llm
+
+            case "openrouter":
+                openrouter_mod = importlib.import_module(".openrouter_client", package=__package__)
+                raw_client = openrouter_mod.get_openrouter_client(model)
+
+                api_base = getattr(config, "OPENROUTER_API_ENDPOINT", "https://openrouter.ai/api/v1")
+                llm = OpenAILike(
+                    model=model,
+                    api_base=api_base,
+                    api_key=config.OPENROUTER_API_KEY,
                     is_chat_model=True,
                     callback_manager=callback_manager,
                     temperature=0,
