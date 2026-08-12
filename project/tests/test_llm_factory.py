@@ -55,3 +55,25 @@ async def test_get_client_openrouter_routes_achat_through_injected_client():
 
     assert response.message.content == "hi"
     fake_raw_client.chat.completions.create.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_get_client_openrouter_caps_reasoning_via_extra_body():
+    """OpenRouter-routed models (Generator, Critic) are reasoning-tuned
+    (nemotron, gpt-oss). Without an explicit token budget for the visible
+    answer, the model can spend its entire completion-token budget on
+    hidden reasoning and return message.content=None, which crashes
+    downstream json.loads() calls (the TypeError seen live in
+    dataset_generation_failures.json). OpenRouter's documented fix is the
+    unified `reasoning` request field; the openai SDK has no typed
+    `reasoning` kwarg, so it must travel via `extra_body`.
+    """
+    fake_raw_client = MagicMock()
+    fake_raw_client.chat.completions.create = AsyncMock(return_value=_fake_response("hi"))
+
+    with patch("llm_client.openrouter_client.get_openrouter_client", return_value=fake_raw_client):
+        client = LLMFactory.get_client("openrouter", "some-model")
+        await client.achat([ChatMessage(role=MessageRole.USER, content="hello")])
+
+    _, call_kwargs = fake_raw_client.chat.completions.create.call_args
+    assert call_kwargs.get("extra_body") == {"reasoning": {"effort": "low"}}

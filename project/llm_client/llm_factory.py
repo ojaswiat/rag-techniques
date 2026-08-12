@@ -98,6 +98,18 @@ class LLMFactory:
                     is_chat_model=True,
                     callback_manager=callback_manager,
                     temperature=0,
+                    # OpenRouter-routed models here (Generator, Critic) are
+                    # reasoning-tuned (nemotron, gpt-oss); without this,
+                    # reasoning tokens can exhaust the completion-token
+                    # budget and leave message.content=None, crashing
+                    # downstream json.loads() calls. effort="none" is
+                    # rejected by some endpoints (e.g. gpt-oss-20b:free:
+                    # "Reasoning is mandatory for this endpoint and cannot
+                    # be disabled") -- "low" is accepted everywhere tested
+                    # and still caps the reasoning-token spend. The openai
+                    # SDK has no typed `reasoning` kwarg -- OpenRouter's
+                    # unified reasoning field travels via extra_body.
+                    additional_kwargs={"extra_body": {"reasoning": {"effort": "low"}}},
                 )
                 # See the groq branch above -- same fix, same reason.
                 llm._aclient = raw_client

@@ -28,7 +28,7 @@ All LLM calls run on **Groq's free tier** (open-source models, no credit card, r
 |  STAGE                          MODEL                      WHERE        |
 |  -----------------------------  -------------------------  ----------   |
 |  Dataset generation             nvidia/nemotron-3-super-120b-a12b:free  OpenRouter |
-|  Dataset critique (+ search)    Qwen3.6-27B                  Groq free    |
+|  Dataset critique (+ search)    openai/gpt-oss-20b:free  OpenRouter |
 |  P3 summary-index build (1x)    llama-3.1-8b-instant       Groq free    |
 |  Pipeline answers (P1/P2/P3)    Llama 3.3 70B  (SHARED)    Groq free    |
 |  Judge / scoring (no search)    Qwen3.6-27B                  Groq free    |
@@ -41,7 +41,7 @@ All LLM calls run on **Groq's free tier** (open-source models, no credit card, r
 ```
 
 ### Mandatory role-separation rules
-* **Generator ≠ Critic.** The Generator (`gpt-oss-120b`) and Critic (`Qwen3.6-27B`) must remain **different model families**, so dataset agreement reflects cross-architecture consensus rather than a model agreeing with itself.
+* **Generator ≠ Critic.** The Generator (`nvidia/nemotron-3-super-120b-a12b:free`) and Critic (`openai/gpt-oss-20b:free`) must remain **different model families**, so dataset agreement reflects cross-architecture consensus rather than a model agreeing with itself.
 * **Answerer ≠ Judge.** The pipeline answerer (`Llama 3.3 70B`) and the Judge (`Qwen3.6-27B`) must remain **different families**. No model may grade its own output. If the Judge is later swapped (e.g. to `gpt-oss-120b` to pass the §4 gate), it must still differ from the Llama answerer.
 * **Shared answerer across pipelines.** All three pipelines (P1/P2/P3) must use the **same** answerer (`Llama 3.3 70B`) at the **same** generation settings. Differences in scores must come from *retrieval*, not from different answer models — otherwise the experiment measures generation, not retrieval.
 * **Critic has a search tool; the Judge does not.** The Critic must be given a search tool over **all nodes of the filing** (independence requires searching beyond the source section). The Judge must **not** have a search tool — it already receives the ground-truth answer and citations and only needs to score the output against them. Adding search to the Judge is cost for no gain.

@@ -22,7 +22,7 @@ THROTTLE_LIMIT: int = 3
 # Guardrails.md §2 — fixed model routing matrix. Do not change without updating the spec.
 MODEL_ROUTING: dict[str, dict] = {
     "generator":     {"model": "nvidia/nemotron-3-super-120b-a12b:free", "provider": "openrouter"},
-    "critic":        {"model": "qwen/qwen3.6-27b",        "provider": "groq"},
+    "critic":        {"model": "openai/gpt-oss-20b:free", "provider": "openrouter"},
     "p3_index_build":{"model": "nvidia/nemotron-3-super-120b-a12b", "provider": "nvidia"},
     "answerer":      {"model": "llama-3.3-70b-versatile","provider": "groq"},
     "judge":         {"model": "qwen/qwen3.6-27b",        "provider": "groq"},
