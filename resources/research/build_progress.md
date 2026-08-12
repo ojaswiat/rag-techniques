@@ -60,6 +60,19 @@ left open (different, larger fix needed) — see "What needs attention" below.
    exist, but the first real end-to-end run may surface issues no mock
    caught — plan for a `LOCAL_TEST_THROTTLE`-limited dry run first, per
    Guardrails.
+6. **`dataset_generation_failures.json` has stale test-fixture entries mixed
+   into the real production log.** Discovered during the first real
+   throttled Phase 4 run (2026-08-11): entries like `document_id: "DOC_A"`
+   / `fake_generate_query` — clearly test-suite fixture data — appear
+   alongside genuine run failures in `project/logs/dataset_generation_failures.json`.
+   `append_failure_log()` writes to a module-level `FAILURE_LOG_PATH`
+   constant rather than a path scoped per test run, so a test that doesn't
+   monkeypatch it (or a test run from the repo's real `logs/` directory)
+   leaks fixture rows into the same file real runs append to. Left
+   unfixed for now — deferred, not blocking, since it only pollutes a
+   diagnostic log, not `benchmark.db` itself. Worth a cleanup pass (audit
+   `FAILURE_LOG_PATH` usage across the test suite, strip stale entries)
+   before the log is relied on for the dissertation's methodology writeup.
 
 ## Next steps, in dependency order
 
