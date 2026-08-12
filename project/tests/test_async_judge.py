@@ -1,0 +1,240 @@
+"""async_judge: quadrant-filtered few-shot, no search tool, folded metrics.
+
+The Judge (Qwen3.6-27B, Guardrails.md §2/§4) scores each JEQ output 1-10.
+It sees only the 5 golden_queries exemplars that share the row's quadrant
+(§4a), never a search tool (§2: it already has ground truth + citations), and
+never a JEQ row as an exemplar (§3). The same pass computes the deterministic
+metrics in code (deviations.md #26) so a scored row is complete in one write.
+
+The LLM stand-in is a real OpenAILike with its async client swapped, matching
+what LLMFactory returns in production -- the same shape test_answerer uses.
+"""
+import json
+import os
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
+from llama_index.llms.openai_like import OpenAILike
+
+import database_manager as dbm
+from judge import async_judge
+from judge.async_judge import (
+    Judge,
+    build_prefix,
+    compute_deterministic_metrics,
+    parse_judge_score,
+)
+
+TEST_DB = "test_benchmark_async_judge.db"
+
+
+@pytest.fixture(autouse=True)
+def clean_db():
+    for suffix in ("", "-wal", "-shm"):
+        path = TEST_DB + suffix
+        if os.path.exists(path):
+            os.remove(path)
+    yield
+    for suffix in ("", "-wal", "-shm"):
+        path = TEST_DB + suffix
+        if os.path.exists(path):
+            os.remove(path)
+
+
+def _fake_judge_client(response_content: str) -> OpenAILike:
+    response = MagicMock()
+    response.choices = [
+        MagicMock(message=MagicMock(content=response_content, role="assistant", tool_calls=None), logprobs=None)
+    ]
+    response.usage = MagicMock(prompt_tokens=1500, completion_tokens=12, total_tokens=1512)
+    raw_client = MagicMock()
+    raw_client.chat.completions.create = AsyncMock(return_value=response)
+    client = OpenAILike(model="test-model", api_base="http://test", api_key="test", is_chat_model=True)
+    client._aclient = raw_client
+    return client
+
+
+def _row(quadrant="Q3_Direct_Table"):
+    return {
+        "result_id": "R1",
+        "query_id": "JEQ_001",
+        "pipeline": "P1_vector",
+        "k_value": 5,
+        "retrieved_node_ids": ["AAPL_2025_n0421", "AAPL_2025_n0420"],
+        "pipeline_output": "Net sales were $394.3B. [[node:AAPL_2025_n0421]]",
+        "cited_node_ids": ["AAPL_2025_n0421"],
+        "quadrant": quadrant,
+        "query_text": "What were FY2025 net sales?",
+        "ground_truth_answer": "$394.3B",
+        "gt_citations": ["AAPL_2025_n0421"],
+        "document_id": "SEC_10K_AAPL_2025",
+    }
+
+
+def _exemplar(query_id, quadrant, score=90, output="It was $1B. [[node:n1]]"):
+    return {
+        "query_id": query_id,
+        "quadrant": quadrant,
+        "query_text": f"exemplar question {query_id}",
+        "ground_truth_answer": "$1B",
+        "gt_citations": ["n1"],
+        "example_output": output,
+        "human_score": score,
+        "human_reasoning": "correct figure and citation.",
+        "is_good": 1,
+        "document_id": "SEC_10K_AAPL_2025",
+    }
+
+
+# --- parse_judge_score ---
+
+
+def test_parse_score_from_json():
+    assert parse_judge_score('{"score": 8, "justification": "good"}') == 8
+
+
+def test_parse_score_from_json_alt_key():
+    assert parse_judge_score('{"judge_score": 6}') == 6
+
+
+def test_parse_score_from_string_value():
+    assert parse_judge_score('{"score": "9"}') == 9
+
+
+def test_parse_score_clamps_out_of_range():
+    assert parse_judge_score('{"score": 12}') == 10
+    assert parse_judge_score('{"score": 0}') == 1
+
+
+def test_parse_score_bare_integer_fallback():
+    assert parse_judge_score("I would rate this a 7 out of 10.") == 7
+
+
+def test_parse_score_unparseable_raises():
+    with pytest.raises(ValueError):
+        assert parse_judge_score("no number here")
+
+
+# --- compute_deterministic_metrics (no LLM) ---
+
+
+def test_deterministic_metrics_q3():
+    m = compute_deterministic_metrics(_row("Q3_Direct_Table"))
+    assert m["precision_at_k"] == 0.2
+    assert m["recall_at_k"] == 1.0
+    assert m["evidence_hit"] == 1
+    assert m["citation_match"] == 1
+    assert m["exact_match"] == 1  # figure extracted from the sentence
+    assert 0.0 <= m["token_f1"] <= 1.0
+
+
+def test_deterministic_metrics_exact_match_null_for_q2():
+    m = compute_deterministic_metrics(_row("Q2_Implicit_Text"))
+    assert m["exact_match"] is None
+
+
+def test_deterministic_metrics_evidence_hit_zero_when_missed():
+    row = _row("Q3_Direct_Table")
+    row["retrieved_node_ids"] = ["wrong_1", "wrong_2"]
+    m = compute_deterministic_metrics(row)
+    assert m["recall_at_k"] == 0.0
+    assert m["evidence_hit"] == 0
+
+
+def test_deterministic_metrics_citation_match_zero_on_bad_citation():
+    row = _row("Q3_Direct_Table")
+    row["cited_node_ids"] = ["hallucinated_node"]
+    m = compute_deterministic_metrics(row)
+    assert m["citation_match"] == 0
+
+
+# --- build_prefix: only the quadrant's exemplars, none from other quadrants ---
+
+
+def test_prefix_includes_quadrant_exemplars_only():
+    exemplars = [_exemplar(f"GQ_T3_{i}", "Q3_Direct_Table") for i in range(5)]
+    prefix = build_prefix("Q3_Direct_Table", exemplars)
+    for ex in exemplars:
+        assert ex["query_text"] in prefix
+    assert "exemplar question GQ_T1" not in prefix  # no other-quadrant leakage
+
+
+def test_prefix_rescales_exemplar_scores_to_1_10():
+    """golden_queries.human_score is 0-100; the judge outputs 1-10, so the
+    teaching scores are shown on the judge's own scale."""
+    prefix = build_prefix("Q3_Direct_Table", [_exemplar("GQ_T3_1", "Q3_Direct_Table", score=90)])
+    assert "9" in prefix  # 90/100 -> 9/10
+    assert "90" not in prefix
+
+
+# --- Judge scoring: no tool call, judge model enforced ---
+
+
+def test_judge_rejects_wrong_model():
+    with pytest.raises(ValueError, match="fixed"):
+        Judge(model="llama-3.3-70b-versatile")
+
+
+def test_judge_rejects_nonzero_temperature():
+    with pytest.raises(ValueError, match="temperature"):
+        Judge(temperature=0.5)
+
+
+@pytest.mark.asyncio
+async def test_score_row_uses_plain_chat_not_tools():
+    client = _fake_judge_client('{"score": 8}')
+    prefix = build_prefix("Q3_Direct_Table", [_exemplar("GQ_T3_1", "Q3_Direct_Table")])
+    with patch("judge.async_judge.LLMFactory.get_client_for_stage", return_value=client):
+        score = await Judge().score_row(_row(), prefix)
+    assert score == 8
+    # plain achat path -> chat.completions.create, and never a search tool.
+    client._aclient.chat.completions.create.assert_awaited()
+    sent = client._aclient.chat.completions.create.call_args.kwargs
+    assert "tools" not in sent or not sent["tools"]
+
+
+# --- judge_jeq_rows: end-to-end over a seeded DB, one UPDATE per row ---
+
+
+@pytest.mark.asyncio
+async def test_judge_jeq_rows_scores_and_writes(monkeypatch):
+    monkeypatch.setattr(async_judge.config, "LOCAL_TEST_THROTTLE", False, raising=False)
+    monkeypatch.setattr(async_judge, "LOCAL_TEST_THROTTLE", False, raising=False)
+
+    await dbm.init_db(TEST_DB)
+    jv = {
+        "query_id": "JEQ_001",
+        "quadrant": "Q3_Direct_Table",
+        "query_text": "What were FY2025 net sales?",
+        "ground_truth_answer": "$394.3B",
+        "gt_citations": ["AAPL_2025_n0421"],
+        "document_id": "SEC_10K_AAPL_2025",
+    }
+    await dbm.insert_judge_validation(TEST_DB, jv)
+    for i in range(5):
+        await dbm.insert_golden_query(TEST_DB, _exemplar(f"GQ_T3_{i}", "Q3_Direct_Table"))
+    result_row = {
+        "result_id": "R1",
+        "source_set": "JEQ",
+        "query_id": "JEQ_001",
+        "pipeline": "P1_vector",
+        "k_value": 5,
+        "retrieved_node_ids": ["AAPL_2025_n0421", "AAPL_2025_n0420"],
+        "pipeline_output": "Net sales were $394.3B. [[node:AAPL_2025_n0421]]",
+        "cited_node_ids": ["AAPL_2025_n0421"],
+    }
+    await dbm.upsert_result(TEST_DB, result_row)
+
+    client = _fake_judge_client('{"score": 9}')
+    with patch("judge.async_judge.LLMFactory.get_client_for_stage", return_value=client):
+        summary = await async_judge.judge_jeq_rows(TEST_DB)
+
+    assert summary["judged"] == 1
+    rows = await dbm.get_results(TEST_DB, "JEQ")
+    row = next(r for r in rows if r["result_id"] == "R1")
+    assert row["judge_score"] == 9
+    assert row["precision_at_k"] == 0.2
+    assert row["recall_at_k"] == 1.0
+    assert row["evidence_hit"] == 1
+    assert row["citation_match"] == 1
+    assert row["exact_match"] == 1

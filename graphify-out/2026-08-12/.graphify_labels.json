@@ -269,5 +269,17 @@
   "267": "group_sections",
   "268": "Phase 3 — P3 Summary-Index Build: Design",
   "269": "Note 7 – Interest income and interest expense",
-  "270": "Deferred Items Log"
+  "270": "Deferred Items Log",
+  "271": "Phase 5/7 Loop Executor: Retry-Queue Design (for future implementation)",
+  "272": "test_node_convert.py",
+  "273": "Note 7 – Interest income and interest expense",
+  "274": "conftest.py",
+  "275": "__init__.py",
+  "276": "backup_data.sh",
+  "277": "reload_backup.sh",
+  "278": "__init__.py",
+  "279": "__init__.py",
+  "280": "__init__.py",
+  "281": "__init__.py",
+  "282": "build_summary_index.py"
 }

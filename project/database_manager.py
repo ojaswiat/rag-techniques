@@ -312,6 +312,136 @@ async def update_golden_query_labels(
             raise ValueError(f"No golden_query found with query_id={query_id!r} -- check for a typo")
 
 
+async def get_results(db_path: str, source_set: str) -> list[dict]:
+    """Every results row for one source_set, JSON node-id columns decoded.
+
+    The JSON-in-TEXT boundary stays here (§4.4): callers receive
+    retrieved_node_ids / cited_node_ids as plain list[str].
+    """
+    async with aiosqlite.connect(db_path) as conn:
+        conn.row_factory = aiosqlite.Row
+        cursor = await conn.execute(
+            "SELECT * FROM results WHERE source_set = ? ORDER BY result_id",
+            (source_set,),
+        )
+        rows = await cursor.fetchall()
+    result = []
+    for row in rows:
+        d = dict(row)
+        d["retrieved_node_ids"] = _loads(d["retrieved_node_ids"])
+        d["cited_node_ids"] = _loads(d["cited_node_ids"])
+        result.append(d)
+    return result
+
+
+async def get_jeq_judging_rows(db_path: str) -> list[dict]:
+    """The 60 gate rows, each joined to its judge_validation ground truth.
+
+    async_judge.py scores one results row at a time but needs that row's
+    quadrant (to pick the 5 matching exemplars), ground-truth answer, and
+    gt_citations -- none of which live in results. The join supplies them so
+    the Judge never has to reach across tables itself. JSON list columns from
+    both tables are decoded to list[str].
+    """
+    async with aiosqlite.connect(db_path) as conn:
+        conn.row_factory = aiosqlite.Row
+        cursor = await conn.execute(
+            """SELECT r.*, jv.quadrant, jv.query_text, jv.ground_truth_answer,
+                      jv.gt_citations, jv.document_id
+               FROM results r
+               JOIN judge_validation jv ON jv.query_id = r.query_id
+               WHERE r.source_set = 'JEQ'
+               ORDER BY r.result_id"""
+        )
+        rows = await cursor.fetchall()
+    result = []
+    for row in rows:
+        d = dict(row)
+        d["retrieved_node_ids"] = _loads(d["retrieved_node_ids"])
+        d["cited_node_ids"] = _loads(d["cited_node_ids"])
+        d["gt_citations"] = _loads(d["gt_citations"])
+        result.append(d)
+    return result
+
+
+async def get_golden_queries_by_quadrant(db_path: str, quadrant: str) -> list[dict]:
+    """The teaching exemplars for one quadrant (Guardrails.md §4a).
+
+    async_judge.py builds a prompt from exactly the 5 GQ that share the
+    target row's quadrant, never all 20, so this reads a single quadrant's
+    slice rather than the whole golden_queries table.
+    """
+    async with aiosqlite.connect(db_path) as conn:
+        conn.row_factory = aiosqlite.Row
+        cursor = await conn.execute(
+            "SELECT * FROM golden_queries WHERE quadrant = ? ORDER BY query_id",
+            (quadrant,),
+        )
+        rows = await cursor.fetchall()
+    result = []
+    for row in rows:
+        d = dict(row)
+        d["gt_citations"] = _loads(d["gt_citations"])
+        result.append(d)
+    return result
+
+
+# Columns async_judge.py may write per gate row: the deterministic metrics plus
+# the LLM judge_score. Everything else on a results row is fixed at insert time
+# by loop_executor and must not be reachable through this update path.
+_UPDATABLE_SCORE_COLUMNS = frozenset(
+    {
+        "precision_at_k",
+        "recall_at_k",
+        "evidence_hit",
+        "citation_match",
+        "token_f1",
+        "exact_match",
+        "judge_score",
+    }
+)
+
+
+async def update_result_scores(db_path: str, result_id: str, scores: dict) -> None:
+    """Write the deterministic metrics and judge_score onto one results row.
+
+    upsert_result is INSERT-only (it fails loudly on a re-inserted cell), so
+    scoring a row after loop_executor produced it needs this separate UPDATE.
+    Only the score columns are writable; any other key is rejected so this
+    can never be used to rewrite the run's identity or its raw output.
+    """
+    if not scores:
+        raise ValueError("update_result_scores: no score columns supplied")
+    unknown = set(scores) - _UPDATABLE_SCORE_COLUMNS
+    if unknown:
+        raise ValueError(f"unknown score column(s): {sorted(unknown)}")
+
+    assignments = ", ".join(f"{c} = :{c}" for c in scores)
+    params = {**scores, "result_id": result_id}
+    async with aiosqlite.connect(db_path) as conn:
+        cursor = await conn.execute(
+            f"UPDATE results SET {assignments} WHERE result_id = :result_id",
+            params,
+        )
+        await conn.commit()
+        if cursor.rowcount == 0:
+            raise ValueError(f"no results row with result_id={result_id!r}")
+
+
+async def update_result_human_score(db_path: str, result_id: str, human_score: int) -> None:
+    """Record the researcher's hand-score for one JEQ gate row (1-10)."""
+    if not isinstance(human_score, int) or isinstance(human_score, bool) or not (1 <= human_score <= 10):
+        raise ValueError(f"human_score {human_score!r} must be an integer in 1-10")
+    async with aiosqlite.connect(db_path) as conn:
+        cursor = await conn.execute(
+            "UPDATE results SET human_score = ? WHERE result_id = ?",
+            (human_score, result_id),
+        )
+        await conn.commit()
+        if cursor.rowcount == 0:
+            raise ValueError(f"no results row with result_id={result_id!r}")
+
+
 def _dumps(items: list[str]) -> str:
     return json.dumps(items)
 
