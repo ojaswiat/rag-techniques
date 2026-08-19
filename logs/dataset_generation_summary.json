@@ -1,0 +1,23 @@
+{
+  "counts": {
+    "queries": {
+      "Q1_Direct_Text": 0,
+      "Q2_Implicit_Text": 0,
+      "Q3_Direct_Table": 0,
+      "Q4_Implicit_Table": 0
+    },
+    "golden_queries": {
+      "Q1_Direct_Text": 0,
+      "Q2_Implicit_Text": 0,
+      "Q3_Direct_Table": 0,
+      "Q4_Implicit_Table": 0
+    },
+    "judge_validation": {
+      "Q1_Direct_Text": 0,
+      "Q2_Implicit_Text": 0,
+      "Q3_Direct_Table": 0,
+      "Q4_Implicit_Table": 0
+    }
+  },
+  "summary": "queries: Q1_Direct_Text 0/25 (underfilled), Q2_Implicit_Text 0/25 (underfilled), Q3_Direct_Table 0/25 (underfilled), Q4_Implicit_Table 0/25 (underfilled)\ngolden_queries: Q1_Direct_Text 0/5 (underfilled), Q2_Implicit_Text 0/5 (underfilled), Q3_Direct_Table 0/5 (underfilled), Q4_Implicit_Table 0/5 (underfilled)\njudge_validation: Q1_Direct_Text 0/5 (underfilled), Q2_Implicit_Text 0/5 (underfilled), Q3_Direct_Table 0/5 (underfilled), Q4_Implicit_Table 0/5 (underfilled)"
+}

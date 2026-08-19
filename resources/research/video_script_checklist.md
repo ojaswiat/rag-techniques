@@ -7,10 +7,10 @@ per concept. Not an audience-facing explainer.
 delivery slack under 10:00. These are estimates. Do a timed read-through before filming and write
 the measured figure here: `measured read-through: ____`
 
-**Numbers verified live 2026-08-19** against `benchmark.db`, `project/`, and
-`resources/research/project_deep_audit_2026-08-18.md`. Where the audit doc and the live DB
-disagree, the live DB wins. **Re-check the DB counts on the morning of filming** — the dataset
-generation run is still live and the GQ/JEQ figures will move.
+**Numbers re-verified 2026-08-19 (second pass)** against `benchmark.db`, `project/` and a live
+`pytest` run. **Phase 4 dataset generation is now COMPLETE: 140/140.** Where the deep-audit doc and
+the live DB disagree, the live DB wins. The figures below are now stable — the only number still
+capable of moving before filming is `results`, which is at 0.
 
 **Screen material:** 13 `.drawio` diagrams in `resources/assets/diagrams/` (all rebuilt 19 Aug 2026 on the
 Tailwind-500 flat palette in `00-PALETTE.md`), the HTML deck for title/close only, live VSCode editor +
@@ -156,7 +156,7 @@ modes, then the closing line: "I know the mechanisms; the ranking is what has to
   from a different model family independently re-verifies with a search tool
 - **Anti-self-grading invariant:** Generator ≠ Critic family, Answerer ≠ Judge family
 - Models: Generator `nvidia/nemotron-3-super-120b-a12b:free`, Critic `openai/gpt-oss-20b:free`
-- **Live status: PQ 100/100, GQ 19/20, JEQ 15/20** — six rows from finished
+- **Dataset is COMPLETE: PQ 100/100, GQ 20/20, JEQ 20/20 = 140/140.** Finished, not in progress
 
 > **Why this way — "Why generate the benchmark with LLMs instead of hand-writing the questions?"**
 > Two reasons. **Scale with citation precision:** 140 questions each needing exact node-ID
@@ -171,9 +171,10 @@ modes, then the closing line: "I know the mechanisms; the ranking is what has to
 different family independently verifies, and only what survives both goes in — that makes the
 dataset auditable rather than a matter of my own judgement."
 
-**Show:** `03-three-query-sets.drawio` (the live 100/19/15 counts are printed on it) →
+**Show:** `03-three-query-sets.drawio` (the 100/20/20 counts are printed on it) →
 `04-four-quadrants.drawio` → `05-adversarial-generation.drawio`. On the last one, follow the red dashed
-return edge with the cursor — that loop is the adversarial part, and it reads instantly on screen.
+return edge with the cursor — that loop is the adversarial part, and it reads instantly on screen. The
+green DATASET COMPLETE panel on the right carries the 140/140 count.
 
 ---
 
@@ -254,7 +255,7 @@ Then `09-database-schema.drawio`, landing on the red `UNIQUE` band at the bottom
 - Layout: `ingest/`, `dataset_generation/`, `pipelines/{vector,bm25,structural}/`, `judge/`,
   `llm_client/`, `tests/`
 - Open exactly one real file and glance; do not explain internals
-- **338 passing, 2 live-API smoke tests deselected by default, 340 collected**
+- **339 passing, 2 live-API smoke tests deselected by default, 341 collected**
 - Coverage spans Phases 1–6: infra, ingestion, tree build, dataset generation, all three
   retrievers, the answerer's citation parsing and anti-leakage guarantees, loop-executor
   resumability, judge metrics
@@ -269,13 +270,18 @@ Then `09-database-schema.drawio`, landing on the red `UNIQUE` band at the bottom
 > the results without failing anything visibly. The test suite is the methodology, expressed
 > executably.
 
-**Say:** State the number plainly, then the invariants point. No apology, no over-claiming.
+**Say:** State the number plainly — 339 passing — then the invariants point. No apology, no
+over-claiming.
 
 **Show:** VSCode file tree briefly → `project/pipelines/bm25/p2_bm25.py` → **pre-recorded** pytest
 output.
 
-> **Do NOT run pytest live and unedited.** Measured 56.9s wall clock, which alone blows this
-> section. Pre-record or cut in editing. Re-run once before filming to confirm 338 still holds.
+> **Do NOT run pytest live and unedited.** Measured 49.7s wall clock, which alone blows this
+> section. Pre-record or cut in editing.
+>
+> **Run it from `project/`, not from the repo root.** Two dataset-generation tests resolve
+> `data/filings_manifest.json` relative to the working directory, so from the repo root they fail and
+> you get two red lines on camera. `cd project && uv run pytest -q -m "not live"` gives the clean 339.
 
 ---
 
@@ -321,13 +327,14 @@ at the two cards underneath for the "why published" framing.
 ## 10. Timeline — done, now, blockers, slowest operations (6:25 – 7:05, 40s)
 
 **Concepts**
-- **Done:** Phases 1–3 (infra, ingestion, P3 tree build for all 13 filings)
-- **Now:** Phase 4 dataset generation at **134 of 140 rows**, actively running
+- **Done:** Phases 1–4 (infra, ingestion, P3 tree build for all 13 filings, and the full
+  140-question dataset — finished as of today)
 - **Code complete, zero real runs:** Phases 5 and 6 — all three retrievers, answerer, loop
   executor, judge and validation gate exist and are unit-tested, never touched real data
 - **Not started:** Phase 7 (benchmark executor, planned only), Phase 8 (analysis)
 - **Current blocker, plainly:** `results` is at 0 rows. Nothing has been through retrieve →
-  answer → store yet. Unblocking that is the highest-value next action
+  answer → store yet. With the dataset now complete, nothing external is blocking it — the judge gate
+  and the first benchmark run are both ready to start
 - **Most time-consuming operations, both quota-bound not compute-bound:**
   1. P3 summary-tree build — longest wall-clock phase, 1.73M input / 0.97M output tokens across
      13 filings, throttled at 40 RPM on NIM, run resumably over multiple sittings
@@ -341,12 +348,13 @@ at the two cards underneath for the "why published" framing.
 > simply not runnable under this constraint. The two slowest phases are both slow for the same
 > reason — neither is CPU-limited, both are quota-limited.
 
-**Say:** Be exact. Not "nearly done", not "just started". Six dataset rows remaining, zero
-benchmark rows executed. Then the money-becomes-time point.
+**Say:** Be exact. Not "nearly done", not "just started". Dataset complete at 140/140, zero benchmark
+rows executed. Then the money-becomes-time point.
 
 **Show:** `12-phase-gantt.drawio` — ten weeks across, eight phases down, colour-coded by real status (green
-complete, amber running, cyan built-but-never-run, faded slate not started). The cyan bars are the point of
-the section: built and tested, zero live runs. Then a live `sqlite3` count showing `results = 0`.
+complete for Phases 1–4, cyan built-but-never-run for 5–6, faded slate not started for 7–8). The cyan bars
+are the point of the section: built and tested, zero live runs. Then a live `sqlite3` count showing
+`results = 0`.
 
 ---
 
@@ -383,8 +391,8 @@ the red `0 written so far` band directly beneath it. That red band is what stops
 ## 12. Next steps, future scope, close (7:30 – 7:50, 20s)
 
 **Concepts**
-- Immediate: finish the last 6 dataset rows → first real loop-executor run → clear the >80% judge
-  gate → build the Phase 7 executor → Phase 8 analysis and plots
+- Immediate, and now unblocked: first real loop-executor run → clear the >80% judge gate → build the
+  Phase 7 executor → Phase 8 analysis and plots
 - Future scope: more companies and fiscal years, a hybrid P1+P2 arm, filing types beyond 10-K
 - Contribution in one sentence: a disjoint-set, anti-leakage, anti-self-grading benchmark design
   for financial-document RAG, executable at effectively zero infrastructure cost
@@ -469,7 +477,7 @@ so the cut is clean in editing.
 ## Professor feedback to address explicitly on camera
 
 - [ ] **Filing count:** say "thirteen" exactly (§3) — direct fix for the vague-count note
-- [ ] **Testing (graded B, lowest section):** show 338 passing tests (§8) — the grade predates
+- [ ] **Testing (graded B, lowest section):** show 339 passing tests (§8) — the grade predates
       most of this suite
 - [ ] Optional single line if it fits: literature review scope was RAG-general rather than
       finance-specific. Acknowledge, do not dwell
@@ -521,16 +529,23 @@ so the cut is clean in editing.
 | 12 | Next steps and close | none — HTML deck closing slide |
 | 13 | FAQ | none — stay on camera |
 
-**Diagrams carrying live numbers — re-render if the DB moves before filming**
-- [ ] `03-three-query-sets.drawio` — prints PQ 100/100, GQ 19/20, JEQ 15/20
-- [ ] `05-adversarial-generation.drawio` — prints the same counts plus "134 of 140 rows"
-- [ ] `09-database-schema.drawio` — prints per-table row counts
-- [ ] `12-phase-gantt.drawio` — prints "Running · 134/140 rows" and "results table = 0 rows"
+**Diagrams carrying live numbers — all settled as of 19 Aug 2026, second pass**
+- [x] `03-three-query-sets.drawio` — PQ 100/100, GQ 20/20, JEQ 20/20, dataset complete
+- [x] `05-adversarial-generation.drawio` — same counts, green DATASET COMPLETE panel
+- [x] `09-database-schema.drawio` — per-table row counts (26,050 / 100 / 20 / 20 / 0)
+- [x] `12-phase-gantt.drawio` — Phase 4 green and complete, `results = 0` blocker band
+- [ ] Only `results` can still change. If a benchmark run starts before filming, re-render `09` and `12`
+
+**Edge labels**
+- [ ] All four labelled arrows (two in `01`, two in `05`) carry a perpendicular offset so the text sits
+      clear of the stroke. If you move a box in draw.io, re-check that the label did not snap back onto
+      the line
 
 **Pre-run and capture**
-- [ ] `uv run pytest -q -m "not live"` — capture green output, confirm 338 still passes
-- [ ] `sqlite3 project/benchmark.db` count query — re-run on the morning of filming, update the §5
-      and §10 figures in this file before recording
+- [ ] `cd project && uv run pytest -q -m "not live"` — capture green output, confirms 339 passing.
+      Must be run from `project/`; from the repo root two tests fail on a relative manifest path
+- [ ] `sqlite3 project/benchmark.db` count query — the §5 and §10 figures are current as of the second
+      pass; only `results` can still move
 - [ ] Editor tabs pre-opened: `project/pipelines/bm25/p2_bm25.py`, `project/loop_executor.py`,
       `project/judge/metrics.py`, `project/llm_client/config.py`
 
