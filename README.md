@@ -34,6 +34,35 @@ TODO.md          # Active task list
 
 > Implementation source code (Python modules `ingest/`, `pipelines/`, `judge/`) has not been started yet. Phase 1 of the phase plan is the next milestone.
 
+## Knowledge Graph
+
+A pre-built knowledge graph of the codebase is committed to `graphify-out/`, so it is
+available on clone with no build step and no API key.
+
+| File | What it is |
+|---|---|
+| `graphify-out/graph.html` | Interactive graph, open it directly in a browser |
+| `graphify-out/GRAPH_REPORT.md` | Plain-language report: communities, hub nodes, cross-file links |
+| `graphify-out/graph.json` | Raw graph data for tooling |
+
+Query it from the command line:
+
+```bash
+graphify query "How does fetch_filing resolve a 10-K from SEC EDGAR?"
+graphify explain "_find_10k()"
+graphify path "run_ingestion" "database_manager"
+```
+
+Regenerate after changing code (AST only, no LLM, no cost):
+
+```bash
+graphify update .
+```
+
+Scope is set by `.graphifyignore`. The parsed 10-K corpus and its backups are excluded
+on purpose: they are benchmark input data, not part of the system, and they outnumbered
+the code roughly twenty to one.
+
 ## Status
 
 Planning / proposal phase complete. Technical build not yet started.

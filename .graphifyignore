@@ -1,0 +1,17 @@
+# Keep the knowledge graph scoped to code, specs and docs.
+#
+# The parsed 10-K corpus is the benchmark's *input data*, not part of the
+# system being described. Each parsed copy contributes ~7,200 heading nodes,
+# and the two backup snapshots duplicate it verbatim, so leaving these in
+# pushed the graph to 23,393 nodes -- 93% corpus text, and past the 5,000-node
+# limit for graph.html, which meant no interactive graph was generated at all.
+project/backups/
+project/data/parsed/
+project/data/raw/
+
+# Local virtualenv and JS dependencies.
+.venv/
+node_modules/
+
+# graphify's own outputs -- never feed the graph back into itself.
+graphify-out/
