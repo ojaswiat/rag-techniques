@@ -1,0 +1,31 @@
+[
+  {
+    "query_id": "QT1_GQ_001",
+    "quadrant": "Q1_Direct_Text",
+    "document_id": "MSFT_2023",
+    "query_text": "What is the date of the Annual Meeting of Shareholders referenced in the Proxy Statement?",
+    "ground_truth_answer": "December 7, 2023",
+    "gt_citations": [
+      "MSFT_2023_n1070",
+      "MSFT_2023_n1071"
+    ],
+    "example_output": "December 7, 2023",
+    "human_score": 1,
+    "human_reasoning": "PENDING_HUMAN_LABEL",
+    "is_good": null
+  },
+  {
+    "query_id": "QT1_GQ_002",
+    "quadrant": "Q1_Direct_Text",
+    "document_id": "TSLA_2023",
+    "query_text": "How many shares of common stock was Andrew Baglino permitted to sell under his Rule 10b5-1 trading arrangement adopted on November 13, 2023?",
+    "ground_truth_answer": "up to 115,500 shares",
+    "gt_citations": [
+      "TSLA_2023_n0969"
+    ],
+    "example_output": "up to 115,500 shares",
+    "human_score": 1,
+    "human_reasoning": "PENDING_HUMAN_LABEL",
+    "is_good": null
+  }
+]

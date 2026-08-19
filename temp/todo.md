@@ -1,8 +1,7 @@
-1. Use Draw.io MCP and Skill to create diagrams.
-2. Use Playwright MCP to verify them.
+1. Create a separate branch called `presentation`, then install a skill to remove/update ai slop in the code.
+2. Build full HTML page.
+3. How can I create a minimal dashboard in plain HTML, CSS, and JS? Just tell me the possible options.
 
-- Phase 3 reads it to build P3's summary tree (a separate, one-time step).
-- Phase 4 reads it to write benchmark questions and cite exact pieces of evidence.
 
 ## Issues
 

@@ -12,7 +12,8 @@ the measured figure here: `measured read-through: ____`
 the live DB disagree, the live DB wins. The figures below are now stable — the only number still
 capable of moving before filming is `results`, which is at 0.
 
-**Screen material:** 13 `.drawio` diagrams in `resources/assets/diagrams/` (all rebuilt 19 Aug 2026 on the
+**Screen material:** 15 code stills in `resources/assets/images/` (Carbonara, macOS frame, dark seti,
+flat/no shadow — see the mapping at the end), 13 `.drawio` diagrams in `resources/assets/diagrams/` (all rebuilt 19 Aug 2026 on the
 Tailwind-500 flat palette in `00-PALETTE.md`), the HTML deck for title/close only, live VSCode editor +
 terminal.
 
@@ -157,6 +158,9 @@ modes, then the closing line: "I know the mechanisms; the ranking is what has to
 - **Anti-self-grading invariant:** Generator ≠ Critic family, Answerer ≠ Judge family
 - Models: Generator `nvidia/nemotron-3-super-120b-a12b:free`, Critic `openai/gpt-oss-20b:free`
 - **Dataset is COMPLETE: PQ 100/100, GQ 20/20, JEQ 20/20 = 140/140.** Finished, not in progress
+- **But the GQ human labelling is NOT done** — all 20 rows still carry
+  `human_reasoning = "PENDING_HUMAN_LABEL"`, `human_score = 1` (a placeholder) and
+  `is_good = NULL`. The questions exist; the human judgement that calibrates the judge does not
 
 > **Why this way — "Why generate the benchmark with LLMs instead of hand-writing the questions?"**
 > Two reasons. **Scale with citation precision:** 140 questions each needing exact node-ID
@@ -336,8 +340,11 @@ at the two cards underneath for the "why published" framing.
   answer → store yet. With the dataset now complete, nothing external is blocking it — the judge gate
   and the first benchmark run are both ready to start
 - **Most time-consuming operations, both quota-bound not compute-bound:**
-  1. P3 summary-tree build — longest wall-clock phase, 1.73M input / 0.97M output tokens across
-     13 filings, throttled at 40 RPM on NIM, run resumably over multiple sittings
+  1. P3 summary-tree build — longest wall-clock phase. **Measured** from
+     `logs/index_build_costs.json`: ~1.89M input / ~1.05M output tokens to build the 13 trees once,
+     ~146K/81K per filing, ~36 min per filing, throttled at 40 RPM on NIM. Actual logged spend
+     including rebuilds and resumed runs was 15.5 hours. Say "roughly 1.9 million input tokens and
+     about eight hours of throttled wall clock" — round, don't read digits
   2. Dataset generation — ran across days, paced entirely by free-tier daily token caps
 
 > **Why this way — "Why is the dominant project cost wall-clock time rather than money?"**
@@ -529,6 +536,12 @@ so the cut is clean in editing.
 | 12 | Next steps and close | none — HTML deck closing slide |
 | 13 | FAQ | none — stay on camera |
 
+**Open item the stills expose — GQ labelling**
+- [ ] All 20 golden queries are unlabelled (`PENDING_HUMAN_LABEL`). Phase 6 calibrates the judge
+      against these, so the judge gate cannot run until they are hand-scored. Either do the labelling
+      before filming, or say plainly on camera that it is the next manual step — do not describe GQ
+      as "hand-scored by a human" in the past tense
+
 **Diagrams carrying live numbers — all settled as of 19 Aug 2026, second pass**
 - [x] `03-three-query-sets.drawio` — PQ 100/100, GQ 20/20, JEQ 20/20, dataset complete
 - [x] `05-adversarial-generation.drawio` — same counts, green DATASET COMPLETE panel
@@ -540,6 +553,31 @@ so the cut is clean in editing.
 - [ ] All four labelled arrows (two in `01`, two in `05`) carry a perpendicular offset so the text sits
       clear of the stroke. If you move a box in draw.io, re-check that the label did not snap back onto
       the line
+
+**Code stills — `resources/assets/images/`, all generated from live repo state**
+
+| # | Still | Use in |
+|---|---|---|
+| 01 | `01-project-structure.png` — annotated module tree | §8 |
+| 02 | `02-filings-manifest.png` — all 13 filings, countable on screen | §3 |
+| 03 | `03-parsed-table-markdown.png` — real LlamaParse table, cells intact | §3 |
+| 04 | `04-node-record.png` — stored node, `node_id` as evidence anchor | §2, §3 |
+| 05 | `05-bm25-tokenizer.png` — regex + the tests that pin it | §4 |
+| 06 | `06-p3-mockllm.png` — zero LLM at query time | §4 |
+| 07 | `07-answerer-antileakage.png` — `build_prompt` + leak tests | §2, §4 |
+| 08 | `08-dataset-record.png` — one verified table-quadrant query | §5 |
+| 09 | `09-quadrant-balance.png` — 25/25/25/25, 140/140, `results = 0` | §5, §10 |
+| 10 | `10-golden-queries.png` — GQ rows as stored, labels still `PENDING_HUMAN_LABEL` | §5, §6 |
+| 11 | `11-judge-metrics.png` — `citation_audit`, `precision_at_k` | §6 |
+| 12 | `12-results-schema.png` — DDL, three pillars, `UNIQUE` key | §7 |
+| 13 | `13-model-routing.png` — 5 stages, 3 providers, both invariants | §7 |
+| 14 | `14-pytest-run.png` — 339 passing | §8 |
+| 15 | `15-p3-build-cost.png` — cost table, measured vs projected, quota-bound | §10 |
+
+- [ ] Stills 08, 09 carry live DB numbers. Only `results` can still move; re-render if a benchmark
+      run starts before filming
+- [ ] Prefer the still over the live editor wherever both exist — the stills are legible at video
+      bitrates, editor text is not
 
 **Pre-run and capture**
 - [ ] `cd project && uv run pytest -q -m "not live"` — capture green output, confirms 339 passing.
