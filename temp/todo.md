@@ -1,4 +1,5 @@
-
+1. Use Draw.io MCP and Skill to create diagrams.
+2. Use Playwright MCP to verify them.
 
 - Phase 3 reads it to build P3's summary tree (a separate, one-time step).
 - Phase 4 reads it to write benchmark questions and cite exact pieces of evidence.

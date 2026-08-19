@@ -184,3 +184,15 @@ Rules:
 - If graphify-out/wiki/index.md exists, use it for broad navigation instead of raw source browsing.
 - Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.
 - After modifying code, run `graphify update .` to keep the graph current (AST-only, no API cost).
+
+## Diagramming & Testing Guidelines
+
+### Draw.io Diagrams
+When asked to create or update diagrams:
+- Use the `drawio` MCP tools to create `.drawio` files, CSV layouts, or Mermaid diagrams.
+- Use native `mxGraph` XML or Mermaid format for clean auto-layouts.
+- Save diagram files into the `/docs/diagrams/` folder unless specified otherwise.
+
+### Web Automation & Testing
+- Use the `playwright` MCP tools to interact with local dev servers or external sites.
+- Prefer accessibility selectors (roles, text, labels) over CSS classes.

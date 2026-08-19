@@ -1,51 +1,81 @@
 <mxfile host="app.diagrams.net">
-  <diagram id="ZAqlC9vxb9WyNvXQji4J" name="Page-1">
-    <mxGraphModel dx="1240" dy="907" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="1000" pageHeight="800" math="0" shadow="0">
+  <diagram id="05-adversarial-generation.drawio" name="Adversarial Dataset Generation">
+    <mxGraphModel dx="1538" dy="1131" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1440" pageHeight="1120" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
-        <mxCell id="S" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#455A64;strokeColor=#1C313A;fontColor=#FFFFFF;fontSize=12;verticalAlign=middle;align=center;arcSize=6;" value="SEC 10-K Split into&#xa;Per-Section Chunks &lt; 128K" vertex="1">
-          <mxGeometry height="60" width="360" x="380" y="26" as="geometry" />
+        <mxCell id="t1" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontColor=#6366f1;fontSize=24;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;shadow=0;fontStyle=1;" value="Adversarial Dataset Generation" vertex="1">
+          <mxGeometry height="34" width="1200" x="80" y="44" as="geometry" />
         </mxCell>
-        <mxCell id="G" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1565C0;strokeColor=#0D47A1;fontColor=#FFFFFF;fontSize=12;verticalAlign=middle;align=center;arcSize=6;" value="Generator Agent&#xa;openai/gpt-oss-120b&#xa;creates query · answer · node-ID citations" vertex="1">
-          <mxGeometry height="104" width="360" x="380" y="154" as="geometry" />
+        <mxCell id="t2" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontColor=#64748b;fontSize=13;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;shadow=0;" value="Two model families, opposed roles. Nothing enters the benchmark on a single model&#39;s word." vertex="1">
+          <mxGeometry height="22" width="1200" x="80" y="80" as="geometry" />
         </mxCell>
-        <mxCell id="C" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#6A1B9A;strokeColor=#38006B;fontColor=#FFFFFF;fontSize=12;verticalAlign=middle;align=center;arcSize=6;" value="Critic Agent&#xa;Qwen3-32b + search tool&#xa;independent search over ALL nodes" vertex="1">
-          <mxGeometry height="107" width="360" x="380" y="377" as="geometry" />
+        <mxCell id="c3" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f43f5e;strokeColor=none;fontColor=#FFFFFF;fontSize=12;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;verticalAlign=middle;align=center;shadow=0;glass=0;spacingLeft=8;spacingRight=8;spacingTop=6;spacingBottom=6;arcSize=0;fontStyle=1;" value="SEC 10-K SECTION CHUNK&#xa;split per filing section, sized under the provider token ceiling" vertex="1">
+          <mxGeometry height="76" width="560" x="440" y="140" as="geometry" />
         </mxCell>
-        <mxCell id="X" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#F9A825;strokeColor=#C17900;fontColor=#1A1A1A;fontSize=12;fontStyle=1;verticalAlign=middle;align=center;" value="Automated Cross-Check&#xa;node-ID + value match ?" vertex="1">
-          <mxGeometry height="127" width="360" x="380" y="549" as="geometry" />
+        <mxCell id="c4" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#6366f1;strokeColor=none;fontColor=#FFFFFF;fontSize=13;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;verticalAlign=middle;align=center;shadow=0;glass=0;spacingLeft=8;spacingRight=8;spacingTop=6;spacingBottom=6;arcSize=0;fontStyle=1;" value="GENERATOR&#xa;nvidia/nemotron-3-super-120b-a12b:free  ·  OpenRouter&#xa;writes question · answer · node_id citations" vertex="1">
+          <mxGeometry height="110" width="560" x="440" y="266" as="geometry" />
         </mxCell>
-        <mxCell id="V" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2E7D32;strokeColor=#1B5E20;fontColor=#FFFFFF;fontSize=12;fontStyle=1;verticalAlign=middle;align=center;arcSize=6;" value="Auto-Verified&#xa;140-Query Pool" vertex="1">
-          <mxGeometry height="60" width="360" x="380" y="772" as="geometry" />
+        <mxCell id="c5" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f59e0b;strokeColor=none;fontColor=#FFFFFF;fontSize=12;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;verticalAlign=middle;align=center;shadow=0;glass=0;spacingLeft=8;spacingRight=8;spacingTop=6;spacingBottom=6;arcSize=0;fontStyle=1;" value="CANDIDATE RECORD&#xa;question · expected answer · cited node_ids · quadrant label" vertex="1">
+          <mxGeometry height="76" width="560" x="440" y="426" as="geometry" />
         </mxCell>
-        <mxCell id="B6Y3aGEeKS4OW4diy3dl-1" edge="1" parent="1" source="D" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" target="G">
-          <mxGeometry relative="1" as="geometry">
-            <mxPoint x="902" y="323" as="targetPoint" />
+        <mxCell id="c6" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d946ef;strokeColor=none;fontColor=#FFFFFF;fontSize=13;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;verticalAlign=middle;align=center;shadow=0;glass=0;spacingLeft=8;spacingRight=8;spacingTop=6;spacingBottom=6;arcSize=0;fontStyle=1;" value="CRITIC&#xa;openai/gpt-oss-20b:free  ·  OpenRouter  ·  different family&#xa;re-derives the answer independently, with a search tool" vertex="1">
+          <mxGeometry height="110" width="560" x="440" y="552" as="geometry" />
+        </mxCell>
+        <mxCell id="c7" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#06b6d4;strokeColor=none;fontColor=#FFFFFF;fontSize=12;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;verticalAlign=middle;align=center;shadow=0;glass=0;spacingLeft=8;spacingRight=8;spacingTop=6;spacingBottom=6;arcSize=0;fontStyle=1;" value="CROSS-CHECK&#xa;Critic&#39;s answer and citations compared against the Generator&#39;s" vertex="1">
+          <mxGeometry height="76" width="560" x="440" y="712" as="geometry" />
+        </mxCell>
+        <mxCell id="c8" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#22c55e;strokeColor=none;fontColor=#FFFFFF;fontSize=13;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;verticalAlign=middle;align=center;shadow=0;glass=0;spacingLeft=8;spacingRight=8;spacingTop=6;spacingBottom=6;arcSize=0;fontStyle=1;" value="ACCEPTED INTO THE POOL&#xa;written to SQLite, assigned to PQ / GQ / JEQ" vertex="1">
+          <mxGeometry height="76" width="560" x="440" y="838" as="geometry" />
+        </mxCell>
+        <mxCell id="e9" edge="1" parent="1" source="c3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#f43f5e;strokeWidth=2;endArrow=block;endFill=1;shadow=0;fontColor=#f43f5e;fontSize=11;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;labelBackgroundColor=none;jettySize=auto;orthogonalLoop=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="c4" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e10" edge="1" parent="1" source="c4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#6366f1;strokeWidth=2;endArrow=block;endFill=1;shadow=0;fontColor=#6366f1;fontSize=11;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;labelBackgroundColor=none;jettySize=auto;orthogonalLoop=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="c5" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e11" edge="1" parent="1" source="c5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#f59e0b;strokeWidth=2;endArrow=block;endFill=1;shadow=0;fontColor=#f59e0b;fontSize=11;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;labelBackgroundColor=none;jettySize=auto;orthogonalLoop=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="c6" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e12" edge="1" parent="1" source="c6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#d946ef;strokeWidth=2;endArrow=block;endFill=1;shadow=0;fontColor=#d946ef;fontSize=11;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;labelBackgroundColor=none;jettySize=auto;orthogonalLoop=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="c7" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e13" edge="1" parent="1" source="c7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#06b6d4;strokeWidth=2;endArrow=block;endFill=1;shadow=0;fontColor=#06b6d4;fontSize=11;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;labelBackgroundColor=none;jettySize=auto;orthogonalLoop=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="c8" value="agree">
+          <mxGeometry relative="1" x="-0.1792" y="30" as="geometry">
+            <mxPoint as="offset" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="B6Y3aGEeKS4OW4diy3dl-2" connectable="0" parent="B6Y3aGEeKS4OW4diy3dl-1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="Regenerate" vertex="1">
-          <mxGeometry relative="1" x="-0.193" y="-2" as="geometry">
-            <mxPoint y="1" as="offset" />
+        <mxCell id="e14" edge="1" parent="1" source="c7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#ef4444;strokeWidth=2;endArrow=block;endFill=1;shadow=0;fontColor=#ef4444;fontSize=11;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;labelBackgroundColor=none;jettySize=auto;orthogonalLoop=1;dashed=1;dashPattern=4 4;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="c4" value="disagree — discard and regenerate">
+          <mxGeometry relative="1" x="0.0023" y="112" as="geometry">
+            <mxPoint as="offset" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="D" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#C62828;strokeColor=#7F0000;fontColor=#FFFFFF;fontSize=12;verticalAlign=middle;align=center;arcSize=6;" value="Discard &amp; Regenerate" vertex="1">
-          <mxGeometry height="60" width="200" x="867" y="582.5" as="geometry" />
+        <mxCell id="t15" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontColor=#64748b;fontSize=12;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;shadow=0;fontStyle=1;" value="WHY TWO MODELS" vertex="1">
+          <mxGeometry height="24" width="300" x="80" y="270" as="geometry" />
         </mxCell>
-        <mxCell id="e1" edge="1" parent="1" source="S" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" target="G">
-          <mxGeometry relative="1" as="geometry" />
+        <mxCell id="c16" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#8b5cf6;strokeColor=none;fontColor=#FFFFFF;fontSize=12;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;verticalAlign=middle;align=left;shadow=0;glass=0;spacingLeft=16;spacingRight=16;spacingTop=6;spacingBottom=6;arcSize=0;" value="A single model writing and then approving its own questions is both author and validator of the benchmark.&#xa;&#xa;The Critic breaks that circularity before the data is ever used." vertex="1">
+          <mxGeometry height="150" width="300" x="80" y="300" as="geometry" />
         </mxCell>
-        <mxCell id="e2" edge="1" parent="1" source="G" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" target="C" value="hide answer and citations">
-          <mxGeometry relative="1" as="geometry" />
+        <mxCell id="t17" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontColor=#64748b;fontSize=12;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;shadow=0;fontStyle=1;" value="SEARCH TOOL" vertex="1">
+          <mxGeometry height="24" width="300" x="80" y="560" as="geometry" />
         </mxCell>
-        <mxCell id="e3" edge="1" parent="1" source="C" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" target="X">
-          <mxGeometry relative="1" as="geometry" />
+        <mxCell id="c18" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#14b8a6;strokeColor=none;fontColor=#FFFFFF;fontSize=12;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;verticalAlign=middle;align=left;shadow=0;glass=0;spacingLeft=16;spacingRight=16;spacingTop=6;spacingBottom=6;arcSize=0;" value="The Critic re-locates the evidence itself rather than trusting the Generator&#39;s citations, so a wrong node_id fails the cross-check." vertex="1">
+          <mxGeometry height="130" width="300" x="80" y="590" as="geometry" />
         </mxCell>
-        <mxCell id="e4" edge="1" parent="1" source="X" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" target="V" value="Yes">
-          <mxGeometry relative="1" as="geometry" />
+        <mxCell id="t19" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontColor=#64748b;fontSize=12;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;shadow=0;fontStyle=1;" value="TEMPERATURE = 0" vertex="1">
+          <mxGeometry height="24" width="300" x="1060" y="270" as="geometry" />
         </mxCell>
-        <mxCell id="e5" edge="1" parent="1" source="X" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" target="D" value="No">
-          <mxGeometry relative="1" as="geometry" />
+        <mxCell id="c20" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#10b981;strokeColor=none;fontColor=#FFFFFF;fontSize=12;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;verticalAlign=middle;align=left;shadow=0;glass=0;spacingLeft=16;spacingRight=16;spacingTop=6;spacingBottom=6;arcSize=0;" value="Both stages run deterministically, so the whole protocol can be re-executed and audited by a third party." vertex="1">
+          <mxGeometry height="110" width="300" x="1060" y="300" as="geometry" />
+        </mxCell>
+        <mxCell id="t21" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontColor=#64748b;fontSize=12;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;shadow=0;fontStyle=1;" value="LIVE PROGRESS" vertex="1">
+          <mxGeometry height="24" width="300" x="1060" y="560" as="geometry" />
+        </mxCell>
+        <mxCell id="c22" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#3b82f6;strokeColor=none;fontColor=#FFFFFF;fontSize=14;fontFamily=JetBrains Mono;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DJetBrains%2BMono;verticalAlign=middle;align=left;shadow=0;glass=0;spacingLeft=16;spacingRight=16;spacingTop=6;spacingBottom=6;arcSize=0;fontStyle=1;" value="PQ   100 / 100&#xa;GQ    19 / 20&#xa;JEQ   15 / 20&#xa;&#xa;134 of 140 rows" vertex="1">
+          <mxGeometry height="130" width="300" x="1060" y="590" as="geometry" />
+        </mxCell>
+        <mxCell id="c23" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ef4444;strokeColor=none;fontColor=#FFFFFF;fontSize=13;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;verticalAlign=middle;align=left;shadow=0;glass=0;spacingLeft=18;spacingRight=18;spacingTop=6;spacingBottom=6;arcSize=0;" value="THE SAME PRINCIPLE APPLIES DOWNSTREAM — the Answerer (Llama) and the Judge (Qwen) are also drawn from different&#xa;model families. No model in this project ever grades output produced by its own family." vertex="1">
+          <mxGeometry height="88" width="1280" x="80" y="960" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
