@@ -8,7 +8,7 @@ This file governs how the Claude Code agent operates within this repository. Rea
 
 This is the workspace for a **COMP702 M.Sc. Dissertation**: a comparative benchmark of three RAG retrieval paradigms (semantic vector, statistical BM25, structural summary-tree) evaluated against SEC 10-K financial filings.
 
-**Current state:** Planning and proposal phase. No implementation code exists yet. The technical build (Python, SQLite, `ingest/` / `pipelines/` / `judge/` modules) has not started. Phase 1 of `resources/specs/Phase Plan.md` is the next milestone.
+**Current state:** Phases 1 to 6 of `resources/specs/Phase Plan.md` are built and tested. Ingestion is complete (13 filings, 26,050 nodes), dataset generation is complete (100 PQ, 20 GQ, 20 JEQ in `project/benchmark.db`), all three pipelines and the Judge are implemented, and the test suite stands at 339 passing. The Judge's >80% agreement gate has not been run, the `results` table is empty, and Phase 7 (the full 900-run benchmark) is the next milestone.
 
 ### Repository Layout
 
@@ -92,18 +92,19 @@ When the project moves to the technical build, `resources/specs/Guardrails.md` i
 
 ### Infrastructure
 - **No per-hour or scale-to-non-zero infrastructure, ever.**
-- Retrieval/indexing runs locally: FAISS/ChromaDB (P1), `rank_bm25` (P2), local `SummaryIndex` (P3)
-- All LLM calls run on **Groq's free tier**
+- Retrieval/indexing runs locally: ChromaDB + `fastembed` (P1), `rank_bm25` (P2), a local LlamaIndex `TreeIndex` per filing (P3)
+- LLM calls run on the free tiers of **Groq, NVIDIA NIM and OpenRouter**, always via `LLMFactory.get_client_for_stage()`
 
 ### Fixed Model Routing
 
 | Role | Model |
 |---|---|
-| Generator | `openai/gpt-oss-120b` |
-| Critic | `Qwen3.6-27B` (with search tool; no search for Judge) |
-| P3 index build | `llama-3.1-8b-instant` |
-| Pipeline Answerer | `Llama 3.3 70B` |
-| Judge | `Qwen3.6-27B` |
+| Generator | `nvidia/nemotron-3-super-120b-a12b:free` (OpenRouter) |
+| Critic | `openai/gpt-oss-20b:free` (OpenRouter, with search tool; no search for Judge) |
+| P3 index build | `nvidia/nemotron-3-super-120b-a12b` (NVIDIA NIM) |
+| Pipeline Answerer | `llama-3.3-70b-versatile` (Groq) |
+| Judge | `qwen/qwen3.6-27b` (Groq) |
+| Throwaway debugging | `llama-3.1-8b-instant` (Groq) |
 
 Generator ≠ Critic family; Answerer ≠ Judge family — this is an anti-self-grading invariant.
 
@@ -115,7 +116,7 @@ Generator ≠ Critic family; Answerer ≠ Judge family — this is an anti-self-
 The Judge must clear a **>80% human-agreement gate** (Phase 2, on 20 JEQ × 3 pipelines = 60 outputs) before grading the full 900-run benchmark. This gate runs before the expensive full run.
 
 ### Loop Safety
-Every loop script must include a hardcoded `LOCAL_TEST_THROTTLE` boolean (forces `LIMIT 3`) and must be run clean end-to-end at throttle before release to the full batch.
+`LOCAL_TEST_THROTTLE` is defined once in `project/llm_client/config.py` alongside `THROTTLE_LIMIT = 3`. Every loop script must honour it through the shared `loop_template.py` helpers rather than declaring its own copy, and must be run clean end-to-end at throttle before release to the full batch.
 
 ### Storage
 - **SQLite (`aiosqlite`, WAL mode) is mandatory** — five tables per `resources/specs/Architecture.md` §3.2

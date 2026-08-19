@@ -12,7 +12,7 @@ This is a methodology-chapter-appropriate level of design detail (an M.Sc. disse
 
 ## 0. Decisions Carried Over From the Scoping Discussion
 
-1. **Corpus: 13 filings (5 companies, uneven fiscal-year coverage)**, not one document. Expanded from the original ~6–9 filing / 2–3 company scope (AAPL, MSFT, TSLA) to add JPM and JNJ — covering financial services and healthcare alongside the original tech/auto set (see `resources/artifacts/Changes.md`, `corpus-expansion-3-companies` branch) — then reduced from an initially-planned 18 (6 companies × 3 fiscal years, adding WMT) back down to 13: AAPL/MSFT/TSLA at FY2023–2025 (3 years each), JPM/JNJ at FY2023–2024 (2 years each), WMT dropped entirely (see `resources/research/deviations.md` entry 20 for the reduction rationale). The fixed counts from `Project_Idea.md` (140 total queries, 100/20/20 split, 900 benchmark runs) are unchanged — only where queries are sourced from changes.
+1. **Corpus: 13 filings (5 companies, uneven fiscal-year coverage)**, not one document. Expanded from the original ~6–9 filing / 2–3 company scope (AAPL, MSFT, TSLA) to add JPM and JNJ — covering financial services and healthcare alongside the original tech/auto set (see `resources/research/deviations.md`) — then reduced from an initially-planned 18 (6 companies × 3 fiscal years, adding WMT) back down to 13: AAPL/MSFT/TSLA at FY2023–2025 (3 years each), JPM/JNJ at FY2023–2024 (2 years each), WMT dropped entirely (see `resources/research/deviations.md` entry 20 for the reduction rationale). The fixed counts from `Project_Idea.md` (140 total queries, 100/20/20 split, 900 benchmark runs) are unchanged — only where queries are sourced from changes.
 2. **Retrieval scope: per-document, not cross-corpus.** Every pipeline retrieves only within the one filing (`document_id`) a query is about. This is *not* the metadata pre-filter `Guardrails.md` §3 bans — that ban is about narrowing to a target *section* using answer-derived information; narrowing to the correct *filing* is a property of the query itself (every query already carries `document_id`), applied identically to all three pipelines.
 3. **P1 vector store: ChromaDB** (local, embedded) — the third option `Guardrails.md` §1 leaves open.
 
@@ -62,11 +62,12 @@ A ninth point is a flagged ambiguity rather than a fix — see §12, item 3 (con
                  v                                               v
    +-----------------------------+               +-------------------------------+
    |  Dataset Generation         |               |  Pipeline Index Builders      |
-   |  dataset_gen/*.py           |               |  pipelines/*                  |
-   |  external: Groq             |               |  P1: ChromaDB + bge embed     |
-   |  (gpt-oss-120b, Qwen3.6-27B)  |               |  P2: rank_bm25 (per document) |
-   +---------------+-----------------+           |  P3: TreeIndex (1x build,     |
-                   | queries / golden_queries /  |      llama-3.1-8b-instant)    |
+   |  dataset_generation/*.py    |               |  pipelines/*                  |
+   |  external: OpenRouter       |               |  P1: ChromaDB + bge embed     |
+   |  (nemotron-3-super-120b,    |               |  P2: rank_bm25 (per document) |
+   |   gpt-oss-20b)              |               |  P3: TreeIndex (1x build,     |
+   +---------------+-----------------+           |                               |
+                   | queries / golden_queries /  |      NIM nemotron-3-super)    |
                    | judge_validation            +---------------+---------------+
                    v                                             |
    +-------------------------------------------------------------------------------------+
@@ -80,7 +81,7 @@ A ninth point is a flagged ambiguity rather than a fix — see §12, item 3 (con
                          +-----------------------------+
                          |   Judge & Metrics           |
                          |   judge/*.py                |
-                         |   external: Groq Qwen3.6-27B  |
+                         |   external: Groq qwen3.6-27b  |
                          +---------------+---------------+
                                          | scored results
                                          v
@@ -307,7 +308,7 @@ Note `exact_match = NULL` on the Q2/Q4 row (per `Project_Idea.md` §7, EM is Q1/
 
 ### 3.4 Integrity Notes
 
-* Disjointness across `queries` / `golden_queries` / `judge_validation` (`Guardrails.md` §3) is enforced at write time in `dataset_gen/split_and_label.py`, not by a database constraint — SQLite can't express "no PK value may repeat across three named tables" declaratively.
+* Disjointness across `queries` / `golden_queries` / `judge_validation` (`Guardrails.md` §3) is enforced at write time in `dataset_generation/run_dataset_generation.py`, not by a database constraint — SQLite can't express "no PK value may repeat across three named tables" declaratively.
 * `results.UNIQUE(source_set, query_id, pipeline, k_value)` is both the data-integrity constraint and the literal resume-lookup key for `loop_executor.py`.
 
 ---
@@ -478,16 +479,17 @@ async_generator.py        search_tool.py          async_critic.py       cross_ch
 
 ---
 
-### Phase 3 — P3 Summary-Index Build, one-time (Week 3)
+### Phase 3 — P3 Tree-Index Build, one-time (Week 3)
 
 *One summary tree per filing — summaries are bound to one document's section hierarchy.*
 
 | Module | Responsibility |
 |---|---|
-| `pipelines/structural/build_summary_index.py` | Per `document_id`, builds a `TreeIndex` over that document's nodes using `llama-3.1-8b-instant`; persists to `storage/summary_index/{document_id}/`; directory-existence check is the cache test. |
+| `pipelines/structural/build_summary_index.py` | Per `document_id`, builds a `TreeIndex` over that document's nodes using `nvidia/nemotron-3-super-120b-a12b` on NVIDIA NIM; persists to `storage/summary_index/{document_id}/`; directory-existence check is the cache test. |
+| `pipelines/structural/node_convert.py` | Converts stored `nodes` rows into the LlamaIndex node objects the `TreeIndex` builder consumes. |
 | `logs/index_build_costs.json` | One row per filing: wall-clock + token cost (Pillar 3 metric). Flat-file is acceptable here — 13 rows, no crash-resume requirement, unlike `results`. |
 
-**Packages:** `llama-index-core`, `llama-index-llms-groq`.
+**Packages:** `llama-index-core`, `llama-index-llms-groq` (the OpenAI-compatible client also fronts NIM and OpenRouter via `LLMFactory`).
 
 ---
 
@@ -497,14 +499,17 @@ async_generator.py        search_tool.py          async_critic.py       cross_ch
 
 | Module | Responsibility |
 |---|---|
-| `dataset_gen/async_generator.py` | Generator (`openai/gpt-oss-120b`) reads one `(document_id, section)` chunk at a time; accumulates 35/quadrant across all 13 filings. |
-| `dataset_gen/search_tool.py` | Critic's independent search tool — fresh `rank_bm25` instance per document (§5, self-contained). |
-| `dataset_gen/async_critic.py` | Critic (`Qwen3.6-27B`), blind to the Generator's answer/citations. |
-| `dataset_gen/cross_check.py` | Deterministic node-ID + value comparison → Auto-Verify or discard. |
-| `dataset_gen/split_and_label.py` | Splits into disjoint `queries`(100)/`golden_queries`(20)/`judge_validation`(20); enforces 25/5/5-per-quadrant strata and no shared `query_id`. |
-| `dataset_gen/label_gq.py` | CLI: prompts the researcher for `human_score` + `human_reasoning` on the 20 GQ. |
+| `dataset_generation/async_generator.py` | Generator (`nvidia/nemotron-3-super-120b-a12b:free`, OpenRouter) reads one `(document_id, section)` chunk at a time; accumulates 35/quadrant across all 13 filings. |
+| `dataset_generation/section_grouper.py` | Groups a filing's nodes into the per-section chunks the Generator consumes, keeping each chunk inside the context cap. |
+| `dataset_generation/search_tool.py` | Critic's independent search tool — fresh `rank_bm25` instance per document (§5, self-contained). |
+| `dataset_generation/async_critic.py` | Critic (`openai/gpt-oss-20b:free`, OpenRouter), blind to the Generator's answer/citations. |
+| `dataset_generation/cross_check.py` | Deterministic node-ID + value comparison → Auto-Verify or discard. |
+| `dataset_generation/run_dataset_generation.py` | Orchestrator: drives generate → critique → cross-check per section, enforces quadrant strata, and splits into disjoint `queries`(100)/`golden_queries`(20)/`judge_validation`(20) with no shared `query_id`. |
+| `dataset_generation/gq_label_export.py` / `gq_label_import.py` | Exports the 20 GQ for hand-labelling, then imports `human_score` (0–100), `human_reasoning` and `is_good` back, rejecting out-of-range scores and unmatched query IDs. |
 
-**Data flow:** reads `nodes`; writes `queries`, `golden_queries`, `judge_validation` (question fields only, per the redesign in §1 issue #1). **Packages:** `groq`, `rank_bm25` (already introduced).
+**Data flow:** reads `nodes`; writes `queries`, `golden_queries`, `judge_validation` (question fields only, per the redesign in §1 issue #1). **Packages:** `rank_bm25`, `fastembed`, `tiktoken` (already introduced).
+
+**State:** complete — 100 PQ, 20 GQ and 20 JEQ are populated in `benchmark.db`.
 
 ---
 
@@ -575,7 +580,7 @@ The corpus growing from one filing to ~9 (§0.1) genuinely adds ingestion/parsin
 | Phase | W1 | W2 | W3 | W4 | W5 | W6 | W7 | W8 | W9 | W10 |
 |---|---|---|---|---|---|---|---|---|---|---|
 | 1 — Infra | ● | | | | | | | | | |
-| 2 — Ingestion (6–9 filings) | ● | ● | ● | | | | | | | |
+| 2 — Ingestion (13 filings) | ● | ● | ● | | | | | | | |
 | 3 — P3 index build | | | ● | | | | | | | |
 | 4 — Dataset gen & verification | | | | ● | ● | | | | | |
 | 5 — Pipeline impl (P1/P2/P3) | | | | | ● | ● | | | | |
@@ -592,62 +597,76 @@ This redistribution is also applied to `Phase Plan.md` (its week labels and intr
 ## 9. Proposed Repository Layout
 
 ```
-new-project/
+project/
 ├── .env
-├── requirements.txt
-├── config.py
-├── database_manager.py
-├── groq_client.py
-├── groq_limits.md
+├── pyproject.toml                    # deps pinned via uv; uv.lock alongside
+├── conftest.py
 ├── benchmark.db                      # nodes, queries, golden_queries, judge_validation, results
+├── database_manager.py
+├── loop_executor.py
+├── loop_template.py                  # shared LOCAL_TEST_THROTTLE helpers
+├── score_gate_outputs.py
+├── validation_gate.py
+├── groq_limits.md
+├── llm_client/
+│   ├── config.py                     # MODEL_ROUTING, throttle flag, env loading
+│   ├── llm_factory.py                # get_client_for_stage(), provider dispatch
+│   ├── groq_client.py
+│   ├── nim_client.py
+│   ├── openrouter_client.py
+│   └── utils.py
 ├── data/
 │   ├── filings_manifest.json
 │   ├── raw/
 │   └── parsed/
 ├── storage/
-│   ├── chroma/
-│   ├── bm25/
-│   └── summary_index/
+│   ├── summary_index/                # P3, one TreeIndex per filing
+│   ├── chroma/                       # P1, created on first index build
+│   └── bm25/                         # P2, created on first index build
 ├── logs/
 │   └── index_build_costs.json
+├── scripts/
+│   ├── backup_data.sh
+│   └── reload_backup.sh
 ├── ingest/
 │   ├── fetch_filings.py
 │   ├── parse_filing.py
 │   ├── node_builder.py
-│   └── parsing_audit.py
-├── dataset_gen/
+│   ├── parsing_audit.py
+│   └── run_ingestion.py
+├── dataset_generation/
 │   ├── async_generator.py
+│   ├── section_grouper.py
 │   ├── search_tool.py
 │   ├── async_critic.py
 │   ├── cross_check.py
-│   ├── split_and_label.py
-│   └── label_gq.py
+│   ├── run_dataset_generation.py
+│   ├── gq_label_export.py
+│   └── gq_label_import.py
 ├── pipelines/
-│   ├── base.py
+│   ├── base.py                       # shared Retriever ABC
 │   ├── answerer.py
-│   ├── vector/p1_vector.py
-│   ├── keyword/
+│   ├── vector/
+│   │   ├── build_vector_index.py
+│   │   ├── fastembed_reranker.py
+│   │   └── p1_vector.py
+│   ├── bm25/
 │   │   ├── tokenizer.py
+│   │   ├── build_bm25_index.py
 │   │   └── p2_bm25.py
 │   └── structural/
 │       ├── build_summary_index.py
+│       ├── node_convert.py
 │       └── p3_structural.py
-├── loop_executor.py
 ├── judge/
 │   ├── async_judge.py
 │   ├── metrics.py
-│   ├── numeric_normalizer.py
-│   ├── score_gate_outputs.py
-│   └── validation_gate.py
-├── run_benchmark.py
-├── analysis/
+│   └── numeric_normalizer.py
+├── analysis/                         # Phase 8, not yet created
 │   ├── aggregate.py
 │   ├── plots.py
 │   └── tables.py
-└── tests/
-    ├── test_groq_client_backoff.py
-    ├── test_tokenizer_consistency.py
-    └── test_no_leakage.py
+└── tests/                            # 43 modules, 339 passing
 ```
 
 ---

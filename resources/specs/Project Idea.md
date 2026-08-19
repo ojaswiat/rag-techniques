@@ -133,7 +133,7 @@ Every query is stored as a deterministic record with explicit ground-truth mappi
 
 ## 4. Open-Model Generation and Adversarial Verification Architecture
 
-To produce 140 ground-truth queries without manual authoring while remaining academically rigorous, the system uses **open-source instruction models served on Groq's free tier** (no credit card; rate-limited rather than billed). Because open models cap at a ~128K-token context window — far short of an entire 10-K — generation operates on a **per-section (chunked) basis**: each section (e.g., *Item 1A*, *Item 7 MD&A*, *Item 8*) is fed independently with its node range tracked, so the model always reasons over a context that fits in-window.
+To produce 140 ground-truth queries without manual authoring while remaining academically rigorous, the system uses **open-source instruction models served on free tiers across Groq, NVIDIA NIM and OpenRouter** (rate-limited rather than billed per token). Because open models cap at a ~128K-token context window — far short of an entire 10-K — generation operates on a **per-section (chunked) basis**: each section (e.g., *Item 1A*, *Item 7 MD&A*, *Item 8*) is fed independently with its node range tracked, so the model always reasons over a context that fits in-window.
 
 The **Generator and Critic use different model families** to break the circular-validation loop: agreement between two independent architectures is far stronger evidence of a query's soundness than agreement within one family.
 
@@ -145,7 +145,7 @@ The **Generator and Critic use different model families** to break the circular-
                                       v
                        +------------------------------+
                        |   Generator Agent            |
-                       |   (openai/gpt-oss-120b)      |
+                       | (nemotron-3-super-120b:free) |
                        |   Creates: query, answer,    |
                        |   node-ID citations          |
                        +------------------------------+
@@ -154,7 +154,7 @@ The **Generator and Critic use different model families** to break the circular-
                                       v
                        +------------------------------+
                        |   Critic Agent               |
-                       |   (Qwen3.6-27B) + SEARCH TOOL  |
+                       | (gpt-oss-20b:free) + SEARCH TOOL |
                        |   independent search over    |
                        |   ALL nodes of the filing    |
                        +------------------------------+
@@ -173,15 +173,15 @@ The **Generator and Critic use different model families** to break the circular-
                 +-------------------+    +-------------------+
 ```
 
-### Step 1 — Per-Section Ground-Truth Synthesis (Generator: `openai/gpt-oss-120b`)
+### Step 1 — Per-Section Ground-Truth Synthesis (Generator: `nvidia/nemotron-3-super-120b-a12b:free`)
 
-* A Python script targets the Groq API using **`openai/gpt-oss-120b`** to read one parsed section at a time.
+* A Python script targets the OpenRouter API using **`nvidia/nemotron-3-super-120b-a12b:free`** to read one parsed section at a time.
 * For each section the model outputs quadrant-appropriate questions plus the exact `gt_citations` (node IDs) and a detailed `ground_truth_answer` sourced directly from the material.
 * Questions accumulate across sections until each quadrant reaches its target count (25 PQ + 5 GQ + 5 JEQ per quadrant = 35/quadrant; 140 total).
 
-### Step 2 — Multi-Agent Adversarial Quality Control (Critic: `Qwen3.6-27B` + search tool)
+### Step 2 — Multi-Agent Adversarial Quality Control (Critic: `openai/gpt-oss-20b:free` + search tool)
 
-The Critic runs on **`Qwen3.6-27B`** — a deliberately different family from the gpt-oss Generator — so agreement reflects cross-architecture consensus:
+The Critic runs on **`openai/gpt-oss-20b:free`** — a deliberately different family from the Nemotron Generator — so agreement reflects cross-architecture consensus:
 
 1. **Blind test:** the Critic receives *only* `query_text`. The ground-truth answer and node citations are redacted.
 2. **Independent search:** the Critic is given a **search tool over all parsed nodes of the filing** (not just the section the Generator saw) and must independently locate the answer and cite the node(s) it relied on. Searching the whole filing — rather than the single source section — is what makes the verification genuinely independent.
@@ -223,8 +223,8 @@ Teaching is not the same as proving the teaching worked. To certify the automate
 3. The Judge scores the same outputs, blind to the human scores.
 4. The **LLM-Judge Agreement Rate** is computed across the JEQ outputs. The Judge must reach **>80% agreement** before it is permitted to grade the full benchmark. If it fails, the Judge's rubric or model is changed and the check repeats.
 
-> If `Qwen3.6-27B` cannot clear the >80% bar, there are 3 fallback options:
-> 1. Swap the Judge to `openai/gpt-oss-120b` — still a different family from the Llama answerer, so the no-self-judging rule holds.
+> If `qwen/qwen3.6-27b` cannot clear the >80% bar, there are 3 fallback options:
+> 1. Swap the Judge to another family that is still distinct from the Llama answerer, so the no-self-judging rule holds.
 > 2. Tune the scoring rubrics.
 > 3. Both.
 
@@ -250,7 +250,7 @@ This project benchmarks **three in-scope retrieval architectures (P1, P2, P3)**.
 | P2: Keyword RAG (exact words)         |         | P5: Naive Vector RAG                  |
 |     rank_bm25 (true BM25)             |         |     (single-stage, flat)              |
 | P3: Structural RAG (summary tree)     |         | P6: Hybrid Fusion RAG                 |
-|     SummaryIndex + 1-time LLM build   |         |     (two-stage composite)             |
+|     TreeIndex + 1-time LLM build      |         |     (two-stage composite)             |
 +---------------------------------------+         +---------------------------------------+
 ```
 
@@ -260,7 +260,7 @@ This project benchmarks **three in-scope retrieval architectures (P1, P2, P3)**.
 
 * **P2 — Keyword RAG (retrieval by exact words).** Implemented via **`rank_bm25`**, applying the statistical **Okapi BM25** algorithm directly over tokenized nodes. It bypasses dense vector space entirely; retrieval is deterministic, reproducible, and needs no LLM at the retrieval step. **Tokenization is decisive and custom** (Section 7 / Guardrails §2): a regex tokenizer preserves numbers, decimals, `%`, and currency tokens, strips table-markdown pipes while keeping cell values, applies no stemming, and is used identically at index and query time. *Design note:* LlamaIndex's `KeywordTableIndex` is rejected for this role — it uses an LLM to extract keywords, so it is neither statistical nor deterministic.
 
-* **P3 — Structural RAG (retrieval by summary-tree traversal).** Retrieval traverses a hierarchical `SummaryIndex` built from parent summaries over child nodes. **This pipeline requires a one-time summary-index build step (Phase 0.5) that uses an LLM** — `llama-3.1-8b-instant` on Groq's free tier, chosen for its high daily request ceiling so bulk per-node summarisation does not exhaust the tighter caps reserved for generation and judging. The index is built once and cached; it is never rebuilt. **Known risk (documented, not hidden):** summary generation can drop cell values, footnotes, and narrow row variables, so P3 is expected to be weakest on the table-heavy quadrants (Q3/Q4). Including it tests exactly how badly hierarchical summarisation degrades on dense financial tables.
+* **P3 — Structural RAG (retrieval by summary-tree traversal).** Retrieval traverses a hierarchical LlamaIndex `TreeIndex` built from parent summaries over child nodes, one per filing. **This pipeline requires a one-time tree-index build step that uses an LLM** — `nvidia/nemotron-3-super-120b-a12b` on NVIDIA NIM's free tier, which is request-limited rather than token-limited, so bulk per-node summarisation never touches the tighter Groq caps reserved for answering and judging. The index is built once and cached; it is never rebuilt. **Known risk (documented, not hidden):** summary generation can drop cell values, footnotes, and narrow row variables, so P3 is expected to be weakest on the table-heavy quadrants (Q3/Q4). Including it tests exactly how badly hierarchical summarisation degrades on dense financial tables.
 
 ### Future-Scope Pipelines (ranked by increasing complexity)
 
@@ -285,7 +285,7 @@ PHASE 2 — JUDGE VALIDATION GATE  (cheap; runs FIRST)
         |                                                  |
         v                                                  v
   HUMAN scores 60                                  JUDGE scores 60
-  (by hand)                                        (Qwen3.6-27B, few-shot by GQ)
+  (by hand)                                     (qwen/qwen3.6-27b, few-shot by GQ)
         \                                                  /
          \------------------> Agreement > 80% ? <---------/
                                 |            |
@@ -324,7 +324,7 @@ $$\text{Recall}@K = \frac{|\{\text{distinct GT nodes appearing in top-}K\}|}{|\{
 
 ### Pillar 2 — Answer-Quality Metrics
 
-* **LLM-as-a-Judge (1–10) — PRIMARY.** The Judge (`Qwen3.6-27B`) scores each pipeline output against the stored `ground_truth_answer` using the fixed rubric plus the 5 quadrant-matched GQ exemplars. Because it scores semantic correctness against a reference, it handles the long, multi-phrased answers in Q2/Q4 that string metrics cannot.
+* **LLM-as-a-Judge (1–10) — PRIMARY.** The Judge (`qwen/qwen3.6-27b`) scores each pipeline output against the stored `ground_truth_answer` using the fixed rubric plus the 5 quadrant-matched GQ exemplars. Because it scores semantic correctness against a reference, it handles the long, multi-phrased answers in Q2/Q4 that string metrics cannot.
 * **Token-level F1 — SECONDARY (lexical).** Overlap between output and ground-truth text. Reported throughout but never primary.
 * **Exact Match — Q1/Q3 ONLY.** EM requires an exact string match, which is meaningful only for short canonical answers (direct extraction). It is reported for Q1/Q3 with **numeric normalisation** (so `$394.3B` = `394,300 million`) and is **not** used for Q2/Q4. For numeric answers a tolerance check (parse and compare within ε) is preferred over raw string match.
 * **Citation Audit — deterministic, code-only.** A code layer checks whether the node IDs cited in the output are a subset of the query's `gt_citations`. A correct-looking answer with mismatched citations is flagged as **coincidental correctness** and its score downgraded. This check is computed in code (not asked of the Judge), because LLMs are unreliable at comparing ID strings.
@@ -367,8 +367,8 @@ PHASE 0.5 — P3 SUMMARY INDEX BUILD  (one-time, P3 only)
 --------------------------------------------------------
                                               [ Generate summary tree
                                                 over all nodes
-                                                (llama-3.1-8b-instant,
-                                                 Groq free tier)       ]
+                                            (nvidia/nemotron-3-super-120b-a12b,
+                                                 NIM free tier)        ]
                                                            |
                                                            v
                                               [ Summary Index Store ]
@@ -376,11 +376,11 @@ PHASE 0.5 — P3 SUMMARY INDEX BUILD  (one-time, P3 only)
 PHASE 1 — DATASET GENERATION
 ----------------------------
    [ Generate 140 queries (question + answer + node-ID citations)
-     Generator: openai/gpt-oss-120b ]
+     Generator: nvidia/nemotron-3-super-120b-a12b:free ]
             |
             v
    [ Critic verifies independently
-     Qwen3.6-27B + search tool over all nodes ]
+     openai/gpt-oss-20b:free + search tool over all nodes ]
             |
             v
    [ Verified pool ] --- split into 3 DISJOINT sets --->
@@ -401,7 +401,7 @@ PHASE 2 — JUDGE VALIDATION   (GATE: runs BEFORE the full benchmark)
             +----------------------+----------------------+
             v                                              v
    [ HUMAN scores 60 ]                          [ Judge scores 60 ]
-                                                (Qwen3.6-27B, few-shot by GQ)
+                                             (qwen/qwen3.6-27b, few-shot by GQ)
             |                                              |
             +----------------------+----------------------+
                                    v
@@ -418,10 +418,10 @@ PHASE 2 — JUDGE VALIDATION   (GATE: runs BEFORE the full benchmark)
 PHASE 3 — FULL BENCHMARK   (uses PQ + the trusted judge)
 --------------------------------------------------------
    [ Run PQ (100) on P1, P2, P3  x  K = {3, 5, 10} ]  =  900 runs
-     Answerer (shared): Llama 3.3 70B
+     Answerer (shared): llama-3.3-70b-versatile
             |
             v
-   [ Trusted judge (Qwen3.6-27B) + code metrics score everything ]
+   [ Trusted judge (qwen/qwen3.6-27b) + code metrics score everything ]
             |
             v
    [ Results Store  ->  Analysis & Comparison ]
@@ -429,11 +429,11 @@ PHASE 3 — FULL BENCHMARK   (uses PQ + the trusted judge)
 ==================================================================
 MODEL ROUTING (summary)
 ==================================================================
-   Dataset generation ....... openai/gpt-oss-120b     (Groq, free)
-   Dataset critique ......... Qwen3.6-27B + search tool (Groq, free)
-   P3 summary-index build ... llama-3.1-8b-instant    (Groq, free)
-   Pipeline answers (P1/P2/P3) Llama 3.3 70B          (Groq, free)
-   Judge .................... Qwen3.6-27B, no search    (Groq, free)
+   Dataset generation ....... nemotron-3-super-120b-a12b:free  (OpenRouter, free)
+   Dataset critique ......... gpt-oss-20b:free + search tool   (OpenRouter, free)
+   P3 tree-index build ...... nemotron-3-super-120b-a12b       (NIM, free)
+   Pipeline answers (P1/P2/P3) llama-3.3-70b-versatile         (Groq, free)
+   Judge .................... qwen/qwen3.6-27b, no search      (Groq, free)
    Embeddings ............... bge-small-en-v1.5        (local CPU, $0)
    Reranker (P1) ............ bge-reranker-base        (local CPU, $0)
    BM25 (P2) ................ rank_bm25                (local CPU, $0)
@@ -477,9 +477,9 @@ HUMAN-IN-THE-LOOP:
 
 Running 900 generations + 900 judgements via synchronous loops is slow and fragile (≈2s network wait per call, frequent socket timeouts). The system must use asynchronous worker pools (`asyncio` / native async SDK clients) with bounded concurrency, reducing wall-clock from hours to minutes per batch while respecting rate limits.
 
-### Groq Free-Tier Rate Limits — the binding constraint is the **token-per-day (TPD)** ceiling, not request count
+### Free-Tier Rate Limits — the binding constraint is throughput, not spend
 
-Free-tier limits are per-model and **per-organization** (extra API keys do not raise the ceiling). As verified mid-2026, `llama-3.3-70b-versatile` is published at ~30 RPM, ~1,000 RPD, ~12K TPM, and ~100K TPD; `openai/gpt-oss-120b` at ~30 RPM, ~1,000 RPD, ~8K TPM, ~200K TPD; `qwen/qwen3.6-27b` at ~60 RPM / ~8K TPM (per `project/groq_limits.md`, live-verified 2026-07-21; TPM is its tight axis); `llama-3.1-8b-instant` allows far higher daily request volume. **The answer-generation and judging phases are token-heavy, so TPD — not RPD — is what gates throughput.** See `Budget.md` for the full reconciliation and the prompt-caching lever (cached tokens do not count toward limits). HTTP 429s are handled with `tenacity` exponential backoff + jitter (Guardrails §5). There is no spend ceiling to exhaust — only daily token throughput.
+Limits are per-model and **per-organization or account** (extra API keys do not raise the ceiling), and their shape differs by provider. On **Groq**, which now serves only the Answerer, Judge and debug stages, limits are token-based: as verified mid-2026, `llama-3.3-70b-versatile` is published at ~30 RPM, ~1,000 RPD, ~12K TPM, and ~100K TPD; `qwen/qwen3.6-27b` at ~60 RPM / ~8K TPM (per `project/groq_limits.md`, live-verified 2026-07-21; TPM is its tight axis); `llama-3.1-8b-instant` allows far higher daily request volume. **The answer-generation and judging phases are token-heavy, so on Groq it is TPD — not RPD — that gates throughput.** On **OpenRouter** (Generator and Critic) and **NVIDIA NIM** (P3 tree build) the limits are request-based instead: ~20 RPM and 1,000 requests/day on OpenRouter at the funded tier, ~40 RPM on NIM. Dataset generation was moved off Groq precisely because its token ceilings bound before its request ceilings. See `Budget.md` for the full reconciliation and the prompt-caching lever (cached tokens do not count toward limits). HTTP 429s are handled with `tenacity` exponential backoff + jitter (Guardrails §5). The only spend anywhere is a one-time $10 OpenRouter credit top-up, which raises the free-model daily request cap and buys no tokens.
 
 ### Software Stack Version Instability (LlamaIndex Drift)
 
@@ -511,7 +511,7 @@ LlamaIndex changes rapidly with breaking syntax. Code must pin exact versions (e
 
 1. **Standardised context volumes.** To keep P1, P2, and P3 comparable, the total context mass (token volume passed to the answerer) is held constant across pipelines at each value of K.
 2. **No leakage to the pipelines.** The pipelines receive *only* retrieved nodes + the query — never few-shot exemplars, never ground-truth answers or citations, and (per the dropped metadata pre-filter) no answer-location hints. This is what keeps the retrieval comparison honest.
-3. **Separation of model roles.** Generator (`gpt-oss-120b`) ≠ Critic (`Qwen3.6-27B`); Answerer (`Llama 3.3 70B`) ≠ Judge (`Qwen3.6-27B`). No model grades its own output, and dataset agreement reflects cross-architecture consensus.
+3. **Separation of model roles.** Generator (`nvidia/nemotron-3-super-120b-a12b:free`) ≠ Critic (`openai/gpt-oss-20b:free`); Answerer (`llama-3.3-70b-versatile`) ≠ Judge (`qwen/qwen3.6-27b`). No model grades its own output, and dataset agreement reflects cross-architecture consensus.
 4. **Validated automated judging.** The automated Judge is trusted only after clearing the >80% human-agreement gate (Phase 2) on a held-out set (JEQ) that is disjoint from its teaching set (GQ).
 5. **Explicit citation enforcement.** RAG prompts mandate node-ID source attributions so the Citation Audit can flag coincidental correctness.
 6. **Methodological transparency.** The methodology chapter documents all six architectural iterations and gives engineering-based justifications for the in-scope three (P1/P2/P3) and the reserved three (P4/P5/P6), establishing a clear narrative of deliberate scoping around the core semantic-vs-statistical comparison, with structural RAG as a third paradigm.

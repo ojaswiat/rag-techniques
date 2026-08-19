@@ -4,8 +4,6 @@
 - Phase 3 reads it to build P3's summary tree (a separate, one-time step).
 - Phase 4 reads it to write benchmark questions and cite exact pieces of evidence.
 
-Can we double just the JEQ and GQ since we have more data to work with now? What will be the impact? What if download some more data?
-
 ## Issues
 
 ## Final Run

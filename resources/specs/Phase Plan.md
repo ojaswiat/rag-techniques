@@ -17,21 +17,21 @@ Stand up the repo, the SQLite state layer, and the rate-limit/throttle scaffoldi
 
 ## Goals
 1. Initialise the repo and pin exact versions (`llama-index==0.10.x`, fixed `rank-bm25`, `bge` models, Groq + LlamaParse SDKs) to guard against LlamaIndex drift.
-2. Provision free-tier access: Groq API key, LlamaParse account; re-verify current Groq model availability and per-organization RPM/RPD/**TPM/TPD** limits at `console.groq.com`.
+2. Provision free-tier access: Groq, NVIDIA NIM and OpenRouter API keys, plus a LlamaParse account; re-verify current model availability and per-organization RPM/RPD/**TPM/TPD** limits at each provider's console.
 3. Build `database_manager.py` with the **five isolated SQLite tables**: `nodes`, `queries` (100 PQ), `golden_queries` (20 GQ), `judge_validation` (20 JEQ), `results` (900 runs).
-4. Build a resilient Groq call wrapper: `tenacity` exponential backoff + randomised jitter on HTTP 429, and an `asyncio.Semaphore` capped at **≤ 5 parallel workers**.
+4. Build a resilient call wrapper per provider (`groq_client.py`, `nim_client.py`, `openrouter_client.py`) behind a single `LLMFactory`: `tenacity` exponential backoff + randomised jitter on HTTP 429, and an `asyncio.Semaphore` capped at **≤ 5 parallel workers**.
 5. Add the `LOCAL_TEST_THROTTLE` boolean pattern (forces `LIMIT 3`) to the top of every loop script template.
 
 ## Evaluations
 1. A fresh clone installs cleanly from pinned versions with no dependency conflicts.
 2. The five tables instantiate with correct schemas and enforce the disjoint-set constraint (no `query_id` can exist in more than one query table).
 3. A deliberately rate-limited test triggers 429s and confirms the wrapper backs off and recovers instead of crashing.
-4. Groq limits are recorded in-repo with the verification date.
+4. Provider limits are recorded in-repo with the verification date (`project/groq_limits.md`).
 
 ## Deliverables
 1. Version-pinned repo with `requirements.txt` / lockfile.
 2. `database_manager.py` and an initialised, empty SQLite database.
-3. Reusable async Groq client wrapper (backoff + semaphore) and the `LOCAL_TEST_THROTTLE` template.
+3. Reusable async client wrappers (backoff + semaphore) behind `LLMFactory`, and the shared `LOCAL_TEST_THROTTLE` template in `loop_template.py`.
 4. A short `groq_limits.md` note recording verified limits and the check date.
 
 ---
@@ -59,12 +59,12 @@ Turn raw SEC 10-K filings into a clean, metadata-rich node store. Every downstre
 
 ---
 
-# Phase 3: P3 Summary-Index Build (one-time)
+# Phase 3: P3 Tree-Index Build (one-time)
 Build the hierarchical summary tree that P3 retrieves over (one tree per filing). This is the **only** index build permitted to use an LLM, and it must run once and be cached — never per query (`Guardrails.md §1`).
 **Week 3**
 
 ## Goals
-1. Build a hierarchical `SummaryIndex` (parent summaries over child nodes) using **`llama-3.1-8b-instant`** on Groq's free tier (chosen for its high daily request ceiling so it does not touch the tighter 70B/gpt-oss caps).
+1. Build a hierarchical LlamaIndex `TreeIndex` (parent summaries over child nodes), one per filing, using **`nvidia/nemotron-3-super-120b-a12b`** on NVIDIA NIM's free tier (request-limited rather than token-limited, so this bulk job never touches Groq's tighter daily token caps).
 2. Run the build under `LOCAL_TEST_THROTTLE = True` first, then release in full.
 3. Persist the summary index to disk/SQLite and confirm it is loaded from cache thereafter, never rebuilt.
 
@@ -85,7 +85,7 @@ Produce the 140-query benchmark via cross-family generation and critique, then s
 **Weeks 4–5**
 
 ## Goals
-1. **Generator (`openai/gpt-oss-120b`):** per-section (chunked, <128K) generation of quadrant-appropriate `query_text`, `ground_truth_answer`, and `gt_citations` (node IDs), accumulating to 35/quadrant (140 total).
+1. **Generator (`nvidia/nemotron-3-super-120b-a12b:free` on OpenRouter):** per-section (chunked, <128K) generation of quadrant-appropriate `query_text`, `ground_truth_answer`, and `gt_citations` (node IDs), accumulating to 35/quadrant (140 total).
 2. **Critic (`Qwen3.6-27B`) — a different family — with a search tool over *all* nodes of the filing:** blind verification (answer + citations redacted), independently locating and citing evidence.
 3. **Automated code cross-check:** compare Critic's cited nodes + value against the Generator's ground truth → Auto-Verify or discard-and-regenerate.
 4. Split the verified pool into three **disjoint** sets: **PQ 100 / GQ 20 / JEQ 20**, 25/5/5 per quadrant.
@@ -112,7 +112,7 @@ Implement all three retrieval paradigms and the single shared answerer, with lea
 ## Goals
 1. **P1 — Vector:** local `bge-small-en-v1.5` embeddings + local `bge-reranker-base` cross-encoder over a local index (FAISS/Chroma). **No metadata pre-filter / section head-start.**
 2. **P2 — BM25:** `rank_bm25` (true Okapi BM25) with the **custom regex tokenizer** (preserves numbers, decimals, `%`, currency; strips table pipes but keeps cell values; no stemming; identical at index and query time). **No `KeywordTableIndex`.**
-3. **P3 — Structural:** retrieval by traversing the cached summary index from Phase 3, via the real LlamaIndex `.as_retriever(retriever_mode="embedding")` on the index object built in Phase 3 (deferred here deliberately — see `docs/superpowers/specs/2026-07-22-phase3-summary-index-design.md`, "Out of scope").
+3. **P3 — Structural:** retrieval by traversing the cached `TreeIndex` from Phase 3, via the real LlamaIndex `.as_retriever(retriever_mode="embedding")` on the index object built in Phase 3 (deferred here deliberately — see `docs/superpowers/specs/2026-07-22-phase3-summary-index-design.md`, "Out of scope").
 4. **Shared answerer (`Llama 3.3 70B`, `temperature = 0`)** across all three pipelines at identical settings, with prompts that mandate node-ID citations and receive **only the query + retrieved nodes** (no exemplars, no ground truth, no answer-location hint).
 5. Hold total context mass constant across pipelines at each K.
 
@@ -137,7 +137,7 @@ Build the LLM-as-a-Judge with dynamic few-shot routing and code-based citation a
 1. **`async_judge.py`:** for each output, read the target quadrant and inject **exactly the 5 GQ exemplars matching that quadrant** → four cacheable prompt prefixes (rubric + 5 exemplars). Cached tokens don't count toward limits.
 2. **Deterministic code metrics:** Citation Audit (output cited node IDs ⊆ `gt_citations`), Token-F1, Exact Match (Q1/Q3 only, numeric-normalised + ε tolerance), Precision@K, Recall@K, Evidence Hit Rate.
 3. **Phase-2 gate:** run JEQ (20) on P1/P2/P3 at a **single K = 5** → 60 outputs; researcher hand-scores all 60; Judge scores the same 60; compute the human–judge **Agreement Rate**.
-4. If agreement **≤ 80%**: change rubric and/or swap Judge to `gpt-oss-120b` (still ≠ the Llama answerer) and re-run the check.
+4. If agreement **≤ 80%**: change the rubric and/or swap the Judge to another model (still ≠ the Llama answerer's family) and re-run the check.
 
 ## Evaluations
 1. The Judge never sees all 20 GQ at once — only the 5 quadrant-matched exemplars — and the Judge has **no search tool**.
@@ -164,7 +164,7 @@ Run the 900-cell matrix and score every output. Kicks off the instant the gate p
 
 ## Evaluations
 1. A mid-run crash resumes from the last committed row without re-spending calls or duplicating rows.
-2. Throughput stays inside Groq's per-organization TPD/TPM ceilings (no sustained 429 storms).
+2. Throughput stays inside each provider's per-organization ceilings — Groq's TPD/TPM, OpenRouter's and NIM's RPM/RPD (no sustained 429 storms).
 3. All 900 cells are present in `results` with both judge scores and code metrics; mismatched-citation outputs are downgraded.
 
 ## Deliverables

@@ -2,7 +2,7 @@
 
 This document defines strict architectural constraints and explicit boundaries for this project. If you are an autonomous coding agent or developer script executing instructions, you are strictly prohibited from implementing or provisioning any system component that violates these rules.
 
-The primary objective is to enforce the project's **near-zero-spend operating model** (every recurring component on a free tier or local CPU) **and** the **role-separation and anti-leakage rules** that make the automated evaluation academically defensible. The binding cost constraint is **Groq's per-day token throughput (TPD)**, not a dollar budget. See `Budget.md` for the full cost reconciliation and `Project_Idea.md` for the methodology.
+The primary objective is to enforce the project's **near-zero-spend operating model** (every recurring component on a free tier or local CPU) **and** the **role-separation and anti-leakage rules** that make the automated evaluation academically defensible. The binding cost constraint is **per-day token and request throughput across the three providers in use (Groq, NVIDIA NIM, OpenRouter)**, not a dollar budget. The one exception to $0 is a single one-time **$10 OpenRouter credit top-up**, which raises the free-model daily request cap; free-suffixed models still cost $0 per token. See `Budget.md` for the full cost reconciliation and `Project_Idea.md` for the methodology.
 
 ---
 
@@ -11,44 +11,45 @@ You must never provision any continuously billing, persistent, or per-hour cloud
 
 * **No managed vector / search endpoints:** no managed vector databases, hosted search APIs, or deployed indexes that charge hourly and do not scale to zero (e.g. Vertex AI Vector Search, hosted Pinecone tiers, managed Discovery/Search APIs).
 * **No paid embedding or reranking APIs:** no hosted per-token embedding APIs (`text-embedding-004`, OpenAI `3-small`) or paid hosted rerankers (Cohere Rerank). Embeddings and re-ranking run **locally on CPU** (see §2).
-* **Mandated local indexing:** for the vector pipeline (P1) use an in-memory or file-backed local store (local **FAISS**, **ChromaDB**, or LlamaIndex's native local storage). For the keyword pipeline (P2) use the pure-Python **`rank_bm25`**. For the structural pipeline (P3) use a local **`SummaryIndex`** persisted to disk.
+* **Mandated local indexing:** for the vector pipeline (P1) use an in-memory or file-backed local store (local **FAISS**, **ChromaDB**, or LlamaIndex's native local storage). For the keyword pipeline (P2) use the pure-Python **`rank_bm25`**. For the structural pipeline (P3) use a local LlamaIndex **`TreeIndex`** persisted to disk, one per filing.
 * **P2 must remain purely statistical:** do **not** use LlamaIndex's `KeywordTableIndex` for P2. It invokes an LLM to extract keywords at index/query time, so it is neither statistical nor deterministic and adds per-node API cost — it would invalidate the clean semantic-vs-statistical comparison. **Use `rank_bm25` only.**
-* **P3's LLM summary build is explicitly permitted (and is not a §1 violation):** unlike the banned `KeywordTableIndex`, P3's hierarchical summarisation is *the paradigm under test*, so its use of an LLM at index-build time is legitimate and disclosed. It must use the free-tier `llama-3.1-8b-instant`, run **once**, and be **cached to disk** — never rebuilt per query and never run on a per-hour endpoint. P3's LLM use is confined to this one-time build; P3 retrieval at query time is local.
+* **P3's LLM summary build is explicitly permitted (and is not a §1 violation):** unlike the banned `KeywordTableIndex`, P3's hierarchical summarisation is *the paradigm under test*, so its use of an LLM at index-build time is legitimate and disclosed. It must use the free-tier `nvidia/nemotron-3-super-120b-a12b` on NVIDIA NIM, run **once**, and be **cached to disk** — never rebuilt per query and never run on a per-hour endpoint. P3's LLM use is confined to this one-time build; P3 retrieval at query time is local.
 
 ---
 
 ## 2. Model Routing Matrix and Local Compute (per-stage LLM assignment)
 
-All LLM calls run on **Groq's free tier** (open-source models, no credit card, rate-limited rather than billed). All retrieval-side compute (embeddings, re-ranking, BM25, P3 traversal) runs **locally on CPU at $0**. The model assigned to each stage is fixed:
+All LLM calls run on the free tiers of **Groq, NVIDIA NIM, and OpenRouter** (open-source models, rate-limited rather than billed per token). Stages are spread across providers because no single free tier has the headroom for all of them; see `Budget.md`. All retrieval-side compute (embeddings, re-ranking, BM25, P3 traversal) runs **locally on CPU at $0**. The model assigned to each stage is fixed:
 
 ```text
-+------------------------------------------------------------------------+
-|                      MANDATED MODEL ASSIGNMENT MAP                     |
-+------------------------------------------------------------------------+
-|  STAGE                          MODEL                      WHERE        |
-|  -----------------------------  -------------------------  ----------   |
-|  Dataset generation             nvidia/nemotron-3-super-120b-a12b:free  OpenRouter |
-|  Dataset critique (+ search)    openai/gpt-oss-20b:free  OpenRouter |
-|  P3 summary-index build (1x)    llama-3.1-8b-instant       Groq free    |
-|  Pipeline answers (P1/P2/P3)    Llama 3.3 70B  (SHARED)    Groq free    |
-|  Judge / scoring (no search)    Qwen3.6-27B                  Groq free    |
-|  -----------------------------  -------------------------  ----------   |
-|  Embeddings (P1)                bge-small-en-v1.5          Local CPU $0 |
-|  Re-ranker (P1)                 bge-reranker-base          Local CPU $0 |
-|  BM25 (P2)                      rank_bm25                  Local CPU $0 |
-|  Throwaway debugging            llama-3.1-8b-instant       Groq free    |
-+------------------------------------------------------------------------+
++--------------------------------------------------------------------------------------+
+|                            MANDATED MODEL ASSIGNMENT MAP                             |
++--------------------------------------------------------------------------------------+
+|  STAGE                        MODEL                                   WHERE          |
+|  ---------------------------  --------------------------------------  -------------  |
+|  Dataset generation           nvidia/nemotron-3-super-120b-a12b:free  OpenRouter     |
+|  Dataset critique (+ search)  openai/gpt-oss-20b:free                 OpenRouter     |
+|  P3 tree-index build (1x)     nvidia/nemotron-3-super-120b-a12b       NIM free       |
+|  Pipeline answers (P1/P2/P3)  llama-3.3-70b-versatile  (SHARED)       Groq free      |
+|  Judge / scoring (no search)  qwen/qwen3.6-27b                        Groq free      |
+|  ---------------------------  --------------------------------------  -------------  |
+|  Embeddings (P1)              BAAI/bge-small-en-v1.5                  Local CPU $0   |
+|  Re-ranker (P1)               BAAI/bge-reranker-base                  Local CPU $0   |
+|  BM25 (P2)                    rank_bm25                               Local CPU $0   |
+|  Vector store (P1)            ChromaDB                                Local disk $0  |
+|  Throwaway debugging          llama-3.1-8b-instant                    Groq free      |
++--------------------------------------------------------------------------------------+
 ```
 
 ### Mandatory role-separation rules
 * **Generator ≠ Critic.** The Generator (`nvidia/nemotron-3-super-120b-a12b:free`) and Critic (`openai/gpt-oss-20b:free`) must remain **different model families**, so dataset agreement reflects cross-architecture consensus rather than a model agreeing with itself.
-* **Answerer ≠ Judge.** The pipeline answerer (`Llama 3.3 70B`) and the Judge (`Qwen3.6-27B`) must remain **different families**. No model may grade its own output. If the Judge is later swapped (e.g. to `gpt-oss-120b` to pass the §4 gate), it must still differ from the Llama answerer.
+* **Answerer ≠ Judge.** The pipeline answerer (`Llama 3.3 70B`) and the Judge (`Qwen3.6-27B`) must remain **different families**. No model may grade its own output. If the Judge is later swapped to pass the §4 gate, the replacement must still differ from the Llama answerer's family.
 * **Shared answerer across pipelines.** All three pipelines (P1/P2/P3) must use the **same** answerer (`Llama 3.3 70B`) at the **same** generation settings. Differences in scores must come from *retrieval*, not from different answer models — otherwise the experiment measures generation, not retrieval.
 * **Critic has a search tool; the Judge does not.** The Critic must be given a search tool over **all nodes of the filing** (independence requires searching beyond the source section). The Judge must **not** have a search tool — it already receives the ground-truth answer and citations and only needs to score the output against them. Adding search to the Judge is cost for no gain.
 
 ### Local-compute and context rules
 * **Open-model context cap.** Open models cap at ~128K tokens — far short of a full 10-K. Generation must operate **per-section (chunked)**; the generator script must monitor context length and never inject an entire filing in one call.
-* **Local retrieval models.** Embeddings use `BAAI/bge-small-en-v1.5`; re-ranking uses `BAAI/bge-reranker-base`. Both run on CPU. Persist embeddings/indexes to local cache / SQLite immediately so they are never recomputed.
+* **Local retrieval models.** Embeddings use `BAAI/bge-small-en-v1.5`; re-ranking uses `BAAI/bge-reranker-base`. Both run on CPU via **`fastembed`** (ONNX), not `sentence-transformers`, which does not install on this platform. P1's vector store is **ChromaDB**. Persist embeddings/indexes to local cache / SQLite immediately so they are never recomputed.
 * **Determinism.** All LLM calls run at **`temperature = 0`**. Each of the 900 benchmark cells is run **once**; do not add repeated runs (they multiply token cost without adding signal at temperature 0). Any robustness repeats are confined to the JEQ validation subset.
 
 ---
@@ -85,11 +86,11 @@ The automated Judge must be proven against the human standard **before** it grad
 
 ## 5. Concurrency and Rate-Limiting Enforcement
 
-Asynchronous worker pools running many free-tier calls simultaneously can exceed Groq's TPM/RPM quotas (and, over a long run, the TPD ceiling), causing HTTP 429 errors, crashes, and half-written tables.
+Asynchronous worker pools running many free-tier calls simultaneously can exceed a provider's TPM/RPM quotas (and, over a long run, its TPD ceiling), causing HTTP 429 errors, crashes, and half-written tables. Each provider has its own wrapper and its own ceiling: Groq is token-bound (TPM/TPD), NIM is request-bound (40 RPM), OpenRouter is request-bound (20 RPM, 1,000 requests/day at the funded tier).
 
-* **Resilience dependency:** wrap all Groq API calls in a resilient wrapper (e.g. `tenacity`).
+* **Resilience dependency:** wrap all provider API calls in a resilient wrapper (`tenacity`). Each provider has its own client module (`groq_client.py`, `nim_client.py`, `openrouter_client.py`), and every stage must obtain its client through `LLMFactory.get_client_for_stage()` so the retry and semaphore wrapping is never bypassed.
 * **429 handling:** catch HTTP 429 explicitly and apply **exponential backoff with randomized jitter**; pause and retry smoothly rather than terminating mid-run.
-* **Queue bounds:** cap concurrency with an `asyncio.Semaphore` to **≤ 5 parallel workers** unless token analysis confirms a higher ceiling is safe under Groq's published per-organization limits. Limits apply **per organization**, not per key — extra keys do not raise the ceiling.
+* **Queue bounds:** cap concurrency with an `asyncio.Semaphore` to **≤ 5 parallel workers** per provider unless token analysis confirms a higher ceiling is safe under that provider's published limits. Limits apply **per organization or account**, not per key — extra keys do not raise the ceiling.
 * **TPD-aware pacing:** because the answerer (`Llama 3.3 70B`, ~100K TPD) is token-bound, long phases must be paced/spread across days (with §6 resume) rather than hammered in one session.
 
 ---
@@ -110,7 +111,7 @@ Writing outputs to raw CSV or nested JSON is forbidden for long-running batches.
 
 To protect against runaway loops, infinite recursion, or unhandled file exceptions, every iteration script must embed a programmatic cap.
 
-* **Mandatory test-brake variable:** every loop script (`async_generator.py`, `async_critic.py`, `loop_executor.py`, `async_judge.py`, and the P3 summary-build script) must contain a hardcoded boolean `LOCAL_TEST_THROTTLE` at the top of the file.
+* **Mandatory test-brake variable:** `LOCAL_TEST_THROTTLE` is defined once in `llm_client/config.py` (default `True`, overridable by the environment) alongside `THROTTLE_LIMIT = 3`. Every loop script (`run_dataset_generation.py`, `async_critic.py`, `loop_executor.py`, `async_judge.py`, `run_ingestion.py`, and the P3 tree-build script) must honour it through the shared `loop_template.py` helpers rather than re-declaring its own copy, so one flag brakes the whole build.
 * **Throttle logic:** when `LOCAL_TEST_THROTTLE = True`, force a strict fetch cap to **exactly 3 data items** (e.g. `LIMIT 3` in the SQL).
 * **Removal protocol:** run the entire workflow — ingestion, P3 build, generation, critique, pipeline answering, and judging — under `LOCAL_TEST_THROTTLE = True` first. Only after a clean 3-item end-to-end run may the throttle be set to `False` to release the full batch.
 
@@ -118,4 +119,4 @@ To protect against runaway loops, infinite recursion, or unhandled file exceptio
 
 ## 8. Single Hard Rule
 
-> **No component in this project may bill per-hour or scale-to-non-zero.** All retrieval and indexing run locally; all LLM calls run on a free tier with request/token-rate limits, not spend. P3's one-time summary build uses a free-tier LLM and is cached. If any design change would introduce a persistent or per-hour cloud charge (a managed vector DB endpoint, a hosted reranker, a premium parse tier), it must be re-scoped to a local or free-tier equivalent before implementation. This is the authoritative infrastructure ban referenced by `Budget.md`.
+> **No component in this project may bill per-hour or scale-to-non-zero.** All retrieval and indexing run locally; all LLM calls run on a free tier with request/token-rate limits, not per-token spend; the sole disclosed exception is the one-time $10 OpenRouter credit top-up, which buys request headroom, not tokens. P3's one-time summary build uses a free-tier LLM and is cached. If any design change would introduce a persistent or per-hour cloud charge (a managed vector DB endpoint, a hosted reranker, a premium parse tier), it must be re-scoped to a local or free-tier equivalent before implementation. This is the authoritative infrastructure ban referenced by `Budget.md`.

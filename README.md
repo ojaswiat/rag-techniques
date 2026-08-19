@@ -10,29 +10,44 @@ Which retrieval paradigm — semantic (vector), statistical (BM25), or structura
 
 | Pipeline | Method | Library |
 |---|---|---|
-| P1 — Semantic | Dense vector embeddings | FAISS / ChromaDB |
+| P1 — Semantic | Dense vector embeddings, plus a cross-encoder re-rank | ChromaDB + `fastembed` (`bge-small-en-v1.5`, `bge-reranker-base`) |
 | P2 — Statistical | Okapi BM25 keyword ranking | `rank_bm25` |
-| P3 — Structural | LLM-generated summary tree traversal | LlamaIndex `SummaryIndex` |
+| P3 — Structural | LLM-generated summary tree traversal | LlamaIndex `TreeIndex`, one per filing |
+
+All three share a single answerer (`llama-3.3-70b-versatile`) at identical settings, so score differences come from retrieval, not generation.
 
 ## Benchmark Design
 
 - **140 queries** across three sets: 100 Pipeline Queries (PQ), 20 Golden Queries (GQ), 20 Judge Evaluation Queries (JEQ)
 - **Dataset**: 13 SEC 10-K filings (EDGAR) across 5 companies — AAPL, MSFT, TSLA × FY2023-2025, JPM, JNJ × FY2023-2024
 - **Judge**: LLM-as-judge with a >80% human-agreement gate before the full 900-run benchmark runs
+- **Corpus**: 26,050 parsed nodes across the 13 filings
 - **Storage**: SQLite with WAL mode, fully resumable runs
+- **Models**: free tiers of Groq, NVIDIA NIM and OpenRouter; all retrieval compute is local CPU. See `resources/specs/Guardrails.md` §2 for the fixed routing matrix
 
 ## Repository Layout
 
 ```
-claude/          # Agent steering files — not project source code (see below)
-specs/           # (inside claude/) Architecture, guardrails, budget, phase plan
-artifacts/       # (inside claude/) Proposal deliverables
-README.md        # This file
-CLAUDE.md        # Instructions for the Claude Code agent
-TODO.md          # Active task list
+project/             # All source code
+  ingest/            # SEC EDGAR fetch, LlamaParse parsing, node building
+  dataset_generation/# Generator + Critic loop that builds the 140-query dataset
+  pipelines/         # P1 vector, P2 bm25, P3 structural, and the shared answerer
+  judge/             # LLM-as-judge, scoring metrics, numeric normalisation
+  llm_client/        # Provider clients (Groq, NIM, OpenRouter) behind LLMFactory
+  tests/             # Test suite
+  data/              # filings_manifest.json, raw and parsed filings
+  benchmark.db       # SQLite results database
+resources/           # User files and steering layer — not source code
+  specs/             # Architecture, Guardrails, Budget, Phase Plan, Project Idea
+  artifacts/         # Proposal deliverables
+  assets/            # Design palette, typography, diagrams
+  research/          # Deviations log, planning notes
+  docs/              # University brief and template (read-only)
+graphify-out/        # Pre-built knowledge graph (see below)
+openwiki/            # Generated documentation wiki
+README.md            # This file
+CLAUDE.md            # Instructions for the Claude Code agent
 ```
-
-> Implementation source code (Python modules `ingest/`, `pipelines/`, `judge/`) has not been started yet. Phase 1 of the phase plan is the next milestone.
 
 ## Knowledge Graph
 
@@ -65,4 +80,19 @@ the code roughly twenty to one.
 
 ## Status
 
-Planning / proposal phase complete. Technical build not yet started.
+Phases 1 to 6 are built and tested; the full benchmark run has not started.
+
+| Phase | State |
+|---|---|
+| 1. Environment and infrastructure | Complete |
+| 2. Ingestion and parsing | Complete — 13 filings, 26,050 nodes |
+| 3. P3 tree-index build | Complete — one index per filing |
+| 4. Dataset generation | Complete — 100 PQ, 20 GQ, 20 JEQ in the database |
+| 5. Pipeline implementation | Complete — P1, P2, P3 and the shared answerer |
+| 6. Judge and validation gate | Built; the >80% agreement gate has not been run |
+| 7. Full benchmark execution | Not started — the `results` table is empty |
+| 8. Analysis and write-up | Not started |
+
+Test suite: 339 passing, 2 skipped (the skips are live-API smoke tests, gated behind an environment variable).
+
+Deviations from the specs are logged in `resources/research/deviations.md`.
