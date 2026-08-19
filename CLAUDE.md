@@ -197,3 +197,5 @@ When asked to create or update diagrams:
 ### Web Automation & Testing
 - Use the `playwright` MCP tools to interact with local dev servers or external sites.
 - Prefer accessibility selectors (roles, text, labels) over CSS classes.
+
+**!! IMPORTANT:** Never include a Co-Authored-By OR "Claude" or related terms in commit messages.
