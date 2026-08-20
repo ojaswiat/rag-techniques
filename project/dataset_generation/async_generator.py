@@ -1,7 +1,7 @@
-"""Generator: proposes a query + ground truth + citations for one filing section.
+"""Generator: proposes a query, ground truth answer and citations for one filing section.
 
-Uses openai/gpt-oss-120b (config.MODEL_ROUTING["generator"]) -- a different
-model family from the Critic (Task 6), per the anti-self-grading invariant.
+Uses openai/gpt-oss-120b (config.MODEL_ROUTING["generator"]), a different
+model family from the Critic, per the anti-self-grading invariant.
 """
 import json
 
@@ -37,10 +37,9 @@ async def generate_query(
 
     if previous_attempt_feedback:
         # temperature=0 means an identical prompt reproduces the identical
-        # (already-rejected) output, so a retry must change the input --
-        # tell the Generator what specifically failed and steer it toward a
-        # genuinely different candidate (different fact/number/angle) from
-        # the same section, rather than restating the prior one.
+        # (already-rejected) output, so a retry must change the input:
+        # state what failed and steer the Generator toward a genuinely
+        # different candidate from the same section.
         user_content += (
             "\n\nA previous attempt for this section was rejected: "
             f"{previous_attempt_feedback}\n"
@@ -49,13 +48,12 @@ async def generate_query(
             "above, phrased so its citation and answer are unambiguous."
         )
 
-    # Get client for the generator stage
     client = LLMFactory.get_client_for_stage("generator")
 
-    # client is a LlamaIndex LLM (OpenAILike), not a raw OpenAI SDK client --
+    # client is a LlamaIndex LLM (OpenAILike), not a raw OpenAI SDK client:
     # it exposes achat(messages), not chat.completions.create(...). Model
-    # and temperature=0 are already fixed at construction (LLMFactory.
-    # get_client_for_stage), so they aren't passed again here.
+    # and temperature=0 are already fixed at construction, so they are not
+    # passed again here.
     response = await client.achat([
         ChatMessage(role=MessageRole.SYSTEM, content=_SYSTEM_PROMPT),
         ChatMessage(role=MessageRole.USER, content=user_content),

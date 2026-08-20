@@ -1,9 +1,8 @@
 """Critic: independently re-derives an answer using a local search tool.
 
-Uses qwen/qwen3.6-27b (config.MODEL_ROUTING["critic"]) -- a different model
-family from the Generator (Task 5), per the anti-self-grading invariant.
-Given only the query text (never the Generator's answer or citations), it
-must search the filing itself before answering.
+Uses qwen/qwen3.6-27b, a different model family from the Generator, per
+the anti-self-grading invariant. Given only the query text, never the
+Generator's answer or citations, it must search the filing itself first.
 """
 import json
 
@@ -30,11 +29,10 @@ _SYSTEM_PROMPT = (
 
 
 def _build_search_tool(all_nodes: list[dict]) -> FunctionTool:
-    """Wrap search_filing_nodes as a LlamaIndex tool bound to one filing.
+    """Wraps search_filing_nodes as a LlamaIndex tool bound to one filing.
 
-    The filing's nodes are closed over rather than exposed as a tool
-    argument: the Critic chooses only the search terms, never which corpus
-    it searches.
+    The nodes are closed over rather than passed as a tool argument, so the
+    Critic can only choose search terms, never which corpus it searches.
     """
 
     def search_filing(query: str) -> str:
@@ -54,34 +52,26 @@ def _build_search_tool(all_nodes: list[dict]) -> FunctionTool:
 async def critique_query(
     query_text: str, all_nodes: list[dict], return_messages: bool = False
 ) -> dict:
-    """Run the Critic's search-then-answer loop and return the parsed final
-    answer as {"cited_node_ids": [...], "computed_answer": "..."}.
+    """Runs the Critic's search-then-answer loop.
 
-    If return_messages is True, the returned dict additionally carries a
-    "messages" key holding the full message history for the run as
-    LlamaIndex ChatMessage objects (system/user/assistant/tool, including
-    any tool-call and tool-result turns) -- useful for tests/diagnostics
-    that need to assert directly on tool-call behaviour rather than
-    inferring it from the final answer. Default is False, so existing
-    callers are unaffected.
+    Returns {"cited_node_ids": [...], "computed_answer": "..."}. If
+    return_messages is True, the dict also carries the full ChatMessage
+    history under "messages", for tests asserting on tool-call behaviour.
     """
     messages = [
         ChatMessage(role=MessageRole.SYSTEM, content=_SYSTEM_PROMPT),
         ChatMessage(role=MessageRole.USER, content=query_text),
     ]
 
-    # Get client for critic stage
     critic_client = LLMFactory.get_client_for_stage("critic")
     search_tool = _build_search_tool(all_nodes)
 
     for _ in range(_MAX_TOOL_ROUNDS):
-        # client is a LlamaIndex LLM (OpenAILike, a FunctionCallingLLM), not
-        # a raw OpenAI SDK client -- tool calling goes through
-        # achat_with_tools(tools=..., chat_history=...), not a `tools=` kwarg
-        # on chat.completions.create(). Model and temperature=0 are fixed at
-        # construction (LLMFactory.get_client_for_stage), so they aren't
-        # passed again here. chat_history is copied because the library
-        # appends to the list it is given.
+        # client is a LlamaIndex LLM (OpenAILike, a FunctionCallingLLM), not a
+        # raw OpenAI SDK client. Model and temperature=0 are already fixed at
+        # construction, so tool calls go through achat_with_tools() rather
+        # than a `tools=` kwarg on chat.completions.create(). chat_history is
+        # copied because the library appends to the list it is given.
         response = await critic_client.achat_with_tools(
             tools=[search_tool],
             chat_history=list(messages),

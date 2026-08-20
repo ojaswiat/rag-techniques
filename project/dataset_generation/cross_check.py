@@ -1,32 +1,8 @@
 """Deterministic accept/reject logic for the Generator/Critic adversarial loop.
 
-Plain code, not an LLM judgement (Phase Plan.md Phase 4 Evaluation 3): accept
-a candidate query only if all three of the following hold between the
-Generator's proposed ground truth and the Critic's independent re-derivation:
-
-1. Citation overlap -- the Critic's independently-found node citations
-   overlap the Generator's proposed citations (`citations_overlap`).
-2. Numeric subset match -- every number in the Generator's answer appears
-   (within tolerance) somewhere in the Critic's answer; extra numbers in the
-   Critic's answer (e.g. an unrelated year) are permitted, not penalised
-   (`values_match`).
-3. Embedding similarity -- the two answer texts are semantically similar
-   above a threshold, computed locally with `BAAI/bge-small-en-v1.5` (the
-   same embedding model already used for P1/P3 retrieval elsewhere in this
-   project; see Architecture.md). This is deterministic (no sampling, no
-   Groq call) and exists to catch a Critic answer whose numbers happen to
-   match by coincidence but whose surrounding text is otherwise unrelated --
-   a failure mode numeric-subset matching alone cannot see.
-
-Numeric-subset matching is kept alongside embedding similarity, not replaced
-by it: embeddings are unreliable at penalising a single wrong figure in an
-otherwise similarly-worded sentence (empirically, "$100 million" vs.
-"$150 million" restated in full sentences still scores ~0.81 cosine
-similarity -- well above a 0.75 threshold). Each of the three gates catches a
-distinct failure mode the others do not cover. See Changes.md's 2026-07-28
-entry ("Cross-check numeric matching was too strict") for the full design
-discussion, including the LLM-based-similarity alternative that was
-considered and rejected.
+Plain code, not an LLM judgement. A candidate is accepted only if the
+Critic's independent re-derivation agrees with the Generator's proposal on
+citations, on the numbers in the answer and on the answer's overall meaning.
 """
 import re
 
@@ -34,22 +10,16 @@ from fastembed import TextEmbedding
 
 _NUMBER_RE = re.compile(r"-?\d[\d,]*\.?\d*")
 
-# Embedding model reused from the project's existing P1/P3 retrieval choice
-# (Architecture.md), loaded via `fastembed` (ONNX Runtime, no Groq call, no
-# GPU/torch dependency -- deterministic local inference).
+# Embedding model reused from this project's existing P1/P3 retrieval choice,
+# loaded via fastembed (ONNX Runtime): no Groq call, no GPU/torch dependency.
 _EMBEDDING_MODEL_NAME = "BAAI/bge-small-en-v1.5"
 
-# Cosine-similarity threshold above which two answer texts are considered
+# Cosine-similarity threshold for two answer texts being considered
 # semantically matching. Chosen empirically: genuinely-restated matching
-# facts scored 0.93-0.97 cosine similarity in manual testing (e.g. "Net
-# revenue increased to $100 million in fiscal 2025" vs. "The company
-# reported $100 million in net revenue for fiscal year 2025" -> 0.932),
-# while clearly unrelated financial statements scored 0.45-0.69 (e.g. a
-# revenue sentence vs. an unrelated expenses sentence -> 0.452). 0.75 sits
-# comfortably in the gap between those two clusters, erring toward
-# permissive (this gate's job is to catch clearly unrelated text, not to
-# arbitrate numeric correctness -- that is `values_match`'s job). Tune here
-# if false accepts/rejects are observed in practice.
+# facts scored 0.93-0.97 in manual testing, while clearly unrelated
+# statements scored 0.45-0.69. 0.75 sits in the gap between the two,
+# erring toward permissive since this gate's job is to catch unrelated
+# text, not to arbitrate numeric correctness (that is values_match's job).
 EMBEDDING_SIMILARITY_THRESHOLD = 0.75
 
 _embedding_model: TextEmbedding | None = None
@@ -79,10 +49,9 @@ def extract_numbers(text: str) -> list[float]:
 
 
 def values_match(gt_answer: str, critic_answer: str, tolerance: float = 0.01) -> bool:
-    """True if every number in `gt_answer` appears (within tolerance)
-    somewhere in `critic_answer`'s numbers. Extra numbers in `critic_answer`
-    (e.g. an unrelated year) are allowed and ignored -- this is a subset
-    check, not an exact-count match (see module docstring).
+    """True if every number in gt_answer appears, within tolerance, somewhere
+    in critic_answer's numbers. Extra numbers in critic_answer are allowed
+    and ignored: this is a subset check, not an exact-count match.
     """
     gt_numbers = extract_numbers(gt_answer)
     critic_numbers = extract_numbers(critic_answer)
@@ -97,7 +66,7 @@ def values_match(gt_answer: str, critic_answer: str, tolerance: float = 0.01) ->
 
 def embedding_similarity(text_a: str, text_b: str) -> float:
     """Cosine similarity between the bge-small-en-v1.5 embeddings of two
-    texts. Purely local ONNX inference -- deterministic, no Groq call.
+    texts. Purely local ONNX inference: deterministic, no Groq call.
     """
     model = _get_embedding_model()
     emb_a, emb_b = list(model.embed([text_a or "", text_b or ""]))
@@ -135,14 +104,11 @@ def diagnose_rejection(
     critic_cited_ids: list[str],
     critic_answer: str,
 ) -> str:
-    """Human-readable reason a rejected candidate failed `check_query`.
+    """Human-readable reason a rejected candidate failed check_query.
 
-    Only meaningful to call after `check_query` has already returned False
-    for the same inputs -- used to build retry feedback for the Generator
-    (see run_dataset_generation._attempt_fill), not as part of the
-    accept/reject decision itself. `check_query`'s own signature/return type
-    (bool) is left untouched so existing callers and tests keep working;
-    this is a separate, additive diagnostic step.
+    Only meaningful after check_query has already returned False for the
+    same inputs; used to build retry feedback for the Generator, not as
+    part of the accept/reject decision itself.
     """
     if not citations_overlap(gt_citations, critic_cited_ids):
         return (

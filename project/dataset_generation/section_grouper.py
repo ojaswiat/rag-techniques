@@ -1,8 +1,8 @@
-"""Groups Phase 2 nodes into per-section chunks for the Phase 4 Generator.
+"""Groups filing nodes into per-section chunks for the Generator.
 
 A "section" is every node sharing the same (document_id, parent_item_header),
-case-normalized. Nodes with no header (cover pages, TOC, signature blocks --
-~6% of the corpus, confirmed during Phase 4 brainstorming) are excluded.
+case-normalised. Nodes with no header (cover pages, tables of contents,
+signature blocks, roughly 6% of the corpus) are excluded.
 """
 
 

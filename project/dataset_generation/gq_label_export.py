@@ -1,6 +1,6 @@
-"""Writes golden_queries_to_label.md so the researcher can hand-write the
-'why this answer is good' note + 0-100 score for each of the 20 GQ
-(Phase Plan.md Phase 4 Goal 5). This is the only manual step in Phase 4."""
+"""Writes golden_queries_to_label.md so a researcher can hand-write the
+'why this answer is good' note and 0-100 score for each of the 20 golden
+queries."""
 import asyncio
 
 import database_manager as dbm
