@@ -248,7 +248,8 @@ rather than fought, because on a free tier the limit is not negotiable.
 
 **Show:** `10-provider-routing.drawio` for the five-stage → three-provider fan-out and the five numbered
 defence layers — this diagram *is* the answer to the question above, so leave it up for the whole answer.
-Then `09-database-schema.drawio`, landing on the red `UNIQUE` band at the bottom. Then
+Then `09-database-schema.drawio` — a crow's foot ER diagram; land on the cyan `UNIQUE` band
+under `results`. Then
 `project/loop_executor.py` (point at the `UNIQUE` comment and `K_VALUES`).
 
 ---
