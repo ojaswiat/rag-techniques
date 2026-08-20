@@ -49,6 +49,16 @@ def git_show(rev: str, path: str) -> str:
     working directory. Raises FileNotFoundAtRevision if the file does not
     exist at the revision, and GitError for other failures.
     """
+    # Get the repo root
+    root_result = subprocess.run(
+        ["git", "rev-parse", "--show-toplevel"],
+        capture_output=True,
+        text=True,
+    )
+    if root_result.returncode != 0:
+        raise GitError(f"git rev-parse --show-toplevel failed: {root_result.stderr.strip()}")
+    repo_root = root_result.stdout.strip()
+
     # Get the current directory relative to the repo root
     prefix_result = subprocess.run(
         ["git", "rev-parse", "--show-prefix"],
@@ -56,7 +66,7 @@ def git_show(rev: str, path: str) -> str:
         text=True,
     )
     if prefix_result.returncode != 0:
-        raise GitError(f"git rev-parse failed: {prefix_result.stderr.strip()}")
+        raise GitError(f"git rev-parse --show-prefix failed: {prefix_result.stderr.strip()}")
     prefix = prefix_result.stdout.strip()
 
     # Normalize the input path: strip leading ./
@@ -64,10 +74,19 @@ def git_show(rev: str, path: str) -> str:
     if normalized_path.startswith("./"):
         normalized_path = normalized_path[2:]
 
-    # Resolve path relative to repo root if needed
+    # Resolve path relative to repo root
     resolved_path = normalized_path
-    if prefix and not normalized_path.startswith(prefix):
-        if not os.path.isabs(normalized_path):
+
+    if os.path.isabs(normalized_path):
+        # Absolute path: strip the repo root to get a repo-relative path
+        if normalized_path.startswith(repo_root):
+            resolved_path = os.path.relpath(normalized_path, repo_root)
+        else:
+            # Path is outside the repo
+            raise GitError(f"{path} is outside the repository root {repo_root}")
+    else:
+        # Relative path: prepend the current directory prefix if needed
+        if prefix and not normalized_path.startswith(prefix):
             resolved_path = os.path.join(prefix, normalized_path)
 
     # Check if file exists at the baseline revision
