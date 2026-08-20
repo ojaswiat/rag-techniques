@@ -55,7 +55,6 @@ All documents, slides, and Word files in this project follow the rules below. Pu
   - Code: **Consolas**
 - **Language**: British English throughout
 - **Punctuation**: No em dashes — use commas, semicolons (rarely). Use simple/spoken English punctuations.
-- **Diagrams / charts / tables**: Built with native Word/PowerPoint features only — never attached images
 - **References**: Harvard style with real, high-citation sources
 - **Labelling**: `Figure X.Y` / `Table X.Y` (section.number)
 
