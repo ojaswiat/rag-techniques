@@ -61,9 +61,7 @@ def test_is_document_indexed_false_for_empty_collection(tmp_path):
 
 @pytest.mark.asyncio
 async def test_build_index_for_document_isolates_nodes_across_documents(tmp_path, monkeypatch):
-    # Two documents sharing one collection must not leak nodes across the
-    # document_id filter: querying for DOC_A's document_id must return only
-    # DOC_A's node ids, and querying for DOC_B's must return only DOC_B's.
+    # Node ids must not leak across documents sharing one collection.
     monkeypatch.setattr(bvi, "STORAGE_ROOT", tmp_path)
 
     nodes_a = [
@@ -102,8 +100,8 @@ async def test_build_index_for_document_isolates_nodes_across_documents(tmp_path
 async def test_build_index_for_document_embeds_only_raw_content(tmp_path, monkeypatch):
     # parent_item_header, node_type, source_page_num and document_id live in
     # TextNode.metadata (set by the shared nodes_to_llama_nodes), but P1 must
-    # embed only the filing text itself -- anything else would leak
-    # structural signal into the vector pipeline that P2/P3 don't get.
+    # embed only the filing text itself; anything else would leak structural
+    # signal into the vector pipeline that P2/P3 don't get.
     monkeypatch.setattr(bvi, "STORAGE_ROOT", tmp_path)
 
     fake_nodes = [
@@ -125,12 +123,11 @@ async def test_build_index_for_document_embeds_only_raw_content(tmp_path, monkey
 
 @pytest.mark.asyncio
 async def test_build_index_for_document_raises_on_colliding_ids_across_documents(tmp_path, monkeypatch):
-    # Regression test for the silent-duplicate-id-drop failure mode: Chroma's
-    # collection.add() keeps the OLD row and drops the NEW one on a
-    # colliding id, without raising. Pre-seed a row under a node id that a
-    # different document's build will reuse, then assert the post-index
-    # row-count verification in build_index_for_document raises instead of
-    # returning a false "success".
+    # Chroma's collection.add() keeps the OLD row and silently drops the NEW
+    # one on a colliding id, without raising. Pre-seed a row under a node id
+    # that a different document's build will reuse, then confirm the
+    # post-index row-count check in build_index_for_document raises instead
+    # of returning a false success.
     monkeypatch.setattr(bvi, "STORAGE_ROOT", tmp_path)
 
     stale_nodes = [

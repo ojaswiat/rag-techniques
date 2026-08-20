@@ -48,7 +48,7 @@ async def test_build_index_for_document_builds_and_persists(tmp_path, monkeypatc
 @pytest.mark.asyncio
 async def test_build_index_for_document_crash_leaves_only_temp_dir(tmp_path, monkeypatch):
     """A crash between persist() and the atomic rename must never leave a
-    false-positive cache hit -- the final dir must stay absent."""
+    false-positive cache hit; the final dir must stay absent."""
     monkeypatch.setattr(bsi, "STORAGE_ROOT", tmp_path)
 
     fake_nodes = [{"node_id": "AAPL_2025_n0001", "document_id": "AAPL_2025",
@@ -125,12 +125,10 @@ async def test_build_index_for_document_raises_on_no_nodes(tmp_path, monkeypatch
 
 @pytest.mark.asyncio
 async def test_build_index_for_document_shares_callback_manager_with_llm_and_tree(tmp_path, monkeypatch):
-    """The CallbackManager (holding the TokenCountingHandler)
-    built in build_index_for_document() must be passed both to
-    LLMFactory.get_client_for_stage() and to TreeIndex() -- llama_index's
-    llm_chat_callback() decorator fires token-usage events into the LLM
-    object's own callback_manager, not the index's, so the LLM must be
-    wired to the same CallbackManager for token counting to work."""
+    """The same CallbackManager must reach both LLMFactory.get_client_for_stage()
+    and TreeIndex(): llama_index's llm_chat_callback() decorator fires
+    token-usage events into the LLM's own callback_manager, not the index's,
+    so the two must share one for token counting to work."""
     monkeypatch.setattr(bsi, "STORAGE_ROOT", tmp_path)
 
     fake_nodes = [{"node_id": "AAPL_2025_n0001", "document_id": "AAPL_2025",
@@ -150,8 +148,6 @@ async def test_build_index_for_document_shares_callback_manager_with_llm_and_tre
          patch.object(bsi.LLMFactory, "get_client_for_stage") as mock_get_client:
         await bsi.build_index_for_document("AAPL_2025")
 
-    # The callback_manager passed to get_client_for_stage(...) must be the
-    # same object passed to TreeIndex(...).
     mock_get_client.assert_called_once()
     _, get_client_kwargs = mock_get_client.call_args
     assert get_client_kwargs["callback_manager"] is not None

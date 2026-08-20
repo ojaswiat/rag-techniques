@@ -18,9 +18,9 @@ class _ForbiddenLLM(MockLLM):
 async def _seed_index(tmp_path, monkeypatch, nodes_by_document: dict[str, list[dict]]):
     # Seed via the real build path (build_index_for_document) so the persisted
     # layout can't drift from production, with the summariser swapped for a
-    # MockLLM -- the tree build is the one LLM-calling stage, and the test
-    # suite must never spend provider quota. Summary text is therefore filler;
-    # only the leaf nodes carry real text, which is what retrieve() returns.
+    # MockLLM: the tree build is the one LLM-calling stage, and the test
+    # suite must never spend provider quota. Summary text is therefore
+    # filler; only the leaf nodes carry real text, which retrieve() returns.
     monkeypatch.setattr(bsi, "STORAGE_ROOT", tmp_path)
     for document_id, fake_nodes in nodes_by_document.items():
         with patch.object(bsi.dbm, "get_nodes_by_document", new=AsyncMock(return_value=fake_nodes)), \

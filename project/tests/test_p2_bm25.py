@@ -21,11 +21,11 @@ def _fake_node(node_id, document_id, content, page_num=1):
 
 def _seed_index(tmp_path, monkeypatch, nodes_by_document: dict[str, list[dict]]):
     # Sync on purpose: retrieve() below drives its own asyncio.run() call,
-    # and nesting that inside a pytest-asyncio test coroutine's already-
-    # running loop raises RuntimeError. Seeding synchronously via its own
-    # asyncio.run() keeps every test function plain sync, so retrieve()'s
-    # asyncio.run() always starts from a clean, non-running loop -- the
-    # same condition it runs under in production.
+    # and nesting that inside a pytest-asyncio test coroutine's already
+    # running loop raises RuntimeError. Seeding synchronously keeps every
+    # test function plain sync, so retrieve()'s asyncio.run() always starts
+    # from a clean, non-running loop, the same condition it runs under in
+    # production.
     monkeypatch.setattr(bbi, "STORAGE_ROOT", tmp_path)
     for document_id, fake_nodes in nodes_by_document.items():
         with patch.object(bbi.dbm, "get_nodes_by_document", new=AsyncMock(return_value=fake_nodes)):
@@ -60,8 +60,8 @@ def test_retrieve_returns_correct_top_k(tmp_path, monkeypatch):
 def test_retrieve_filters_to_given_document_id(tmp_path, monkeypatch):
     _seed_index(tmp_path, monkeypatch, {"AAPL_2025": _AAPL_NODES, "MSFT_2025": _MSFT_NODES})
 
-    # The node lookup returns both filings' nodes, so document_id scoping has
-    # to come from retrieve() itself rather than from a narrowed mock: if it
+    # The node lookup returns both filings' nodes, so document_id scoping
+    # must come from retrieve() itself rather than a narrowed mock: if it
     # ever ranked against the wrong document's node ids, the MSFT node could
     # genuinely surface here.
     combined = _AAPL_NODES + _MSFT_NODES
@@ -70,10 +70,10 @@ def test_retrieve_filters_to_given_document_id(tmp_path, monkeypatch):
         results = retriever.retrieve("total revenue", document_id="AAPL_2025", k=5)
 
     # k=5 exceeds the 3-node AAPL corpus, so plain score-sorted top-k
-    # returns all 3 -- including AAPL_2025_n0003, which has zero query-term
-    # overlap and a score of 0. That's correct top-k behaviour, not a
-    # filtering bug: this test's actual requirement is document_id
-    # scoping (no MSFT node ever appears), not relevance filtering.
+    # returns all 3, including AAPL_2025_n0003, which has zero query-term
+    # overlap and a score of 0. That is correct top-k behaviour; the actual
+    # requirement here is document_id scoping (no MSFT node ever appears),
+    # not relevance filtering.
     node_ids = {node.node.node_id for node in results}
     assert node_ids <= {"AAPL_2025_n0001", "AAPL_2025_n0002", "AAPL_2025_n0003"}
     assert "MSFT_2025_n0001" not in node_ids

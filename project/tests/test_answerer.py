@@ -1,9 +1,7 @@
 """Answerer: citation parsing, anti-leakage, token/latency capture.
 
-The LLM stand-in is a real OpenAILike with its private async client
-swapped out -- the same shape LLMFactory.get_client_for_stage() returns in
-production -- so these tests exercise the genuine achat() serialisation
-path rather than a hand-rolled mock of it.
+The LLM stand-in is a real OpenAILike with its client swapped out, so
+tests exercise the genuine achat() path rather than a hand-rolled mock.
 """
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -46,7 +44,7 @@ async def _run_answer(client: OpenAILike, query_text: str, nodes: list[NodeWithS
         return await Answerer().answer(query_text, nodes)
 
 
-# --- citation parsing (Architecture.md §4.2) ---
+# --- citation parsing ---
 
 
 def test_parse_citations_extracts_marker():
@@ -74,7 +72,7 @@ def test_parse_citations_ignores_malformed_markers():
     assert parse_citations("[node:A] [[node A]] [[node:]] [[node:GOOD_1]]") == ["GOOD_1"]
 
 
-# --- anti-leakage (Architecture.md §4.1, Guardrails.md §3) ---
+# --- anti-leakage ---
 
 
 def test_build_prompt_contains_only_query_and_node_content():
@@ -88,8 +86,8 @@ def test_build_prompt_contains_only_query_and_node_content():
 
 
 def test_build_prompt_excludes_node_metadata():
-    """parent_item_header and page numbers point at where the answer sits,
-    which is precisely what retrieval is being scored on."""
+    """parent_item_header and page numbers hint at where the answer sits,
+    which retrieval is scored on."""
     nodes = [_node("N1", "Revenue rose 12%.", parent_item_header="Item 7", source_page_num=41, document_id="AAPL_2025")]
     prompt = build_prompt("How did revenue change?", nodes)
 
@@ -105,8 +103,8 @@ def test_build_prompt_handles_empty_node_list():
 
 @pytest.mark.asyncio
 async def test_prompt_on_the_wire_leaks_no_ground_truth():
-    """The whole payload, both roles, must carry nothing but the question,
-    the node ids, the node text, and fixed instructions."""
+    """The whole payload, both roles, carries only the question, node ids,
+    node text and fixed instructions."""
     nodes = [_node("AAPL_2025_n0421", "Total net sales were $394.3 billion.")]
     client = _fake_llm_client("Answer. [[node:AAPL_2025_n0421]]")
 
@@ -160,7 +158,7 @@ async def test_answer_populates_result_fields():
 
 @pytest.mark.asyncio
 async def test_answer_keeps_markers_in_raw_text():
-    """Architecture.md §4.2: markers are stored, not stripped."""
+    """Markers stay in raw_text; only parse_citations strips them."""
     raw = "Claim. [[node:N1]]"
     client = _fake_llm_client(raw)
     result = await _run_answer(client, "q", [_node("N1", "text")])
@@ -181,7 +179,7 @@ def test_answerer_rejects_nonzero_temperature():
 
 
 def test_answerer_construction_does_not_build_a_client():
-    """Constructing an Answerer must not reach for credentials -- the client
+    """Constructing an Answerer must not reach for credentials; the client
     is built on first use so a 900-cell run shares one."""
     with patch("pipelines.answerer.LLMFactory.get_client_for_stage") as factory:
         Answerer()

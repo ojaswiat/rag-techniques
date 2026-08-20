@@ -8,9 +8,8 @@ from pipelines.vector.p1_vector import P1VectorRetriever
 
 async def _seed_collection(tmp_path, monkeypatch, nodes_by_document: dict[str, list[dict]]):
     # Seed via the real build path (build_index_for_document) rather than
-    # hand-constructing TextNodes + VectorStoreIndex, so this test fixture
-    # can't drift from how the index is actually built in production --
-    # matching the pattern used in tests/test_build_vector_index.py.
+    # hand-constructing TextNodes + VectorStoreIndex, so this fixture can't
+    # drift from how the index is actually built in production.
     monkeypatch.setattr(bvi, "STORAGE_ROOT", tmp_path)
     for document_id, fake_nodes in nodes_by_document.items():
         with patch.object(bvi.dbm, "get_nodes_by_document", new=AsyncMock(return_value=fake_nodes)):

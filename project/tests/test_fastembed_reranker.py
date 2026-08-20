@@ -19,7 +19,6 @@ def test_reranks_by_relevance_to_query():
 
     assert len(result) == 3
     assert result[0].node.node_id == "n2"
-    # scores must be set and sorted descending
     assert all(result[i].score >= result[i + 1].score for i in range(len(result) - 1))
 
 
