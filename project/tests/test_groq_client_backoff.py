@@ -112,7 +112,7 @@ async def test_groq_client_omits_tools_when_not_given():
 
 @pytest.mark.asyncio
 async def test_call_groq_backward_compatibility():
-    """Ensure the module‑level call_groq still works (used by legacy code)."""
+    """Exercises the module-level call_groq wrapper, not the client class."""
     success_result = _FakeResult()
     call_count = {"n": 0}
 

@@ -24,19 +24,14 @@ class _FakeCompletion:
 
 @pytest.mark.asyncio
 async def test_nim_client_accomplete_calls_openai_client(monkeypatch):
-    """get_nim_client() should return a client whose chat.completions.create
-    delegates through to the underlying AsyncOpenAI client's create method
-    (wrapped with retry/semaphore/rate-limit, but transparent to kwargs)."""
+    """Transparent to kwargs despite the retry/semaphore/rate-limit wrapping."""
     captured = {}
 
-    # Ensure the config sees a dummy API key so validation passes
     monkeypatch.setattr("llm_client.config.NIM_API_KEY", "dummy-key")
     # Avoid the 40 RPM rate-limit sleep affecting unrelated call timing
     # across tests in this module.
     monkeypatch.setattr("llm_client.nim_client._last_request_time", 0.0)
 
-    # We'll patch the AsyncOpenAI constructor to return a mock whose
-    # chat.completions.create we can spy on.
     class MockClient:
         def __init__(self):
             self.chat = SimpleNamespace()
@@ -57,13 +52,10 @@ async def test_nim_client_accomplete_calls_openai_client(monkeypatch):
     # not on the openai package itself.
     monkeypatch.setattr("llm_client.nim_client.AsyncOpenAI", mock_constructor)
 
-    # Call get_nim_client() directly -- this is the object under test.
-    # (Going through LLMFactory.get_client() would wrap it in a llama_index
-    # OpenAILike LLM, whose public surface is chat()/acomplete(), not a raw
-    # chat.completions.create -- that's a different object graph entirely.)
+    # get_nim_client() is called directly, not through LLMFactory.get_client(),
+    # which would wrap it in a llama_index OpenAILike LLM exposing chat() and
+    # acomplete() rather than a raw chat.completions.create.
     client = nim_client_mod.get_nim_client("test-model")
-    # The client returned wraps our mock_client's create method (since we
-    # patched the constructor that get_nim_client() calls internally).
     await client.chat.completions.create(
         model="test-model",
         messages=[{"role": "user", "content": "hi"}],
@@ -77,9 +69,7 @@ async def test_nim_client_accomplete_calls_openai_client(monkeypatch):
         "tools": None,
     }
 
-    # Reset captured
     captured.clear()
-    # Second call with tools
     await client.chat.completions.create(
         model="test-model",
         messages=[{"role": "user", "content": "hi"}],
@@ -96,14 +86,8 @@ async def test_nim_client_accomplete_calls_openai_client(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_get_llm_client_returns_equivalent_client_nim(monkeypatch):
-    """Repeated LLMFactory.get_client("nvidia", ...) calls must each produce a
-    correctly and identically configured client for the given model.
-
-    LLMFactory.get_client()/get_nim_client() construct a brand-new
-    AsyncOpenAI client and a brand-new OpenAILike wrapper on every call --
-    there is no caching, so client identity is not guaranteed and is not
-    asserted here. What matters is that separate calls yield
-    equivalently-configured clients.
+    """No caching: each call builds a new client, so identity is not
+    asserted here, only that separate calls are equivalently configured.
     """
     monkeypatch.setattr("llm_client.config.NIM_API_KEY", "dummy-key")
     client1 = LLMFactory.get_client("nvidia", "test-model")
@@ -120,10 +104,8 @@ async def test_get_llm_client_unknown_provider_raises():
 
 
 def test_get_client_wires_callback_manager_when_provided(monkeypatch):
-    """LLMFactory.get_client must forward a caller-supplied
-    callback_manager to the OpenAILike LLM it constructs, so that events
-    fired by llama_index's llm_chat_callback() decorator (e.g. token-usage
-    tracking) land on the caller's bus rather than an empty default one.
+    """Forwarded so events from llama_index's llm_chat_callback() decorator
+    (token-usage tracking) land on the caller's bus, not an empty default.
     """
     monkeypatch.setattr("llm_client.config.GROQ_API_KEY", "dummy-key")
 
@@ -137,9 +119,7 @@ def test_get_client_wires_callback_manager_when_provided(monkeypatch):
 
 
 def test_get_client_omitting_callback_manager_still_constructs(monkeypatch):
-    """The other three unchanged call sites (critic/generator stages) call
-    get_client_for_stage() with no callback_manager arg -- confirm the new
-    parameter defaults to None and does not break construction."""
+    """callback_manager omitted defaults to None; construction still succeeds."""
     monkeypatch.setattr("llm_client.config.GROQ_API_KEY", "dummy-key")
 
     client = LLMFactory.get_client("groq", "some-model")

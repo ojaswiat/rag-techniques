@@ -1,7 +1,8 @@
-"""Tests for LLMFactory's client construction -- specifically that the
-retry/semaphore-wrapped client built by groq_client.get_groq_client()
-(or nim_client.get_nim_client()) is the client actually used for network
-calls, not silently discarded.
+"""Tests for LLMFactory's client construction.
+
+Confirms the retry/semaphore-wrapped client built by get_groq_client() (or
+get_nim_client()) is the client actually used for network calls, not
+silently discarded.
 """
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -59,14 +60,11 @@ async def test_get_client_openrouter_routes_achat_through_injected_client():
 
 @pytest.mark.asyncio
 async def test_get_client_openrouter_caps_reasoning_via_extra_body():
-    """OpenRouter-routed models (Generator, Critic) are reasoning-tuned
-    (nemotron, gpt-oss). Without an explicit token budget for the visible
-    answer, the model can spend its entire completion-token budget on
-    hidden reasoning and return message.content=None, which crashes
-    downstream json.loads() calls (the TypeError seen live in
-    dataset_generation_failures.json). OpenRouter's documented fix is the
-    unified `reasoning` request field; the openai SDK has no typed
-    `reasoning` kwarg, so it must travel via `extra_body`.
+    """Reasoning-tuned models (nemotron, gpt-oss) can spend their entire
+    completion-token budget on hidden reasoning and return
+    message.content=None. OpenRouter's fix is the `reasoning` request
+    field, and the openai SDK has no typed kwarg for it, so it must travel
+    via `extra_body`.
     """
     fake_raw_client = MagicMock()
     fake_raw_client.chat.completions.create = AsyncMock(return_value=_fake_response("hi"))

@@ -23,10 +23,7 @@ class _FakeCompletion:
 
 @pytest.mark.asyncio
 async def test_openrouter_client_accomplete_calls_openai_client(monkeypatch):
-    """get_openrouter_client() should return a client whose
-    chat.completions.create delegates through to the underlying AsyncOpenAI
-    client's create method (wrapped with retry/semaphore/rate-limit, but
-    transparent to kwargs)."""
+    """Transparent to kwargs despite the retry/semaphore/rate-limit wrapping."""
     captured = {}
 
     monkeypatch.setattr("llm_client.config.OPENROUTER_API_KEY", "dummy-key")
@@ -71,10 +68,8 @@ async def test_openrouter_client_accomplete_calls_openai_client(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_get_llm_client_returns_equivalent_client_openrouter(monkeypatch):
-    """Repeated LLMFactory.get_client("openrouter", ...) calls must each
-    produce a correctly and identically configured client for the given
-    model -- no caching, so client identity is not guaranteed and is not
-    asserted here."""
+    """No caching, so client identity is not guaranteed and is not
+    asserted here; only that separate calls are equivalently configured."""
     monkeypatch.setattr("llm_client.config.OPENROUTER_API_KEY", "dummy-key")
     client1 = LLMFactory.get_client("openrouter", "test-model")
     client2 = LLMFactory.get_client("openrouter", "test-model")
