@@ -37,15 +37,12 @@ def get_nim_client(model: str) -> AsyncOpenAI:
     )
     _semaphore = asyncio.Semaphore(getattr(config, "NIM_MAX_CONCURRENCY", 5))
 
-    # Wrap the create method with retry, semaphore, and rate limiting
     original_create = _client.chat.completions.create
 
     @_retry_decorator()
     async def wrapped_create(**kwargs):
         global _last_request_time
-        # Acquire semaphore for concurrency limit
         async with _semaphore:
-            # Enforce minimum interval between requests
             async with _request_lock:
                 elapsed = time.monotonic() - _last_request_time
                 if elapsed < _MIN_REQUEST_INTERVAL:
@@ -53,7 +50,8 @@ def get_nim_client(model: str) -> AsyncOpenAI:
                 try:
                     result = await original_create(**kwargs)
                 except Exception as exc:
-                    # Log and re-raise to let tenacity retry if applicable
+                    # Logged before re-raising so a retry that eventually
+                    # succeeds still leaves a record of the failed attempt.
                     logger.warning(
                         "NIMClient call failed: model=%s, error=%s",
                         model,

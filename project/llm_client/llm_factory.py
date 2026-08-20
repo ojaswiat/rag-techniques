@@ -22,26 +22,11 @@ class LLMFactory:
     ) -> Any:
         """Return a LlamaIndex LLM instance for the given provider and model.
 
-        Parameters
-        ----------
-        provider: str
-            One of "groq", "nvidia", or "openrouter".
-        model: str
-            Model identifier as expected by the provider API.
-        callback_manager: Optional[CallbackManager]
-            Callback manager to attach to the returned LLM so that events
-            fired by llama_index's `llm_chat_callback()` decorator (e.g.
-            token-usage tracking) land on the caller's bus instead of an
-            empty default one. If None, OpenAILike falls back to its own
-            default behaviour.
-
-        Returns
-        -------
-        A LlamaIndex LLM object (subclass of BaseLLM) ready for use in
-        TreeIndex, VectorStoreIndex, etc. Constructed with `temperature=0`
-        (Guardrails.md: "All LLM calls at temperature = 0") -- OpenAILike's
-        own default is 0.1, not 0, so this must be set explicitly rather than
-        relying on the library default.
+        Args:
+            provider: One of "groq", "nvidia", or "openrouter".
+            callback_manager: Attached to the returned LLM so events from
+                llama_index's `llm_chat_callback()` decorator land on the
+                caller's bus instead of a default empty one.
         """
         match provider:
             case "groq":
@@ -55,17 +40,14 @@ class LLMFactory:
                     api_key=config.GROQ_API_KEY,
                     is_chat_model=True,
                     callback_manager=callback_manager,
-                    temperature=0,
+                    temperature=0,  # OpenAILike defaults to 0.1; forced to 0 here
                 )
-                # OpenAILike/OpenAI has no `async_client` field -- passing one
-                # as a kwarg is silently dropped (arbitrary_types_allowed
-                # model config accepts and discards unknown kwargs), so the
-                # retry+semaphore-wrapped client above would otherwise never
-                # be used. `_get_aclient()` only builds its own AsyncOpenAI
-                # when `self._aclient` is unset (with `reuse_client=True`,
-                # the default), so setting it directly here makes every
-                # achat()/acomplete() call route through raw_client's retry
-                # and concurrency-limit wrapping instead.
+                # OpenAILike has no async_client kwarg; passing one is silently
+                # dropped, so the retry- and concurrency-wrapped client above
+                # would otherwise never be used. _get_aclient() only builds its
+                # own AsyncOpenAI when _aclient is unset, so assigning it here
+                # routes every achat()/acomplete() call through raw_client
+                # instead.
                 llm._aclient = raw_client
                 return llm
 
@@ -82,7 +64,7 @@ class LLMFactory:
                     callback_manager=callback_manager,
                     temperature=0,
                 )
-                # See the groq branch above -- same fix, same reason.
+                # Same reason as the groq branch above.
                 llm._aclient = raw_client
                 return llm
 
@@ -98,20 +80,17 @@ class LLMFactory:
                     is_chat_model=True,
                     callback_manager=callback_manager,
                     temperature=0,
-                    # OpenRouter-routed models here (Generator, Critic) are
-                    # reasoning-tuned (nemotron, gpt-oss); without this,
-                    # reasoning tokens can exhaust the completion-token
-                    # budget and leave message.content=None, crashing
-                    # downstream json.loads() calls. effort="none" is
-                    # rejected by some endpoints (e.g. gpt-oss-20b:free:
-                    # "Reasoning is mandatory for this endpoint and cannot
-                    # be disabled") -- "low" is accepted everywhere tested
-                    # and still caps the reasoning-token spend. The openai
-                    # SDK has no typed `reasoning` kwarg -- OpenRouter's
-                    # unified reasoning field travels via extra_body.
+                    # These OpenRouter-routed models (nemotron, gpt-oss) are
+                    # reasoning-tuned: without a cap, reasoning tokens can
+                    # exhaust the completion-token budget and leave
+                    # message.content=None, crashing the caller's json.loads().
+                    # effort="none" is rejected by some endpoints (gpt-oss-20b:free
+                    # requires reasoning to stay on); "low" is accepted everywhere
+                    # tested and still bounds the spend. The openai SDK has no
+                    # typed reasoning kwarg, so it travels via extra_body.
                     additional_kwargs={"extra_body": {"reasoning": {"effort": "low"}}},
                 )
-                # See the groq branch above -- same fix, same reason.
+                # Same reason as the groq branch above.
                 llm._aclient = raw_client
                 return llm
 
@@ -123,7 +102,7 @@ class LLMFactory:
         stage: str,
         callback_manager: Optional[CallbackManager] = None,
     ) -> Any:
-        """Convenience: fetch client using config.MODEL_ROUTING for a stage."""
+        """Return a client for the model and provider routed to this stage."""
         try:
             entry = config.MODEL_ROUTING[stage]
         except KeyError as exc:

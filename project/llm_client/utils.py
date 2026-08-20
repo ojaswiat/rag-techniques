@@ -7,8 +7,7 @@ logger = logging.getLogger(__name__)
 
 
 def _is_rate_limit_error(exc: BaseException) -> bool:
-    """Return True if the exception is a HTTP 429 rate‑limit error."""
-    # OpenAI compatible clients raise errors with status_code attribute
+    """Return True if the exception is a HTTP 429 rate-limit error."""
     return hasattr(exc, "status_code") and getattr(exc, "status_code") == 429
 
 

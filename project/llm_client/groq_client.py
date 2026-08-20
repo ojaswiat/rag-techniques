@@ -1,8 +1,8 @@
 """Groq client provider.
 
-Returns a ready-to-use AsyncOpenAI instance configured for Groq's OpenAI-compatible
-endpoint with retry and semaphore applied. Also provides a backward‑compatible
-module‑level ``call_groq`` coroutine that mimics the original groq_client interface.
+Builds an AsyncOpenAI client for Groq's OpenAI-compatible endpoint with retry
+and concurrency limiting applied, plus a module-level ``call_groq`` coroutine
+for callers that want a plain completion without constructing their own client.
 """
 
 from __future__ import annotations
@@ -30,7 +30,6 @@ def get_groq_client(model: str) -> AsyncOpenAI:
     )
     _semaphore = asyncio.Semaphore(config.GROQ_MAX_CONCURRENCY)
 
-    # Wrap the create method with retry and semaphore
     original_create = _client.chat.completions.create
 
     @_retry_decorator()
@@ -39,12 +38,13 @@ def get_groq_client(model: str) -> AsyncOpenAI:
             return await original_create(**kwargs)
 
     _client.chat.completions.create = wrapped_create  # type: ignore[assignment]
-    # Attach the semaphore so external code can access it (used by tests)
+    # Exposed on the client so the test suite can assert on it directly.
     _client._semaphore = _semaphore  # type: ignore[attr-defined]
     return _client
 
 
-# Backward‑compatible shim for existing test suite
+# Module-level client so call_groq() below and importers of _client/_semaphore
+# have one ready without building their own.
 _shim_client = get_groq_client("placeholder-model")
 _client = _shim_client
 _semaphore = _shim_client._semaphore  # type: ignore[attr-defined]
@@ -57,7 +57,7 @@ async def call_groq(
     temperature: float = 0.0,
     tools: list[dict] | None = None,
 ) -> Any:
-    """Drop‑in replacement for the original groq_client.call_groq."""
+    """Send a chat completion to Groq and return the raw response."""
     kwargs: dict[str, Any] = {
         "model": model,
         "messages": messages,

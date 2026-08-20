@@ -18,9 +18,9 @@ from openai import AsyncOpenAI
 logger = logging.getLogger(__name__)
 
 # Rate limit: 20 requests per 60 seconds => min interval 3.0 seconds. This
-# ceiling is per-minute and is unaffected by OpenRouter's daily-request cap
-# (50/day unfunded, 1000/day with $10+ lifetime credit) -- funding the
-# account raises the daily budget, not the per-minute throughput.
+# per-minute ceiling is separate from OpenRouter's daily-request cap (50/day
+# unfunded, 1000/day with $10+ lifetime credit); funding the account raises
+# the daily budget, not the per-minute throughput.
 _MIN_REQUEST_INTERVAL = 60.0 / 20.0
 _last_request_time = 0.0
 _request_lock = asyncio.Lock()
@@ -40,15 +40,12 @@ def get_openrouter_client(model: str) -> AsyncOpenAI:
     )
     _semaphore = asyncio.Semaphore(getattr(config, "OPENROUTER_MAX_CONCURRENCY", 5))
 
-    # Wrap the create method with retry, semaphore, and rate limiting
     original_create = _client.chat.completions.create
 
     @_retry_decorator()
     async def wrapped_create(**kwargs):
         global _last_request_time
-        # Acquire semaphore for concurrency limit
         async with _semaphore:
-            # Enforce minimum interval between requests
             async with _request_lock:
                 elapsed = time.monotonic() - _last_request_time
                 if elapsed < _MIN_REQUEST_INTERVAL:
@@ -56,7 +53,8 @@ def get_openrouter_client(model: str) -> AsyncOpenAI:
                 try:
                     result = await original_create(**kwargs)
                 except Exception as exc:
-                    # Log and re-raise to let tenacity retry if applicable
+                    # Logged before re-raising so a retry that eventually
+                    # succeeds still leaves a record of the failed attempt.
                     logger.warning(
                         "OpenRouterClient call failed: model=%s, error=%s",
                         model,
