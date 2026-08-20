@@ -1,25 +1,11 @@
-"""Benchmark cell orchestrator (Architecture.md §4.5a).
+"""Runs a single benchmark cell, one (source_set, query_id, pipeline,
+k_value) run, and writes one `results` row.
 
-One "cell" is a single (source_set, query_id, pipeline, k_value) run:
-retrieve k nodes for the query from one pipeline, hand them to the shared
-Answerer, and write one `results` row. The full benchmark is the cross
-product of the query set, the three pipelines, and the three K values.
-
-Resumability is row-level and rests on
-`results.UNIQUE(source_set, query_id, pipeline, k_value)` (Architecture.md
-§3.4): every run first reads back the keys already committed and skips
-them, so a crash or an interrupted overnight batch never re-spends
-free-tier quota on a cell that is already recorded.
-
-Retrievers are injected rather than imported here. P1/P2/P3 own very
-different heavyweight setup (a Chroma collection plus a cross-encoder, a
-pickled BM25 corpus, a cached summary tree), and constructing all three
-eagerly would make a single-pipeline run pay for all of them -- so the
-caller decides which pipelines are in play.
-
-The Judge's columns (precision_at_k, recall_at_k, evidence_hit,
-citation_match, token_f1, exact_match, judge_score, human_score) are left
-NULL here. This phase produces the raw outputs; Phase 6 scores them.
+Resumability rests on the `results.UNIQUE(source_set, query_id, pipeline,
+k_value)` constraint: a run reads back the keys already committed and skips
+them, so an interrupted batch never re-spends quota on a recorded cell.
+Retrievers are injected rather than imported here, since constructing all
+three eagerly would make a single-pipeline run pay for all of them.
 """
 import argparse
 import asyncio
@@ -41,10 +27,10 @@ def result_id(source_set: str, query_id: str, pipeline: str, k_value: int) -> st
     """Derived from the natural key rather than a running counter.
 
     result_id is the table's PRIMARY KEY while
-    (source_set, query_id, pipeline, k_value) is its UNIQUE key, so making
-    the former a function of the latter means the two can never disagree --
-    and a re-run of an already-written cell fails loudly on the primary key
-    instead of quietly inserting a second row under a fresh sequence number.
+    (source_set, query_id, pipeline, k_value) is its UNIQUE key; making the
+    former a function of the latter means the two can never disagree, so a
+    re-run of an already-written cell fails loudly on the primary key
+    instead of quietly inserting a second row.
     """
     return f"R_{source_set}_{query_id}_{pipeline}_K{k_value}"
 
@@ -56,9 +42,8 @@ def build_cells(
     completed: set[tuple[str, str, int]],
 ) -> list[dict]:
     """Outstanding cells, query-major so all three pipelines answer a given
-    query before the run moves on -- the same-query-across-pipelines
-    ordering the comparison depends on, preserved even if a run is cut
-    short by the throttle or by an interruption."""
+    query before the run moves on, preserving the same-query-across-pipelines
+    ordering the comparison depends on even if the run is cut short."""
     cells = []
     for query in queries:
         for pipeline in pipelines:
@@ -134,9 +119,8 @@ async def main(
     cells = build_cells(queries, pipelines, k_values, completed)
     total_outstanding = len(cells)
 
-    # Guardrails: LOCAL_TEST_THROTTLE caps a run at THROTTLE_LIMIT cells.
-    # The cap is on cells rather than on queries because a cell is the unit
-    # that spends quota -- one query under throttle would still fan out to
+    # The throttle caps cells rather than queries: a cell is the unit that
+    # spends quota, so one query under throttle would still fan out to
     # pipelines x K values worth of LLM calls.
     cells = apply_throttle(cells)
 

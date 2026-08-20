@@ -1,8 +1,7 @@
 """SQLite access layer: five isolated tables, WAL mode, JSON-in-TEXT convention.
 
-See resources/specs/Architecture.md §3.2 for the authoritative DDL and §3.4
-for integrity notes. This module is the only place that touches raw JSON
-strings for node-ID list columns — everything else works with list[str].
+This is the only module that touches raw JSON strings for node-id list
+columns; everything else works with list[str].
 """
 import json
 
@@ -92,14 +91,13 @@ async def init_db(db_path: str) -> None:
 
 
 async def _migrate_golden_queries_schema(conn: aiosqlite.Connection) -> None:
-    """CREATE TABLE IF NOT EXISTS never alters an already-existing table, so
-    a golden_queries table created under an older schema (missing is_good,
-    or the old human_score BETWEEN 1 AND 10 CHECK) silently persists forever
-    -- the exact gap that let the 0-100/is_good rescale drift out of sync
-    with this project's real on-disk database. Rebuild the table in place
-    when stale, but only if it holds no real rows: SQLite can't ALTER an
-    existing CHECK constraint, so fixing it requires recreating the table,
-    and this refuses to silently discard real hand-labeled research data.
+    """CREATE TABLE IF NOT EXISTS never alters an already-existing table, so a
+    golden_queries table built under an older schema (missing is_good, or the
+    old human_score BETWEEN 1 AND 10 CHECK) would otherwise persist unchanged.
+    Rebuilds the table in place when stale, but only if it holds no real
+    rows: SQLite cannot alter an existing CHECK constraint, so fixing one
+    means recreating the table, and this refuses to silently discard real
+    hand-labelled research data.
     """
     cursor = await conn.execute("PRAGMA table_info(golden_queries)")
     columns = {row[1] for row in await cursor.fetchall()}
@@ -230,11 +228,11 @@ async def get_quadrant_counts(db_path: str, table: str) -> dict[str, int]:
 
 
 async def get_all_query_texts(db_path: str) -> list[tuple[str, str]]:
-    """(query_id, query_text) pairs from all three quadrant-fill tables --
-    queries, golden_queries, judge_validation -- combined. Used by the
-    duplicate-question check: a duplicate between a PQ and a GQ is
-    just as real a problem as a duplicate within one table, so the check
-    must see the whole 140-query set, not just one table at a time."""
+    """(query_id, query_text) pairs from all three quadrant-fill tables
+    (queries, golden_queries, judge_validation), combined. Used by the
+    duplicate-question check: a duplicate between a PQ and a GQ is just as
+    real a problem as a duplicate within one table, so the check must see
+    the whole 140-query set, not just one table at a time."""
     async with aiosqlite.connect(db_path) as conn:
         cursor = await conn.execute(
             """SELECT query_id, query_text FROM queries
@@ -254,9 +252,9 @@ async def get_queries(db_path: str, source_set: str) -> list[dict]:
     """Benchmark queries for one results.source_set value.
 
     Only 'PQ' and 'JEQ' are addressable here: those are the two values the
-    results table's CHECK constraint permits, so golden_queries ('GQ' --
-    the Judge's few-shot exemplar pool) is deliberately unreachable. That
-    keeps the exemplar set out of any code path that feeds a pipeline.
+    results table's CHECK constraint permits, so golden_queries ('GQ', the
+    Judge's few-shot exemplar pool) is deliberately unreachable, keeping the
+    exemplar set out of any code path that feeds a pipeline.
     """
     try:
         table = _SOURCE_SET_TABLES[source_set]
@@ -315,8 +313,8 @@ async def update_golden_query_labels(
 async def get_results(db_path: str, source_set: str) -> list[dict]:
     """Every results row for one source_set, JSON node-id columns decoded.
 
-    The JSON-in-TEXT boundary stays here (§4.4): callers receive
-    retrieved_node_ids / cited_node_ids as plain list[str].
+    The JSON-in-TEXT boundary stays here: callers receive retrieved_node_ids
+    and cited_node_ids as plain list[str].
     """
     async with aiosqlite.connect(db_path) as conn:
         conn.row_factory = aiosqlite.Row
@@ -338,10 +336,10 @@ async def get_jeq_judging_rows(db_path: str) -> list[dict]:
     """The 60 gate rows, each joined to its judge_validation ground truth.
 
     async_judge.py scores one results row at a time but needs that row's
-    quadrant (to pick the 5 matching exemplars), ground-truth answer, and
-    gt_citations -- none of which live in results. The join supplies them so
-    the Judge never has to reach across tables itself. JSON list columns from
-    both tables are decoded to list[str].
+    quadrant, ground-truth answer, and gt_citations, none of which live in
+    results. The join supplies them so the Judge never has to reach across
+    tables itself; JSON list columns from both tables are decoded to
+    list[str].
     """
     async with aiosqlite.connect(db_path) as conn:
         conn.row_factory = aiosqlite.Row
@@ -365,7 +363,7 @@ async def get_jeq_judging_rows(db_path: str) -> list[dict]:
 
 
 async def get_golden_queries_by_quadrant(db_path: str, quadrant: str) -> list[dict]:
-    """The teaching exemplars for one quadrant (Guardrails.md §4a).
+    """The teaching exemplars for one quadrant.
 
     async_judge.py builds a prompt from exactly the 5 GQ that share the
     target row's quadrant, never all 20, so this reads a single quadrant's

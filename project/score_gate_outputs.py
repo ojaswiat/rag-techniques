@@ -1,18 +1,11 @@
-"""Human scoring and the Judge validation gate (Architecture.md §4.5b).
+"""Human scoring and the Judge validation gate.
 
-The final Phase 6 step. It collects the researcher's human_score for each of
-the 60 JEQ gate rows, then measures how closely the automated Judge agrees
-with that human standard and enforces the hard gate before Phase 7.
-
-Agreement rule (deviations.md #26): both scores are rescaled from 1-10 to
-0-100 (x10); a row *agrees* when they differ by no more than +/-10 points on
-that scale (equivalently within +/-1 on 1-10 -- a single point of ordinal
-subjectivity is not treated as disagreement). The Agreement Rate is the
-percentage of scored rows that agree, and the gate is a strict
-Agreement Rate > 80%.
-
-Anti-bias: the human is never shown the Judge's score while scoring, so the
-two judgements stay independent -- the whole point of the gate.
+Collects a human_score for each of the 60 JEQ gate rows, then measures how
+closely the automated Judge agrees with that human standard. Both scores are
+rescaled to 0-100; a row agrees when they differ by no more than 10 points
+on that scale, and the gate requires an Agreement Rate strictly above 80%.
+The human never sees the Judge's score while scoring, keeping the two
+judgements independent.
 """
 import argparse
 import asyncio
@@ -63,7 +56,7 @@ def compute_agreement_rate(rows: list[dict], *, tolerance: int = AGREEMENT_TOLER
 
 
 def _render_row_for_human(row: dict) -> str:
-    """What the researcher sees before scoring one row -- no judge_score."""
+    """What the researcher sees before scoring one row: no judge_score."""
     return (
         "\n--- Score this answer 1-10 ---\n"
         f"Question: {row['query_text']}\n"
