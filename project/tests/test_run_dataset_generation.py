@@ -23,14 +23,12 @@ from dataset_generation.run_dataset_generation import (
 
 @pytest.fixture(autouse=True)
 def _isolate_progress_log(monkeypatch, tmp_path):
-    """Every test in this module calls main(), which now calls
-    _configure_logging() on entry. Without isolation, the first test to run
-    would permanently attach handlers pointing at the real
-    logs/dataset_generation_progress.log (since _configure_logging is a
-    no-op once logger.handlers is non-empty), and every later test would
-    silently reuse that same real-path config. Point PROGRESS_LOG_PATH at a
-    per-test tmp_path and clear handlers before/after each test so every
-    test gets a fresh, isolated logger configuration."""
+    """Every test here calls main(), which calls _configure_logging() on entry.
+    _configure_logging is a no-op once logger.handlers is non-empty, so
+    without isolation the first test to run would attach handlers pointing at
+    the real logs/dataset_generation_progress.log and every later test would
+    reuse them. Point PROGRESS_LOG_PATH at a per-test tmp_path and clear
+    handlers around each test."""
     monkeypatch.setattr(rdg, "PROGRESS_LOG_PATH", tmp_path / "progress.log")
     rdg.logger.handlers.clear()
     yield
@@ -127,8 +125,7 @@ async def test_main_smoke_runs_under_throttle(monkeypatch):
 async def test_resume_after_restart_does_not_collide_with_existing_query_ids(monkeypatch):
     """Simulates process A having already committed 2 accepted queries into
     (queries, Q1_Direct_Text) before crashing. Process B restarts main(), and
-    the newly generated query_id must be QT1_PQ_003 -- not a
-    collision with the _001/_002 rows process A already committed.
+    the newly generated query_id must be QT1_PQ_003, not a collision with the _001/_002 rows process A already committed.
     """
     monkeypatch.setattr("dataset_generation.run_dataset_generation.config.LOCAL_TEST_THROTTLE", True)
     monkeypatch.setattr("dataset_generation.run_dataset_generation.config.THROTTLE_LIMIT", 1)
@@ -190,8 +187,7 @@ async def test_resume_after_restart_does_not_collide_with_existing_query_ids(mon
 
 @pytest.mark.asyncio
 async def test_main_with_empty_document_ids_tuple_stays_empty_not_all_filings(monkeypatch):
-    """document_ids=() means 'restrict to zero filings' -- a distinct intent
-    from document_ids=None ('not provided'). An explicitly empty
+    """document_ids=() means 'restrict to zero filings', a distinct intent from document_ids=None ('not provided'). An explicitly empty
     tuple must stay empty: get_nodes_by_document must never be called, and
     build_pools must receive an empty documents list."""
     monkeypatch.setattr("dataset_generation.run_dataset_generation.config.LOCAL_TEST_THROTTLE", True)
@@ -252,9 +248,9 @@ async def test_main_with_document_ids_none_defaults_to_all_filings(monkeypatch):
 
 
 def test_all_filings_derived_from_manifest_includes_all_13_current_filings():
-    """_ALL_FILINGS must track data/filings_manifest.json, not a stale
-    hardcoded list -- a mismatch here silently excludes filings from
-    every future Phase 4 run with no error or warning."""
+    """_ALL_FILINGS must track data/filings_manifest.json, not a stale hardcoded
+    list. A mismatch silently excludes filings from every run, with no error
+    or warning."""
     assert len(rdg._ALL_FILINGS) == 13
     assert "JPM_2023" in rdg._ALL_FILINGS
     assert "JPM_2024" in rdg._ALL_FILINGS
@@ -290,7 +286,7 @@ _FAKE_GENERATED = {
 async def test_duplicate_check_below_threshold_accepted_normally(monkeypatch, tmp_path):
     """A candidate whose embedding_similarity score against an existing
     accepted query is below _DUPLICATE_QUESTION_SIMILARITY_THRESHOLD must be
-    accepted normally -- no behaviour change for the non-duplicate case."""
+    accepted normally."""
     monkeypatch.setattr("dataset_generation.run_dataset_generation.config.LOCAL_TEST_THROTTLE", True)
     monkeypatch.setattr("dataset_generation.run_dataset_generation.config.THROTTLE_LIMIT", 1)
     monkeypatch.setattr(
@@ -388,9 +384,8 @@ async def test_duplicate_check_at_or_above_threshold_rejected_and_retried(monkey
     assert "QT1_PQ_001" in duplicate_records[0].message
     assert "0.950" in duplicate_records[0].message
 
-    # The retry feedback must steer the next attempt away from the duplicate,
-    # not just repeat -- same retry-feedback mechanism as the citation/value
-    # mismatch rejection paths.
+    # The retry feedback must steer the next attempt away from the duplicate
+    # rather than repeat it.
     second_call_feedback = mock_generate.await_args_list[1].kwargs.get("previous_attempt_feedback")
     assert second_call_feedback is not None
     assert "too similar" in second_call_feedback.lower()
@@ -402,8 +397,7 @@ async def test_first_attempt_rejected_second_attempt_receives_rejection_feedback
     """Attempt 1 is rejected by check_query (citation mismatch: Critic cites
     a node the Generator didn't). Because every Groq call runs at
     temperature=0, retrying generate_query with an identical prompt would
-    deterministically reproduce the same rejected candidate -- so attempt
-    2's call to generate_query must receive a `previous_attempt_feedback`
+    deterministically reproduce the same rejected candidate, so attempt 2's call to generate_query must receive a `previous_attempt_feedback`
     string describing what specifically failed on attempt 1, and attempt 1's
     call must not have received any feedback (nothing to report yet)."""
     monkeypatch.setattr("dataset_generation.run_dataset_generation.config.LOCAL_TEST_THROTTLE", True)
@@ -507,8 +501,8 @@ async def test_first_attempt_accepted_no_feedback_passed(monkeypatch, tmp_path):
 async def test_critic_runtime_error_on_first_attempt_recovers_on_second(monkeypatch, tmp_path):
     """critique_query raises RuntimeError (Critic exceeded tool-call rounds) on
     attempt 1; attempt 2 succeeds and the query still gets accepted. main()
-    must not crash and must not lose the section -- the existing per-attempt
-    retry loop should absorb the exception exactly like a rejection."""
+    must not crash and must not lose the section; the per-attempt retry loop
+    absorbs the exception exactly like a rejection."""
     monkeypatch.setattr("dataset_generation.run_dataset_generation.config.LOCAL_TEST_THROTTLE", True)
     monkeypatch.setattr("dataset_generation.run_dataset_generation.config.THROTTLE_LIMIT", 1)
     monkeypatch.setattr(
@@ -553,8 +547,7 @@ async def test_critic_runtime_error_on_first_attempt_recovers_on_second(monkeypa
 async def test_all_attempts_raise_json_decode_error_section_skipped_not_crashed(monkeypatch, tmp_path):
     """generate_query raises json.JSONDecodeError on every attempt (malformed
     LLM output). main() must not raise, must not insert anything, and must
-    move on (the section is skipped exactly as an all-rejected section is
-    today)."""
+    move on, skipping the section exactly as an all-rejected section is."""
     monkeypatch.setattr("dataset_generation.run_dataset_generation.config.LOCAL_TEST_THROTTLE", True)
     monkeypatch.setattr("dataset_generation.run_dataset_generation.config.THROTTLE_LIMIT", 1)
     failure_log = tmp_path / "failures.json"
@@ -649,8 +642,8 @@ async def test_api_status_error_is_caught_and_logged(monkeypatch, tmp_path):
 @pytest.mark.asyncio
 async def test_openai_api_status_error_is_caught_and_logged(monkeypatch, tmp_path):
     """The real Groq call path raises openai.APIStatusError (via LlamaIndex's
-    OpenAILike -> openai.AsyncOpenAI), not groq.APIStatusError -- a genuine
-    rate-limit/status failure must be caught and logged like any other
+    OpenAILike -> openai.AsyncOpenAI), not groq.APIStatusError. A genuine
+    rate-limit or status failure must be caught and logged like any other
     per-attempt failure, not crash the whole orchestrator."""
     import httpx
     import openai
@@ -690,8 +683,8 @@ async def test_null_gt_citations_raises_type_error_caught_and_logged(monkeypatch
     """generate_query returns valid JSON but gt_citations: null (a malformed
     but non-exception-raising LLM response). check_query -> citations_overlap
     calls set(None), raising TypeError. main() must catch this per-attempt,
-    log it, and not crash -- exactly like the other malformed-response
-    exceptions in this file."""
+    log it, and not crash, exactly like the other malformed-response exceptions
+    in this file."""
     monkeypatch.setattr("dataset_generation.run_dataset_generation.config.LOCAL_TEST_THROTTLE", True)
     monkeypatch.setattr("dataset_generation.run_dataset_generation.config.THROTTLE_LIMIT", 1)
     failure_log = tmp_path / "failures.json"
@@ -802,9 +795,8 @@ def test_classify_section_text_when_no_table_nodes():
 
 
 def test_classify_section_table_when_any_node_is_table():
-    """A single table node among mostly-text nodes is still enough material
-    for a Q3/Q4 question -- classification uses 'any', not 'majority' (see
-    classify_section's docstring for the reasoning)."""
+    """A single table node among mostly-text nodes is still enough material for a
+    Q3/Q4 question, so classification uses 'any', not 'majority'."""
     nodes = [
         _node("n1", "DOC_A", "Item 8", node_type="text"),
         _node("n2", "DOC_A", "Item 8", node_type="text"),
@@ -870,18 +862,15 @@ def test_build_pools_routes_by_content_type_and_interleaves_companies():
 
 
 def _words(n):
-    """`n` single-token words: tiktoken's cl100k_base encoding tokenizes
-    the bare word "x" to exactly 1 token, so `_words(n)` gives content with
-    an exact, predictable token count of `n` -- verified directly against
-    the real encoding, not assumed."""
+    """`n` single-token words. tiktoken's cl100k_base encoding tokenizes the bare
+    word "x" to exactly 1 token, so `_words(n)` gives content with an exact
+    token count of `n`, checked against the real encoding."""
     return " ".join(["x"] * n)
 
 
 def test_chunk_section_under_limit_returns_itself_unchanged():
-    """The overwhelmingly common case: a section under _MAX_SECTION_TOKENS
-    must produce exactly one chunk, and that chunk must be the original
-    section dict, unchanged -- zero behaviour change for ordinary
-    sections."""
+    """The common case: a section under _MAX_SECTION_TOKENS must produce exactly
+    one chunk, and that chunk must be the original section dict, unchanged."""
     nodes = [_node("n1", "DOC_A", "Item 1A", node_type="text", content="alpha beta gamma")]
     section = _section(["n1"])
 
@@ -921,7 +910,7 @@ def test_chunk_section_over_limit_splits_into_multiple_chunks_each_under_limit(m
 def test_chunk_section_never_splits_text_node_away_from_following_table(monkeypatch):
     """Naive greedy packing would close the chunk right before n2 (the
     6-token text node n1 already fills the 10-token budget, and n2 alone
-    would push it over) -- but n2 is a table immediately following text
+    would push it over), but n2 is a table immediately following text
     node n1, so the boundary must back up and keep n1+n2 together in one
     (over-budget) chunk instead of splitting them."""
     monkeypatch.setattr(rdg, "_MAX_SECTION_TOKENS", 10)
@@ -954,7 +943,7 @@ def test_chunk_section_never_splits_text_node_away_from_following_table(monkeypa
 def test_chunk_section_single_oversized_node_logged_and_skipped_rest_packed(monkeypatch, caplog):
     """A single node (almost always one huge table) that alone exceeds
     _MAX_SECTION_TOKENS cannot be split further without breaking table
-    atomicity -- it must be logged and skipped, without blocking the rest
+    atomicity, so it must be logged and skipped, without blocking the rest
     of the section's nodes from being packed normally."""
     monkeypatch.setattr(rdg, "_MAX_SECTION_TOKENS", 10)
     nodes = [
@@ -982,8 +971,7 @@ def test_chunk_section_single_oversized_node_logged_and_skipped_rest_packed(monk
 
 def test_next_target_restricts_search_to_given_quadrants():
     """A pool restricted to _TABLE_QUADRANTS must never report a target in
-    Q1/Q2, even if those quadrants are the emptiest overall -- this is what
-    keeps table sections from ever being routed at a text quadrant."""
+    Q1/Q2, even if those quadrants are the emptiest overall. That is what keeps table sections from ever being routed at a text quadrant."""
     counts = {
         table: {q: 0 for q in _QUADRANTS}
         for table in ("queries", "golden_queries", "judge_validation")
@@ -1014,9 +1002,8 @@ def test_format_underfill_summary_marks_only_below_target_quadrants():
 async def test_main_pool_cycling_is_capped_and_terminates(monkeypatch, tmp_path):
     """If accepted counts never actually rise from the DB's point of view
     (e.g. get_quadrant_counts stubbed to always return 0, simulating a slot
-    that structurally can never be satisfied), main() must not loop forever
-    -- it should visit the one available section exactly _MAX_POOL_CYCLES
-    times and then stop."""
+    that structurally can never be satisfied), main() must not loop forever. It visits the one available section exactly
+    _MAX_POOL_CYCLES times, then stops."""
     monkeypatch.setattr("dataset_generation.run_dataset_generation.config.LOCAL_TEST_THROTTLE", False)
     monkeypatch.setattr("dataset_generation.run_dataset_generation._MAX_POOL_CYCLES", 2)
     monkeypatch.setattr(
@@ -1068,7 +1055,7 @@ async def test_main_routes_table_sections_only_to_table_quadrants(monkeypatch, t
     """End-to-end content-aware routing check: a document with one text
     section and one table section must only ever have generate_query called
     with a text quadrant for the text section and a table quadrant for the
-    table section -- never mismatched."""
+    table section, never mismatched."""
     monkeypatch.setattr("dataset_generation.run_dataset_generation.config.LOCAL_TEST_THROTTLE", False)
     monkeypatch.setattr(
         "dataset_generation.run_dataset_generation.SUMMARY_LOG_PATH", tmp_path / "summary.json"
