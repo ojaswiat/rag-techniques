@@ -1,10 +1,8 @@
-"""Builds the shared P1 vector index (Phase 5) -- one Chroma collection,
+"""Builds the shared P1 vector index: one Chroma collection,
 metadata-tagged by document_id, covering every filing's nodes.
 
 Fully local: embeddings via fastembed (BAAI/bge-small-en-v1.5), no LLM
-call, per Guardrails.md's "Retrieval/indexing runs locally" rule.
-Resumable at document granularity, matching build_summary_index.py's
-skip-if-already-built pattern.
+call. Resumable at document granularity.
 """
 import asyncio
 import json
@@ -26,13 +24,13 @@ DB_PATH = "benchmark.db"
 MANIFEST_PATH = "data/filings_manifest.json"
 EMBED_MODEL_NAME = "BAAI/bge-small-en-v1.5"
 
-# nodes_to_llama_nodes (shared with P3) puts these keys in TextNode.metadata.
-# P1 must embed only the raw content -- letting node_type or
-# parent_item_header leak into the embedded text would give the vector
-# pipeline structural signal that P2/P3 don't get, breaking the
-# semantic-vs-statistical-vs-structural comparability the benchmark relies
-# on. Excluded from both embed and LLM metadata modes for uniform handling,
-# even though no LLM call happens in this pipeline.
+# nodes_to_llama_nodes (shared with P3) puts these keys in
+# TextNode.metadata. P1 must embed only the raw content: letting
+# node_type or parent_item_header leak into the embedded text would give
+# the vector pipeline structural signal that P2 and P3 don't get,
+# breaking comparability between the three pipelines. Excluded from both
+# embed and LLM metadata modes for uniform handling, even though no LLM
+# call happens in this pipeline.
 _STRUCTURAL_METADATA_KEYS = [
     "parent_item_header",
     "node_type",
@@ -43,8 +41,8 @@ _STRUCTURAL_METADATA_KEYS = [
 
 def get_collection(storage_root: Path | None = None):
     # storage_root defaults to the module-level STORAGE_ROOT, resolved at
-    # call time (not bound as a default argument) so tests can monkeypatch
-    # bvi.STORAGE_ROOT and have every call pick up the override.
+    # call time rather than bound as a default argument, so tests can
+    # monkeypatch STORAGE_ROOT and have every call pick up the override.
     if storage_root is None:
         storage_root = STORAGE_ROOT
     client = chromadb.PersistentClient(path=str(storage_root))
@@ -77,7 +75,7 @@ async def build_index_for_document(
         )
 
     llama_nodes = nodes_to_llama_nodes(nodes)
-    # Strip structural metadata before it can reach the embedding text --
+    # Strip structural metadata before it can reach the embedding text,
     # see _STRUCTURAL_METADATA_KEYS above. Only node.text (raw content) is
     # embedded after this.
     for node in llama_nodes:
@@ -109,11 +107,11 @@ async def build_index_for_document(
     # Chroma's collection.add() silently keeps the OLD row and drops the
     # new one on a duplicate id, instead of erroring or overwriting. If any
     # of this document's node ids already existed in the collection under a
-    # different (or missing) document_id -- e.g. leftover rows from a prior
-    # run that used different node ids for the same slot -- the write above
-    # would have completed without indexing all of this document's nodes,
-    # with no exception raised anywhere. Verifying the row count here turns
-    # that silent gap into a hard failure at build time.
+    # different (or missing) document_id, for example leftover rows from a
+    # prior run that used different node ids for the same slot, the write
+    # above would have completed without indexing all of this document's
+    # nodes, with no exception raised anywhere. Verifying the row count
+    # here turns that silent gap into a hard failure at build time.
     indexed = collection.get(where={"document_id": document_id})
     if len(indexed["ids"]) != len(llama_nodes):
         raise RuntimeError(

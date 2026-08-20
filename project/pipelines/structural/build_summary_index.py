@@ -1,9 +1,8 @@
-"""Builds and persists one hierarchical TreeIndex per filing (Phase 3,
-Guardrails.md §1 -- the only index build permitted to call an LLM, and it
-must run once and be cached, never per query).
+"""Builds and persists one hierarchical TreeIndex per filing.
 
-Deliberately routes LLM calls through LLMFactory to support multi-provider
-routing and custom rate limiting/semaphore execution.
+This is the only index build permitted to call an LLM; it runs once per
+filing and is cached, never rebuilt per query. LLM calls route through
+LLMFactory for multi-provider routing and rate limiting.
 """
 import asyncio
 import json

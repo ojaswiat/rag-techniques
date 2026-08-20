@@ -1,10 +1,8 @@
-"""Builds the per-document P2 BM25 index (Phase 5) -- one pickled
-BM25Okapi corpus per filing under storage/bm25/.
+"""Builds the per-document P2 BM25 index: one pickled BM25Okapi corpus
+per filing under storage/bm25/.
 
-Purely statistical: rank_bm25.BM25Okapi over the shared tokenizer, no
-embeddings, no LLM call, per Guardrails.md's "Retrieval/indexing runs
-locally" rule. Resumable at document granularity, matching
-build_vector_index.py's skip-if-already-built pattern.
+Purely statistical, rank_bm25 over the shared tokenizer, no embeddings
+and no LLM call. Resumable at document granularity.
 """
 import asyncio
 import json

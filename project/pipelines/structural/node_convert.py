@@ -1,6 +1,7 @@
-"""Converts nodes-table rows into LlamaIndex TextNode objects for Phase 3's
-TreeIndex build. Kept separate from build_summary_index.py so the shape
-mapping (node dict -> TextNode) can be unit-tested without touching Groq.
+"""Converts nodes-table rows into LlamaIndex TextNode objects.
+
+Kept separate from build_summary_index.py so the node-to-TextNode mapping
+can be unit-tested without touching Groq.
 """
 from llama_index.core.schema import TextNode
 

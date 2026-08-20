@@ -1,10 +1,9 @@
-"""P3: structural summary-tree retrieval (Architecture.md §6 Phase 5).
+"""P3: structural summary-tree retrieval.
 
-Loads the per-filing TreeIndex persisted by build_summary_index.py and
+Loads the per-filing TreeIndex built by build_summary_index.py and
 traverses it root-to-leaf by embedding similarity against the LLM-written
-summary nodes (Architecture.md §5, "P3 retrieval stays local"). The tree
-build is the only stage allowed to call an LLM; no LLM call happens
-anywhere in this class.
+summary nodes. No LLM call happens in this class; only the tree build
+step is allowed to call one.
 """
 from pathlib import Path
 
@@ -24,9 +23,9 @@ _RETRIEVER_MODE = "select_leaf_embedding"
 class P3StructuralRetriever(Retriever):
     def __init__(self, storage_root: Path | None = None):
         # storage_root defaults to bsi.STORAGE_ROOT resolved here, at call
-        # time, not bound as a def-time default -- so tests that
+        # time, rather than bound as a def-time default, so tests that
         # monkeypatch bsi.STORAGE_ROOT are honoured even when the caller
-        # omits storage_root, matching p1_vector.py/p2_bm25.py.
+        # omits storage_root.
         if storage_root is None:
             storage_root = bsi.STORAGE_ROOT
         self._storage_root = storage_root

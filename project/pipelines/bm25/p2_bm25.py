@@ -1,11 +1,8 @@
-"""P2: BM25 statistical retrieval (Architecture.md §6 Phase 5).
+"""P2: BM25 statistical retrieval.
 
-Loads the per-document pickled BM25Okapi corpus built by
-build_bm25_index.py, tokenizes the query with the exact same tokenizer
-used at index time, and ranks by BM25 score. No embeddings, no LLM call
-anywhere in this class -- node content comes straight from
-database_manager rather than through the LlamaIndex node-conversion
-machinery P1/P3 use, keeping P2 a genuinely raw statistical baseline.
+Loads the per-document BM25Okapi corpus and ranks by BM25 score using
+the same tokenizer as index time. No embeddings, no LLM call anywhere
+in this class.
 """
 import asyncio
 import pickle
@@ -47,14 +44,11 @@ class P2BM25Retriever(Retriever):
             key=lambda item: (-item[0], item[1]),
         )[:k]
 
-        # retrieve() is sync because the shared Retriever ABC requires it, so
-        # this async DB read is driven by asyncio.run(). asyncio.run() raises
-        # RuntimeError if called while an event loop is already running, so a
-        # future async caller (an `async def main()` loop script, as used
-        # elsewhere in this repo) must not call retrieve() directly on its own
-        # loop. Such a caller should either wrap the call in
-        # asyncio.to_thread(retriever.retrieve, ...), or drop the DB round-trip
-        # entirely by carrying node text inside the pickled index payload.
+        # retrieve() is sync because the Retriever ABC requires it, so this
+        # DB read runs via asyncio.run(), which raises RuntimeError if called
+        # from a thread that already has an event loop running. A future
+        # async caller should use asyncio.to_thread(retriever.retrieve, ...)
+        # instead of calling retrieve() directly from its own loop.
         nodes = asyncio.run(dbm.get_nodes_by_document(self._db_path, document_id))
         nodes_by_id = {node["node_id"]: node for node in nodes}
 

@@ -1,9 +1,8 @@
-"""P1: semantic vector retrieval (Architecture.md §6 Phase 5).
+"""P1: semantic vector retrieval.
 
-Filters to the query's own document_id (required, not the banned
-metadata pre-filter -- see Architecture.md Decision 0.2), then reranks a
-wider Chroma candidate set down to k with a local cross-encoder. No LLM
-call anywhere in this class.
+Filters to the query's own document_id, which is required and not the
+banned metadata pre-filter, then reranks a wider Chroma candidate set
+down to k with a local cross-encoder. No LLM call anywhere in this class.
 """
 from pathlib import Path
 
@@ -27,9 +26,9 @@ _MIN_PREFETCH = 20
 class P1VectorRetriever(Retriever):
     def __init__(self, storage_root: Path | None = None):
         # storage_root defaults to bvi.STORAGE_ROOT resolved here, at call
-        # time, not bound as a def-time default -- so tests that
+        # time, rather than bound as a def-time default, so tests that
         # monkeypatch bvi.STORAGE_ROOT are honoured even when the caller
-        # omits storage_root, matching build_vector_index.py's pattern.
+        # omits storage_root.
         if storage_root is None:
             storage_root = bvi.STORAGE_ROOT
         collection = bvi.get_collection(storage_root)

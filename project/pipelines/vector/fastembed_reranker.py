@@ -1,11 +1,8 @@
-"""Cross-encoder reranker for P1, backed by fastembed's ONNX TextCrossEncoder.
+"""Cross-encoder reranker for P1, backed by fastembed's ONNX
+TextCrossEncoder.
 
-No official llama-index postprocessor package wraps fastembed's reranker
-(confirmed absent from PyPI), so this is a small custom
-BaseNodePostprocessor -- the same fastembed-over-torch substitution already
-used project-wide for BAAI/bge-small-en-v1.5 (see
-resources/research/deviations.md entry 13), applied here to
-BAAI/bge-reranker-base.
+No official llama-index postprocessor wraps fastembed's reranker, so
+this is a small custom BaseNodePostprocessor around BAAI/bge-reranker-base.
 """
 from fastembed.rerank.cross_encoder import TextCrossEncoder
 from llama_index.core.bridge.pydantic import PrivateAttr

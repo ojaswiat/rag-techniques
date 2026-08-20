@@ -1,17 +1,8 @@
-"""Shared Answerer: turns (query, retrieved nodes) into a cited answer.
+"""Turns a query plus its retrieved nodes into a cited answer.
 
-One Answerer serves all three pipelines (Architecture.md §4.1). Holding the
-generation step constant is what makes the benchmark a comparison of
-*retrieval* strategies -- any difference in answer quality between P1, P2
-and P3 must come from which nodes reached this class, never from how those
-nodes were turned into prose.
-
-Anti-leakage (Architecture.md §4.1, Guardrails.md §3): the prompt carries
-only the query text and the retrieved nodes' ids and content. No
-exemplars, no ground-truth answer, no gt_citations, no quadrant label, and
-no node metadata -- a node's parent_item_header or page number would hint
-at where the answer lives, which is exactly what the retrieval step is
-being measured on.
+All three pipelines share one Answerer so that score differences come from
+retrieval rather than generation. The prompt gets the query text and the
+nodes' ids and content, nothing else.
 """
 import re
 import time
@@ -25,8 +16,8 @@ from llm_client.llm_factory import LLMFactory
 
 _STAGE = "answerer"
 
-# Architecture.md §4.2. Markers are kept in pipeline_output rather than
-# stripped, so a stored answer stays auditable against its own citations.
+# Markers are kept in pipeline_output rather than stripped, so a stored
+# answer stays auditable against its own citations.
 _CITATION_PATTERN = re.compile(r"\[\[node:([\w\-]+)\]\]")
 
 _SYSTEM_PROMPT = (
@@ -57,12 +48,7 @@ def parse_citations(raw_text: str) -> list[str]:
 
 
 def build_prompt(query_text: str, nodes: list[NodeWithScore]) -> str:
-    """The user-role message: retrieved sources, then the question.
-
-    Each node contributes its id and its text and nothing else -- the id
-    because the model has to be able to cite it, the text because it is the
-    evidence. See this module's docstring for why metadata is excluded.
-    """
+    """Builds the user-role message: retrieved sources, then the question."""
     blocks = [
         f"[node:{node.node.node_id}]\n{node.node.get_content()}" for node in nodes
     ]
@@ -77,12 +63,11 @@ class Answerer:
         temperature: float = 0.0,
     ):
         routed_model = config.MODEL_ROUTING[_STAGE]["model"]
-        # The routing matrix and temperature=0 are fixed constraints, and
-        # LLMFactory already applies both when it builds the client. These
-        # parameters exist because Architecture.md §4.1 specifies them, so
-        # a contradicting value is rejected outright rather than silently
-        # ignored -- a benchmark run that thinks it used a different model
-        # or a nonzero temperature would be unreproducible.
+        # Model and temperature are fixed by config.MODEL_ROUTING and are
+        # already applied when LLMFactory builds the client. These
+        # parameters exist only to reject a contradicting value outright,
+        # since a benchmark run that thinks it used a different model or
+        # temperature would be unreproducible.
         if model != routed_model:
             raise ValueError(
                 f"Answerer model is fixed to {routed_model!r} by "
@@ -98,9 +83,9 @@ class Answerer:
 
     def _get_client(self):
         # Built on first use, not in __init__, so constructing an Answerer
-        # never reaches for API credentials -- and so the whole 900-cell run
-        # reuses one client (with its retry and concurrency wrapping) instead
-        # of rebuilding it per call.
+        # never reaches for API credentials, and the whole run reuses one
+        # client (with its retry and concurrency wrapping) instead of
+        # rebuilding it per call.
         if self._client is None:
             self._client = LLMFactory.get_client_for_stage(_STAGE)
         return self._client

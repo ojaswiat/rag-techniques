@@ -1,8 +1,8 @@
-"""Custom BM25 tokenizer (Project Idea.md §6): preserves numbers, decimals,
-percentages and currency amounts; strips table-markdown pipes; applies no
-stemming. Called identically at index time (build_bm25_index.py) and
-query time (p2_bm25.py) -- one function, both call sites, so scores are
-never computed against mismatched vocabularies.
+"""Custom BM25 tokenizer: preserves numbers, decimals, percentages and
+currency amounts, strips table-markdown pipes, applies no stemming.
+
+Called identically at index time and query time, so scores are never
+computed against mismatched vocabularies.
 """
 import re
 
