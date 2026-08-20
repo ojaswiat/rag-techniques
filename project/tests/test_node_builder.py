@@ -84,10 +84,8 @@ Incorporated by Reference
 
 
 def test_build_nodes_classifies_captioned_table_as_table():
-    """A real AAPL_2025 filing node was found with a caption line directly
-    above a table's rows (no blank line separating them) -- the original
-    first-line-only check misclassified this as text. Confirmed live in
-    Phase 2 Task 6; see resources/artifacts/Changes.md."""
+    """A caption line directly above a table's rows, with no blank line
+    separating them, still classifies as a table rather than text."""
     nodes = node_builder.build_nodes("AAPL_2025", "AAPL", 2025, CAPTIONED_TABLE_MARKDOWN)
     table_nodes = [n for n in nodes if n["node_type"] == "table"]
     assert len(table_nodes) == 1

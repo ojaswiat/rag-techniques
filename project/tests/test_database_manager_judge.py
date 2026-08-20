@@ -1,9 +1,8 @@
-"""Phase 6 read/update helpers on database_manager.
+"""Read/update helpers on database_manager for the Judge.
 
-These are additive: `upsert_result` stays INSERT-only (it guards against a
-cell being written twice), so the Judge's per-row scoring needs its own
+Additive: upsert_result stays INSERT-only, so per-row scoring needs its own
 UPDATE paths, and the gate needs a reader that joins each JEQ results row to
-its quadrant/ground-truth in judge_validation.
+its quadrant and ground truth in judge_validation.
 """
 import os
 
