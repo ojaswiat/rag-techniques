@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Rewrite every docstring and comment in the 48 Python source files so they read like a senior engineer wrote them: short, factual, and about the code rather than about the specs.
+**Goal:** Rewrite every docstring and comment in all 90 Python files, 48 source and 42 test, so they read like a senior engineer wrote them: short, factual, and about the code rather than about the specs.
 
 **Architecture:** Prose-only edits. No executable line changes anywhere. Each task takes one package, rewrites its docstrings and comments, then proves nothing executable moved by comparing the Python AST with all docstrings stripped, before and after. Work lands on `presentation`; `dev` fast-forwards at the end because it is already an ancestor.
 
@@ -18,7 +18,7 @@
 - **Work on branch `presentation`.** Do not touch `dev` until Task 7.
 - **No development history in comments.** No "previously", "used to", "was changed to", "fixed a bug where", no session or agent references, no `Doubt:` tags. Describe the code as it is.
 - **British English**, matching the rest of the repo.
-- **Scope is source only.** The 42 files under `project/tests/` are out of scope for this plan and are a separate phase.
+- **Two phases.** Phase 1 is the 48 source files (Tasks 1 to 7). Phase 2 is the 42 files under `project/tests/` (Tasks 8 to 12). `dev` moves only in Task 13, after both.
 - **Commit after every task**, with the message given in that task's final step.
 
 ---
@@ -65,6 +65,8 @@ nodes' ids and content, nothing else.
 ```
 
 **Function and method docstrings: one line, unless the signature genuinely needs more.** A one-line summary in the imperative or third person. Add an `Args:`/`Returns:` block only when a parameter's meaning or a return shape is not obvious from its name and type hint. Delete docstrings on private helpers whose name already says it, like `_headers()`.
+
+One case that always counts as not obvious: **a return annotation of `Any`, or no return annotation at all.** The hint tells the reader nothing, so keep a one-line `Returns:` naming the real type and what it is for. The same applies to a parameter whose behaviour when omitted is not visible from its default.
 
 **Comments explain why, never what.** Delete any comment that restates the line under it. Keep the ones that record a non-obvious reason: a workaround for an upstream bug, a rate limit, an ordering requirement, a constraint that would look wrong to a reader who did not know it.
 
@@ -290,13 +292,16 @@ dash = specs = 0
 for p in files:
     t = p.read_text(encoding="utf-8")
     dash += len(re.findall(r'\S\s--\s\S', t))
-    specs += len(re.findall(r'(Architecture|Guardrails|Budget|deviations)\.md|§\s?\d', t))
-print(f"remaining '--' dashes: {dash}")
-print(f"remaining spec refs:   {specs}")
+    specs += sum(
+        1 for line in t.splitlines()
+        if re.search(r'(Architecture|Guardrails|Budget|deviations)\.md|§\s?\d', line)
+    )
+print(f"remaining '--' dashes:    {dash}")
+print(f"remaining spec-ref lines: {specs}")
 EOF
 ```
 
-Expected: `--` dashes at 0, spec refs at 1 (the `config.py` routing-matrix comment kept in Step 2).
+Expected: `--` dashes at 0, spec-ref lines at 1 (the `config.py` routing-matrix comment kept in Step 2). Count lines, not regex matches: that one comment contains both `Guardrails.md` and `§2`, so a match count reports 2 for a single reference.
 
 - [ ] **Step 6: Commit**
 
@@ -619,14 +624,14 @@ git commit -m "docs(project): simplify docstrings and comments in package root"
 
 ---
 
-## Task 7: Whole-repo verification and the `dev` fast-forward
+## Task 7: Source-phase verification gate
 
 **Files:**
-- Modify: none. This task only verifies and moves a branch pointer.
+- Modify: none. This task only verifies.
 
 **Interfaces:**
 - Consumes: every commit from Tasks 1 to 6.
-- Produces: `dev` pointing at `presentation`.
+- Produces: a verified source phase. The tests phase (Tasks 8 to 12) starts from here, and `dev` moves only in Task 13.
 
 - [ ] **Step 1: Re-verify all 48 files against the original baseline**
 
@@ -652,13 +657,16 @@ lens = []
 for p in src:
     t = p.read_text(encoding='utf-8')
     dash += len(re.findall(r'\S\s--\s\S', t))
-    specs += len(re.findall(r'(Architecture|Guardrails|Budget|deviations)\.md|§\s?\d', t))
+    specs += sum(
+        1 for line in t.splitlines()
+        if re.search(r'(Architecture|Guardrails|Budget|deviations)\.md|§\s?\d', line)
+    )
     m = re.match(r'\s*(?:r|u)?"""(.*?)"""', t, re.S)
     if m:
         lens.append(m.group(1).count('\n') + 1)
 print(f"files:               {len(src)}   (baseline 48)")
 print(f"'--' dashes:         {dash}   (baseline 103, target 0)")
-print(f"spec refs:           {specs}   (baseline 102, target <= 48)")
+print(f"spec-ref lines:      {specs}   (baseline 102, target <= 48)")
 print(f"longest docstring:   {max(lens)} lines   (baseline 30, target <= 6)")
 print(f"mean docstring:      {sum(lens)/len(lens):.1f} lines   (baseline 9.2, target <= 4)")
 EOF
@@ -685,6 +693,378 @@ git log --oneline "$(cat /tmp/docstring-baseline-rev)"..presentation
 
 Expected: empty status, and seven commits listed (Task 0 plus Tasks 1 to 6).
 
+- [ ] **Step 5: Report and hand over to the tests phase**
+
+Print the before/after metrics from Step 2. Do not move any branch pointer. `dev` stays where it is until Task 13.
+
+---
+
+# Phase 2: test files
+
+The 42 files under `project/tests/` total 6,240 lines and carry 53 `--` dashes, 20 spec-reference lines, and 17 module docstrings averaging 7.6 lines. Lighter than the source phase, with one difference that changes the work.
+
+**A test's name is its documentation.** `test_fetch_filing_falls_back_to_paginated_archives` already says what the test does, so a docstring reading "Tests that fetch_filing falls back to paginated archives" is pure restatement. In this phase the default action on a test docstring is **delete**, not shorten. Keep one only where it records something the name cannot: why the fixture is shaped oddly, what upstream bug the case pins, which edge case the numbers encode.
+
+**The AST checker matters more here, not less.** A silently altered assertion is worse than a silently altered source line, because the suite would still pass while testing something different. Every task in this phase runs the same check.
+
+The style contract in Task 0 applies unchanged, including both Task 1 rulings: never add a module docstring where none exists, and keep a one-line `Returns:` when the annotation is `Any` or absent.
+
+---
+
+## Self-review
+
+**Spec coverage.** The style contract in Task 0 has seven rules: module docstring length, function docstring length, comments explain why, one spec reference per file, no `--`, no emphasis scaffolding, and do not invent. Tasks 1 to 6 each apply all seven across their package, and Task 7 Step 2 measures four of them numerically. The three that cannot be measured by regex, comments explaining why, one line per function, and do not invent, are covered by the per-task reviewer gate that subagent-driven-development provides.
+
+**Placeholder scan.** No TBD, no "similar to Task N", no "handle edge cases". The checker script is given in full rather than described. Every verification step names the command and the expected output. The one deliberate repetition is the style contract, which lives in Task 0 and is referenced rather than restated, because a subagent reads Task 0 first by instruction in the task header.
+
+**Type consistency.** The checker is `project/scripts/check_docstrings_only.py` in every task that invokes it, always with the same two-argument shape, `<git-rev> <files...>`. The baseline revision is written to `/tmp/docstring-baseline-rev` in Task 0 Step 5 and read back with `$(cat /tmp/docstring-baseline-rev)` in Tasks 1 to 7. Test counts are `339 passed, 2 skipped` throughout.
+
+**One gap worth naming.** `/tmp/docstring-baseline-rev` does not survive a machine reboot between tasks. If it is missing, recover it with `git log --oneline --all | grep "add AST checker"` and use the commit immediately before that one.
+
+---
+
+## Task 8: Client and loop tests (7 files)
+
+**Files:**
+- Modify: `project/tests/__init__.py`, `project/tests/test_config.py`, `project/tests/test_llm_factory.py`, `project/tests/test_llm_client_nim.py`, `project/tests/test_llm_client_openrouter.py`, `project/tests/test_groq_client_backoff.py`, `project/tests/test_loop_template.py`
+
+**Interfaces:**
+- Consumes: `project/scripts/check_docstrings_only.py` from Task 0.
+- Produces: nothing importable. Sets the tone Tasks 9 to 12 copy for test prose.
+
+- [ ] **Step 1: Read all seven files end to end**
+
+```bash
+cd /Users/ojaswi/Projects/rag-techniques/project
+for f in tests/__init__.py tests/test_config.py tests/test_llm_factory.py tests/test_llm_client_nim.py tests/test_llm_client_openrouter.py tests/test_groq_client_backoff.py tests/test_loop_template.py; do echo "===== $f ====="; cat "$f"; done
+```
+
+- [ ] **Step 2: Rewrite the docstrings and comments**
+
+Apply the Task 0 style contract, with the phase-2 default: delete a test docstring that restates its function name. These files cover provider clients and the shared throttle helper, so the comments worth keeping are the ones recording a provider's real limit or why a mock is shaped the way it is. A comment saying "patch the client" above a `patch.object` call is not.
+
+- [ ] **Step 3: Verify only docstrings moved**
+
+```bash
+cd /Users/ojaswi/Projects/rag-techniques/project
+.venv/bin/python scripts/check_docstrings_only.py "$(cat /tmp/docstring-baseline-rev)" tests/__init__.py tests/test_config.py tests/test_llm_factory.py tests/test_llm_client_nim.py tests/test_llm_client_openrouter.py tests/test_groq_client_backoff.py tests/test_loop_template.py
+```
+
+Expected: `all 7 file(s) docstring-only`, exit code 0.
+
+- [ ] **Step 4: Run the tests**
+
+```bash
+cd /Users/ojaswi/Projects/rag-techniques/project
+.venv/bin/python -m pytest -q 2>&1 | tail -3
+```
+
+Expected: `339 passed, 2 skipped`.
+
+- [ ] **Step 5: Commit**
+
+```bash
+cd /Users/ojaswi/Projects/rag-techniques
+git add project/tests/__init__.py project/tests/test_config.py project/tests/test_llm_factory.py project/tests/test_llm_client_nim.py project/tests/test_llm_client_openrouter.py project/tests/test_groq_client_backoff.py project/tests/test_loop_template.py
+git commit -m "docs(tests): simplify docstrings and comments in client and loop tests"
+```
+
+---
+
+## Task 9: Ingestion and storage tests (8 files)
+
+**Files:**
+- Modify: `project/tests/test_fetch_filings.py`, `project/tests/test_parse_filing.py`, `project/tests/test_node_builder.py`, `project/tests/test_parsing_audit.py`, `project/tests/test_run_ingestion.py`, `project/tests/test_filings_manifest.py`, `project/tests/test_database_manager.py`, `project/tests/test_database_manager_judge.py`
+
+**Interfaces:**
+- Consumes: `project/scripts/check_docstrings_only.py` from Task 0.
+- Produces: nothing importable.
+
+- [ ] **Step 1: Read all eight files end to end**
+
+```bash
+cd /Users/ojaswi/Projects/rag-techniques/project
+for f in tests/test_fetch_filings.py tests/test_parse_filing.py tests/test_node_builder.py tests/test_parsing_audit.py tests/test_run_ingestion.py tests/test_filings_manifest.py tests/test_database_manager.py tests/test_database_manager_judge.py; do echo "===== $f ====="; cat "$f"; done
+```
+
+- [ ] **Step 2: Rewrite the docstrings and comments**
+
+Apply the Task 0 style contract and the phase-2 default. Two notes. `test_fetch_filings.py` contains fixtures built from real SEC accession numbers and report dates; a comment explaining why a fixture uses a particular date shape records an upstream fact and survives. `test_database_manager.py` and `test_database_manager_judge.py` cover the five-table SQLite schema, and any comment recording a schema constraint the assertion depends on, such as the `UNIQUE(source_set, query_id, pipeline, k_value)` resumability key, states something the test body alone does not show.
+
+- [ ] **Step 3: Verify only docstrings moved**
+
+```bash
+cd /Users/ojaswi/Projects/rag-techniques/project
+.venv/bin/python scripts/check_docstrings_only.py "$(cat /tmp/docstring-baseline-rev)" tests/test_fetch_filings.py tests/test_parse_filing.py tests/test_node_builder.py tests/test_parsing_audit.py tests/test_run_ingestion.py tests/test_filings_manifest.py tests/test_database_manager.py tests/test_database_manager_judge.py
+```
+
+Expected: `all 8 file(s) docstring-only`, exit code 0.
+
+- [ ] **Step 4: Run the tests**
+
+```bash
+cd /Users/ojaswi/Projects/rag-techniques/project
+.venv/bin/python -m pytest -q 2>&1 | tail -3
+```
+
+Expected: `339 passed, 2 skipped`.
+
+- [ ] **Step 5: Commit**
+
+```bash
+cd /Users/ojaswi/Projects/rag-techniques
+git add project/tests/test_fetch_filings.py project/tests/test_parse_filing.py project/tests/test_node_builder.py project/tests/test_parsing_audit.py project/tests/test_run_ingestion.py project/tests/test_filings_manifest.py project/tests/test_database_manager.py project/tests/test_database_manager_judge.py
+git commit -m "docs(tests): simplify docstrings and comments in ingestion and storage tests"
+```
+
+---
+
+## Task 10: Pipeline tests (11 files)
+
+**Files:**
+- Modify: `project/tests/test_answerer.py`, `project/tests/test_base_retriever.py`, `project/tests/test_p1_vector.py`, `project/tests/test_p2_bm25.py`, `project/tests/test_p3_structural.py`, `project/tests/test_build_vector_index.py`, `project/tests/test_build_bm25_index.py`, `project/tests/test_build_summary_index.py`, `project/tests/test_fastembed_reranker.py`, `project/tests/test_tokenizer.py`, `project/tests/test_node_convert.py`
+
+**Interfaces:**
+- Consumes: `project/scripts/check_docstrings_only.py` from Task 0.
+- Produces: nothing importable.
+
+- [ ] **Step 1: Read all eleven files end to end**
+
+```bash
+cd /Users/ojaswi/Projects/rag-techniques/project
+for f in tests/test_answerer.py tests/test_base_retriever.py tests/test_p1_vector.py tests/test_p2_bm25.py tests/test_p3_structural.py tests/test_build_vector_index.py tests/test_build_bm25_index.py tests/test_build_summary_index.py tests/test_fastembed_reranker.py tests/test_tokenizer.py tests/test_node_convert.py; do echo "===== $f ====="; cat "$f"; done
+```
+
+- [ ] **Step 2: Rewrite the docstrings and comments**
+
+Apply the Task 0 style contract and the phase-2 default. Three notes. `test_p2_bm25.py` uses a three-document corpus specifically because BM25's inverse document frequency goes to zero on a smaller one, and that reason must survive in some form; without it the corpus size looks arbitrary and a later reader will shrink it. `test_answerer.py` covers the anti-leakage rule that the prompt carries only the query and retrieved nodes, which is a real invariant worth one plain line. `test_tokenizer.py` pins specific tokenisation decisions, so a comment naming the input that motivated a case is recording an example, not narrating the code.
+
+- [ ] **Step 3: Verify only docstrings moved**
+
+```bash
+cd /Users/ojaswi/Projects/rag-techniques/project
+.venv/bin/python scripts/check_docstrings_only.py "$(cat /tmp/docstring-baseline-rev)" tests/test_answerer.py tests/test_base_retriever.py tests/test_p1_vector.py tests/test_p2_bm25.py tests/test_p3_structural.py tests/test_build_vector_index.py tests/test_build_bm25_index.py tests/test_build_summary_index.py tests/test_fastembed_reranker.py tests/test_tokenizer.py tests/test_node_convert.py
+```
+
+Expected: `all 11 file(s) docstring-only`, exit code 0.
+
+- [ ] **Step 4: Run the tests**
+
+```bash
+cd /Users/ojaswi/Projects/rag-techniques/project
+.venv/bin/python -m pytest -q 2>&1 | tail -3
+```
+
+Expected: `339 passed, 2 skipped`.
+
+- [ ] **Step 5: Commit**
+
+```bash
+cd /Users/ojaswi/Projects/rag-techniques
+git add project/tests/test_answerer.py project/tests/test_base_retriever.py project/tests/test_p1_vector.py project/tests/test_p2_bm25.py project/tests/test_p3_structural.py project/tests/test_build_vector_index.py project/tests/test_build_bm25_index.py project/tests/test_build_summary_index.py project/tests/test_fastembed_reranker.py project/tests/test_tokenizer.py project/tests/test_node_convert.py
+git commit -m "docs(tests): simplify docstrings and comments in pipeline tests"
+```
+
+---
+
+## Task 11: Dataset-generation tests (8 files)
+
+The heaviest package by test volume. `test_run_dataset_generation.py` alone is over 1,300 lines.
+
+**Files:**
+- Modify: `project/tests/test_async_generator.py`, `project/tests/test_async_critic.py`, `project/tests/test_async_critic_live_smoke.py`, `project/tests/test_search_tool.py`, `project/tests/test_cross_check.py`, `project/tests/test_section_grouper.py`, `project/tests/test_run_dataset_generation.py`, `project/tests/test_gq_labeling.py`
+
+**Interfaces:**
+- Consumes: `project/scripts/check_docstrings_only.py` from Task 0.
+- Produces: nothing importable.
+
+- [ ] **Step 1: Read all eight files end to end**
+
+```bash
+cd /Users/ojaswi/Projects/rag-techniques/project
+for f in tests/test_async_generator.py tests/test_async_critic.py tests/test_async_critic_live_smoke.py tests/test_search_tool.py tests/test_cross_check.py tests/test_section_grouper.py tests/test_gq_labeling.py; do echo "===== $f ====="; cat "$f"; done
+wc -l tests/test_run_dataset_generation.py
+```
+
+Read `test_run_dataset_generation.py` in sections rather than one call. It is the largest file in the repo.
+
+- [ ] **Step 2: Rewrite the docstrings and comments**
+
+Apply the Task 0 style contract and the phase-2 default. Three notes. `test_async_critic_live_smoke.py` has the longest module docstring in the test suite at 22 lines, and it is one of the two tests skipped by default; its docstring must still say how to run it, because that is the one thing a reader cannot get from the code. `test_async_critic.py` covers the Critic being blind to the Generator's answer and citations, which is a dataset-validity invariant and survives as one line. In `test_run_dataset_generation.py`, expect many `monkeypatch.setattr(... LOCAL_TEST_THROTTLE ...)` lines with comments restating them; those comments go.
+
+- [ ] **Step 3: Verify only docstrings moved**
+
+```bash
+cd /Users/ojaswi/Projects/rag-techniques/project
+.venv/bin/python scripts/check_docstrings_only.py "$(cat /tmp/docstring-baseline-rev)" tests/test_async_generator.py tests/test_async_critic.py tests/test_async_critic_live_smoke.py tests/test_search_tool.py tests/test_cross_check.py tests/test_section_grouper.py tests/test_run_dataset_generation.py tests/test_gq_labeling.py
+```
+
+Expected: `all 8 file(s) docstring-only`, exit code 0.
+
+- [ ] **Step 4: Run the tests**
+
+```bash
+cd /Users/ojaswi/Projects/rag-techniques/project
+.venv/bin/python -m pytest -q 2>&1 | tail -3
+```
+
+Expected: `339 passed, 2 skipped`.
+
+- [ ] **Step 5: Commit**
+
+```bash
+cd /Users/ojaswi/Projects/rag-techniques
+git add project/tests/test_async_generator.py project/tests/test_async_critic.py project/tests/test_async_critic_live_smoke.py project/tests/test_search_tool.py project/tests/test_cross_check.py project/tests/test_section_grouper.py project/tests/test_run_dataset_generation.py project/tests/test_gq_labeling.py
+git commit -m "docs(tests): simplify docstrings and comments in dataset-generation tests"
+```
+
+---
+
+## Task 12: Judge and gate tests (8 files)
+
+**Files:**
+- Modify: `project/tests/test_async_judge.py`, `project/tests/test_async_judge_live_smoke.py`, `project/tests/test_metrics.py`, `project/tests/test_numeric_normalizer.py`, `project/tests/test_exact_match.py`, `project/tests/test_score_gate_outputs.py`, `project/tests/test_validation_gate.py`, `project/tests/test_loop_executor.py`
+
+**Interfaces:**
+- Consumes: `project/scripts/check_docstrings_only.py` from Task 0.
+- Produces: nothing importable. Last task of the tests phase.
+
+- [ ] **Step 1: Read all eight files end to end**
+
+```bash
+cd /Users/ojaswi/Projects/rag-techniques/project
+for f in tests/test_async_judge.py tests/test_async_judge_live_smoke.py tests/test_metrics.py tests/test_numeric_normalizer.py tests/test_exact_match.py tests/test_score_gate_outputs.py tests/test_validation_gate.py tests/test_loop_executor.py; do echo "===== $f ====="; cat "$f"; done
+```
+
+- [ ] **Step 2: Rewrite the docstrings and comments**
+
+Apply the Task 0 style contract and the phase-2 default. Three notes. `test_async_judge_live_smoke.py` is the second default-skipped test, so like its critic counterpart it keeps the line saying how to run it. `test_numeric_normalizer.py` and `test_exact_match.py` encode financial-figure comparison rules, and a comment naming why a particular pair of figures should or should not match is recording the rule, not the code. `test_loop_executor.py` covers row-level resumability, so a comment about the `UNIQUE` key that makes a skip correct survives as one line.
+
+- [ ] **Step 3: Verify only docstrings moved**
+
+```bash
+cd /Users/ojaswi/Projects/rag-techniques/project
+.venv/bin/python scripts/check_docstrings_only.py "$(cat /tmp/docstring-baseline-rev)" tests/test_async_judge.py tests/test_async_judge_live_smoke.py tests/test_metrics.py tests/test_numeric_normalizer.py tests/test_exact_match.py tests/test_score_gate_outputs.py tests/test_validation_gate.py tests/test_loop_executor.py
+```
+
+Expected: `all 8 file(s) docstring-only`, exit code 0.
+
+- [ ] **Step 4: Run the tests**
+
+```bash
+cd /Users/ojaswi/Projects/rag-techniques/project
+.venv/bin/python -m pytest -q 2>&1 | tail -3
+```
+
+Expected: `339 passed, 2 skipped`.
+
+- [ ] **Step 5: Commit**
+
+```bash
+cd /Users/ojaswi/Projects/rag-techniques
+git add project/tests/test_async_judge.py project/tests/test_async_judge_live_smoke.py project/tests/test_metrics.py project/tests/test_numeric_normalizer.py project/tests/test_exact_match.py project/tests/test_score_gate_outputs.py project/tests/test_validation_gate.py project/tests/test_loop_executor.py
+git commit -m "docs(tests): simplify docstrings and comments in judge and gate tests"
+```
+
+---
+
+## Task 13: Whole-repo verification and the `dev` fast-forward
+
+**Files:**
+- Modify: none. This task verifies and moves one branch pointer.
+
+**Interfaces:**
+- Consumes: every commit from Tasks 1 to 12.
+- Produces: `dev` pointing at `presentation`.
+
+- [ ] **Step 1: Re-verify all 90 files against the original baseline**
+
+```bash
+cd /Users/ojaswi/Projects/rag-techniques/project
+.venv/bin/python scripts/check_docstrings_only.py "$(cat /tmp/docstring-baseline-rev)" \
+  $(find . -name '*.py' -not -path './.venv/*' -not -path '*__pycache__*' -not -path './scripts/*')
+```
+
+Expected: `all 90 file(s) docstring-only`, exit code 0. This is the check that matters. It proves the entire twelve-task sequence moved no executable line, in source or in tests.
+
+- [ ] **Step 2: Confirm the prose targets were hit across both phases**
+
+```bash
+cd /Users/ojaswi/Projects/rag-techniques/project
+.venv/bin/python - <<'EOF'
+import re, pathlib, io, tokenize
+
+def count_prose_dashes(path):
+    """Counts ' -- ' in real docstrings and comments only.
+
+    Uses ast.get_docstring rather than a token heuristic. A STRING token that
+    merely begins a logical line is not a docstring: continuation strings inside
+    a parenthesised expression look identical to the tokenizer, and this project
+    has four of them (an LLM retry prompt, a logger format string, a LlamaParse
+    prompt, a RuntimeError message) that must never be rewritten.
+
+    A dash inside a normal string literal is data, not prose. parse_filing.py
+    sends one to LlamaParse in system_prompt_append; rewriting it would change
+    behaviour, and the AST checker would rightly fail the task for it.
+    """
+    n = 0
+    with open(path, "rb") as fh:
+        toks = list(tokenize.tokenize(fh.readline))
+    for i, tok in enumerate(toks):
+        is_comment = tok.type == tokenize.COMMENT
+        is_docstring = (
+            tok.type == tokenize.STRING
+            and i > 0
+            and toks[i - 1].type in (tokenize.INDENT, tokenize.NEWLINE, tokenize.NL, tokenize.ENCODING)
+        )
+        if is_comment or is_docstring:
+            n += len(re.findall(r'\S\s--\s\S', tok.string))
+    return n
+
+def scan(paths):
+    dash = specs = 0; lens = []
+    for p in paths:
+        t = p.read_text(encoding='utf-8')
+        dash += count_prose_dashes(p)
+        specs += sum(1 for L in t.splitlines()
+                     if re.search(r'(Architecture|Guardrails|Budget|deviations)\.md|§\s?\d', L))
+        m = re.match(r'\s*(?:r|u)?"""(.*?)"""', t, re.S)
+        if m: lens.append(m.group(1).count('\n') + 1)
+    return dash, specs, lens
+allpy = [p for p in pathlib.Path('.').rglob('*.py')
+         if '.venv' not in p.parts and '__pycache__' not in p.parts and 'scripts' not in p.parts]
+src = [p for p in allpy if 'tests' not in p.parts]
+tst = [p for p in allpy if 'tests' in p.parts]
+for name, group, base_dash, base_spec, base_max in (
+        ("source", src, 103, 102, 30), ("tests", tst, 53, 20, 22)):
+    d, s, l = scan(group)
+    print(f"{name:>7}: {len(group):>3} files | dashes {d:>3} (was {base_dash}) | "
+          f"spec lines {s:>3} (was {base_spec}) | longest docstring {max(l) if l else 0} (was {base_max}) | "
+          f"mean {sum(l)/len(l):.1f}" if l else "")
+EOF
+```
+
+Expected: dashes at 0 in both groups, spec lines at one per file or fewer, longest module docstring 6 lines or fewer in source and 6 or fewer in tests apart from the two live-smoke files that keep their run instructions.
+
+- [ ] **Step 3: Run the full suite one final time**
+
+```bash
+cd /Users/ojaswi/Projects/rag-techniques/project
+.venv/bin/python -m pytest -q 2>&1 | tail -3
+```
+
+Expected: `339 passed, 2 skipped`.
+
+- [ ] **Step 4: Confirm the working tree is clean**
+
+```bash
+cd /Users/ojaswi/Projects/rag-techniques
+git status --short
+git log --oneline "$(cat /tmp/docstring-baseline-rev)"..presentation
+```
+
+Expected: empty status, and thirteen commits listed.
+
 - [ ] **Step 5: Fast-forward `dev` to `presentation`**
 
 ```bash
@@ -698,16 +1078,4 @@ Expected: `fast-forward is safe`, then `0	0`. Use `git branch -f` rather than a 
 
 - [ ] **Step 6: Report, and stop**
 
-Print the before/after metrics from Step 2 and the branch state from Step 5. **Do not push.** Pushing is the user's call, and this repo's convention is that no commit or push happens without an explicit request in that turn.
-
----
-
-## Self-review
-
-**Spec coverage.** The style contract in Task 0 has seven rules: module docstring length, function docstring length, comments explain why, one spec reference per file, no `--`, no emphasis scaffolding, and do not invent. Tasks 1 to 6 each apply all seven across their package, and Task 7 Step 2 measures four of them numerically. The three that cannot be measured by regex, comments explaining why, one line per function, and do not invent, are covered by the per-task reviewer gate that subagent-driven-development provides.
-
-**Placeholder scan.** No TBD, no "similar to Task N", no "handle edge cases". The checker script is given in full rather than described. Every verification step names the command and the expected output. The one deliberate repetition is the style contract, which lives in Task 0 and is referenced rather than restated, because a subagent reads Task 0 first by instruction in the task header.
-
-**Type consistency.** The checker is `project/scripts/check_docstrings_only.py` in every task that invokes it, always with the same two-argument shape, `<git-rev> <files...>`. The baseline revision is written to `/tmp/docstring-baseline-rev` in Task 0 Step 5 and read back with `$(cat /tmp/docstring-baseline-rev)` in Tasks 1 to 7. Test counts are `339 passed, 2 skipped` throughout.
-
-**One gap worth naming.** `/tmp/docstring-baseline-rev` does not survive a machine reboot between tasks. If it is missing, recover it with `git log --oneline --all | grep "add AST checker"` and use the commit immediately before that one.
+Print the Step 2 metrics and the Step 5 branch state. **Do not push.** Pushing is the user's call, and this repo's convention is that no commit or push happens without an explicit request in that turn.
