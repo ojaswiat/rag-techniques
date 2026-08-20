@@ -1,10 +1,9 @@
 """validation_gate: run the 60 JEQ gate outputs, then judge them.
 
-Architecture.md §4.5b: the gate runs the 20 JEQ through P1/P2/P3 at a single
-K=5 (=60 rows) via the existing loop_executor, then the Judge scores them.
-This module is wiring only -- retrieval/answering stays in loop_executor and
-scoring stays in async_judge, both already tested and both already carrying
-their own LOCAL_TEST_THROTTLE.
+The gate runs the 20 JEQ through P1/P2/P3 at a single K=5, giving 60 rows, via
+the existing loop_executor, then the Judge scores them. This module is wiring
+only: retrieval and answering stay in loop_executor, scoring stays in
+async_judge, and both callees carry their own LOCAL_TEST_THROTTLE.
 """
 from unittest.mock import AsyncMock, MagicMock, patch
 

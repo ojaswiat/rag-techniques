@@ -1,7 +1,7 @@
 """loop_executor: cell construction, resume-skip, throttle, row shape.
 
-Uses a stub Retriever (the real ABC, sync retrieve()) and a stub Answerer,
-against a real temporary SQLite database -- so the resume path is asserted
+Uses a stub Retriever (the real ABC, sync retrieve()) and a stub Answerer
+against a real temporary SQLite database, so the resume path is asserted
 through the actual UNIQUE constraint and the actual get_completed_keys()
 query rather than a mock of them.
 """

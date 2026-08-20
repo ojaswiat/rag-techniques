@@ -1,10 +1,8 @@
-"""exact_match: Q1/Q3-only, extraction/containment semantics.
+"""exact_match: Q1/Q3 only, extraction and containment semantics.
 
-Resolves the Architecture.md §4.3-vs-§3.3 tension in favour of the worked
-§3.3 row (recorded in deviations.md #26): a figure or short answer counts as
-an exact match when it can be *found* inside the model's sentence, not only
-when the whole sentence equals the ground truth. EM is undefined (None) for
-the implicit quadrants Q2/Q4, per Project_Idea.md §7.
+A figure or short answer counts as an exact match when it can be found inside
+the model's sentence, not only when the whole sentence equals the ground truth.
+EM is undefined (None) for the implicit quadrants Q2 and Q4.
 """
 from judge.metrics import exact_match
 

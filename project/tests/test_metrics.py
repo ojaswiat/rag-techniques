@@ -1,9 +1,8 @@
-"""Deterministic Judge metrics (Architecture.md §4.1).
+"""Deterministic Judge metrics.
 
-These functions carry no LLM call: citation validity, retrieval precision and
-recall, and answer token overlap are all computed in code so they stay
-reproducible and cannot be swayed by the Judge model (Guardrails.md §4b:
-"citation matching is code, not LLM").
+Citation validity, retrieval precision and recall, and answer token overlap are
+all computed in code with no LLM call, so they stay reproducible and cannot be
+swayed by the Judge model.
 """
 from judge.metrics import citation_audit, precision_at_k, recall_at_k, token_f1
 
@@ -24,7 +23,7 @@ def test_citation_audit_extra_citation_is_false():
 
 
 def test_citation_audit_empty_cited_is_true():
-    """Citing nothing introduces no invalid citation -- vacuously a subset."""
+    """Citing nothing introduces no invalid citation, so it is vacuously a subset."""
     assert citation_audit([], ["n1"]) is True
 
 

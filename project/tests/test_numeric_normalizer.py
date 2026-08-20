@@ -1,8 +1,7 @@
-"""normalize_numeric: currency/separator stripping and suffix expansion.
+"""normalize_numeric: currency and separator stripping, suffix expansion.
 
-The point of these cases is the equivalence Architecture.md §4.3 requires for
-Exact Match: "$394.3B" and "394,300 million" must reduce to the same Decimal
-so a Q3 table answer scores as correct regardless of how the figure is spelt.
+Exact Match needs "$394.3B" and "394,300 million" to reduce to the same
+Decimal, so a Q3 table answer scores correctly however the figure is spelt.
 """
 from decimal import Decimal
 
@@ -37,7 +36,7 @@ def test_word_suffix_million():
 
 
 def test_dollar_billions_equals_word_millions():
-    """The §4.3 equivalence: the two spellings collapse to one value."""
+    """The two spellings collapse to one value."""
     assert normalize_numeric("$394.3B") == normalize_numeric("394,300 million")
 
 

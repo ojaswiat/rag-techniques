@@ -1,10 +1,9 @@
 """score_gate_outputs: human scoring and the Agreement-Rate gate.
 
-Two jobs (Architecture.md §4.5b, deviations.md #26): collect the researcher's
-human_score for each of the 60 JEQ rows without showing them the Judge's
-score (anti-bias), then compute the human-judge Agreement Rate and enforce the
-> 80% gate. Agreement is defined on a 0-100 scale: a row agrees when the two
-scores, rescaled x10, differ by <= 10 points (i.e. within +/-1 on 1-10).
+Two jobs: collect the researcher's human_score for each of the 60 JEQ rows
+without showing them the Judge's score, then compute the human-judge Agreement
+Rate and enforce the > 80% gate. A row agrees when the two scores, rescaled to
+0-100, differ by no more than 10 points.
 """
 import os
 

@@ -1,16 +1,14 @@
-"""ONE live, throttled smoke test proving Judge.score_row() actually speaks
-Groq's real chat protocol and returns a parseable 1-10 score, not just the
-mocked shape asserted in tests/test_async_judge.py.
+"""ONE live, throttled smoke test proving Judge.score_row() speaks Groq's real
+chat protocol and returns a parseable 1-10 score, not just the mocked shape in
+tests/test_async_judge.py.
 
-Guardrails.md "Loop Safety" requires throttled proof before the full batch.
-This is not the gate loop, but the same spirit applies: it makes exactly ONE
-real achat() call -- a single frozen Q3 exemplar as the cacheable prefix and a
-single frozen JEQ-shaped row as the target -- never a live DB read and never a
-loop. It costs one Groq call, once, per explicit opt-in run.
+It makes exactly one real achat() call, with a frozen Q3 exemplar as the prefix
+and a frozen JEQ-shaped row as the target. No DB read, no loop, one Groq call
+per opt-in run.
 
-Gating mirrors tests/test_async_critic_live_smoke.py: SKIPPED by default,
-requires RUN_LIVE_GROQ_TESTS=1 and a real GROQ_API_KEY. Plain `pytest -q`
-never runs it and never spends quota.
+Skipped by default. To run: set RUN_LIVE_GROQ_TESTS=1 and resolve a real
+GROQ_API_KEY via config.py, then run pytest as usual. Plain `pytest -q` never
+runs it and never spends quota.
 """
 import os
 
@@ -62,13 +60,12 @@ _TARGET_ROW = {
 )
 @pytest.mark.asyncio
 async def test_judge_score_row_live_round_trip_against_real_groq_api():
-    """Exercises the REAL Qwen judge call end to end -- no mocking of the client.
+    """Exercises the real Qwen judge call end to end, with no client mocking.
 
-    Proves the rubric+exemplar prompt Judge.score_row() builds is accepted by
-    the live API and that its reply parses into a valid 1-10 score, the one
-    thing the mocked test cannot cover. The target answer is correct, so a
-    functioning judge should score it high, but the smoke test only asserts a
-    parseable in-range integer -- not a specific value.
+    Proves the prompt Judge.score_row() builds is accepted by the live API and
+    that its reply parses into a valid 1-10 score, the one thing the mocked
+    test cannot cover. The target answer is correct, but this asserts only a
+    parseable in-range integer, not a specific value.
     """
     prefix = build_prefix("Q3_Direct_Table", [_EXEMPLAR])
     score = await Judge().score_row(_TARGET_ROW, prefix)

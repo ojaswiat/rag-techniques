@@ -1,13 +1,12 @@
 """async_judge: quadrant-filtered few-shot, no search tool, folded metrics.
 
-The Judge (Qwen3.6-27B, Guardrails.md §2/§4) scores each JEQ output 1-10.
-It sees only the 5 golden_queries exemplars that share the row's quadrant
-(§4a), never a search tool (§2: it already has ground truth + citations), and
-never a JEQ row as an exemplar (§3). The same pass computes the deterministic
-metrics in code (deviations.md #26) so a scored row is complete in one write.
+The Judge scores each JEQ output 1-10. It sees only the 5 golden_queries
+exemplars sharing the row's quadrant, never a search tool, and never a JEQ row
+as an exemplar. The same pass computes the deterministic metrics in code, so a
+scored row is written complete in one update.
 
 The LLM stand-in is a real OpenAILike with its async client swapped, matching
-what LLMFactory returns in production -- the same shape test_answerer uses.
+what LLMFactory returns in production.
 """
 import json
 import os
