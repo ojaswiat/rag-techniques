@@ -30,27 +30,25 @@ built against that idea, verified today.
 
 ### 2.1 Data — CORRECTED THIS SESSION
 
-**Corpus is 13 filings, not 18, not 6 companies.** This was the exact mistake flagged and now fixed
+**Corpus is 13 filings across 5 companies.** This was the exact mistake flagged and now fixed
 in `video_script_checklist.md`.
 
 | | |
 |---|---|
-| Companies | 5 — AAPL, MSFT, TSLA, JPM, JNJ (**no Walmart**) |
+| Companies | 5 — AAPL, MSFT, TSLA, JPM, JNJ |
 | Filings | AAPL/MSFT/TSLA × FY2023–2025 (3 each) + JPM/JNJ × FY2023–2024 (2 each) = **13** |
-| Nodes ingested | 26,050 rows in `benchmark.db.nodes` (verified via live query) |
+| Nodes ingested | 18,297 rows in `benchmark.db.nodes` (verified via live query) |
 | Manifest | `project/data/filings_manifest.json` — 13 entries, single source of truth, confirmed unique tickers |
 
-Why 13 and not 18: originally scoped to 18 (6 companies × 3yr incl. Walmart), but only 13 had a
-P3 summary-tree built by the time dataset generation was about to start. Rather than pay for 5
-more LLM-based tree builds for no research benefit, the corpus was trimmed to the 13 already
-built (`deviations.md` #20, 2026-08-11). This is a documented, deliberate scope cut — the
-professor's "say the number instead of guessing" note is now answerable precisely: **13**.
+Why 13: the corpus was originally scoped at 9 (AAPL/MSFT/TSLA × FY2023–2025) and expanded to 13
+by adding JPM and JNJ at FY2023–2024, for more data to work with and, specifically, for the dense
+tabular and footnote structure those two filings carry (`deviations.md` #20, 2026-08-11). This is a
+documented, deliberate scope decision — the professor's "say the number instead of guessing" note
+is now answerable precisely: **13**.
 
 `README.md`'s "Benchmark Design" section already states 13/5-companies correctly (line-checked
-this session) — the drift was specifically in `video_script_checklist.md`, which I'd built from a
-stale `openwiki/quickstart.md` line ("expanded to 6 companies... 18 filings") that itself predates
-the trim and was never updated. Flagging `openwiki/quickstart.md` line 71 as stale too — it still
-says 18 filings/6 companies.
+this session) — the drift was specifically in `video_script_checklist.md`, which had been built from
+a since-corrected `openwiki/quickstart.md` line that predated the expansion. Both now state 13.
 
 **Known data-quality issue (documented, not fixed):** LlamaParse table header misalignment — units
 caption merged into column-1 header on 31 tables across 5 of the original 9 audited filings
@@ -151,7 +149,7 @@ Checked `benchmark.db` directly this session:
 | `golden_queries` (GQ) | 10 | 20 |
 | `judge_validation` (JEQ) | 10 | 20 |
 | `results` | 0 | 900 (eventual) |
-| `nodes` | 26,050 | (ingestion, complete) |
+| `nodes` | 18,297 | (ingestion, complete) |
 
 This contradicts two different stale claims: `build_progress.md` (08-11) says all three query
 tables are empty and "the pipeline has never been run end-to-end against live data"; the earlier
@@ -231,7 +229,7 @@ code/data issues; the second is now fully answerable (13, exact).
 
 - Full infra layer: multi-provider LLM client factory (Groq/NIM/OpenRouter), SQLite schema (5
   tables, WAL mode), resumable loop template.
-- Full ingestion: 13 filings fetched from SEC EDGAR, parsed via LlamaParse into 26,050 atomic
+- Full ingestion: 13 filings fetched from SEC EDGAR, parsed via LlamaParse into 18,297 atomic
   `TextNode`s with stable `node_id`s and structural metadata.
 - P3's one-time summary-tree build, complete for all 13 filings.
 - Dataset-generation pipeline built end-to-end (Generator → Critic → cross-check → 3-way disjoint
@@ -263,7 +261,6 @@ code/data issues; the second is now fully answerable (13, exact).
      `nvidia/nemotron-3-super-120b-a12b`/NIM).
    - `Budget.md`'s entire model-assignment table (three generations behind current routing).
    - `README.md`'s Status section and repo-layout block (says build hasn't started).
-   - `openwiki/quickstart.md` line 71 (still says 18 filings/6 companies).
    - `resources/research/build_progress.md` and `tests.md` (both dated 08-11, materially stale on
      Phase 5/6 status and test counts — worth a refreshed snapshot before relying on either again).
 

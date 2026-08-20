@@ -12,7 +12,7 @@ This is a methodology-chapter-appropriate level of design detail (an M.Sc. disse
 
 ## 0. Decisions Carried Over From the Scoping Discussion
 
-1. **Corpus: 13 filings (5 companies, uneven fiscal-year coverage)**, not one document. Expanded from the original ~6–9 filing / 2–3 company scope (AAPL, MSFT, TSLA) to add JPM and JNJ — covering financial services and healthcare alongside the original tech/auto set (see `resources/research/deviations.md`) — then reduced from an initially-planned 18 (6 companies × 3 fiscal years, adding WMT) back down to 13: AAPL/MSFT/TSLA at FY2023–2025 (3 years each), JPM/JNJ at FY2023–2024 (2 years each), WMT dropped entirely (see `resources/research/deviations.md` entry 20 for the reduction rationale). The fixed counts from `Project_Idea.md` (140 total queries, 100/20/20 split, 900 benchmark runs) are unchanged — only where queries are sourced from changes.
+1. **Corpus: 13 filings (5 companies, uneven fiscal-year coverage)**, not one document. Expanded from the original ~6–9 filing / 2–3 company scope (AAPL, MSFT, TSLA) to add JPM and JNJ — covering financial services and healthcare alongside the original tech/auto set (see `resources/research/deviations.md`) — giving 13: AAPL/MSFT/TSLA at FY2023–2025 (3 years each), JPM/JNJ at FY2023–2024 (2 years each) (see `resources/research/deviations.md` entry 20 for the expansion rationale). The fixed counts from `Project_Idea.md` (140 total queries, 100/20/20 split, 900 benchmark runs) are unchanged — only where queries are sourced from changes.
 2. **Retrieval scope: per-document, not cross-corpus.** Every pipeline retrieves only within the one filing (`document_id`) a query is about. This is *not* the metadata pre-filter `Guardrails.md` §3 bans — that ban is about narrowing to a target *section* using answer-derived information; narrowing to the correct *filing* is a property of the query itself (every query already carries `document_id`), applied identically to all three pipelines.
 3. **P1 vector store: ChromaDB** (local, embedded) — the third option `Guardrails.md` §1 leaves open.
 
@@ -260,11 +260,11 @@ CREATE INDEX idx_results_query_id   ON results(query_id);
 CREATE INDEX idx_results_pipeline_k ON results(pipeline, k_value);
 ```
 
-Row volume: `nodes` = 18,297 (13 filings, confirmed live 2026-08-11, after the 18→13 scope reduction — see `resources/research/deviations.md` entry 20); `queries` = 100; `golden_queries` = 20; `judge_validation` = 20; `results` = 900 (PQ, full benchmark) + 60 (JEQ, Phase-6 gate) = **960 rows**.
+Row volume: `nodes` = 18,297 (13 filings, confirmed live 2026-08-11 — see `resources/research/deviations.md` entry 20); `queries` = 100; `golden_queries` = 20; `judge_validation` = 20; `results` = 900 (PQ, full benchmark) + 60 (JEQ, Phase-6 gate) = **960 rows**.
 
 ### 3.3 Example Rows
 
-Real corpus (expanded from the original illustrative 9-filing example, then reduced from an initially-planned 18 back to 13):
+Real corpus (expanded from the original illustrative 9-filing example to 13):
 **AAPL, MSFT, TSLA** (FY2023–2025, 3 years each) + **JPM, JNJ** (FY2023–2024, 2 years each)
 = 5 companies, 13 filings.
 
@@ -715,7 +715,7 @@ No new packages were needed for the §4 LLD additions (citation parsing, numeric
 ## 11. Open Items / Recommendations
 
 1. **Regenerate `schemas/db_schema_example.jsonc`** from §3.2/§3.3 above — it still reflects the old 2-pipeline/600-row/12-JEQ design.
-2. ~~**Exact filing list**~~ — **resolved**: corpus expanded to `AAPL, MSFT, TSLA, JPM, JNJ, WMT × FY2023–2025` (18 filings), then reduced to `AAPL, MSFT, TSLA × FY2023–2025` + `JPM, JNJ × FY2023–2024` (13 filings, WMT dropped) — see `resources/research/deviations.md` entry 20 — confirmed in `data/filings_manifest.json`.
+2. ~~**Exact filing list**~~ — **resolved**: corpus expanded from `AAPL, MSFT, TSLA × FY2023–2025` (9 filings) to `AAPL, MSFT, TSLA × FY2023–2025` + `JPM, JNJ × FY2023–2024` (13 filings) — see `resources/research/deviations.md` entry 20 — confirmed in `data/filings_manifest.json`.
 3. ~~`Guardrails.md` §6's wording is stale against §1 issue #1's fix~~ — **resolved**: `Guardrails.md` §6 has been reworded so its "mandatory schema" and `judge_validation` bullets now match this design exactly (`judge_validation` holds question fields only; the 60 gate outputs and their `human_score`/`judge_score` land on `results` tagged `source_set='JEQ'`).
 4. **"Context mass held constant across pipelines" (`Project_Idea.md` §10, principle 1) is not mechanically enforced anywhere** — K is standardized as *node count*, not *token count*, and node sizes vary (a table node can be much longer than a text node), so two pipelines at the same K can still pass different token volumes to the answerer. Nothing in any spec doc specifies a token-budget truncation step to force exact equality. The recommendation here is to treat "same K" as the operational definition of "standardized context volume" and document the resulting token-volume variance as an accepted approximation (consistent with the project's existing "statistical honesty" framing elsewhere) rather than adding a truncation mechanism that no spec doc currently calls for. Flagged for the researcher to confirm or override.
 5. **Per-filing query allocation isn't forced even** — Phase 4 accumulates 35/quadrant across the corpus, not a fixed number per filing. Left open deliberately, per the original v1 note.

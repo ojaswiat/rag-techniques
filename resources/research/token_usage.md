@@ -31,9 +31,3 @@ Output Token Cost: 958,129 (measured, exact)
 Wall Clock: 15.5 hours
 Reason: The exact sum of all 24 successful build runs recorded in `index_build_costs.json`, as distinct from the one-pass cost above. It is higher in wall clock and lower in tokens than the one-pass figure for two different reasons. Higher wall clock: AAPL_2023, AAPL_2024 and AAPL_2025 were built more than once, and every filing has additional resumed runs that re-walked already-persisted work and logged 0 tokens while still consuming time. Lower tokens: the two JPM builds contributed 0 to this sum because of the logging defect noted above. This is the honest "what was actually spent" number, and the gap between it and the one-pass estimate is the cost of resumability and rebuilds, which is a real cost of the $0 free-tier constraint rather than an accounting error.
 
-## Phase 3 — Summary Tree Build, 18-Filing Projection (not built)
-
-Input Token Cost: ~2.62M (projected)
-Output Token Cost: ~1.46M (projected)
-Wall Clock: ~10.7 hours
-Reason: The measured per-filing average (146K in / 81K out / 36 min) multiplied by 18, giving what the originally-scoped corpus would have cost had it not been trimmed to 13 (`deviations.md` entry 20). Recorded here so the scope cut can be quantified rather than asserted: dropping five filings saved roughly 0.73M input tokens, 0.41M output tokens and 3 hours of throttled wall clock, and bought no additional research signal, since the benchmark's statistical unit is the query and not the filing. This supersedes the earlier 2.4M in / 1.34M out projection, which was written before any build had run and used the low output estimate.

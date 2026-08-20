@@ -50,7 +50,7 @@ tuned system gives a number and a comparison gives a reason."
 ## 2. System overview and end-to-end data flow (0:30 – 1:10, 40s)
 
 **Concepts**
-- One flow, left to right: SEC EDGAR → LlamaParse → 26,050 `TextNode`s → three separate index
+- One flow, left to right: SEC EDGAR → LlamaParse → 18,297 `TextNode`s → three separate index
   builds → query → top-K retrieval → shared Answerer → `results` row → Judge → metrics
 - Every pipeline shares the same corpus, the same Answerer, and the same Judge. Only the
   retrieval step differs
@@ -67,7 +67,7 @@ tuned system gives a number and a comparison gives a reason."
 which is the whole reason a score difference can be attributed to the paradigm."
 
 **Show:** `01-high-level-overview.drawio` — the single most important figure in the video. Trace it left to
-right with the cursor: EDGAR → LlamaParse → 26,050 nodes → three coloured arms → the one shared teal
+right with the cursor: EDGAR → LlamaParse → 18,297 nodes → three coloured arms → the one shared teal
 Answerer band → `results` → Judge. The colour of each arm (P1 sky, P2 emerald, P3 violet) is reused in
 every later diagram, so name the colours once here.
 
@@ -79,7 +79,7 @@ every later diagram, so name the colours once here.
 - **13 filings, 5 companies** — AAPL, MSFT, TSLA (FY2023–2025) and JPM, JNJ (FY2023–2024)
 - Fetched from SEC EDGAR, parsed with LlamaParse in atomic table-extraction mode
 - Nodes carry structural metadata: section header, node type (text vs table), source page
-- 26,050 nodes ingested, all 13 filings complete
+- 18,297 nodes ingested, all 13 filings complete
 
 > **Why this way — "Why was the 10-K dataset used?"**
 > Four reasons, in order of importance:
@@ -164,7 +164,7 @@ modes, then the closing line: "I know the mechanisms; the ranking is what has to
 
 > **Why this way — "Why generate the benchmark with LLMs instead of hand-writing the questions?"**
 > Two reasons. **Scale with citation precision:** 140 questions each needing exact node-ID
-> evidence across 26,050 nodes is not hand-producible at consistent quality by one person in the
+> evidence across 18,297 nodes is not hand-producible at consistent quality by one person in the
 > time available. **Reproducibility:** a documented Generator-plus-Critic protocol at
 > `temperature=0` can be re-run and audited by a third party; one researcher's private judgement
 > cannot. The Critic exists precisely because a single generating model would otherwise be both
@@ -503,7 +503,6 @@ so the cut is clean in editing.
   not started
 - `resources/specs/Budget.md` and `Guardrails.md` model tables on screen — **stale on routing**,
   both predate the current three-provider setup
-- `openwiki/quickstart.md` line 71 on screen — **stale**, still says 18 filings / 6 companies
 - Flipping through all 13 diagrams. One or two per section, as mapped below — the mapping is deliberate
 - Deep internals of any single file. Glance, name it, move on
 - All ten FAQ answers. Three or four only
@@ -545,7 +544,7 @@ so the cut is clean in editing.
 **Diagrams carrying live numbers — all settled as of 19 Aug 2026, second pass**
 - [x] `03-three-query-sets.drawio` — PQ 100/100, GQ 20/20, JEQ 20/20, dataset complete
 - [x] `05-adversarial-generation.drawio` — same counts, green DATASET COMPLETE panel
-- [x] `09-database-schema.drawio` — per-table row counts (26,050 / 100 / 20 / 20 / 0)
+- [x] `09-database-schema.drawio` — per-table row counts (18,297 / 100 / 20 / 20 / 0)
 - [x] `12-phase-gantt.drawio` — Phase 4 green and complete, `results = 0` blocker band
 - [ ] Only `results` can still change. If a benchmark run starts before filming, re-render `09` and `12`
 

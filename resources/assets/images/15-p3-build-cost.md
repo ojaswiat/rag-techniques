@@ -28,7 +28,6 @@ Source: `project/logs/index_build_costs.json`
 | Per filing (average)      | 145,698      | 81,094        | 36 min     | measured, 11 filings |
 | 13 filings, one full pass | ~1.89M       | ~1.05M        | ~7.7 h     | measured x 13        |
 | All runs logged to date   | 1,783,711    | 958,129       | 15.5 h     | measured, 24 runs    |
-| 18 filings (never built)  | ~2.62M       | ~1.46M        | ~10.7 h    | projection           |
 
 Not CPU-bound: the build is throttled to 40 RPM by the provider, so wall clock is set by
 the rate limit and not by local hardware. This is the slowest phase in the project, and it
