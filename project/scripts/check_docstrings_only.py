@@ -5,11 +5,20 @@ replaced by a placeholder. If the dumps differ, something other than a
 docstring moved.
 """
 import ast
+import os
 import subprocess
 import sys
 
 
 _DOC_HOLDERS = (ast.Module, ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)
+
+
+class GitError(Exception):
+    pass
+
+
+class FileNotFoundAtRevision(Exception):
+    pass
 
 
 def strip_docstrings(tree: ast.AST) -> ast.AST:
@@ -34,13 +43,54 @@ def normalise(source: str) -> str:
 
 
 def git_show(rev: str, path: str) -> str:
-    out = subprocess.run(
-        ["git", "show", f"{rev}:{path}"],
+    """Fetch a file at a given git revision, handling path resolution.
+
+    Resolves the path relative to the repo root, accounting for the current
+    working directory. Raises FileNotFoundAtRevision if the file does not
+    exist at the revision, and GitError for other failures.
+    """
+    # Get the current directory relative to the repo root
+    prefix_result = subprocess.run(
+        ["git", "rev-parse", "--show-prefix"],
         capture_output=True,
         text=True,
-        check=True,
     )
-    return out.stdout
+    if prefix_result.returncode != 0:
+        raise GitError(f"git rev-parse failed: {prefix_result.stderr.strip()}")
+    prefix = prefix_result.stdout.strip()
+
+    # Normalize the input path: strip leading ./
+    normalized_path = path
+    if normalized_path.startswith("./"):
+        normalized_path = normalized_path[2:]
+
+    # Resolve path relative to repo root if needed
+    resolved_path = normalized_path
+    if prefix and not normalized_path.startswith(prefix):
+        if not os.path.isabs(normalized_path):
+            resolved_path = os.path.join(prefix, normalized_path)
+
+    # Check if file exists at the baseline revision
+    check_result = subprocess.run(
+        ["git", "cat-file", "-e", f"{rev}:{resolved_path}"],
+        capture_output=True,
+        text=True,
+    )
+
+    if check_result.returncode != 0:
+        raise FileNotFoundAtRevision(f"{path} does not exist at {rev}")
+
+    # File exists, fetch it
+    show_result = subprocess.run(
+        ["git", "show", f"{rev}:{resolved_path}"],
+        capture_output=True,
+        text=True,
+    )
+
+    if show_result.returncode != 0:
+        raise GitError(f"git show failed for {resolved_path}: {show_result.stderr.strip()}")
+
+    return show_result.stdout
 
 
 def main(argv: list[str]) -> int:
@@ -51,17 +101,31 @@ def main(argv: list[str]) -> int:
     failures = []
     for path in paths:
         try:
-            before = normalise(git_show(rev, path))
-        except subprocess.CalledProcessError:
-            print(f"SKIP (new file) {path}")
+            before_content = git_show(rev, path)
+        except FileNotFoundAtRevision:
+            print(f"NEW  {path}")
             continue
-        with open(path, encoding="utf-8") as handle:
-            after = normalise(handle.read())
+        except GitError as e:
+            print(f"ERROR {path}: {e}")
+            failures.append(path)
+            continue
+
+        try:
+            with open(path, encoding="utf-8") as handle:
+                after_content = handle.read()
+        except Exception as e:
+            print(f"ERROR {path}: cannot read current file: {e}")
+            failures.append(path)
+            continue
+
+        before = normalise(before_content)
+        after = normalise(after_content)
         if before != after:
             failures.append(path)
             print(f"FAIL {path}: executable code changed")
         else:
             print(f"ok   {path}")
+
     if failures:
         print(f"\n{len(failures)} file(s) changed more than docstrings")
         return 1
