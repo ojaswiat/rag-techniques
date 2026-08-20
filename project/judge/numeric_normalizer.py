@@ -1,17 +1,16 @@
-"""Reduce a financial figure written as free text to a single Decimal.
+"""Reduces a financial figure written as free text to a single Decimal.
 
-Architecture.md §4.3: Exact Match on a Q1/Q3 answer must treat "$394.3B" and
-"394,300 million" as equal. Both are collapsed here to one Decimal so the
-comparison in judge.metrics.exact_match is scale- and notation-independent;
-anything that is not a bare number (with optional currency mark, thousands
-separators, sign, and one magnitude suffix) returns None so the caller can
+"$394.3B" and "394,300 million" collapse to the same Decimal, so the
+comparison in judge.metrics.exact_match is scale- and notation-independent.
+Anything that is not a bare number, with optional currency mark, thousands
+separators, sign, and one magnitude suffix, returns None so the caller can
 fall back to a string comparison.
 """
 from decimal import Decimal, InvalidOperation
 
-# Only the currency marks and separators §4.3 names -- kept deliberately small
-# so a stray symbol makes a string non-numeric rather than being silently
-# discarded.
+# Only the currency marks and separators handled here, kept deliberately
+# small so a stray symbol makes a string non-numeric rather than being
+# silently discarded.
 _STRIP = str.maketrans("", "", "$£€,")
 
 _WORD_MULTIPLIERS = {

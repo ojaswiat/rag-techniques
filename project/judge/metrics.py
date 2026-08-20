@@ -1,12 +1,8 @@
-"""Deterministic scoring metrics for a single results row (Architecture.md §4.1).
+"""Deterministic, LLM-free scoring metrics for a single results row.
 
-Everything here is pure and LLM-free. Guardrails.md §4b requires citation
-matching in particular to be code, never delegated to the Judge, and holding
-the retrieval and overlap metrics to the same standard keeps the whole
-per-row metric vector reproducible from the stored output alone.
-
-Node-id list arguments are the plain list[str] that database_manager hands
-back (it owns the JSON-in-TEXT boundary, §4.4).
+Citation matching runs here in code, never delegated to the Judge, which
+keeps the metric vector reproducible from the stored output alone. Node-id
+arguments are the plain list[str] that database_manager returns.
 """
 import re
 import string
@@ -14,14 +10,13 @@ from decimal import Decimal
 
 from judge.numeric_normalizer import normalize_numeric
 
-# Same marker shape the Answerer emits and parses (Architecture.md §4.2); the
-# markers are stripped here before any text-overlap metric so citation
-# scaffolding never counts as answer content.
+# Same marker shape the Answerer emits and parses; stripped here before any
+# text-overlap metric so citation scaffolding never counts as answer content.
 _CITATION_PATTERN = re.compile(r"\[\[node:[\w\-]+\]\]")
 _PUNCT_TABLE = str.maketrans("", "", string.punctuation)
 
-# Implicit quadrants have no single canonical figure/phrase to match against,
-# so Exact Match is undefined for them (Project_Idea.md §7; stored as NULL).
+# Implicit quadrants have no single canonical figure or phrase to match
+# against, so Exact Match is undefined for them (stored as NULL).
 _EM_UNDEFINED_QUADRANTS = frozenset({"Q2_Implicit_Text", "Q4_Implicit_Table"})
 
 # A currency-marked or suffixed number as it appears mid-sentence. Each hit is
@@ -47,9 +42,9 @@ def citation_audit(cited_node_ids: list[str], gt_citations: list[str]) -> bool:
 def precision_at_k(retrieved: list[str], gt: list[str], k: int) -> float:
     """Ground-truth nodes among the top-k retrieved, divided by k.
 
-    The denominator is k itself, not the number actually retrieved
-    (Architecture.md §3.3: one hit in a K=5 slot scores 0.20, not 1.0), so a
-    pipeline that pads its top-k with irrelevant nodes is penalised for them.
+    The denominator is k itself, not the number actually retrieved, so one
+    hit in a k=5 slot scores 0.20 rather than 1.0; a pipeline that pads its
+    top-k with irrelevant nodes is penalised for it.
     """
     if k <= 0:
         return 0.0
@@ -62,9 +57,9 @@ def recall_at_k(retrieved: list[str], gt: list[str]) -> float:
     """Fraction of ground-truth nodes that appear anywhere in retrieved.
 
     No k argument: the retriever has already returned its k nodes, so recall
-    is measured over the whole returned set (Architecture.md §4.1 signature).
-    An empty ground-truth set scores 0.0 rather than a vacuous 1.0, so it can
-    never inflate the evidence_hit signal derived from recall > 0.
+    is measured over the whole returned set. An empty ground-truth set scores
+    0.0 rather than a vacuous 1.0, so it never inflates the evidence_hit
+    signal derived from recall > 0.
     """
     gt_set = set(gt)
     if not gt_set:
@@ -140,11 +135,10 @@ def exact_match(
 
     Returns None for the implicit quadrants Q2/Q4 (EM is Q1/Q3-only). For a
     numeric ground truth, any figure in the output that normalises within
-    `numeric_tolerance` (relative) of it counts, so "$394.3B" is matched out
-    of a full sentence and "394,300 million" is treated as equal. For a text
+    `numeric_tolerance` (relative) of it counts, so "$394.3B" matches out of a
+    full sentence and "394,300 million" is treated as equal. For a text
     ground truth, the answer's tokens must appear contiguously in the output
-    (case- and punctuation-insensitive). See deviations.md #26 for why this
-    follows the §3.3 worked example rather than §4.3's literal wording.
+    (case- and punctuation-insensitive).
     """
     if quadrant in _EM_UNDEFINED_QUADRANTS:
         return None

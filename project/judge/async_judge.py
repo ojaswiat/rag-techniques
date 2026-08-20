@@ -1,19 +1,10 @@
-"""LLM Judge for the validation gate (Guardrails.md §4, Architecture.md §4.5b).
+"""Scores each JEQ gate output 1-10 against its ground truth and writes the
+deterministic metrics in the same pass, so a scored row is complete in one
+UPDATE.
 
-For each of the 60 JEQ gate outputs this scores the pipeline answer 1-10 with
-Qwen3.6-27B and, in the same pass, computes the deterministic metrics in code
-(deviations.md #26) so a scored row is written complete in one UPDATE.
-
-Three invariants from Guardrails hold here and are worth stating plainly:
-  * §4a -- the prompt carries exactly the 5 golden_queries exemplars that
-    share the target row's quadrant, never all 20. This yields four fixed
-    prompt prefixes (one per quadrant), each built once and reused across
-    every row of that quadrant so provider-side prompt caching applies.
-  * §2  -- the Judge has no search tool. It already receives the ground-truth
-    answer and citations; it only has to score the output against them, so it
-    calls achat(), not achat_with_tools().
-  * §3/§4b -- JEQ rows are never used as exemplars (only golden_queries are),
-    and the citation check is deterministic code, never delegated to the model.
+The prompt carries only the five golden_queries exemplars that share the
+target row's quadrant, never all 20. The citation check is deterministic
+code, never delegated to the model.
 """
 import asyncio
 import json
@@ -45,8 +36,7 @@ _RUBRIC = (
 
 
 def _rescale_to_1_10(human_score_0_100: int) -> int:
-    """golden_queries.human_score is 0-100; the Judge outputs 1-10, so the
-    teaching examples are shown on the Judge's own scale (clamped to 1-10)."""
+    """Rescales a 0-100 human score to the Judge's 1-10 scale, clamped."""
     return max(1, min(10, round(human_score_0_100 / 10)))
 
 
@@ -62,11 +52,10 @@ def _format_exemplar(ex: dict) -> str:
 
 
 def build_prefix(quadrant: str, exemplars: list[dict]) -> str:
-    """The cacheable system message for one quadrant: rubric + its exemplars.
+    """Builds the cacheable system message for one quadrant: rubric plus exemplars.
 
-    Same string for every JEQ row of `quadrant`, so a provider that caches
-    prompt prefixes charges the exemplar tokens once per quadrant, not once
-    per row (Guardrails §4a).
+    Same string for every row of that quadrant, so a prompt-caching provider
+    charges the exemplar tokens once per quadrant, not once per row.
     """
     blocks = "\n\n".join(_format_exemplar(ex) for ex in exemplars)
     return (
@@ -109,11 +98,11 @@ def parse_judge_score(raw_text: str) -> int:
 
 
 def compute_deterministic_metrics(row: dict) -> dict:
-    """The code-computed metric columns for one gate row (no LLM).
+    """Computes the code-computed metric columns for one gate row (no LLM).
 
-    evidence_hit is derived from recall (deviations.md #26): retrieval
-    surfaced at least one ground-truth citation. exact_match stays None for
-    the implicit quadrants Q2/Q4, stored as NULL.
+    evidence_hit is derived from recall: retrieval surfaced at least one
+    ground-truth citation. exact_match stays None for the implicit quadrants
+    Q2/Q4, stored as NULL.
     """
     retrieved = row["retrieved_node_ids"]
     cited = row["cited_node_ids"]
@@ -133,9 +122,9 @@ def compute_deterministic_metrics(row: dict) -> dict:
 class Judge:
     """Wraps the Qwen judge client; enforces the fixed model and temperature.
 
-    Like the Answerer, the routed model and temperature=0 are constraints, so
-    a caller asking for anything else is rejected rather than silently
-    overridden -- a gate scored under the wrong model would be meaningless.
+    The routed model and temperature=0 are fixed constraints, so a caller
+    asking for anything else is rejected rather than silently overridden; a
+    gate scored under the wrong model would be meaningless.
     """
 
     def __init__(self, model: str | None = None, temperature: float = 0.0):
@@ -168,12 +157,12 @@ class Judge:
 
 
 async def judge_jeq_rows(db_path: str, judge: Judge | None = None) -> dict:
-    """Score every JEQ gate row: deterministic metrics + judge_score, one write each.
+    """Scores every JEQ gate row: deterministic metrics plus judge_score, one write each.
 
     Reads the 60 rows joined to their ground truth, builds each quadrant's
     prompt prefix once, then scores the rows and writes the full metric vector
-    back per row. Honours LOCAL_TEST_THROTTLE (Guardrails §7): under throttle
-    only the first THROTTLE_LIMIT rows run.
+    back per row. Honours LOCAL_TEST_THROTTLE: under throttle only the first
+    THROTTLE_LIMIT rows run.
     """
     if judge is None:
         judge = Judge()
@@ -181,9 +170,8 @@ async def judge_jeq_rows(db_path: str, judge: Judge | None = None) -> dict:
     rows = await dbm.get_jeq_judging_rows(db_path)
     rows = apply_throttle(rows)
 
-    # Build the four (or fewer) cacheable prefixes up front, one DB read per
-    # quadrant present, so scoring can proceed concurrently without racing on
-    # the exemplar reads.
+    # Build each quadrant's cacheable prefix once, up front, so concurrent
+    # scoring never races on the exemplar reads.
     prefixes: dict[str, str] = {}
     for quadrant in {row["quadrant"] for row in rows}:
         exemplars = await dbm.get_golden_queries_by_quadrant(db_path, quadrant)
