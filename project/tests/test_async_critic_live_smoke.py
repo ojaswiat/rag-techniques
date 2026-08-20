@@ -1,24 +1,9 @@
-"""ONE live, throttled smoke test proving async_critic.critique_query() actually
-speaks Groq's real function-calling protocol, not just the mocked shape asserted
-in tests/test_async_critic.py.
+"""ONE live, throttled smoke test proving critique_query() speaks Groq's real
+function-calling protocol, not just the mocked shape in test_async_critic.py.
 
-Guardrails.md "Loop Safety" requires every loop script to be throttled and run
-clean at throttle before release to the full batch. This is not a loop script,
-but the same spirit applies: this test makes exactly ONE critique_query() call
-(bounded internally by async_critic._MAX_TOOL_ROUNDS = 5 Groq round trips) against
-a hardcoded, frozen snapshot of 16 real nodes from a single small JNJ_2023 10-K
-section -- never a live DB query and never a loop over documents/queries. It costs
-at most 5 Groq calls, once, ever, per explicit opt-in run.
-
-Gating: this test is SKIPPED by default. It requires both:
-  1. RUN_LIVE_GROQ_TESTS=1 in the environment (explicit developer opt-in), and
-  2. a real GROQ_API_KEY resolved via config.py.
-Plain `pytest -q` never executes it and never spends Groq quota. There is no
-existing precedent for live-API test gating in this suite (checked test_*.py and
-pyproject.toml) -- this establishes the pattern via a `live` marker (registered
-in pyproject.toml) plus a skipif on the env var, so both `pytest -m "not live"`
-and default collection skip it, and a developer must deliberately set the env
-var to run it.
+Skipped by default. To run: set RUN_LIVE_GROQ_TESTS=1 in the environment and
+resolve a real GROQ_API_KEY via config.py, then run pytest as usual. Without
+both, the test is skipped and no Groq quota is spent.
 """
 import os
 
@@ -30,11 +15,9 @@ from dataset_generation.async_critic import critique_query
 
 _RUN_LIVE = os.getenv("RUN_LIVE_GROQ_TESTS") == "1"
 
-# Frozen snapshot (not a live DB read) of 16 real nodes from JNJ_2023, spanning
-# Item 9A-9C and the start of Item 10/11 -- ~700 tokens total. Small enough to
-# keep the real Groq call cheap, and deliberately includes several nodes with
-# no lexical overlap with the question so search_filing_nodes must actually
-# rank/filter rather than trivially return everything.
+# Frozen snapshot of 16 real JNJ_2023 nodes (Item 9A-9C to the start of
+# Item 10/11), including several with no lexical overlap with the question
+# so search_filing_nodes must actually rank/filter, not return everything.
 _JNJ_2023_ITEM_9_SLICE = [
     {"node_id": "JNJ_2023_n1161", "content": "Not applicable."},
     {"node_id": "JNJ_2023_n1162", "content": "# Disclosure controls and procedures."},
@@ -166,11 +149,8 @@ _JNJ_2023_ITEM_9_SLICE = [
     },
 ]
 
-# Hardcoded, one-shot-only safety cap in the spirit of Guardrails.md's
-# LOCAL_TEST_THROTTLE convention -- this is not a loop script, so there is no
-# THROTTLE_LIMIT to apply, but the assertion below guards against accidental
-# expansion of the frozen node slice into something that would make the real
-# API call larger/costlier than intended.
+# Guards against accidental expansion of the frozen node slice into
+# something that would make the real API call larger or costlier.
 _MAX_ALLOWED_NODES = 20
 
 _QUESTION = (
@@ -191,11 +171,8 @@ _QUESTION = (
 )
 @pytest.mark.asyncio
 async def test_critique_query_live_round_trip_against_real_groq_api():
-    """Exercises the REAL Groq function-calling protocol end to end -- no mocking
-    of groq_client.call_groq. Proves the tool-call message shape (assistant
-    message with tool_calls, followed by role="tool" results keyed by
-    tool_call_id) that async_critic.critique_query() constructs is actually
-    accepted and honoured by the live API, not just by the hand-written mocks in
+    """Proves the tool-call message shape critique_query() constructs is
+    accepted and honoured by the live Groq API, not just by the mocks in
     test_async_critic.py.
     """
     assert len(_JNJ_2023_ITEM_9_SLICE) <= _MAX_ALLOWED_NODES
@@ -208,15 +185,12 @@ async def test_critique_query_live_round_trip_against_real_groq_api():
     assert isinstance(result["cited_node_ids"], list)
     assert isinstance(result["computed_answer"], str) and result["computed_answer"].strip()
 
-    # Indirect proof (kept, additive): the only node containing "Rule 10b5-1" /
-    # "trading arrangement" is n1169. A correct search-then-answer round trip
-    # must cite it -- if the model answered without ever searching, or
-    # searched but ignored the result, this node would not appear.
+    # The only node mentioning "Rule 10b5-1" / "trading arrangement" is
+    # n1169, so a correct search-then-answer round trip must cite it.
     assert "JNJ_2023_n1169" in result["cited_node_ids"]
 
-    # Direct proof: the real message history must actually contain a
-    # tool-call turn -- an assistant message carrying a ToolCallBlock --
-    # rather than inferring tool use only from the cited node above.
+    # Direct proof: the message history must contain an assistant message
+    # carrying a ToolCallBlock, not just the cited node inferred above.
     assert "messages" in result
     assert isinstance(result["messages"], list) and result["messages"]
     tool_call_blocks = [

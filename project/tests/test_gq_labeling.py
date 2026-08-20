@@ -146,12 +146,8 @@ def test_parse_label_markdown_raises_on_unrecognized_is_good_value():
 
 
 def test_parse_label_markdown_handles_entry_missing_good_example_line():
-    """An entry from an older-format golden_queries_to_label.md (exported
-    before the is_good field existed, or hand-edited to drop the line)
-    must still parse -- not silently vanish from the results. This was a
-    real bug: the regex hard-required the Good Example line, so a filled,
-    well-formed entry missing only that line matched nothing and was
-    dropped with no error, contradicting this file's loud-validation goal."""
+    """An entry missing only the Good Example line must still parse, not
+    silently vanish from the results."""
     old_format = """## Q1_GQ_0001
 
 **Quadrant:** Q1_Direct_Text

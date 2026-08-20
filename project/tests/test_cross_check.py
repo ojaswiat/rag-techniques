@@ -41,16 +41,14 @@ def test_values_match_false_on_real_difference():
 
 
 def test_values_match_false_on_mismatched_number_count():
-    # A gt number ("1.1%") that is simply absent from the critic answer
-    # still fails -- subset matching only permits *extra* numbers on the
-    # critic side, not missing ones.
+    # A gt number ("1.1%") absent from the critic answer still fails;
+    # subset matching permits extra numbers on the critic side, not missing ones.
     assert values_match("4.2% and 1.1%", "4.2%") is False
 
 
 def test_values_match_true_when_critic_has_extra_unrelated_number():
-    # An equally-correct critic answer with an extra,
-    # unrelated number (e.g. a year) must not be rejected purely on
-    # count mismatch.
+    # An equally-correct answer with an extra unrelated number (e.g. a
+    # year) must not be rejected purely on count mismatch.
     assert values_match("$100 million", "$100 million in 2025") is True
 
 
@@ -142,9 +140,8 @@ def test_embedding_similarity_ok_matches_threshold():
 
 
 def test_check_query_rejects_when_numbers_coincidentally_match_but_text_unrelated():
-    # Numeric subset and citation overlap both pass, but the answers are
-    # about unrelated topics that happen to share a number -- the embedding
-    # gate must be the one that catches this.
+    # Numeric subset and citation overlap both pass; the answers are about
+    # unrelated topics sharing a number, so only the embedding gate catches this.
     assert check_query(
         gt_citations=["n1", "n2"],
         gt_answer="Net income was $100 million.",
@@ -186,10 +183,8 @@ def test_check_query_three_gate_and_logic():
         critic_answer=wrong_number_answer,
     ) is False
 
-    # Embedding gate fails alone (citations pass; numeric subset happens to
-    # pass too because the unrelated answer contains no numbers at all, so
-    # values_match falls back to text-equality and still fails -- use a
-    # variant that shares the same number to isolate the embedding gate).
+    # Embedding gate fails alone; this variant shares gt_answer's number so
+    # the numeric gate cannot also fail, isolating the embedding gate.
     assert check_query(
         gt_citations=gt_citations,
         gt_answer=gt_answer,

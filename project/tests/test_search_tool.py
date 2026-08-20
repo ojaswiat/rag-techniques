@@ -45,11 +45,10 @@ def test_tool_schema_shape():
 
 
 def test_short_precise_node_outranks_long_wordy_node():
-    # A short node with fewer raw hits but a higher
-    # hits/length ratio must outrank a long node with more raw hits but a
-    # lower ratio (length-normalized TF, not raw count). Both nodes are
-    # kept >= _MIN_NODE_LENGTH_FOR_SCORING (25 tokens) so the floor does
-    # not mask this ratio comparison.
+    # Scoring is length-normalised TF (hits/length), not raw hit count, so
+    # a short node with fewer hits can outrank a longer one with more. Both
+    # nodes stay >= _MIN_NODE_LENGTH_FOR_SCORING (25 tokens) so the floor
+    # does not mask the comparison.
     # Node A: 26 tokens, 1 "revenue" hit -> score 1/26 ~= 0.0385.
     node_a = _node(
         "nA",
@@ -83,12 +82,11 @@ def test_empty_content_node_skipped_without_zero_division():
 
 
 def test_degenerate_tiny_node_does_not_outrank_real_node():
-    # Without a length floor, a
-    # 1-token node with a single exact hit scores raw_count/len == 1/1 ==
-    # 1.0 and beats any longer, substantive node mentioning the same term
-    # once in real context. This must fail against unfloored scoring
-    # (score = raw_count / len(node_tokens)) and pass with the floor
-    # (score = raw_count / max(len(node_tokens), _MIN_NODE_LENGTH_FOR_SCORING)).
+    # Without a length floor, a 1-token node with one hit scores
+    # raw_count/len == 1/1 == 1.0 and beats a longer, substantive node
+    # mentioning the term once. The floor
+    # (score = raw_count / max(len(node_tokens), _MIN_NODE_LENGTH_FOR_SCORING))
+    # corrects this.
     tiny_node = _node("tiny", "Revenue")  # 1 token, 1 hit -> pre-floor score 1.0
     real_node = _node(
         "real",

@@ -1,11 +1,6 @@
-"""Regression tests for async_critic.critique_query()'s tool-calling loop.
-
-Uses a real OpenAILike instance with its private async client swapped out,
-matching exactly how LLMFactory.get_client_for_stage() constructs clients in
-production -- so these tests fail under a call pattern that assumes a raw
-OpenAI-SDK-shaped object (client.chat.completions.create(tools=...)) instead
-of LlamaIndex's actual function-calling interface
-(client.achat_with_tools(...) / client.get_tool_calls_from_response(...)).
+"""Pins critique_query()'s tool-calling loop to LlamaIndex's real
+achat_with_tools() interface. The Critic is called with only the query and
+retrieved nodes, never the Generator's answer or citations.
 """
 import json
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -25,11 +20,8 @@ _FINAL_PAYLOAD = {"cited_node_ids": ["n1"], "computed_answer": "$100 million"}
 
 
 def _openai_response(content=None, tool_calls=None):
-    """An OpenAI-SDK-shaped chat completion, i.e. what the wire actually returns.
-
-    LlamaIndex parses this itself (from_openai_message), so the tests assert
-    against the real provider payload rather than against LlamaIndex's own
-    ChatResponse objects, which the production code never constructs.
+    """An OpenAI-SDK-shaped chat completion, matching what LlamaIndex's
+    from_openai_message actually parses off the wire.
     """
     message = MagicMock(role="assistant", content=content, tool_calls=tool_calls, audio=None)
     response = MagicMock()
@@ -48,8 +40,7 @@ def _tool_call(call_id="call_1", query="total revenue"):
 
 def _search_tool_call(call_id="call_1", query="total revenue"):
     tool_call = _tool_call(call_id, query)
-    # MagicMock(name=...) sets the mock's own repr name, not the attribute,
-    # so the function name has to be assigned after construction.
+    # MagicMock(name=...) sets the mock's repr name, not the attribute.
     tool_call.function.name = "search_filing"
     return _openai_response(content=None, tool_calls=[tool_call])
 

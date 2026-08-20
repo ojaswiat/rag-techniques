@@ -1,10 +1,7 @@
-"""Regression test for async_generator.generate_query()'s LLM call shape.
-
-Uses a real OpenAILike instance with its private async client swapped out,
-matching exactly how LLMFactory.get_client_for_stage() constructs clients
-in production -- so this test fails under a call pattern that assumes a
-raw OpenAI-SDK-shaped object (client.chat.completions.create(...)) instead
-of LlamaIndex's actual interface (client.achat(...)).
+"""Pins generate_query()'s LLM call shape to LlamaIndex's real achat()
+interface, using a real OpenAILike instance with its private async client
+swapped out, rather than a raw OpenAI-SDK client.chat.completions.create()
+pattern.
 """
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -41,12 +38,9 @@ def _fake_llm_client(response_content: str) -> OpenAILike:
 
 
 def _sent_user_content(client: OpenAILike) -> str:
-    """The user-role prompt text that actually reached the wire.
-
-    OpenAILike.achat() serialises ChatMessage objects down to plain
-    {"role", "content"} dicts passed as the `messages` kwarg, so reading
-    them back here asserts against the real payload rather than against
-    the ChatMessage list generate_query() happened to build.
+    """The user-role prompt text read back from the serialised
+    {"role", "content"} dicts OpenAILike.achat() actually sends as the
+    `messages` kwarg.
     """
     messages = client._aclient.chat.completions.create.call_args.kwargs["messages"]
     user_messages = [m["content"] for m in messages if m["role"] == "user"]
