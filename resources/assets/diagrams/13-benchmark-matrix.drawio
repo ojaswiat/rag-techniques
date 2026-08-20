@@ -4,7 +4,7 @@
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
-        <mxCell id="t1" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontColor=#3b82f6;fontSize=24;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;shadow=0;fontStyle=1;" value="The Target Matrix — 900 Runs, No Results Yet" vertex="1">
+        <mxCell id="t1" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontColor=#3b82f6;fontSize=24;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;shadow=0;fontStyle=1;" value="The Target Matrix  ·  900 Runs, No Results Yet" vertex="1">
           <mxGeometry height="34" width="1200" x="80" y="44" as="geometry" />
         </mxCell>
         <mxCell id="t2" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontColor=#64748b;fontSize=13;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;shadow=0;" value="3 pipelines × 3 retrieval depths × 100 questions. Every cell is currently empty." vertex="1">
@@ -61,7 +61,7 @@
         <mxCell id="c19" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#3b82f6;strokeColor=none;fontColor=#FFFFFF;fontSize=22;fontFamily=JetBrains Mono;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DJetBrains%2BMono;verticalAlign=middle;align=center;shadow=0;glass=0;spacingLeft=8;spacingRight=8;spacingTop=6;spacingBottom=6;arcSize=0;fontStyle=1;" value="3  ×  3  ×  100   =   900 RESULT ROWS" vertex="1">
           <mxGeometry height="64" width="1260" x="80" y="620" as="geometry" />
         </mxCell>
-        <mxCell id="c20" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ef4444;strokeColor=none;fontColor=#FFFFFF;fontSize=14;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;verticalAlign=middle;align=center;shadow=0;glass=0;spacingLeft=8;spacingRight=8;spacingTop=6;spacingBottom=6;arcSize=0;fontStyle=1;" value="0 written so far  —  this is a target, not a finding" vertex="1">
+        <mxCell id="c20" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ef4444;strokeColor=none;fontColor=#FFFFFF;fontSize=14;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;verticalAlign=middle;align=center;shadow=0;glass=0;spacingLeft=8;spacingRight=8;spacingTop=6;spacingBottom=6;arcSize=0;fontStyle=1;" value="0 written so far  ·  a target, not a finding" vertex="1">
           <mxGeometry height="44" width="1260" x="80" y="684" as="geometry" />
         </mxCell>
         <mxCell id="t21" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontColor=#64748b;fontSize=12;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;shadow=0;fontStyle=1;" value="HOW IT WILL BE REPORTED" vertex="1">
