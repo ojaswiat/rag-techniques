@@ -1,9 +1,7 @@
-"""Randomized 20-section parsing validation audit.
+"""Randomised parsing validation audit: samples nodes for a human to check
+that tables and headers survived the parse intact.
 
-Samples nodes across the corpus for a human to eyeball: does the table
-survive intact, is the markdown rendering clean, is anything truncated?
-See resources/specs/Project Idea.md §2 -- this script surfaces the sample,
-it cannot self-certify the result; a human must actually look.
+Surfaces the sample only; a human must judge the result.
 """
 import random
 

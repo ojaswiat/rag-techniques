@@ -1,9 +1,7 @@
-"""Downloads SEC 10-K filings, resolving real URLs from SEC EDGAR's public
-JSON APIs at runtime -- never hardcoded accession numbers or document paths.
+"""Downloads SEC 10-K filings, resolving filing URLs from SEC EDGAR's public
+JSON APIs at runtime rather than hardcoded accession numbers or paths.
 
-See resources/specs/Architecture.md §0.3 and the Global Constraints in this
-phase's plan: SEC EDGAR requires a descriptive User-Agent (fair-access
-policy) and this module must never guess a filing's URL.
+SEC EDGAR requires a descriptive User-Agent under its fair-access policy.
 """
 import os
 
@@ -61,10 +59,9 @@ async def fetch_filing(ticker: str, fiscal_year: int, document_id: str, raw_dir:
 
     match = _find_10k(submissions["filings"]["recent"], fiscal_year)
 
-    # High-filing-frequency issuers (e.g. banks filing frequent 8-Ks/prospectus
-    # supplements) can push a 10-K out of "recent" within a couple of years --
-    # "recent" is a fixed-size window, not a fixed time window. Fall back to
-    # the paginated older-filings archives (newest page first) if needed.
+    # "recent" is a fixed-size window, not a fixed time window, so a frequent
+    # filer's 10-K can drop out of it within a couple of years. Fall back to
+    # the paginated archives, newest page first.
     if match is None:
         for page in submissions["filings"].get("files", []):
             paginated = _get_json(_PAGINATED_SUBMISSIONS_URL.format(name=page["name"]))

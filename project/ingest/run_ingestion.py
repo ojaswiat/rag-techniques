@@ -1,5 +1,5 @@
 """Orchestrates fetch -> parse -> node_builder -> database_manager.insert_node
-for every filing in data/filings_manifest.json, honoring LOCAL_TEST_THROTTLE.
+for every filing in data/filings_manifest.json, honouring LOCAL_TEST_THROTTLE.
 """
 import asyncio
 import json
@@ -15,11 +15,9 @@ MANIFEST_PATH = "data/filings_manifest.json"
 
 
 async def ingest_one(entry: dict) -> int:
-    # Skips on ANY existing row count, so this assumes a prior run for a
-    # given document either completed fully or wasn't started -- a crash
-    # mid-document leaves a partial node set that this will silently treat
-    # as done. To force re-ingestion of a document, delete its rows from
-    # `nodes` first (there's no dedicated repair tool for this yet).
+    # Any existing row count is treated as "done", so a crash mid-document
+    # leaves a partial node set that this will not retry. Delete that
+    # document's rows from `nodes` to force re-ingestion.
     existing = await dbm.get_nodes_by_document(DB_PATH, entry["document_id"])
     if existing:
         return len(existing)

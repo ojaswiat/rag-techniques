@@ -1,10 +1,8 @@
-"""Parses raw filings into clean Markdown via LlamaParse (Cost-effective
-tier, atomic-table mode). Caches aggressively: re-parsing the same file
-within 48 hours is free on LlamaParse's side, but we still skip the network
-call entirely when a fresh cached copy already exists.
+"""Parses raw filings into clean Markdown via LlamaParse, using the
+cost-effective tier with atomic-table mode.
 
-See resources/specs/Budget.md §3 and this phase's plan Global Constraints:
-Cost-effective tier only, never Agentic/Premium.
+Re-parsing within 48 hours is free on LlamaParse's side, but a fresh
+cached copy skips the network call entirely.
 """
 import os
 import time
@@ -18,11 +16,9 @@ _CACHE_FRESH_SECONDS = 48 * 3600
 _parser = LlamaParse(
     api_key=config.LLAMA_CLOUD_API_KEY or "placeholder-key-for-import-only",
     result_type="markdown",
-    # system_prompt_append (not system_prompt) preserves LlamaParse's tuned
-    # default prompt and adds to it -- system_prompt would replace the
-    # default wholesale, which the library's own docs warn "may impact
-    # accuracy". This module's whole job is atomic table extraction, so
-    # keeping the default intact matters.
+    # system_prompt_append preserves LlamaParse's tuned default prompt and
+    # adds to it; system_prompt would replace the default wholesale, which
+    # the library's docs warn may hurt accuracy.
     system_prompt_append=(
         "This is a SEC 10-K filing. Extract all tables as clean, complete "
         "Markdown tables -- never split or truncate a table across multiple "
