@@ -5,50 +5,41 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>CA2 video script console</title>
 <style>
-/* Oxford Ink, matching resources/artifacts/presentation/main.css */
+/* Oxford Ink, matching resources/artifacts/presentation/main.css.
+   Sharp corners throughout: no border-radius anywhere. */
 :root{
   --ink:#0f172a; --slate:#64748b; --line:#e2e8f0; --paper:#fff; --wash:#f8fafc;
   --amber:#f59e0b; --sky:#0ea5e9; --emerald:#10b981; --violet:#8b5cf6;
   --red:#ef4444; --green:#22c55e; --cyan:#06b6d4; --blue:#3b82f6;
   --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
   --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
-  --shadow:0 1px 2px rgba(15,23,42,.06);
 }
 html[data-theme="dark"]{
   --ink:#e2e8f0; --slate:#94a3b8; --line:#1e293b; --paper:#0b1220; --wash:#0f172a;
-  --shadow:0 1px 2px rgba(0,0,0,.4);
 }
 *{box-sizing:border-box}
+*,*::before,*::after{border-radius:0}
 html,body{margin:0;padding:0}
-body{
-  background:var(--wash); color:var(--ink); font-family:var(--sans);
-  -webkit-font-smoothing:antialiased; line-height:1.55;
-}
+body{background:var(--wash);color:var(--ink);font-family:var(--sans);
+  -webkit-font-smoothing:antialiased;line-height:1.55}
 .wrap{max-width:1120px;margin:0 auto;padding:0 24px}
 
 /* ---------------- command bar ---------------- */
-#bar{
-  position:sticky; top:0; z-index:40; background:var(--paper);
-  border-bottom:1px solid var(--line);
-}
+#bar{position:sticky;top:0;z-index:40;background:var(--paper);border-bottom:1px solid var(--line)}
 #bar .wrap{display:flex;align-items:center;gap:18px;height:60px;flex-wrap:nowrap}
 #clock{font-family:var(--mono);font-size:26px;font-weight:600;letter-spacing:-.02em;
   font-variant-numeric:tabular-nums;min-width:86px}
 #clock.over{color:var(--red)}
-.btn{
-  border:1.5px solid var(--line); background:none; color:var(--ink);
-  font:inherit; font-size:13px; padding:6px 13px; border-radius:999px;
-  cursor:pointer; white-space:nowrap;
-}
+.btn{border:1.5px solid var(--line);background:none;color:var(--ink);font:inherit;
+  font-size:13px;padding:6px 14px;cursor:pointer;white-space:nowrap}
 .btn:hover{border-color:var(--ink)}
 .btn.primary{background:var(--ink);color:var(--paper);border-color:var(--ink)}
 html[data-theme="dark"] .btn.primary{color:#0b1220}
 .icon{width:34px;height:34px;padding:0;display:inline-flex;align-items:center;justify-content:center}
-#now{font-size:12px;color:var(--slate);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#now{font-size:12px;color:var(--slate);flex:1;min-width:0;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap}
 #now b{color:var(--ink)}
-#drift{font-family:var(--mono);font-size:13px;padding:3px 9px;border-radius:999px;
-  border:1px solid var(--line);white-space:nowrap}
-#drift.ahead{color:var(--emerald);border-color:var(--emerald)}
+#drift{font-family:var(--mono);font-size:13px;padding:3px 10px;border:1px solid var(--line);white-space:nowrap}
 #drift.behind{color:var(--red);border-color:var(--red)}
 .pace{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--slate);white-space:nowrap}
 .pace input{width:96px;accent-color:var(--ink)}
@@ -58,16 +49,11 @@ html[data-theme="dark"] .btn.primary{color:#0b1220}
 #tl{background:var(--paper);border-bottom:1px solid var(--line);padding:12px 0 16px;
   position:sticky;top:60px;z-index:39}
 #track{display:flex;gap:2px;height:34px}
-#track button{
-  border:none;padding:0;cursor:pointer;position:relative;overflow:hidden;
-  background:var(--line);border-radius:2px;transition:filter .12s;
-}
+#track button{border:none;padding:0;cursor:pointer;position:relative;overflow:hidden;
+  background:var(--line);transition:filter .12s}
 #track button:hover{filter:brightness(.9)}
-#track button span{
-  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
-  font-size:10px;font-weight:700;font-family:var(--mono);color:var(--paper);
-  letter-spacing:.02em;
-}
+#track button span{position:absolute;inset:0;display:flex;align-items:center;
+  justify-content:center;font-size:10px;font-weight:700;font-family:var(--mono);color:var(--paper)}
 #track button.on{outline:2px solid var(--ink);outline-offset:1px}
 #playhead{height:3px;background:var(--ink);width:0;margin-top:5px;transition:width .2s linear}
 #ticks{display:flex;justify-content:space-between;font-family:var(--mono);
@@ -80,7 +66,7 @@ h1{font-size:30px;letter-spacing:-.02em;margin:0 0 6px}
 h2{font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--slate);
   margin:44px 0 14px;font-weight:700}
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1px;
-  background:var(--line);border:1px solid var(--line);border-radius:6px;overflow:hidden}
+  background:var(--line);border:1px solid var(--line)}
 .stat{background:var(--paper);padding:16px 18px}
 .stat b{display:block;font-family:var(--mono);font-size:26px;font-weight:600;
   letter-spacing:-.03em;line-height:1;color:var(--c,var(--ink))}
@@ -88,18 +74,18 @@ h2{font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--slat
   text-transform:uppercase;color:var(--slate)}
 
 /* ---------------- cards ---------------- */
-.card{background:var(--paper);border:1px solid var(--line);border-radius:8px;
-  margin-bottom:14px;box-shadow:var(--shadow);scroll-margin-top:130px;overflow:hidden}
+.card{background:var(--paper);border:1px solid var(--line);margin-bottom:14px;
+  scroll-margin-top:130px;overflow:hidden}
 .card.live{border-color:var(--ink);box-shadow:0 0 0 2px var(--ink)}
 .card > header{display:flex;align-items:baseline;gap:14px;padding:16px 20px 12px;
   border-bottom:1px solid var(--line);flex-wrap:wrap}
 .num{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--paper);
-  background:var(--k,var(--ink));padding:3px 8px;border-radius:4px}
+  background:var(--k,var(--ink));padding:3px 9px}
 html[data-theme="dark"] .num{color:#0b1220}
 .card h3{font-size:19px;margin:0;letter-spacing:-.01em;flex:1;min-width:180px}
 .when{font-family:var(--mono);font-size:12px;color:var(--slate)}
 .tag{font-size:10px;letter-spacing:.09em;text-transform:uppercase;font-weight:700;
-  padding:3px 8px;border-radius:999px;border:1px solid var(--line);color:var(--slate)}
+  padding:3px 9px;border:1px solid var(--line);color:var(--slate)}
 .tag.protect{color:var(--red);border-color:var(--red)}
 .body{padding:6px 20px 18px}
 
@@ -110,26 +96,34 @@ html[data-theme="dark"] .num{color:#0b1220}
 .say{border-left:3px solid var(--ink);padding:4px 0 4px 16px}
 .say p{margin:0 0 11px;font-size:17px;line-height:1.62}
 .say p:last-child{margin-bottom:0}
-.note{background:var(--wash);border-radius:6px;padding:11px 14px;font-size:13.5px;color:var(--slate)}
+.note{background:var(--wash);border-left:3px solid var(--amber);padding:11px 14px;
+  font-size:13.5px;color:var(--slate)}
 .note b{color:var(--ink)}
-code{font-family:var(--mono);font-size:.9em;background:var(--wash);padding:1px 5px;border-radius:3px}
+code{font-family:var(--mono);font-size:.9em;background:var(--wash);padding:1px 5px}
 
-.cmd{display:flex;align-items:center;gap:10px;background:var(--ink);border-radius:6px;
-  padding:11px 14px;margin:10px 0}
+.cmd{display:flex;align-items:center;gap:10px;background:var(--ink);padding:11px 14px;margin:10px 0}
 html[data-theme="dark"] .cmd{background:#020617;border:1px solid var(--line)}
-.cmd code{font-family:var(--mono);font-size:13.5px;color:#e2e8f0;background:none;
+.cmd code{font-family:var(--mono);font-size:13px;color:#e2e8f0;background:none;
   padding:0;flex:1;overflow-x:auto;white-space:pre}
 .cmd button{border:1px solid #334155;background:none;color:#94a3b8;font:inherit;
-  font-size:11px;padding:4px 10px;border-radius:4px;cursor:pointer;white-space:nowrap}
+  font-size:11px;padding:4px 10px;cursor:pointer;white-space:nowrap}
 .cmd button:hover{color:#e2e8f0;border-color:#94a3b8}
 
-/* fit bar */
 .fit{display:flex;align-items:center;gap:10px;font-size:11px;color:var(--slate);
   font-family:var(--mono);padding:10px 20px;border-top:1px solid var(--line);background:var(--wash)}
-.fit .rail{flex:1;height:5px;background:var(--line);border-radius:3px;overflow:hidden}
+.fit .rail{flex:1;height:5px;background:var(--line);overflow:hidden}
 .fit .fill{height:100%;background:var(--emerald);width:0;transition:width .2s}
 .fit .fill.tight{background:var(--amber)}
 .fit .fill.over{background:var(--red)}
+
+/* ---------------- record blocks ---------------- */
+.rec{border:1px solid var(--line);background:var(--paper)}
+.rec .h{font-family:var(--mono);font-size:11px;letter-spacing:.06em;color:var(--slate);
+  padding:9px 14px;border-bottom:1px solid var(--line);background:var(--wash);text-transform:uppercase}
+.rec pre{margin:0;padding:14px;font-family:var(--mono);font-size:12.5px;line-height:1.6;
+  color:var(--slate);overflow-x:auto;white-space:pre}
+.rec pre b{color:var(--ink);font-weight:600}
+.rec pre i{color:var(--sky);font-style:normal;font-weight:600}
 
 /* ---------------- checklist ---------------- */
 .check{list-style:none;margin:0;padding:0}
@@ -148,16 +142,14 @@ td.k{color:var(--ink);font-weight:600}
 td.m{font-family:var(--mono);font-size:.93em}
 .scroll{overflow-x:auto}
 
-/* ---------------- details ---------------- */
-details{background:var(--paper);border:1px solid var(--line);border-radius:8px;
-  margin-bottom:8px;overflow:hidden}
+details{background:var(--paper);border:1px solid var(--line);margin-bottom:8px;overflow:hidden}
 summary{padding:14px 18px;cursor:pointer;font-weight:600;font-size:15px;list-style:none}
 summary::-webkit-details-marker{display:none}
 summary::before{content:"+";font-family:var(--mono);color:var(--slate);margin-right:10px}
 details[open] summary::before{content:"\2212"}
 details .body{padding:0 18px 16px;color:var(--slate);font-size:14.5px}
 
-.two{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 @media(max-width:820px){.two{grid-template-columns:1fr}
   #bar .wrap{height:auto;padding-top:10px;padding-bottom:10px;flex-wrap:wrap}
   .pace,#now{display:none}}
@@ -177,17 +169,16 @@ details .body{padding:0 18px 16px;color:var(--slate);font-size:14.5px}
 #tpBody .cmd code{font-size:clamp(13px,1.2vw,18px)}
 #tp .foot{flex:none;display:flex;align-items:center;gap:14px;border-top:1px solid var(--line);
   padding-top:14px;margin-top:16px;font-size:12px;color:var(--slate)}
-#tpRail{flex:1;height:6px;background:var(--line);border-radius:3px;overflow:hidden}
+#tpRail{flex:1;height:6px;background:var(--line);overflow:hidden}
 #tpFill{height:100%;width:0;background:var(--ink)}
 
 kbd{font-family:var(--mono);font-size:11px;border:1px solid var(--line);
-  border-bottom-width:2px;border-radius:4px;padding:1px 6px;color:var(--slate)}
+  border-bottom-width:2px;padding:1px 6px;color:var(--slate)}
 
 @media print{
   #bar,#tl,#tp,.fit,.btn{display:none!important}
   body{background:#fff}
-  .card{break-inside:avoid;box-shadow:none;border-color:#ccc}
-  details{break-inside:avoid} details[open] .body{display:block}
+  .card,details{break-inside:avoid;border-color:#ccc}
   .say p{font-size:13pt}
 }
 </style>
@@ -200,7 +191,7 @@ kbd{font-family:var(--mono);font-size:11px;border:1px solid var(--line);
   <button class="btn" id="reset">Reset</button>
   <span id="drift">on plan</span>
   <div id="now">Not started. Press <kbd>space</kbd> to run the clock, <kbd>T</kbd> for teleprompter.</div>
-  <label class="pace">pace <input type="range" id="wpm" min="110" max="175" step="5" value="140"> <b id="wpmv">140</b> wpm</label>
+  <label class="pace">pace <input type="range" id="wpm" min="110" max="180" step="5" value="145"> <b id="wpmv">145</b> wpm</label>
   <button class="btn icon" id="theme" title="Light or dark">◐</button>
   <button class="btn icon" id="print" title="Print">⎙</button>
 </div></div>
@@ -208,48 +199,123 @@ kbd{font-family:var(--mono);font-size:11px;border:1px solid var(--line);
 <div id="tl"><div class="wrap">
   <div id="track"></div>
   <div id="playhead"></div>
-  <div id="ticks"><span>0:00</span><span>2:23</span><span>4:46</span><span>7:08</span><span>9:31</span></div>
+  <div id="ticks"><span>0:00</span><span>2:05</span><span>4:10</span><span>6:14</span><span>8:19</span></div>
 </div></div>
 
 <main class="wrap">
 
 <h1>CA2 video script</h1>
-<p class="lede">Runs against <code>presentation.pptx</code>, eleven slides, with a live demo sitting between slides 8 and 9.
-Start the clock when you start recording. The current beat highlights itself and the drift badge tells you whether you are ahead or behind.</p>
+<p class="lede">Runs against <code>presentation.pptx</code>, eleven slides, with a live demo between slides 8 and 9.
+Runs <b>8:19</b>, which sits inside the 8:30 budget. Start the clock when you start
+recording; the current beat highlights itself and the drift badge tells you when you have overrun one.</p>
 
 <div class="stats">
-  <div class="stat"><b>9:31</b><span>planned length</span></div>
-  <div class="stat" style="--c:var(--emerald)"><b>0:29</b><span>slack under cap</span></div>
-  <div class="stat"><b>15</b><span>beats</span></div>
-  <div class="stat" style="--c:var(--amber)"><b>2:03</b><span>live demo</span></div>
+  <div class="stat"><b>8:19</b><span>planned length</span></div>
+  <div class="stat" style="--c:var(--emerald)"><b>0:11</b><span>under 8:30</span></div>
+  <div class="stat"><b>16</b><span>beats</span></div>
+  <div class="stat" style="--c:var(--amber)"><b>2:20</b><span>live demo</span></div>
   <div class="stat"><b id="totWords">0</b><span>words to speak</span></div>
 </div>
 
 <h2>Before you press record</h2>
 <div class="card"><div class="body"><ul class="check" id="pre"></ul></div></div>
 
-<h2>What the demo covers</h2>
+<h2>Nuance 1 &middot; how a filing becomes searchable</h2>
 <div class="card"><div class="body">
-<div class="scroll"><svg viewBox="0 0 720 150" width="100%" height="150" role="img" aria-label="Three stages: retrieve is covered by the demo, answer and judge are not run">
+<p style="margin:6px 0 16px;color:var(--slate);font-size:14.5px">The architecture in one picture. Everything left of the dashed line
+is what the marker will see running. The two boxes on the right are built and tested, but the benchmark has not been run.</p>
+<div class="scroll"><svg viewBox="0 0 720 372" width="100%" height="372" role="img"
+  aria-label="Flow from a SEC filing through parsing into nodes, three indexes, top-K node IDs, then the unrun answerer and judge">
   <defs><marker id="ar" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
     <path d="M0,0 L8,4 L0,8 z" fill="#64748b"/></marker></defs>
-  <rect x="8" y="34" width="196" height="66" rx="6" fill="none" stroke="#0ea5e9" stroke-width="2"/>
-  <text x="24" y="60" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="#0ea5e9" font-weight="700">STAGE 1</text>
-  <text x="24" y="80" font-family="-apple-system,sans-serif" font-size="15" fill="currentColor" font-weight="600">Retrieve top-K nodes</text>
-  <text x="24" y="122" font-family="-apple-system,sans-serif" font-size="12" fill="#0ea5e9">shown live in the demo</text>
-  <line x1="212" y1="67" x2="248" y2="67" stroke="#64748b" stroke-width="1.5" marker-end="url(#ar)"/>
-  <rect x="256" y="34" width="196" height="66" rx="6" fill="none" stroke="#cbd5e1" stroke-width="2" stroke-dasharray="5 4"/>
-  <text x="272" y="60" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="#94a3b8" font-weight="700">STAGE 2</text>
-  <text x="272" y="80" font-family="-apple-system,sans-serif" font-size="15" fill="#94a3b8" font-weight="600">Answer, Llama 3.3 70B</text>
-  <text x="272" y="122" font-family="-apple-system,sans-serif" font-size="12" fill="#94a3b8">built, never run</text>
-  <line x1="460" y1="67" x2="496" y2="67" stroke="#64748b" stroke-width="1.5" marker-end="url(#ar)"/>
-  <rect x="504" y="34" width="196" height="66" rx="6" fill="none" stroke="#cbd5e1" stroke-width="2" stroke-dasharray="5 4"/>
-  <text x="520" y="60" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="#94a3b8" font-weight="700">STAGE 3</text>
-  <text x="520" y="80" font-family="-apple-system,sans-serif" font-size="15" fill="#94a3b8" font-weight="600">Judge, Qwen3.6-27B</text>
-  <text x="520" y="122" font-family="-apple-system,sans-serif" font-size="12" fill="#94a3b8">gated on human scoring</text>
+  <style>
+    .bx{fill:none;stroke:#cbd5e1;stroke-width:1.5}
+    .hi{fill:none;stroke:#0ea5e9;stroke-width:2}
+    .gh{fill:none;stroke:#cbd5e1;stroke-width:1.5;stroke-dasharray:5 4}
+    .nm{font-family:-apple-system,sans-serif;font-size:13.5px;font-weight:600;fill:currentColor}
+    .sm{font-family:ui-monospace,Menlo,monospace;font-size:10px;fill:#64748b}
+    .gy{fill:#94a3b8}
+    .ln{stroke:#64748b;stroke-width:1.4;fill:none}
+  </style>
+
+  <rect class="bx" x="8" y="10" width="118" height="46"/>
+  <text class="nm" x="22" y="32">SEC 10-K</text><text class="sm" x="22" y="47">from EDGAR</text>
+  <line class="ln" x1="126" y1="33" x2="150" y2="33" marker-end="url(#ar)"/>
+  <rect class="bx" x="158" y="10" width="118" height="46"/>
+  <text class="nm" x="172" y="32">LlamaParse</text><text class="sm" x="172" y="47">once, offline</text>
+  <line class="ln" x1="276" y1="33" x2="300" y2="33" marker-end="url(#ar)"/>
+  <rect class="hi" x="308" y="10" width="404" height="46"/>
+  <text class="nm" x="322" y="32">18,297 nodes in SQLite</text>
+  <text class="sm" x="322" y="47">one paragraph or one table each, every one with an id</text>
+
+  <path class="ln" d="M510 56 L510 78 M123 78 L597 78 M123 78 L123 94 M360 78 L360 94 M597 78 L597 94"/>
+  <path class="ln" d="M123 90 l0 8" marker-end="url(#ar)"/>
+  <path class="ln" d="M360 90 l0 8" marker-end="url(#ar)"/>
+  <path class="ln" d="M597 90 l0 8" marker-end="url(#ar)"/>
+
+  <rect class="bx" x="8" y="102" width="230" height="52"/>
+  <text class="nm" x="22" y="124">P1 indexes meaning</text><text class="sm" x="22" y="141">bge-small vectors + rerank</text>
+  <rect class="bx" x="245" y="102" width="230" height="52"/>
+  <text class="nm" x="259" y="124">P2 indexes words</text><text class="sm" x="259" y="141">BM25 term counts, no model</text>
+  <rect class="bx" x="482" y="102" width="230" height="52"/>
+  <text class="nm" x="496" y="124">P3 indexes structure</text><text class="sm" x="496" y="141">summary tree, embedding walk</text>
+
+  <path class="ln" d="M123 154 L123 178 M597 154 L597 178 M123 178 L597 178 M360 154 L360 194"/>
+  <path class="ln" d="M360 190 l0 8" marker-end="url(#ar)"/>
+
+  <rect class="hi" x="250" y="202" width="220" height="46"/>
+  <text class="nm" x="264" y="224">top-K node ids</text>
+  <text class="sm" x="264" y="239">pointers, not sentences</text>
+
+  <text class="sm" x="8" y="272" fill="#ef4444">THE DEMO STOPS HERE &#183; everything above runs locally and spends nothing</text>
+  <line x1="8" y1="280" x2="712" y2="280" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="6 5"/>
+
+  <path class="ln" d="M360 248 L360 292 M210 292 L360 292 M210 292 L210 296"/>
+  <path class="ln" d="M210 294 l0 4" marker-end="url(#ar)"/>
+  <rect class="gh" x="100" y="302" width="220" height="46"/>
+  <text class="nm gy" x="114" y="324">Answerer</text><text class="sm" x="114" y="339">Llama 3.3 70B, shared</text>
+  <line class="ln" x1="320" y1="325" x2="384" y2="325" marker-end="url(#ar)"/>
+  <rect class="gh" x="392" y="302" width="220" height="46"/>
+  <text class="nm gy" x="406" y="324">Judge</text><text class="sm" x="406" y="339">Qwen3.6-27B, gated on scoring</text>
 </svg></div>
-<p class="note" style="margin-top:14px"><b>If asked why there is no answer or verdict on screen:</b> the demo shows the retrieval layer,
-which is the part the dissertation compares. Answer generation and judging are separate passes and neither has been run.</p>
+</div></div>
+
+<h2>Nuance 2 &middot; why retrieval needs no model</h2>
+<div class="card"><div class="body">
+<p style="margin:6px 0 16px;color:var(--slate);font-size:14.5px">This is the point markers most often miss, so it is worth being
+blunt about on camera. The pipelines never write anything. Both halves below are real rows from <code>benchmark.db</code>.</p>
+<div class="two">
+  <div class="rec"><div class="h">one row from <b>nodes</b></div><pre>node_id            = <i>MSFT_2023_n0387</i>
+document_id        = MSFT_2023
+parent_item_header = Item 1B. Unresolved
+                     Staff Comments
+node_type          = text
+content            = "We have received no
+  written comments regarding our periodic
+  or current reports from the staff of the
+  Securities and Exchange Commission..."</pre></div>
+  <div class="rec"><div class="h">the matching row in <b>queries</b></div><pre>query_id     = QT1_PQ_003
+quadrant     = Q1_Direct_Text
+query_text   = "What does the company state
+  regarding written comments from the SEC
+  staff issued 180 days or more before the
+  end of fiscal year 2023..."
+gt_citations = [<i>"MSFT_2023_n0387"</i>]</pre></div>
+</div>
+<p class="note" style="margin-top:16px"><b>So the whole scoring step is one question:</b> did the pipeline return
+<code>n0387</code>? That is a set comparison, which is arithmetic. Nothing has to think, so no model is needed,
+so the numbers come out identical on every run.</p>
+<table style="margin-top:18px">
+  <thead><tr><th>Stage</th><th>Writes new text?</th><th>Needs an LLM?</th><th>In the demo?</th></tr></thead>
+  <tbody>
+    <tr><td class="k">Retrieval, P1 P2 P3</td><td>No, returns ids</td><td>No</td><td style="color:var(--emerald);font-weight:600">Yes</td></tr>
+    <tr><td class="k">Answerer</td><td>Yes</td><td>Llama 3.3 70B</td><td>No</td></tr>
+    <tr><td class="k">Judge</td><td>Yes</td><td>Qwen3.6-27B</td><td>No</td></tr>
+  </tbody>
+</table>
+<p class="note" style="margin-top:16px"><b>The one exception, if pressed:</b> P3's tree was written by a model
+back in Phase 3, at a cost of 1.73M tokens. That result sits frozen on disk. A <code>MockLLM</code> is bound when it
+loads, so a live call at query time is impossible rather than merely unlikely.</p>
 </div></div>
 
 <h2>The beats</h2>
@@ -301,121 +367,133 @@ which is the part the dissertation compares. Answer generation and judging are s
 <script>
 "use strict";
 
-/* ── beat data ─────────────────────────────────────────────────────────── */
 const K = {intro:"#0f172a", demo:"#f59e0b", close:"#06b6d4"};
 
 const BEATS = [
-{n:"1", t:"Title and ethics", slide:"Slide 1", start:0, dur:41, kind:"intro", blocks:[
-  {t:"do", x:"Start on the title slide, full screen. Sit still, look at the camera if you have one."},
-  {t:"say", x:["Hello, I'm Ojaswi Athghara, student number 201959096. This is my second assessment for COMP702, supervised by Blaine Keetch.",
-    "The project compares three ways of finding an answer inside a company's annual report. Everything after retrieval is held identical, so any difference in the scores comes from retrieval itself.",
-    "First, the ethics position, which is category A zero. Every source document is a US SEC 10-K filing from EDGAR, a public regulatory archive. No personal or confidential data, and no licence needed. No human participants. I have read the ethical guidance and I follow it throughout."]},
-  {t:"note", x:"<b>The brief asks for this declaration</b>, so do not rush it or skip it. Roughly ten of the forty seconds belong to the ethics block."}]},
+{n:"1", t:"Title and ethics", slide:"Slide 1", start:0, dur:33, kind:"intro", blocks:[
+  {t:"do", x:"Start on the title slide, full screen. Sit still."},
+  {t:"say", x:["Hello, I'm Ojaswi Athghara, 201959096. This is my second assessment for COMP702, supervised by Blaine Keetch.",
+    "The project compares three ways of finding an answer inside a company's annual report.",
+    "The ethics position is category A zero. Every source document is a US SEC 10-K filing from EDGAR, a public regulatory archive. No personal or confidential data, no licence needed, no human participants. I have read the ethical guidance and I follow it throughout."]},
+  {t:"note", x:"<b>The brief requires this declaration.</b> It is the one block you must not trim, even though the video is now tight."}]},
 
-{n:"2", t:"Motivation", slide:"Slide 2", start:41, dur:39, kind:"intro", blocks:[
-  {t:"do", x:"Advance. Let the three shape boxes sit on screen while you talk."},
+{n:"2", t:"Motivation", slide:"Slide 2", start:33, dur:29, kind:"intro", blocks:[
+  {t:"do", x:"Advance. Let the three shape boxes sit on screen."},
   {t:"say", x:["Most retrieval systems are tested on plain prose. An annual report is not plain prose.",
-    "The answer hides in three different shapes. Sometimes management states it in a sentence, and meaning-based search handles that well. Sometimes it sits in one cell of a numeric table, where summarising the table destroys the thing you need. And sometimes it spans a footnote and the table that note qualifies, so the reader has to join the two.",
-    "The corpus is thirteen filings from five companies, just over eighteen thousand addressable nodes, and a hundred and forty benchmark questions."]}]},
+    "An answer hides in three shapes. Stated in a sentence. Buried in one cell of a table. Or split between a footnote and the table it qualifies.",
+    "That mix is why a system tuned on Wikipedia does not transfer here.",
+    "Thirteen filings, five companies, eighteen thousand nodes, a hundred and forty questions."]}]},
 
-{n:"3", t:"Research question and aims", slide:"Slide 3", start:80, dur:37, kind:"intro", blocks:[
-  {t:"do", x:"Advance. Point at the question line, then work down the three numbered aims."},
-  {t:"say", x:["So, the research question. Does the structure of a document decide which retrieval paradigm wins?",
-    "That stays a question. No number in this deck answers it yet.",
-    "Three aims follow. First, build three pipelines that differ only in how they index. Second, generate a benchmark where every question carries verified evidence, using two language models from different families to propose and to check. Third, measure retrieval, answer quality and cost as three separate things, because a paradigm can win on accuracy and lose badly on speed."]}]},
+{n:"3", t:"Research question and aims", slide:"Slide 3", start:62, dur:29, kind:"intro", blocks:[
+  {t:"do", x:"Advance. Point at the question, then the three aims."},
+  {t:"say", x:["The research question. Does the structure of a document decide which retrieval paradigm wins?",
+    "That stays a question. No number in this deck answers it.",
+    "Three aims. Build three pipelines that differ only in how they index. Generate a benchmark where every question carries verified evidence. And measure retrieval, answer quality and cost separately, because a paradigm can win on accuracy and lose on speed."]}]},
 
-{n:"4", t:"System design", slide:"Slide 4", start:117, dur:44, kind:"intro", blocks:[
-  {t:"do", x:"Advance to the diagram. Trace the flow with the cursor, left to right, as you speak."},
-  {t:"say", x:["This is the whole system. A filing comes down from EDGAR, through a parser, and out as a list of atomic nodes in SQLite. Every node has an ID, and that ID is the evidence anchor for everything downstream. Page numbers are unreliable in these documents. Node IDs are not.",
-    "The three pipelines each build their own index over those same nodes. A question goes to all three. Each returns its top K nodes. Those go to one shared answerer, the answer is written to the database, and a separate judge scores it later.",
-    "One variable changes across the three arms. Retrieval."]},
-  {t:"note", x:"<b>First cut line.</b> If you are running long, this diagram largely explains itself. Trim the middle paragraph."}]},
+{n:"4", t:"Architecture and data flow", slide:"Slide 4", start:91, dur:52, kind:"intro", protect:true, blocks:[
+  {t:"do", x:"Advance to the diagram. Trace it with the cursor as you speak: filing, parser, nodes, then the branch into three."},
+  {t:"say", x:["Everything rests on one idea. Cut the filing into pieces small enough to point at.",
+    "A filing comes down from EDGAR, through a parser, and out as a list of nodes in SQLite. A node is one paragraph or one table. The corpus gives eighteen thousand two hundred and ninety-seven of them.",
+    "Every node carries an ID, and that ID is the evidence anchor for the whole project. Page numbers in these documents are unreliable. Node IDs are not.",
+    "The three pipelines then build three different indexes over those same nodes. Same input, three ways of organising it. A question goes to all three, each returns its top K node IDs, and those IDs go to one shared answerer.",
+    "One variable changes. Retrieval."]},
+  {t:"note", x:"<b>Land the phrase \"same input, three ways of organising it\".</b> It is the sentence that makes the whole comparison sound controlled rather than arbitrary."}]},
 
-{n:"5", t:"The three paradigms", slide:"Slide 5", start:161, dur:60, kind:"intro", protect:true, blocks:[
-  {t:"do", x:"Advance to the comparison diagram. Take the three columns in order and do not hurry."},
-  {t:"say", x:["Here is what actually differs.",
-    "P1 is semantic. Every node is embedded with a small BGE model, and a cross-encoder reranks the top twenty candidates before the final three are picked. It understands paraphrase, so it finds the right sentence when the question uses different words. It pays for that in latency.",
-    "P2 is statistical. BM25, with no model at all. The tokeniser is custom and keeps numbers, decimals, percentages and currency symbols, because a standard one strips them, and on a document made of figures that is fatal. It is blind to paraphrase, but very strong on exact values, and it costs nothing to run.",
-    "P3 is structural. A language model summarised each section, then summarised those summaries into a tree. At query time the system walks that tree from the root down. No model runs at query time."]}]},
+{n:"5", t:"The three paradigms", slide:"Slide 5", start:143, dur:45, kind:"intro", protect:true, blocks:[
+  {t:"do", x:"Advance. Take the three columns in order and do not hurry."},
+  {t:"say", x:["What actually differs is what each one indexes.",
+    "P1 indexes meaning. Every node becomes a list of numbers from a small BGE model, and a cross-encoder reranks the top twenty before the final three. It handles paraphrase. It pays in latency.",
+    "P2 indexes words. BM25, no model at all. The tokeniser keeps numbers, decimals and currency symbols, because a standard one strips them and this document is made of figures. Blind to paraphrase, but very strong on exact values.",
+    "P3 indexes structure. A model summarised each section, then summarised the summaries into a tree. At query time the system walks that tree from the root down."]}]},
 
-{n:"6", t:"Foundations", slide:"Slide 6", start:221, dur:31, kind:"intro", blocks:[
-  {t:"do", x:"Advance. Three items, quick pace, then stop."},
-  {t:"say", x:["Three things pinned down before anything was run.",
-    "The corpus size is a counted number rather than an estimate: thirteen filings, five companies, eighteen thousand two hundred and ninety-seven nodes.",
-    "The test suite covers every stage, three hundred and thirty-nine tests across ingestion, all three retrieval arms, dataset generation and the judge.",
-    "And the reading includes financial question answering directly, starting from FinQA by Chen and colleagues. The dissertation widens that section."]}]},
+{n:"6", t:"Foundations", slide:"Slide 6", start:188, dur:23, kind:"intro", blocks:[
+  {t:"do", x:"Advance. Three items, brisk, then stop."},
+  {t:"say", x:["Three things pinned down before anything ran.",
+    "The corpus size is counted, not estimated. Thirteen filings, eighteen thousand two hundred and ninety-seven nodes.",
+    "Three hundred and thirty-nine tests cover ingestion, all three retrieval arms, dataset generation and the judge.",
+    "And the reading starts from FinQA, question answering over financial filings."]}]},
 
-{n:"7", t:"Status", slide:"Slide 7", start:252, dur:41, kind:"intro", blocks:[
+{n:"7", t:"Status", slide:"Slide 7", start:211, dur:34, kind:"intro", blocks:[
   {t:"do", x:"Advance. Point at the green figures, then deliberately at the two red ones."},
-  {t:"say", x:["Where the project stands today. Six phases are built and tested. The benchmark itself has not run.",
-    "Everything in green comes from the live database. Thirteen filings ingested, a hundred and forty questions generated, three hundred and thirty-nine tests passing.",
-    "Two numbers are red, and they are the honest part of this slide. Twenty golden questions still need hand-labelling, and until that is done the judge cannot be validated. The results table holds zero rows because the executor has never been run. I would rather say that plainly than imply a result I do not have."]}]},
+  {t:"say", x:["Six phases are built and tested. The benchmark has not run.",
+    "In green, from the live database: thirteen filings ingested, a hundred and forty questions generated, three hundred and thirty-nine tests passing.",
+    "Two numbers are red. Twenty golden questions still need hand-labelling, and until they are labelled the judge cannot be validated. The results table holds zero rows because the executor has never run. I would rather say that plainly than imply a result I do not have."]}]},
 
-{n:"8", t:"Handoff", slide:"Slide 8", start:293, dur:13, kind:"intro", blocks:[
+{n:"8", t:"Handoff", slide:"Slide 8", start:245, dur:10, kind:"intro", blocks:[
   {t:"do", x:"Advance. Say the line, then switch desktop. Do not narrate the switch."},
-  {t:"say", x:["That is the introduction. Now the software itself: the source code, a live comparison of all three pipelines on the same question, the database behind those numbers, and the test suite."]}]},
+  {t:"say", x:["That is the introduction. Now the software: what retrieval means, the tokeniser, a live run, the database, and the tests."]}]},
 
-{n:"D1", t:"One file of code", slide:"VS Code", start:306, dur:25, kind:"demo", blocks:[
-  {t:"do", x:"In VS Code, open <code>project/pipelines/bm25/tokenizer.py</code>. It is fourteen lines, so the whole file fits on screen with no scrolling."},
-  {t:"say", x:["Start with the smallest piece that matters. This is the BM25 tokeniser. One regular expression, and it keeps currency symbols, decimals, thousands separators and percentages together as single tokens. A standard tokeniser throws all of that away. On a document made of figures, this one line decides whether the pipeline works."]},
-  {t:"note", x:"<b>Only if you have spare time.</b> <code>p3_structural.py</code> around line 45 shows the <code>MockLLM</code> bound at load, which makes a query-time call to a paid endpoint impossible. Skip it when the clock is tight; slide 5 already makes the point."}]},
+{n:"D1", t:"What retrieval actually means", slide:"Terminal", start:255, dur:24, kind:"demo", protect:true, blocks:[
+  {t:"do", x:"Switch to terminal tab 1. Run this first. It prints one real question row, and the ids of the paragraphs that answer it."},
+  {t:"cmd", x:"sqlite3 -line benchmark.db \"select query_text, gt_citations from queries where query_id='QT1_PQ_003';\""},
+  {t:"say", x:["One thing to be clear about first.",
+    "The pipelines do not write answers. They return node IDs, pointers to paragraphs already in the filing. Retrieval finds text. It does not generate text.",
+    "And the correct pointer is already stored, right there. So scoring is a set comparison, which is why no model runs and the numbers never change."]},
+  {t:"note", x:"<b>This is the single most valuable twenty seconds in the video.</b> It pre-empts the obvious objection, which is: if it is answering questions, surely it is using an LLM."}]},
 
-{n:"D2", t:"Run it", slide:"Terminal tab 1", start:331, dur:62, kind:"demo", blocks:[
-  {t:"do", x:"Switch to terminal tab 1. Type the command visibly, then press enter."},
+{n:"D2", t:"Why the tokeniser is custom", slide:"VS Code", start:279, dur:37, kind:"demo", protect:true, blocks:[
+  {t:"do", x:"Open <code>project/pipelines/bm25/tokenizer.py</code>. Fourteen lines, so the whole file fits on screen with no scrolling. Put the cursor on the regular expression."},
+  {t:"say", x:["This is the BM25 tokeniser. Fourteen lines, one regular expression.",
+    "A standard tokeniser strips punctuation and splits on whitespace. It would break one point four billion dollars into fragments and throw away the percent sign.",
+    "On a filing that is mostly numbers, that loses the exact terms a question asks about. So this one keeps currency symbols, decimals, separators and percentages as single tokens.",
+    "And the same function runs at index time and query time, so scores are never computed against mismatched vocabularies."]},
+  {t:"note", x:"<b>The point is the why, not the code.</b> P2 is the arm with no model in it, so the tokeniser is the only place its behaviour is decided. On a document made of figures, that one line is what makes BM25 competitive at all."}]},
+
+{n:"D3", t:"Run it", slide:"Terminal tab 1", start:316, dur:55, kind:"demo", blocks:[
+  {t:"do", x:"Type the command visibly, then press enter. Runtime is 53 seconds, so there is room to talk over it."},
   {t:"cmd", x:"TRANSFORMERS_VERBOSITY=error uv run python -m demo.main"},
-  {t:"say", l:"while the header and index checks print", x:["This runs one question per difficulty quadrant through all three pipelines, at K equals three. Everything here is local. No API key is read and no quota is spent, which means it produces the same numbers on every run."]},
-  {t:"say", l:"as the first query block appears", x:["Each block is one question. You get the top three node IDs that each pipeline returned, a star where that node is genuinely in the ground truth, then precision, recall and the latency for that retrieval."]},
+  {t:"say", l:"while the header and index checks print", x:["One question per difficulty quadrant, all three pipelines, K equals three. Everything local, nothing spent."]},
+  {t:"say", l:"as the first query block appears", x:["Each block is one question. Three node IDs per pipeline, a star where that ID is in the ground truth, then precision, recall and latency."]},
   {t:"do", x:"When query 3 is on screen, point at it."},
-  {t:"say", x:["This one asks for a figure that lives in a table. BM25 finds two of the four correct nodes, the vector arm finds one, and the structural arm finds none of them."]},
-  {t:"do", x:"Let the summary block finish printing. Pause for a beat. Say nothing over it."},
-  {t:"note", x:"<b>Runtime is 53 seconds</b> with the indexes already built, so there is room to talk over it without rushing."}]},
+  {t:"say", x:["This one wants a figure from a table. BM25 finds two of the four correct nodes. The vector arm finds one. The structural arm finds none."]},
+  {t:"do", x:"Let the summary block finish. Pause. Say nothing over it."}]},
 
-{n:"D3", t:"The database", slide:"Terminal tab 1", start:393, dur:18, kind:"demo", blocks:[
+{n:"D4", t:"The database", slide:"Terminal tab 1", start:371, dur:12, kind:"demo", blocks:[
   {t:"do", x:"Run it live."},
   {t:"cmd", x:"sqlite3 benchmark.db \"select count(*) from results;\""},
-  {t:"say", x:["And the results table, live. Zero. That is the red number on the status slide, and this is where it comes from. Nothing in this presentation is a benchmark result, because there are none yet."]}]},
+  {t:"say", x:["And the results table, live. Zero rows. Nothing in this presentation is a benchmark result, because there are none yet."]}]},
 
-{n:"D4", t:"The test suite", slide:"Terminal tab 2", start:411, dur:18, kind:"demo", blocks:[
+{n:"D5", t:"The test suite", slide:"Terminal tab 2", start:383, dur:12, kind:"demo", blocks:[
   {t:"do", x:"Switch to terminal tab 2, where pytest has already finished."},
-  {t:"say", x:["The test suite, run just before recording. Three hundred and thirty-nine passing, with two live-API tests deselected so nothing spends quota. It takes about forty-five seconds, so I am showing you the finished output rather than making you watch it."]},
+  {t:"say", x:["The test suite, run before recording. Three hundred and thirty-nine passing, two live-API tests deselected."]},
   {t:"do", x:"Switch back to the deck. Advance to slide 9."}]},
 
-{n:"9", t:"What the demo showed", slide:"Slide 9", start:429, dur:76, kind:"close", protect:true, blocks:[
-  {t:"do", x:"Work down the table first, then the three findings underneath."},
-  {t:"say", x:["Those are the numbers, averaged over the four questions.",
-    "BM25 came out ahead here at zero point five precision. Three of the four answers sat inside tables, its home ground. The vector arm found the evidence every time but ranked it more loosely, and spent over five seconds a question on the reranker.",
-    "The structural arm scored zero throughout, and it is worth being precise about why. It did not crash and it did not come back empty. It routed into the lease tables in Item 8 instead of the properties table in Item 2. Both sections talk about leases. It picked a branch near the root, on a broad summary, and a tree walk cannot go back up. That is exactly what its architecture predicts.",
-    "Two more things. Not once did all three pipelines agree on the evidence. And zero point three three was the maximum possible on the single-evidence questions, because the denominator is K.",
-    "Four questions on one filing shows the mechanism. The real benchmark is nine hundred runs, and it has not started."]},
+{n:"9", t:"What the demo showed", slide:"Slide 9", start:395, dur:54, kind:"close", protect:true, blocks:[
+  {t:"do", x:"Work down the table, then the findings underneath."},
+  {t:"say", x:["Averaged over the four questions.",
+    "BM25 came out ahead at zero point five. Three of the four answers sat in tables, its home ground. The vector arm found the evidence every time but ranked it more loosely, and spent five seconds a question on the reranker.",
+    "The structural arm scored zero. It routed into the lease tables in Item 8 instead of the properties table in Item 2. Both sections talk about leases. It committed to a branch near the root, and a tree walk cannot go back up. That is exactly what its architecture predicts.",
+    "And zero point three three was the maximum possible where only one node is correct.",
+    "Four questions on one filing shows the mechanism. The benchmark is nine hundred runs, not yet started."]},
   {t:"table", head:["", "P@3", "R@3", "Latency"], rows:[
     ["P1 semantic","0.42","0.69","5.34s","#0ea5e9"],
     ["P2 statistical","0.50","0.75","0.02s","#10b981"],
     ["P3 structural","0.00","0.00","4.24s","#8b5cf6"]]}]},
 
-{n:"10", t:"Conclusions", slide:"Slide 10", start:505, dur:39, kind:"close", blocks:[
+{n:"10", t:"Conclusions", slide:"Slide 10", start:449, dur:27, kind:"close", blocks:[
   {t:"do", x:"Advance. Three claims, one at a time."},
-  {t:"say", x:["Three claims the work supports, and none of them come from the benchmark. They come from building it.",
-    "The three paradigms genuinely disagree about which evidence answers a question, and you have just watched that happen.",
-    "Cost separates them as sharply as accuracy might. BM25 retrieves with no model at all, while the vector arm pays for a cross-encoder on every single query.",
-    "And free-tier limits shaped the architecture, not just the timetable. The quota runs out part-way through a run, which is why there are three providers and a resumable key."]}]},
+  {t:"say", x:["Three claims, none of them from the benchmark. They come from building it.",
+    "The three paradigms disagree about which evidence answers a question, and you have just watched that.",
+    "Cost separates them as sharply as accuracy might. BM25 uses no model at all.",
+    "And free-tier limits shaped the architecture, which is why there are three providers and a resumable key."]}]},
 
-{n:"11", t:"Next steps and close", slide:"Slide 11", start:544, dur:27, kind:"close", blocks:[
-  {t:"do", x:"Advance. Run down the five steps briskly, then slow right down for the last sentence."},
-  {t:"say", x:["Five steps left. Label the twenty golden questions, clear the judge against human scoring on sixty held-out outputs, build the remaining indexes, run the nine hundred cells, and report per quadrant rather than crowning a single winner.",
-    "And if the benchmark shows no difference between the three paradigms, that falsifies the hypothesis, and it is still a finding worth reporting.",
+{n:"11", t:"Next steps and close", slide:"Slide 11", start:476, dur:23, kind:"close", blocks:[
+  {t:"do", x:"Advance. Run the five steps briskly, then slow down for the last sentence."},
+  {t:"say", x:["Five steps left. Label the twenty golden questions, clear the judge against human scoring, build the remaining indexes, run the nine hundred cells, and report per quadrant rather than crowning one winner.",
+    "If the benchmark shows no difference, that falsifies the hypothesis, and it is still a finding.",
     "Thank you."]},
-  {t:"do", x:"Hold on the final slide for two seconds before stopping the recording."}]}
+  {t:"do", x:"Hold two seconds before stopping the recording."}]}
 ];
 
-const TOTAL = 571;
+const TOTAL = 499;
 
 const PRE = [
- "Deck open in PowerPoint, presenter view on, so the notes are visible to you.",
- "Second desktop ready: VS Code at <code>project/</code>, terminal already inside <code>project</code>.",
- "Terminal tab 1 sitting at an empty prompt.",
+ "Deck open in PowerPoint, presenter view on.",
+ "Second desktop ready: VS Code open at <code>project/pipelines/bm25/tokenizer.py</code>, and a terminal already inside <code>project</code>.",
+ "Terminal tab 1 at an empty prompt, with the D1 <code>sqlite3</code> command in your shell history so you can arrow up to it.",
  "Terminal tab 2 already showing a finished <code>uv run pytest -q -m \"not live\"</code>. It takes 43 seconds, too long to watch on camera.",
- "Terminal font size large enough to read at 1080p. Test it on the recording, not by eye.",
- "One dry run of the demo done. About 53 seconds end to end with the indexes built.",
+ "Terminal font large enough to read at 1080p. Check it on the recording, not by eye.",
+ "One dry run of the demo done. About 53 seconds with the indexes built.",
  "<code>TRANSFORMERS_VERBOSITY=error</code> in front of the demo command, so the PyTorch warning stays off screen.",
  "Results count and pytest total re-checked against the live database."
 ];
@@ -423,8 +501,8 @@ const PRE = [
 const NOSAY = [
  "Any accuracy or win figure framed as a benchmark result. There are none.",
  "\"Which pipeline is best.\" The demo covers four questions on one filing.",
+ "That the pipelines answer questions. They return node ids. The distinction is the point of D1.",
  "Bug numbers or deviation numbers read aloud. Describe the decision instead.",
- "The word \"just\" in front of anything you built. It undersells the work.",
  "Apologies for the zero results. State it once, plainly, and move on."
 ];
 
@@ -436,16 +514,19 @@ const NOSHOW = [
 ];
 
 const FAQ = [
- ["Why is BM25 beating the neural model?","On this sample of four questions, yes. Three of them turn on exact figures pulled from tables, which is BM25's home ground. Four questions on one filing is not a result. The benchmark is nine hundred runs and it has not started."],
- ["Why not use a larger embedding model?","The small BGE model runs on CPU with no API cost, which keeps retrieval reproducible on any machine. A larger model changes the constant, not the comparison. It is a sensible extension rather than a fix."],
- ["Is thirteen filings enough?","It started at nine and went to thirteen for more data to work with, across five companies. The unit of analysis is the question, not the filing, and there are a hundred and forty of those spread over four difficulty types."],
- ["How do you know P3 is not simply broken?","It returns different nodes for different questions, all from the correct filing, and the sections it lands on are topically next door to the right ones. It is choosing, and choosing wrong."],
+ ["If it answers questions, surely it uses an LLM?","Not in the demo. The pipelines return node ids, which are pointers to paragraphs already in the filing. Retrieval finds text; it does not write text. There is an answering stage that uses Llama 3.3 70B, and a judge that uses Qwen3.6-27B, but neither is run here."],
+ ["Why write your own tokeniser?","P2 has no model in it, so the tokeniser decides everything about its behaviour. A standard one strips punctuation and splits on whitespace, which breaks $1.4 billion into fragments and discards the percent sign, the decimal point and the thousands separator. On a 10-K those are the terms questions ask about. The custom one keeps them whole, does no stemming, and runs identically at index time and query time so the vocabularies always match."],
+ ["What exactly is a node?","One paragraph or one table, pulled out of the filing during parsing and given an id. MSFT_2023 has 1,103 of them; the whole corpus has 18,297. The id is the evidence anchor, because page numbers in these documents are unreliable."],
+ ["How is the score worked out with no model?","Every question row already stores the ids of the paragraphs that answer it, in <code>gt_citations</code>. Scoring asks whether the returned ids are in that list. Precision is hits over K, recall is hits over the number of correct nodes."],
+ ["Why is BM25 beating the neural model?","On this sample of four questions, yes. Three turn on exact figures pulled from tables, which is BM25's home ground. Four questions on one filing is not a result. The benchmark is nine hundred runs and it has not started."],
+ ["How do you know P3 is not simply broken?","It returns different nodes for different questions, all from the correct filing, and lands on sections topically next door to the right ones. It is choosing, and choosing wrong."],
+ ["Why not use a larger embedding model?","The small BGE model runs on CPU with no API cost, which keeps retrieval reproducible on any machine. A larger model changes the constant, not the comparison."],
  ["Why has the benchmark not run?","Twenty golden questions still need hand-labelling, and that gates the judge validation. Running nine hundred cells before the judge is validated would produce numbers nobody could defend."],
  ["What stops a model marking its own work?","The generator and the critic are different model families, and so are the answerer and the judge. The three query sets are disjoint, so the judge is never validated on the questions it was taught with."]
 ];
 
 const VERIFY = [
- ["339 tests","Slides 6, 7, 8 and beat D4","uv run pytest -q -m \"not live\""],
+ ["339 tests","Slides 6, 7 and beat D4","uv run pytest -q -m \"not live\""],
  ["0 results rows","Slide 7 and beat D3","sqlite3 benchmark.db \"select count(*) from results;\""],
  ["20 labels outstanding","Slide 7","sqlite3 benchmark.db \"select count(*) from golden_queries where human_reasoning like '%PENDING%';\""],
  ["Demo figures","Slide 9","re-run the demo, the numbers are deterministic"]
@@ -453,25 +534,25 @@ const VERIFY = [
 
 const MAP = [
  ["1","Beat 1","0:00","Ethics declaration, category A zero"],
- ["2","Beat 2","0:41","Three shapes an answer hides in"],
- ["3","Beat 3","1:20","The question stays open"],
- ["4","Beat 4","1:57","Node IDs are the evidence anchor"],
- ["5","Beat 5","2:41","What each paradigm indexes"],
- ["6","Beat 6","3:41","Counted, not estimated"],
- ["7","Beat 7","4:12","Zero results, said plainly"],
- ["8","Beat 8","4:53","Switch desktop, say nothing"],
- ["none","D1 to D4","5:06","Code, live run, database, tests"],
- ["9","Beat 9","7:09","Why P3 scored zero"],
- ["10","Beat 10","8:25","Three claims, none from the benchmark"],
- ["11","Beat 11","9:04","Falsification still counts"]
+ ["2","Beat 2","0:33","Three shapes an answer hides in"],
+ ["3","Beat 3","1:02","The question stays open"],
+ ["4","Beat 4","1:31","Same input, three ways of organising it"],
+ ["5","Beat 5","2:23","What each paradigm indexes"],
+ ["6","Beat 6","3:08","Counted, not estimated"],
+ ["7","Beat 7","3:31","Zero results, said plainly"],
+ ["8","Beat 8","4:05","Five rows, five things, in this order"],
+ ["8","D1","4:15","Retrieval finds text, it does not write text"],
+ ["8","D2","4:39","Why a standard tokeniser will not do"],
+ ["8","D3 to D5","5:16","Live run, database, tests"],
+ ["9","Beat 9","6:35","Why P3 scored zero"],
+ ["10","Beat 10","7:29","Three claims, none from the benchmark"],
+ ["11","Beat 11","7:56","Falsification still counts"]
 ];
 
-/* ── helpers ───────────────────────────────────────────────────────────── */
 const $ = s => document.querySelector(s);
 const mmss = s => { s = Math.max(0, Math.round(s)); return Math.floor(s/60)+":"+String(s%60).padStart(2,"0"); };
 const words = b => b.blocks.filter(x=>x.t==="say").reduce((n,x)=>n+x.x.join(" ").split(/\s+/).length,0);
 
-/* ── build the beat cards ──────────────────────────────────────────────── */
 const host = $("#beats");
 BEATS.forEach((b,i) => {
   const c = document.createElement("section");
@@ -488,12 +569,11 @@ BEATS.forEach((b,i) => {
         <button data-cp="${blk.x.replace(/"/g,"&quot;")}">copy</button></div>`;
     if (blk.t === "note")
       inner += `<div class="blk"><div class="note">${blk.x}</div></div>`;
-    if (blk.t === "table") {
+    if (blk.t === "table")
       inner += `<div class="blk scroll"><table><thead><tr>${blk.head.map(h=>"<th>"+h+"</th>").join("")}</tr></thead><tbody>` +
         blk.rows.map(r=>`<tr><td class="k"><span style="display:inline-block;width:3px;height:13px;background:${r[4]};vertical-align:-2px;margin-right:9px"></span>${r[0]}</td>`+
           `<td class="m" style="color:${r[4]};font-weight:600">${r[1]}</td><td class="m" style="color:${r[4]};font-weight:600">${r[2]}</td><td class="m">${r[3]}</td></tr>`).join("") +
         `</tbody></table></div>`;
-    }
   });
   c.innerHTML =
     `<header><span class="num" style="--k:${K[b.kind]}">${b.n}</span>
@@ -503,11 +583,10 @@ BEATS.forEach((b,i) => {
        ${b.protect?'<span class="tag protect">protect</span>':""}
      </header>
      <div class="body">${inner}</div>
-     <div class="fit"><span data-w>${words(b)} words</span><div class="rail"><div class="fill" data-fill></div></div><span data-est></span></div>`;
+     <div class="fit"><span>${words(b)} words</span><div class="rail"><div class="fill" data-fill></div></div><span data-est></span></div>`;
   host.appendChild(c);
 });
 
-/* lists */
 const li = (arr, id, box) => $("#"+id).innerHTML = arr.map((x,i)=>
   `<li><label><input type="checkbox" data-key="${id}${i}"${box?"":' style="visibility:hidden"'}><span>${x}</span></label></li>`).join("");
 li(PRE,"pre",true); li(NOSAY,"nosay",false); li(NOSHOW,"noshow",false);
@@ -517,7 +596,6 @@ $("#verify").innerHTML = VERIFY.map(([a,b,c])=>`<tr><td class="k">${a}</td><td>$
 $("#map").innerHTML = MAP.map(([a,b,c,d])=>`<tr><td class="k">${a}</td><td>${b}</td><td class="m">${c}</td><td>${d}</td></tr>`).join("");
 $("#totWords").textContent = BEATS.reduce((n,b)=>n+words(b),0).toLocaleString("en-GB");
 
-/* ── timeline ──────────────────────────────────────────────────────────── */
 const track = $("#track");
 BEATS.forEach((b,i) => {
   const el = document.createElement("button");
@@ -528,8 +606,7 @@ BEATS.forEach((b,i) => {
   track.appendChild(el);
 });
 
-/* ── clock ─────────────────────────────────────────────────────────────── */
-let t = 0, running = false, last = 0, cur = -1, follow = true;
+let t = 0, running = false, last = 0, cur = -1;
 
 function beatAt(sec){
   for (let i = BEATS.length - 1; i >= 0; i--) if (sec >= BEATS[i].start) return i;
@@ -538,20 +615,19 @@ function beatAt(sec){
 
 function paint(){
   $("#clock").textContent = mmss(t);
-  $("#clock").classList.toggle("over", t > 600);
+  $("#clock").classList.toggle("over", t > 510);
   $("#playhead").style.width = Math.min(100, t / TOTAL * 100) + "%";
 
   const i = running || t > 0 ? beatAt(t) : cur;
-  if (i !== cur && i >= 0) { cur = i; mark(); if (running && follow) scrollTo_(i); }
+  if (i !== cur && i >= 0) { cur = i; mark(); if (running) scrollTo_(i); }
 
   if (t > 0 && cur >= 0) {
     const b = BEATS[cur];
-    const into = t - b.start, left = b.dur - into;
+    const left = b.dur - (t - b.start);
     $("#now").innerHTML = `<b>${b.n} &middot; ${b.t}</b> &nbsp;${mmss(Math.max(0,left))} left in this beat &nbsp;·&nbsp; ${b.slide}`;
-    const d = Math.round(t - (b.start + b.dur));
     const badge = $("#drift");
     if (t < b.start + b.dur) { badge.textContent = "on plan"; badge.className = ""; }
-    else { badge.textContent = "+" + mmss(d) + " over"; badge.className = "behind"; }
+    else { badge.textContent = "+" + mmss(t - (b.start + b.dur)) + " over"; badge.className = "behind"; }
   }
   if ($("#tp").classList.contains("open")) tpTick();
 }
@@ -588,7 +664,6 @@ function toggle(){
 $("#run").onclick = toggle;
 $("#reset").onclick = () => { running = false; $("#run").textContent = "Start"; t = 0; cur = 0; paint(); mark(); };
 
-/* ── pace ──────────────────────────────────────────────────────────────── */
 function pace(){
   const wpm = +$("#wpm").value;
   $("#wpmv").textContent = wpm;
@@ -599,14 +674,12 @@ function pace(){
     const ratio = est / b.dur;
     fill.style.width = Math.min(100, ratio * 100) + "%";
     fill.className = "fill" + (ratio > 1 ? " over" : ratio > .9 ? " tight" : "");
-    card.querySelector("[data-est]").textContent =
-      `${est.toFixed(0)}s of speech in a ${b.dur}s slot`;
+    card.querySelector("[data-est]").textContent = `${est.toFixed(0)}s of speech in a ${b.dur}s slot`;
   });
   localStorage.setItem("vs.wpm", wpm);
 }
 $("#wpm").oninput = pace;
 
-/* ── teleprompter ──────────────────────────────────────────────────────── */
 function tpRender(){
   const b = BEATS[Math.max(0,cur)];
   $("#tpNum").textContent = b.n; $("#tpNum").style.setProperty("--k", K[b.kind]);
@@ -635,7 +708,6 @@ $("#tpClose").onclick = () => tpOpen(false);
 $("#tpPrev").onclick = () => { goto(cur-1, true); tpRender(); tpTick(); };
 $("#tpNext").onclick = () => { goto(cur+1, true); tpRender(); tpTick(); };
 
-/* ── chrome ────────────────────────────────────────────────────────────── */
 $("#theme").onclick = () => {
   const d = document.documentElement.getAttribute("data-theme") === "dark";
   document.documentElement.setAttribute("data-theme", d ? "light" : "dark");
@@ -669,7 +741,6 @@ document.addEventListener("keydown", e => {
   }
 });
 
-/* ── restore ───────────────────────────────────────────────────────────── */
 (function boot(){
   const th = localStorage.getItem("vs.theme");
   if (th) document.documentElement.setAttribute("data-theme", th);
