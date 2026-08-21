@@ -1,0 +1,684 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CA2 video script console</title>
+<style>
+/* Oxford Ink, matching resources/artifacts/presentation/main.css */
+:root{
+  --ink:#0f172a; --slate:#64748b; --line:#e2e8f0; --paper:#fff; --wash:#f8fafc;
+  --amber:#f59e0b; --sky:#0ea5e9; --emerald:#10b981; --violet:#8b5cf6;
+  --red:#ef4444; --green:#22c55e; --cyan:#06b6d4; --blue:#3b82f6;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --shadow:0 1px 2px rgba(15,23,42,.06);
+}
+html[data-theme="dark"]{
+  --ink:#e2e8f0; --slate:#94a3b8; --line:#1e293b; --paper:#0b1220; --wash:#0f172a;
+  --shadow:0 1px 2px rgba(0,0,0,.4);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--wash); color:var(--ink); font-family:var(--sans);
+  -webkit-font-smoothing:antialiased; line-height:1.55;
+}
+.wrap{max-width:1120px;margin:0 auto;padding:0 24px}
+
+/* ---------------- command bar ---------------- */
+#bar{
+  position:sticky; top:0; z-index:40; background:var(--paper);
+  border-bottom:1px solid var(--line);
+}
+#bar .wrap{display:flex;align-items:center;gap:18px;height:60px;flex-wrap:nowrap}
+#clock{font-family:var(--mono);font-size:26px;font-weight:600;letter-spacing:-.02em;
+  font-variant-numeric:tabular-nums;min-width:86px}
+#clock.over{color:var(--red)}
+.btn{
+  border:1.5px solid var(--line); background:none; color:var(--ink);
+  font:inherit; font-size:13px; padding:6px 13px; border-radius:999px;
+  cursor:pointer; white-space:nowrap;
+}
+.btn:hover{border-color:var(--ink)}
+.btn.primary{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+html[data-theme="dark"] .btn.primary{color:#0b1220}
+.icon{width:34px;height:34px;padding:0;display:inline-flex;align-items:center;justify-content:center}
+#now{font-size:12px;color:var(--slate);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#now b{color:var(--ink)}
+#drift{font-family:var(--mono);font-size:13px;padding:3px 9px;border-radius:999px;
+  border:1px solid var(--line);white-space:nowrap}
+#drift.ahead{color:var(--emerald);border-color:var(--emerald)}
+#drift.behind{color:var(--red);border-color:var(--red)}
+.pace{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--slate);white-space:nowrap}
+.pace input{width:96px;accent-color:var(--ink)}
+.pace b{font-family:var(--mono);color:var(--ink);font-size:13px}
+
+/* ---------------- timeline ---------------- */
+#tl{background:var(--paper);border-bottom:1px solid var(--line);padding:12px 0 16px;
+  position:sticky;top:60px;z-index:39}
+#track{display:flex;gap:2px;height:34px}
+#track button{
+  border:none;padding:0;cursor:pointer;position:relative;overflow:hidden;
+  background:var(--line);border-radius:2px;transition:filter .12s;
+}
+#track button:hover{filter:brightness(.9)}
+#track button span{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-size:10px;font-weight:700;font-family:var(--mono);color:var(--paper);
+  letter-spacing:.02em;
+}
+#track button.on{outline:2px solid var(--ink);outline-offset:1px}
+#playhead{height:3px;background:var(--ink);width:0;margin-top:5px;transition:width .2s linear}
+#ticks{display:flex;justify-content:space-between;font-family:var(--mono);
+  font-size:10px;color:var(--slate);margin-top:5px}
+
+/* ---------------- layout ---------------- */
+main{padding:34px 0 120px}
+h1{font-size:30px;letter-spacing:-.02em;margin:0 0 6px}
+.lede{color:var(--slate);margin:0 0 26px;max-width:74ch}
+h2{font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--slate);
+  margin:44px 0 14px;font-weight:700}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1px;
+  background:var(--line);border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.stat{background:var(--paper);padding:16px 18px}
+.stat b{display:block;font-family:var(--mono);font-size:26px;font-weight:600;
+  letter-spacing:-.03em;line-height:1;color:var(--c,var(--ink))}
+.stat span{display:block;margin-top:7px;font-size:10px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--slate)}
+
+/* ---------------- cards ---------------- */
+.card{background:var(--paper);border:1px solid var(--line);border-radius:8px;
+  margin-bottom:14px;box-shadow:var(--shadow);scroll-margin-top:130px;overflow:hidden}
+.card.live{border-color:var(--ink);box-shadow:0 0 0 2px var(--ink)}
+.card > header{display:flex;align-items:baseline;gap:14px;padding:16px 20px 12px;
+  border-bottom:1px solid var(--line);flex-wrap:wrap}
+.num{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--paper);
+  background:var(--k,var(--ink));padding:3px 8px;border-radius:4px}
+html[data-theme="dark"] .num{color:#0b1220}
+.card h3{font-size:19px;margin:0;letter-spacing:-.01em;flex:1;min-width:180px}
+.when{font-family:var(--mono);font-size:12px;color:var(--slate)}
+.tag{font-size:10px;letter-spacing:.09em;text-transform:uppercase;font-weight:700;
+  padding:3px 8px;border-radius:999px;border:1px solid var(--line);color:var(--slate)}
+.tag.protect{color:var(--red);border-color:var(--red)}
+.body{padding:6px 20px 18px}
+
+.blk{margin:14px 0}
+.lbl{font-size:10px;letter-spacing:.11em;text-transform:uppercase;font-weight:700;
+  color:var(--slate);margin-bottom:6px}
+.do{border-left:3px solid var(--sky);padding:2px 0 2px 14px;color:var(--slate);font-size:14.5px}
+.say{border-left:3px solid var(--ink);padding:4px 0 4px 16px}
+.say p{margin:0 0 11px;font-size:17px;line-height:1.62}
+.say p:last-child{margin-bottom:0}
+.note{background:var(--wash);border-radius:6px;padding:11px 14px;font-size:13.5px;color:var(--slate)}
+.note b{color:var(--ink)}
+code{font-family:var(--mono);font-size:.9em;background:var(--wash);padding:1px 5px;border-radius:3px}
+
+.cmd{display:flex;align-items:center;gap:10px;background:var(--ink);border-radius:6px;
+  padding:11px 14px;margin:10px 0}
+html[data-theme="dark"] .cmd{background:#020617;border:1px solid var(--line)}
+.cmd code{font-family:var(--mono);font-size:13.5px;color:#e2e8f0;background:none;
+  padding:0;flex:1;overflow-x:auto;white-space:pre}
+.cmd button{border:1px solid #334155;background:none;color:#94a3b8;font:inherit;
+  font-size:11px;padding:4px 10px;border-radius:4px;cursor:pointer;white-space:nowrap}
+.cmd button:hover{color:#e2e8f0;border-color:#94a3b8}
+
+/* fit bar */
+.fit{display:flex;align-items:center;gap:10px;font-size:11px;color:var(--slate);
+  font-family:var(--mono);padding:10px 20px;border-top:1px solid var(--line);background:var(--wash)}
+.fit .rail{flex:1;height:5px;background:var(--line);border-radius:3px;overflow:hidden}
+.fit .fill{height:100%;background:var(--emerald);width:0;transition:width .2s}
+.fit .fill.tight{background:var(--amber)}
+.fit .fill.over{background:var(--red)}
+
+/* ---------------- checklist ---------------- */
+.check{list-style:none;margin:0;padding:0}
+.check li{border-bottom:1px solid var(--line)}
+.check li:last-child{border-bottom:none}
+.check label{display:flex;gap:12px;align-items:flex-start;padding:12px 4px;cursor:pointer;font-size:14.5px}
+.check input{margin-top:3px;width:16px;height:16px;accent-color:var(--emerald);flex:none}
+.check input:checked + span{color:var(--slate);text-decoration:line-through}
+
+/* ---------------- tables ---------------- */
+table{width:100%;border-collapse:collapse;font-size:14px;background:var(--paper)}
+th{text-align:left;font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--slate);padding:0 14px 9px 0;border-bottom:1px solid var(--line)}
+td{padding:10px 14px 10px 0;border-bottom:1px solid var(--line);color:var(--slate);vertical-align:top}
+td.k{color:var(--ink);font-weight:600}
+td.m{font-family:var(--mono);font-size:.93em}
+.scroll{overflow-x:auto}
+
+/* ---------------- details ---------------- */
+details{background:var(--paper);border:1px solid var(--line);border-radius:8px;
+  margin-bottom:8px;overflow:hidden}
+summary{padding:14px 18px;cursor:pointer;font-weight:600;font-size:15px;list-style:none}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"+";font-family:var(--mono);color:var(--slate);margin-right:10px}
+details[open] summary::before{content:"\2212"}
+details .body{padding:0 18px 16px;color:var(--slate);font-size:14.5px}
+
+.two{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:820px){.two{grid-template-columns:1fr}
+  #bar .wrap{height:auto;padding-top:10px;padding-bottom:10px;flex-wrap:wrap}
+  .pace,#now{display:none}}
+
+/* ---------------- teleprompter ---------------- */
+#tp{position:fixed;inset:0;z-index:80;background:var(--paper);display:none;
+  flex-direction:column;padding:34px 5vw 24px}
+#tp.open{display:flex}
+#tp .head{display:flex;align-items:center;gap:16px;border-bottom:1px solid var(--line);
+  padding-bottom:14px;margin-bottom:22px;flex:none}
+#tp .head h4{margin:0;font-size:20px;flex:1}
+#tp .head .when{font-size:15px}
+#tpBody{flex:1;overflow:auto}
+#tpBody .say p{font-size:clamp(22px,2.9vw,40px);line-height:1.42;margin:0 0 22px;letter-spacing:-.01em}
+#tpBody .say{border-left-width:5px;padding-left:24px}
+#tpBody .do{font-size:clamp(14px,1.3vw,19px);margin:18px 0}
+#tpBody .cmd code{font-size:clamp(13px,1.2vw,18px)}
+#tp .foot{flex:none;display:flex;align-items:center;gap:14px;border-top:1px solid var(--line);
+  padding-top:14px;margin-top:16px;font-size:12px;color:var(--slate)}
+#tpRail{flex:1;height:6px;background:var(--line);border-radius:3px;overflow:hidden}
+#tpFill{height:100%;width:0;background:var(--ink)}
+
+kbd{font-family:var(--mono);font-size:11px;border:1px solid var(--line);
+  border-bottom-width:2px;border-radius:4px;padding:1px 6px;color:var(--slate)}
+
+@media print{
+  #bar,#tl,#tp,.fit,.btn{display:none!important}
+  body{background:#fff}
+  .card{break-inside:avoid;box-shadow:none;border-color:#ccc}
+  details{break-inside:avoid} details[open] .body{display:block}
+  .say p{font-size:13pt}
+}
+</style>
+</head>
+<body>
+
+<div id="bar"><div class="wrap">
+  <div id="clock">0:00</div>
+  <button class="btn primary" id="run">Start</button>
+  <button class="btn" id="reset">Reset</button>
+  <span id="drift">on plan</span>
+  <div id="now">Not started. Press <kbd>space</kbd> to run the clock, <kbd>T</kbd> for teleprompter.</div>
+  <label class="pace">pace <input type="range" id="wpm" min="110" max="175" step="5" value="140"> <b id="wpmv">140</b> wpm</label>
+  <button class="btn icon" id="theme" title="Light or dark">◐</button>
+  <button class="btn icon" id="print" title="Print">⎙</button>
+</div></div>
+
+<div id="tl"><div class="wrap">
+  <div id="track"></div>
+  <div id="playhead"></div>
+  <div id="ticks"><span>0:00</span><span>2:23</span><span>4:46</span><span>7:08</span><span>9:31</span></div>
+</div></div>
+
+<main class="wrap">
+
+<h1>CA2 video script</h1>
+<p class="lede">Runs against <code>presentation.pptx</code>, eleven slides, with a live demo sitting between slides 8 and 9.
+Start the clock when you start recording. The current beat highlights itself and the drift badge tells you whether you are ahead or behind.</p>
+
+<div class="stats">
+  <div class="stat"><b>9:31</b><span>planned length</span></div>
+  <div class="stat" style="--c:var(--emerald)"><b>0:29</b><span>slack under cap</span></div>
+  <div class="stat"><b>15</b><span>beats</span></div>
+  <div class="stat" style="--c:var(--amber)"><b>2:03</b><span>live demo</span></div>
+  <div class="stat"><b id="totWords">0</b><span>words to speak</span></div>
+</div>
+
+<h2>Before you press record</h2>
+<div class="card"><div class="body"><ul class="check" id="pre"></ul></div></div>
+
+<h2>What the demo covers</h2>
+<div class="card"><div class="body">
+<div class="scroll"><svg viewBox="0 0 720 150" width="100%" height="150" role="img" aria-label="Three stages: retrieve is covered by the demo, answer and judge are not run">
+  <defs><marker id="ar" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+    <path d="M0,0 L8,4 L0,8 z" fill="#64748b"/></marker></defs>
+  <rect x="8" y="34" width="196" height="66" rx="6" fill="none" stroke="#0ea5e9" stroke-width="2"/>
+  <text x="24" y="60" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="#0ea5e9" font-weight="700">STAGE 1</text>
+  <text x="24" y="80" font-family="-apple-system,sans-serif" font-size="15" fill="currentColor" font-weight="600">Retrieve top-K nodes</text>
+  <text x="24" y="122" font-family="-apple-system,sans-serif" font-size="12" fill="#0ea5e9">shown live in the demo</text>
+  <line x1="212" y1="67" x2="248" y2="67" stroke="#64748b" stroke-width="1.5" marker-end="url(#ar)"/>
+  <rect x="256" y="34" width="196" height="66" rx="6" fill="none" stroke="#cbd5e1" stroke-width="2" stroke-dasharray="5 4"/>
+  <text x="272" y="60" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="#94a3b8" font-weight="700">STAGE 2</text>
+  <text x="272" y="80" font-family="-apple-system,sans-serif" font-size="15" fill="#94a3b8" font-weight="600">Answer, Llama 3.3 70B</text>
+  <text x="272" y="122" font-family="-apple-system,sans-serif" font-size="12" fill="#94a3b8">built, never run</text>
+  <line x1="460" y1="67" x2="496" y2="67" stroke="#64748b" stroke-width="1.5" marker-end="url(#ar)"/>
+  <rect x="504" y="34" width="196" height="66" rx="6" fill="none" stroke="#cbd5e1" stroke-width="2" stroke-dasharray="5 4"/>
+  <text x="520" y="60" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="#94a3b8" font-weight="700">STAGE 3</text>
+  <text x="520" y="80" font-family="-apple-system,sans-serif" font-size="15" fill="#94a3b8" font-weight="600">Judge, Qwen3.6-27B</text>
+  <text x="520" y="122" font-family="-apple-system,sans-serif" font-size="12" fill="#94a3b8">gated on human scoring</text>
+</svg></div>
+<p class="note" style="margin-top:14px"><b>If asked why there is no answer or verdict on screen:</b> the demo shows the retrieval layer,
+which is the part the dissertation compares. Answer generation and judging are separate passes and neither has been run.</p>
+</div></div>
+
+<h2>The beats</h2>
+<div id="beats"></div>
+
+<h2>Slide to beat</h2>
+<div class="card"><div class="body scroll"><table>
+<thead><tr><th>Slide</th><th>Beat</th><th>Window</th><th>The one line that matters</th></tr></thead>
+<tbody id="map"></tbody></table></div></div>
+
+<h2>If you are asked afterwards</h2>
+<div id="faq"></div>
+
+<div class="two" style="margin-top:34px">
+  <div><h2 style="margin-top:0">Do not say</h2><div class="card"><div class="body"><ul class="check" id="nosay"></ul></div></div></div>
+  <div><h2 style="margin-top:0">Do not show</h2><div class="card"><div class="body"><ul class="check" id="noshow"></ul></div></div></div>
+</div>
+
+<h2>Re-verify on the morning of filming</h2>
+<div class="card"><div class="body scroll"><table>
+<thead><tr><th>Number</th><th>Appears in</th><th>How to check</th></tr></thead>
+<tbody id="verify"></tbody></table></div></div>
+
+<h2>Keyboard</h2>
+<div class="card"><div class="body" style="color:var(--slate);font-size:14px">
+<kbd>space</kbd> start or pause the clock &nbsp;·&nbsp;
+<kbd>T</kbd> teleprompter &nbsp;·&nbsp;
+<kbd>←</kbd> <kbd>→</kbd> previous or next beat &nbsp;·&nbsp;
+<kbd>R</kbd> reset &nbsp;·&nbsp;
+<kbd>D</kbd> dark mode &nbsp;·&nbsp;
+<kbd>esc</kbd> close teleprompter
+</div></div>
+
+</main>
+
+<div id="tp">
+  <div class="head">
+    <span class="num" id="tpNum">1</span>
+    <h4 id="tpTitle"></h4>
+    <span class="when" id="tpWhen"></span>
+    <button class="btn" id="tpPrev">←</button>
+    <button class="btn" id="tpNext">→</button>
+    <button class="btn" id="tpClose">Close</button>
+  </div>
+  <div id="tpBody"></div>
+  <div class="foot"><span id="tpLeft">0:00 left</span><div id="tpRail"><div id="tpFill"></div></div><span id="tpOf"></span></div>
+</div>
+
+<script>
+"use strict";
+
+/* ── beat data ─────────────────────────────────────────────────────────── */
+const K = {intro:"#0f172a", demo:"#f59e0b", close:"#06b6d4"};
+
+const BEATS = [
+{n:"1", t:"Title and ethics", slide:"Slide 1", start:0, dur:41, kind:"intro", blocks:[
+  {t:"do", x:"Start on the title slide, full screen. Sit still, look at the camera if you have one."},
+  {t:"say", x:["Hello, I'm Ojaswi Athghara, student number 201959096. This is my second assessment for COMP702, supervised by Blaine Keetch.",
+    "The project compares three ways of finding an answer inside a company's annual report. Everything after retrieval is held identical, so any difference in the scores comes from retrieval itself.",
+    "First, the ethics position, which is category A zero. Every source document is a US SEC 10-K filing from EDGAR, a public regulatory archive. No personal or confidential data, and no licence needed. No human participants. I have read the ethical guidance and I follow it throughout."]},
+  {t:"note", x:"<b>The brief asks for this declaration</b>, so do not rush it or skip it. Roughly ten of the forty seconds belong to the ethics block."}]},
+
+{n:"2", t:"Motivation", slide:"Slide 2", start:41, dur:39, kind:"intro", blocks:[
+  {t:"do", x:"Advance. Let the three shape boxes sit on screen while you talk."},
+  {t:"say", x:["Most retrieval systems are tested on plain prose. An annual report is not plain prose.",
+    "The answer hides in three different shapes. Sometimes management states it in a sentence, and meaning-based search handles that well. Sometimes it sits in one cell of a numeric table, where summarising the table destroys the thing you need. And sometimes it spans a footnote and the table that note qualifies, so the reader has to join the two.",
+    "The corpus is thirteen filings from five companies, just over eighteen thousand addressable nodes, and a hundred and forty benchmark questions."]}]},
+
+{n:"3", t:"Research question and aims", slide:"Slide 3", start:80, dur:37, kind:"intro", blocks:[
+  {t:"do", x:"Advance. Point at the question line, then work down the three numbered aims."},
+  {t:"say", x:["So, the research question. Does the structure of a document decide which retrieval paradigm wins?",
+    "That stays a question. No number in this deck answers it yet.",
+    "Three aims follow. First, build three pipelines that differ only in how they index. Second, generate a benchmark where every question carries verified evidence, using two language models from different families to propose and to check. Third, measure retrieval, answer quality and cost as three separate things, because a paradigm can win on accuracy and lose badly on speed."]}]},
+
+{n:"4", t:"System design", slide:"Slide 4", start:117, dur:44, kind:"intro", blocks:[
+  {t:"do", x:"Advance to the diagram. Trace the flow with the cursor, left to right, as you speak."},
+  {t:"say", x:["This is the whole system. A filing comes down from EDGAR, through a parser, and out as a list of atomic nodes in SQLite. Every node has an ID, and that ID is the evidence anchor for everything downstream. Page numbers are unreliable in these documents. Node IDs are not.",
+    "The three pipelines each build their own index over those same nodes. A question goes to all three. Each returns its top K nodes. Those go to one shared answerer, the answer is written to the database, and a separate judge scores it later.",
+    "One variable changes across the three arms. Retrieval."]},
+  {t:"note", x:"<b>First cut line.</b> If you are running long, this diagram largely explains itself. Trim the middle paragraph."}]},
+
+{n:"5", t:"The three paradigms", slide:"Slide 5", start:161, dur:60, kind:"intro", protect:true, blocks:[
+  {t:"do", x:"Advance to the comparison diagram. Take the three columns in order and do not hurry."},
+  {t:"say", x:["Here is what actually differs.",
+    "P1 is semantic. Every node is embedded with a small BGE model, and a cross-encoder reranks the top twenty candidates before the final three are picked. It understands paraphrase, so it finds the right sentence when the question uses different words. It pays for that in latency.",
+    "P2 is statistical. BM25, with no model at all. The tokeniser is custom and keeps numbers, decimals, percentages and currency symbols, because a standard one strips them, and on a document made of figures that is fatal. It is blind to paraphrase, but very strong on exact values, and it costs nothing to run.",
+    "P3 is structural. A language model summarised each section, then summarised those summaries into a tree. At query time the system walks that tree from the root down. No model runs at query time."]}]},
+
+{n:"6", t:"Foundations", slide:"Slide 6", start:221, dur:31, kind:"intro", blocks:[
+  {t:"do", x:"Advance. Three items, quick pace, then stop."},
+  {t:"say", x:["Three things pinned down before anything was run.",
+    "The corpus size is a counted number rather than an estimate: thirteen filings, five companies, eighteen thousand two hundred and ninety-seven nodes.",
+    "The test suite covers every stage, three hundred and thirty-nine tests across ingestion, all three retrieval arms, dataset generation and the judge.",
+    "And the reading includes financial question answering directly, starting from FinQA by Chen and colleagues. The dissertation widens that section."]}]},
+
+{n:"7", t:"Status", slide:"Slide 7", start:252, dur:41, kind:"intro", blocks:[
+  {t:"do", x:"Advance. Point at the green figures, then deliberately at the two red ones."},
+  {t:"say", x:["Where the project stands today. Six phases are built and tested. The benchmark itself has not run.",
+    "Everything in green comes from the live database. Thirteen filings ingested, a hundred and forty questions generated, three hundred and thirty-nine tests passing.",
+    "Two numbers are red, and they are the honest part of this slide. Twenty golden questions still need hand-labelling, and until that is done the judge cannot be validated. The results table holds zero rows because the executor has never been run. I would rather say that plainly than imply a result I do not have."]}]},
+
+{n:"8", t:"Handoff", slide:"Slide 8", start:293, dur:13, kind:"intro", blocks:[
+  {t:"do", x:"Advance. Say the line, then switch desktop. Do not narrate the switch."},
+  {t:"say", x:["That is the introduction. Now the software itself: the source code, a live comparison of all three pipelines on the same question, the database behind those numbers, and the test suite."]}]},
+
+{n:"D1", t:"One file of code", slide:"VS Code", start:306, dur:25, kind:"demo", blocks:[
+  {t:"do", x:"In VS Code, open <code>project/pipelines/bm25/tokenizer.py</code>. It is fourteen lines, so the whole file fits on screen with no scrolling."},
+  {t:"say", x:["Start with the smallest piece that matters. This is the BM25 tokeniser. One regular expression, and it keeps currency symbols, decimals, thousands separators and percentages together as single tokens. A standard tokeniser throws all of that away. On a document made of figures, this one line decides whether the pipeline works."]},
+  {t:"note", x:"<b>Only if you have spare time.</b> <code>p3_structural.py</code> around line 45 shows the <code>MockLLM</code> bound at load, which makes a query-time call to a paid endpoint impossible. Skip it when the clock is tight; slide 5 already makes the point."}]},
+
+{n:"D2", t:"Run it", slide:"Terminal tab 1", start:331, dur:62, kind:"demo", blocks:[
+  {t:"do", x:"Switch to terminal tab 1. Type the command visibly, then press enter."},
+  {t:"cmd", x:"TRANSFORMERS_VERBOSITY=error uv run python -m demo.main"},
+  {t:"say", l:"while the header and index checks print", x:["This runs one question per difficulty quadrant through all three pipelines, at K equals three. Everything here is local. No API key is read and no quota is spent, which means it produces the same numbers on every run."]},
+  {t:"say", l:"as the first query block appears", x:["Each block is one question. You get the top three node IDs that each pipeline returned, a star where that node is genuinely in the ground truth, then precision, recall and the latency for that retrieval."]},
+  {t:"do", x:"When query 3 is on screen, point at it."},
+  {t:"say", x:["This one asks for a figure that lives in a table. BM25 finds two of the four correct nodes, the vector arm finds one, and the structural arm finds none of them."]},
+  {t:"do", x:"Let the summary block finish printing. Pause for a beat. Say nothing over it."},
+  {t:"note", x:"<b>Runtime is 53 seconds</b> with the indexes already built, so there is room to talk over it without rushing."}]},
+
+{n:"D3", t:"The database", slide:"Terminal tab 1", start:393, dur:18, kind:"demo", blocks:[
+  {t:"do", x:"Run it live."},
+  {t:"cmd", x:"sqlite3 benchmark.db \"select count(*) from results;\""},
+  {t:"say", x:["And the results table, live. Zero. That is the red number on the status slide, and this is where it comes from. Nothing in this presentation is a benchmark result, because there are none yet."]}]},
+
+{n:"D4", t:"The test suite", slide:"Terminal tab 2", start:411, dur:18, kind:"demo", blocks:[
+  {t:"do", x:"Switch to terminal tab 2, where pytest has already finished."},
+  {t:"say", x:["The test suite, run just before recording. Three hundred and thirty-nine passing, with two live-API tests deselected so nothing spends quota. It takes about forty-five seconds, so I am showing you the finished output rather than making you watch it."]},
+  {t:"do", x:"Switch back to the deck. Advance to slide 9."}]},
+
+{n:"9", t:"What the demo showed", slide:"Slide 9", start:429, dur:76, kind:"close", protect:true, blocks:[
+  {t:"do", x:"Work down the table first, then the three findings underneath."},
+  {t:"say", x:["Those are the numbers, averaged over the four questions.",
+    "BM25 came out ahead here at zero point five precision. Three of the four answers sat inside tables, its home ground. The vector arm found the evidence every time but ranked it more loosely, and spent over five seconds a question on the reranker.",
+    "The structural arm scored zero throughout, and it is worth being precise about why. It did not crash and it did not come back empty. It routed into the lease tables in Item 8 instead of the properties table in Item 2. Both sections talk about leases. It picked a branch near the root, on a broad summary, and a tree walk cannot go back up. That is exactly what its architecture predicts.",
+    "Two more things. Not once did all three pipelines agree on the evidence. And zero point three three was the maximum possible on the single-evidence questions, because the denominator is K.",
+    "Four questions on one filing shows the mechanism. The real benchmark is nine hundred runs, and it has not started."]},
+  {t:"table", head:["", "P@3", "R@3", "Latency"], rows:[
+    ["P1 semantic","0.42","0.69","5.34s","#0ea5e9"],
+    ["P2 statistical","0.50","0.75","0.02s","#10b981"],
+    ["P3 structural","0.00","0.00","4.24s","#8b5cf6"]]}]},
+
+{n:"10", t:"Conclusions", slide:"Slide 10", start:505, dur:39, kind:"close", blocks:[
+  {t:"do", x:"Advance. Three claims, one at a time."},
+  {t:"say", x:["Three claims the work supports, and none of them come from the benchmark. They come from building it.",
+    "The three paradigms genuinely disagree about which evidence answers a question, and you have just watched that happen.",
+    "Cost separates them as sharply as accuracy might. BM25 retrieves with no model at all, while the vector arm pays for a cross-encoder on every single query.",
+    "And free-tier limits shaped the architecture, not just the timetable. The quota runs out part-way through a run, which is why there are three providers and a resumable key."]}]},
+
+{n:"11", t:"Next steps and close", slide:"Slide 11", start:544, dur:27, kind:"close", blocks:[
+  {t:"do", x:"Advance. Run down the five steps briskly, then slow right down for the last sentence."},
+  {t:"say", x:["Five steps left. Label the twenty golden questions, clear the judge against human scoring on sixty held-out outputs, build the remaining indexes, run the nine hundred cells, and report per quadrant rather than crowning a single winner.",
+    "And if the benchmark shows no difference between the three paradigms, that falsifies the hypothesis, and it is still a finding worth reporting.",
+    "Thank you."]},
+  {t:"do", x:"Hold on the final slide for two seconds before stopping the recording."}]}
+];
+
+const TOTAL = 571;
+
+const PRE = [
+ "Deck open in PowerPoint, presenter view on, so the notes are visible to you.",
+ "Second desktop ready: VS Code at <code>project/</code>, terminal already inside <code>project</code>.",
+ "Terminal tab 1 sitting at an empty prompt.",
+ "Terminal tab 2 already showing a finished <code>uv run pytest -q -m \"not live\"</code>. It takes 43 seconds, too long to watch on camera.",
+ "Terminal font size large enough to read at 1080p. Test it on the recording, not by eye.",
+ "One dry run of the demo done. About 53 seconds end to end with the indexes built.",
+ "<code>TRANSFORMERS_VERBOSITY=error</code> in front of the demo command, so the PyTorch warning stays off screen.",
+ "Results count and pytest total re-checked against the live database."
+];
+
+const NOSAY = [
+ "Any accuracy or win figure framed as a benchmark result. There are none.",
+ "\"Which pipeline is best.\" The demo covers four questions on one filing.",
+ "Bug numbers or deviation numbers read aloud. Describe the decision instead.",
+ "The word \"just\" in front of anything you built. It undersells the work.",
+ "Apologies for the zero results. State it once, plainly, and move on."
+];
+
+const NOSHOW = [
+ "<code>README.md</code>, its status section is stale.",
+ "<code>Budget.md</code> or <code>Guardrails.md</code> model tables, both stale on routing.",
+ "A live <code>pytest</code> run. Forty-three seconds of watching a progress bar.",
+ "Any terminal still printing the PyTorch import warning."
+];
+
+const FAQ = [
+ ["Why is BM25 beating the neural model?","On this sample of four questions, yes. Three of them turn on exact figures pulled from tables, which is BM25's home ground. Four questions on one filing is not a result. The benchmark is nine hundred runs and it has not started."],
+ ["Why not use a larger embedding model?","The small BGE model runs on CPU with no API cost, which keeps retrieval reproducible on any machine. A larger model changes the constant, not the comparison. It is a sensible extension rather than a fix."],
+ ["Is thirteen filings enough?","It started at nine and went to thirteen for more data to work with, across five companies. The unit of analysis is the question, not the filing, and there are a hundred and forty of those spread over four difficulty types."],
+ ["How do you know P3 is not simply broken?","It returns different nodes for different questions, all from the correct filing, and the sections it lands on are topically next door to the right ones. It is choosing, and choosing wrong."],
+ ["Why has the benchmark not run?","Twenty golden questions still need hand-labelling, and that gates the judge validation. Running nine hundred cells before the judge is validated would produce numbers nobody could defend."],
+ ["What stops a model marking its own work?","The generator and the critic are different model families, and so are the answerer and the judge. The three query sets are disjoint, so the judge is never validated on the questions it was taught with."]
+];
+
+const VERIFY = [
+ ["339 tests","Slides 6, 7, 8 and beat D4","uv run pytest -q -m \"not live\""],
+ ["0 results rows","Slide 7 and beat D3","sqlite3 benchmark.db \"select count(*) from results;\""],
+ ["20 labels outstanding","Slide 7","sqlite3 benchmark.db \"select count(*) from golden_queries where human_reasoning like '%PENDING%';\""],
+ ["Demo figures","Slide 9","re-run the demo, the numbers are deterministic"]
+];
+
+const MAP = [
+ ["1","Beat 1","0:00","Ethics declaration, category A zero"],
+ ["2","Beat 2","0:41","Three shapes an answer hides in"],
+ ["3","Beat 3","1:20","The question stays open"],
+ ["4","Beat 4","1:57","Node IDs are the evidence anchor"],
+ ["5","Beat 5","2:41","What each paradigm indexes"],
+ ["6","Beat 6","3:41","Counted, not estimated"],
+ ["7","Beat 7","4:12","Zero results, said plainly"],
+ ["8","Beat 8","4:53","Switch desktop, say nothing"],
+ ["none","D1 to D4","5:06","Code, live run, database, tests"],
+ ["9","Beat 9","7:09","Why P3 scored zero"],
+ ["10","Beat 10","8:25","Three claims, none from the benchmark"],
+ ["11","Beat 11","9:04","Falsification still counts"]
+];
+
+/* ── helpers ───────────────────────────────────────────────────────────── */
+const $ = s => document.querySelector(s);
+const mmss = s => { s = Math.max(0, Math.round(s)); return Math.floor(s/60)+":"+String(s%60).padStart(2,"0"); };
+const words = b => b.blocks.filter(x=>x.t==="say").reduce((n,x)=>n+x.x.join(" ").split(/\s+/).length,0);
+
+/* ── build the beat cards ──────────────────────────────────────────────── */
+const host = $("#beats");
+BEATS.forEach((b,i) => {
+  const c = document.createElement("section");
+  c.className = "card"; c.id = "b"+i;
+  let inner = "";
+  b.blocks.forEach(blk => {
+    if (blk.t === "do")
+      inner += `<div class="blk"><div class="lbl">Do</div><div class="do">${blk.x}</div></div>`;
+    if (blk.t === "say")
+      inner += `<div class="blk"><div class="lbl">Say${blk.l?" &middot; "+blk.l:""}</div>
+        <div class="say">${blk.x.map(p=>"<p>"+p+"</p>").join("")}</div></div>`;
+    if (blk.t === "cmd")
+      inner += `<div class="cmd"><code>${blk.x.replace(/</g,"&lt;")}</code>
+        <button data-cp="${blk.x.replace(/"/g,"&quot;")}">copy</button></div>`;
+    if (blk.t === "note")
+      inner += `<div class="blk"><div class="note">${blk.x}</div></div>`;
+    if (blk.t === "table") {
+      inner += `<div class="blk scroll"><table><thead><tr>${blk.head.map(h=>"<th>"+h+"</th>").join("")}</tr></thead><tbody>` +
+        blk.rows.map(r=>`<tr><td class="k"><span style="display:inline-block;width:3px;height:13px;background:${r[4]};vertical-align:-2px;margin-right:9px"></span>${r[0]}</td>`+
+          `<td class="m" style="color:${r[4]};font-weight:600">${r[1]}</td><td class="m" style="color:${r[4]};font-weight:600">${r[2]}</td><td class="m">${r[3]}</td></tr>`).join("") +
+        `</tbody></table></div>`;
+    }
+  });
+  c.innerHTML =
+    `<header><span class="num" style="--k:${K[b.kind]}">${b.n}</span>
+       <h3>${b.t}</h3>
+       <span class="when">${mmss(b.start)} → ${mmss(b.start+b.dur)} &middot; ${b.dur}s</span>
+       <span class="tag">${b.slide}</span>
+       ${b.protect?'<span class="tag protect">protect</span>':""}
+     </header>
+     <div class="body">${inner}</div>
+     <div class="fit"><span data-w>${words(b)} words</span><div class="rail"><div class="fill" data-fill></div></div><span data-est></span></div>`;
+  host.appendChild(c);
+});
+
+/* lists */
+const li = (arr, id, box) => $("#"+id).innerHTML = arr.map((x,i)=>
+  `<li><label><input type="checkbox" data-key="${id}${i}"${box?"":' style="visibility:hidden"'}><span>${x}</span></label></li>`).join("");
+li(PRE,"pre",true); li(NOSAY,"nosay",false); li(NOSHOW,"noshow",false);
+
+$("#faq").innerHTML = FAQ.map(([q,a])=>`<details><summary>${q}</summary><div class="body">${a}</div></details>`).join("");
+$("#verify").innerHTML = VERIFY.map(([a,b,c])=>`<tr><td class="k">${a}</td><td>${b}</td><td class="m">${c.replace(/</g,"&lt;")}</td></tr>`).join("");
+$("#map").innerHTML = MAP.map(([a,b,c,d])=>`<tr><td class="k">${a}</td><td>${b}</td><td class="m">${c}</td><td>${d}</td></tr>`).join("");
+$("#totWords").textContent = BEATS.reduce((n,b)=>n+words(b),0).toLocaleString("en-GB");
+
+/* ── timeline ──────────────────────────────────────────────────────────── */
+const track = $("#track");
+BEATS.forEach((b,i) => {
+  const el = document.createElement("button");
+  el.style.flex = b.dur; el.style.background = K[b.kind];
+  el.title = `${b.n} · ${b.t} · ${mmss(b.start)}`;
+  el.innerHTML = `<span>${b.dur > 12 ? b.n : ""}</span>`;
+  el.onclick = () => goto(i, true);
+  track.appendChild(el);
+});
+
+/* ── clock ─────────────────────────────────────────────────────────────── */
+let t = 0, running = false, last = 0, cur = -1, follow = true;
+
+function beatAt(sec){
+  for (let i = BEATS.length - 1; i >= 0; i--) if (sec >= BEATS[i].start) return i;
+  return 0;
+}
+
+function paint(){
+  $("#clock").textContent = mmss(t);
+  $("#clock").classList.toggle("over", t > 600);
+  $("#playhead").style.width = Math.min(100, t / TOTAL * 100) + "%";
+
+  const i = running || t > 0 ? beatAt(t) : cur;
+  if (i !== cur && i >= 0) { cur = i; mark(); if (running && follow) scrollTo_(i); }
+
+  if (t > 0 && cur >= 0) {
+    const b = BEATS[cur];
+    const into = t - b.start, left = b.dur - into;
+    $("#now").innerHTML = `<b>${b.n} &middot; ${b.t}</b> &nbsp;${mmss(Math.max(0,left))} left in this beat &nbsp;·&nbsp; ${b.slide}`;
+    const d = Math.round(t - (b.start + b.dur));
+    const badge = $("#drift");
+    if (t < b.start + b.dur) { badge.textContent = "on plan"; badge.className = ""; }
+    else { badge.textContent = "+" + mmss(d) + " over"; badge.className = "behind"; }
+  }
+  if ($("#tp").classList.contains("open")) tpTick();
+}
+
+function mark(){
+  document.querySelectorAll(".card").forEach(c => c.classList.remove("live"));
+  document.querySelectorAll("#track button").forEach((b,i)=>b.classList.toggle("on", i===cur));
+  const c = $("#b"+cur); if (c) c.classList.add("live");
+  if ($("#tp").classList.contains("open")) tpRender();
+}
+
+function scrollTo_(i){ const el = $("#b"+i); if (el) el.scrollIntoView({behavior:"smooth", block:"start"}); }
+
+function goto(i, jump){
+  cur = Math.max(0, Math.min(BEATS.length-1, i));
+  if (jump) { t = BEATS[cur].start; paint(); scrollTo_(cur); }
+  mark();
+}
+
+function tick(){
+  if (!running) return;
+  const now = performance.now();
+  t += (now - last) / 1000; last = now;
+  paint();
+  requestAnimationFrame(tick);
+}
+
+function toggle(){
+  running = !running;
+  $("#run").textContent = running ? "Pause" : "Start";
+  if (running) { last = performance.now(); requestAnimationFrame(tick); }
+}
+
+$("#run").onclick = toggle;
+$("#reset").onclick = () => { running = false; $("#run").textContent = "Start"; t = 0; cur = 0; paint(); mark(); };
+
+/* ── pace ──────────────────────────────────────────────────────────────── */
+function pace(){
+  const wpm = +$("#wpm").value;
+  $("#wpmv").textContent = wpm;
+  BEATS.forEach((b,i) => {
+    const est = words(b) / wpm * 60;
+    const card = $("#b"+i);
+    const fill = card.querySelector("[data-fill]");
+    const ratio = est / b.dur;
+    fill.style.width = Math.min(100, ratio * 100) + "%";
+    fill.className = "fill" + (ratio > 1 ? " over" : ratio > .9 ? " tight" : "");
+    card.querySelector("[data-est]").textContent =
+      `${est.toFixed(0)}s of speech in a ${b.dur}s slot`;
+  });
+  localStorage.setItem("vs.wpm", wpm);
+}
+$("#wpm").oninput = pace;
+
+/* ── teleprompter ──────────────────────────────────────────────────────── */
+function tpRender(){
+  const b = BEATS[Math.max(0,cur)];
+  $("#tpNum").textContent = b.n; $("#tpNum").style.setProperty("--k", K[b.kind]);
+  $("#tpTitle").textContent = b.t;
+  $("#tpWhen").textContent = `${mmss(b.start)} → ${mmss(b.start+b.dur)} · ${b.slide}`;
+  $("#tpOf").textContent = `beat ${cur+1} of ${BEATS.length}`;
+  $("#tpBody").innerHTML = b.blocks.map(blk => {
+    if (blk.t === "say") return `<div class="say">${blk.x.map(p=>"<p>"+p+"</p>").join("")}</div>`;
+    if (blk.t === "do")  return `<div class="do">${blk.x}</div>`;
+    if (blk.t === "cmd") return `<div class="cmd"><code>${blk.x.replace(/</g,"&lt;")}</code></div>`;
+    return "";
+  }).join("");
+  $("#tpBody").scrollTop = 0;
+}
+function tpTick(){
+  const b = BEATS[Math.max(0,cur)];
+  const into = Math.max(0, t - b.start);
+  $("#tpFill").style.width = Math.min(100, into / b.dur * 100) + "%";
+  $("#tpLeft").textContent = mmss(Math.max(0, b.dur - into)) + " left";
+}
+function tpOpen(on){
+  $("#tp").classList.toggle("open", on);
+  if (on) { if (cur < 0) cur = 0; tpRender(); tpTick(); }
+}
+$("#tpClose").onclick = () => tpOpen(false);
+$("#tpPrev").onclick = () => { goto(cur-1, true); tpRender(); tpTick(); };
+$("#tpNext").onclick = () => { goto(cur+1, true); tpRender(); tpTick(); };
+
+/* ── chrome ────────────────────────────────────────────────────────────── */
+$("#theme").onclick = () => {
+  const d = document.documentElement.getAttribute("data-theme") === "dark";
+  document.documentElement.setAttribute("data-theme", d ? "light" : "dark");
+  localStorage.setItem("vs.theme", d ? "light" : "dark");
+};
+$("#print").onclick = () => window.print();
+
+document.addEventListener("click", e => {
+  const cp = e.target.closest("[data-cp]");
+  if (cp) {
+    navigator.clipboard.writeText(cp.dataset.cp);
+    const old = cp.textContent; cp.textContent = "copied";
+    setTimeout(() => cp.textContent = old, 1200);
+  }
+  const box = e.target.closest("input[data-key]");
+  if (box) localStorage.setItem("vs." + box.dataset.key, box.checked ? "1" : "");
+});
+
+document.addEventListener("keydown", e => {
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  const tag = (e.target.tagName || "").toLowerCase();
+  if (tag === "input" || tag === "textarea") return;
+  switch (e.key) {
+    case " ": e.preventDefault(); toggle(); break;
+    case "t": case "T": e.preventDefault(); tpOpen(!$("#tp").classList.contains("open")); break;
+    case "Escape": tpOpen(false); break;
+    case "ArrowRight": e.preventDefault(); goto(cur+1, true); break;
+    case "ArrowLeft": e.preventDefault(); goto(cur-1, true); break;
+    case "r": case "R": $("#reset").click(); break;
+    case "d": case "D": $("#theme").click(); break;
+  }
+});
+
+/* ── restore ───────────────────────────────────────────────────────────── */
+(function boot(){
+  const th = localStorage.getItem("vs.theme");
+  if (th) document.documentElement.setAttribute("data-theme", th);
+  const w = localStorage.getItem("vs.wpm"); if (w) $("#wpm").value = w;
+  document.querySelectorAll("input[data-key]").forEach(b => {
+    if (localStorage.getItem("vs." + b.dataset.key)) b.checked = true;
+  });
+  cur = 0; pace(); paint(); mark();
+})();
+</script>
+</body>
+</html>
