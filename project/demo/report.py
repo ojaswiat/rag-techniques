@@ -34,7 +34,7 @@ def query_block(index: int, total: int, outcome: dict, document_id: str,
                 pipelines: tuple[str, ...]) -> None:
     banner(f"QUERY {index} of {total}   ·   {outcome['query_id']}   ·   {outcome['quadrant']}")
     text = outcome["query_text"]
-    print(f'  "{text}"' if len(text) <= 72 else f'  "{text[:72]}..."')
+    print(f'{text}')
     print()
     gt = ", ".join(short(n, document_id) for n in outcome["ground_truth"])
     print(f"  Ground truth     {gt}")
