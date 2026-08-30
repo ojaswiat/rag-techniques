@@ -1,0 +1,458 @@
+/* COMP702 progress deck — Oxford Ink on white, Tailwind-500 accents.
+   Typography and colour follow resources/assets/diagrams/00-PALETTE.md so the
+   deck and the thirteen figures inside it read as one artefact. */
+
+:root {
+  --ink: #0f172a;
+  --slate: #64748b;
+  --line: #e2e8f0;
+  --paper: #ffffff;
+  --wash: #f8fafc;
+
+  --amber: #f59e0b;
+  --sky: #0ea5e9;
+  --emerald: #10b981;
+  --violet: #8b5cf6;
+  --indigo: #6366f1;
+  --fuchsia: #d946ef;
+  --teal: #14b8a6;
+  --purple: #a855f7;
+  --cyan: #06b6d4;
+  --red: #ef4444;
+  --rose: #f43f5e;
+  --orange: #f97316;
+  --blue: #3b82f6;
+  --lime: #84cc16;
+  --pink: #ec4899;
+  --green: #22c55e;
+
+  --sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --mono: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+
+  --pad: clamp(28px, 3.6vw, 68px);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--sans);
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+/* ---------- progress + chrome ---------- */
+
+#progress {
+  position: fixed;
+  top: 0; left: 0;
+  height: 3px;
+  width: 0;
+  background: var(--ink);
+  z-index: 60;
+  transition: width 180ms ease;
+}
+
+#chrome {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--pad);
+  font-size: 11px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--slate);
+  z-index: 50;
+  pointer-events: none;
+}
+
+#chrome .right { font-family: var(--mono); letter-spacing: 0.04em; }
+#chrome b { color: var(--ink); font-weight: 600; }
+
+/* ---------- nav buttons ---------- */
+
+/* #chrome is pointer-events:none so a stray click still advances the slide;
+   the buttons opt back in. */
+#nav { display: flex; gap: 10px; pointer-events: auto; }
+
+#nav button {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1.5px solid var(--line);
+  border-radius: 50%;
+  background: none;
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: border-color 120ms ease, color 120ms ease;
+}
+
+#nav button:hover:not(:disabled) { border-color: var(--ink); }
+#nav button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+#nav button:disabled { color: var(--line); cursor: default; }
+
+#nav svg {
+  width: 13px;
+  height: 13px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: square;
+  stroke-linejoin: miter;
+}
+
+/* ---------- slides ---------- */
+
+#deck { height: 100%; }
+
+.slide {
+  position: absolute;
+  inset: 0;
+  display: none;
+  flex-direction: column;
+  padding: var(--pad) var(--pad) 62px;
+}
+
+.slide.active { display: flex; }
+
+.eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--slate);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: none;
+}
+
+.eyebrow::before {
+  content: "";
+  width: 22px;
+  height: 3px;
+  background: var(--accent, var(--ink));
+}
+
+h1 {
+  font-size: clamp(30px, 3.5vw, 52px);
+  line-height: 1.08;
+  letter-spacing: -0.022em;
+  font-weight: 700;
+  margin: 0 0 6px;
+  flex: none;
+}
+
+h2 {
+  font-size: clamp(22px, 2.3vw, 34px);
+  line-height: 1.15;
+  letter-spacing: -0.018em;
+  font-weight: 650;
+  margin: 2rem 0;
+  flex: none;
+}
+
+.sub {
+  font-size: clamp(14px, 1.15vw, 18px);
+  color: var(--slate);
+  line-height: 1.45;
+  max-width: 90ch;
+  margin: 0 0 18px;
+  flex: none;
+}
+
+/* ---------- figure area ---------- */
+
+.figure {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.figure svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.figure img {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  display: block;
+  object-fit: contain;
+}
+
+/* ---------- title slide ---------- */
+
+.title-slide { justify-content: center; }
+
+.title-slide h1 {
+  font-size: clamp(38px, 5.2vw, 82px);
+  max-width: 22ch;
+  margin-bottom: 22px;
+}
+
+.title-slide .sub { font-size: clamp(16px, 1.5vw, 22px); max-width: 70ch; }
+
+.rule {
+  height: 4px;
+  width: 120px;
+  background: var(--ink);
+  margin: 0 0 30px;
+}
+
+.meta {
+  margin-top: 40px;
+  display: flex;
+  gap: 46px;
+  flex-wrap: wrap;
+  font-size: 13px;
+  color: var(--slate);
+}
+
+.meta div span {
+  display: block;
+  font-size: 10px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  margin-bottom: 5px;
+}
+
+.meta div b { color: var(--ink); font-weight: 600; font-size: 15px; }
+
+/* ---------- stat rows ---------- */
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 2px;
+  background: var(--line);
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  flex: none;
+}
+
+.stat { background: var(--paper); padding: 20px 22px; }
+
+.stat .n {
+  font-family: var(--mono);
+  font-size: clamp(26px, 3vw, 44px);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  color: var(--c, var(--ink));
+}
+
+.stat .l {
+  margin-top: 9px;
+  font-size: 11px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--slate);
+}
+
+.stat .d { margin-top: 6px; font-size: 13px; color: var(--slate); line-height: 1.4; }
+
+/* ---------- columns ---------- */
+
+.cols {
+  display: grid;
+  gap: 26px;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+/* Cards are sized by their content; auto margins keep a short row optically
+   centred instead of stranded against the top of the slide. */
+.cols { align-content: center; }
+
+.cols.two { grid-template-columns: 1fr 1fr; }
+.cols.three { grid-template-columns: repeat(3, 1fr); }
+.cols.split { grid-template-columns: minmax(280px, 34%) 1fr; }
+
+.card {
+  border-top: 4px solid var(--accent, var(--ink));
+  padding: 18px 0 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.card h3 {
+  margin: 0 0 4px;
+  font-size: clamp(16px, 1.4vw, 21px);
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.card .tag {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--accent, var(--slate));
+  margin-bottom: 10px;
+  letter-spacing: 0.02em;
+}
+
+.card p { margin: 0 0 10px; font-size: clamp(13px, 1.05vw, 16px); line-height: 1.5; color: var(--slate); }
+.card p strong { color: var(--ink); font-weight: 600; }
+
+/* compact metric strip inside a card */
+.mini {
+  display: flex;
+  gap: 26px;
+  padding: 12px 0 14px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.mini b {
+  display: block;
+  font-family: var(--mono);
+  font-size: clamp(20px, 2.1vw, 30px);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  color: var(--accent, var(--ink));
+}
+
+.mini span {
+  display: block;
+  margin-top: 6px;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--slate);
+}
+
+ul.tight { margin: 0; padding-left: 18px; }
+
+ul.tight li {
+  font-size: clamp(13px, 1.05vw, 16px);
+  line-height: 1.55;
+  margin-bottom: 7px;
+  color: var(--slate);
+}
+
+ul.tight li strong { color: var(--ink); font-weight: 600; }
+ul.tight li code, p code { font-family: var(--mono); font-size: 0.9em; color: var(--ink); }
+
+/* ---------- terminal ---------- */
+
+.term {
+  background: var(--ink);
+  color: #e2e8f0;
+  font-family: var(--mono);
+  font-size: clamp(9px, 0.95vw, 15px);
+  line-height: 1.45;
+  padding: 26px 30px;
+  overflow: auto;
+  flex: 0 1 auto;
+  min-height: 0;
+  white-space: pre;
+  tab-size: 4;
+  width: fit-content;
+  max-width: 100%;
+  /* auto margins centre the block in whatever space the slide has left,
+     so a short capture sits in the middle instead of stretching. */
+  margin: auto;
+}
+
+.term .hi { color: var(--amber); }
+.term .ok { color: var(--green); }
+.term .dim { color: #64748b; }
+
+/* ---------- callout ---------- */
+
+.callout {
+  border-left: 4px solid var(--accent, var(--red));
+  padding: 14px 0 14px 18px;
+  margin-top: 16px;
+  flex: none;
+}
+
+.callout b { display: block; font-size: 13px; letter-spacing: 0.03em; margin-bottom: 5px; }
+.callout p { margin: 0; font-size: clamp(13px, 1.02vw, 15px); color: var(--slate); line-height: 1.5; }
+
+/* ---------- table ---------- */
+
+table.data {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: clamp(12px, 1vw, 15px);
+}
+
+table.data th {
+  text-align: left;
+  font-size: 10px;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: var(--slate);
+  font-weight: 600;
+  padding: 0 14px 9px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+table.data td {
+  padding: 10px 14px 10px 0;
+  border-bottom: 1px solid var(--line);
+  color: var(--slate);
+  vertical-align: top;
+}
+
+table.data td.k { color: var(--ink); font-weight: 600; }
+table.data td.m { font-family: var(--mono); font-size: 0.92em; }
+
+/* ---------- overview grid ---------- */
+
+#overview {
+  position: fixed;
+  inset: 0;
+  background: var(--wash);
+  z-index: 70;
+  display: none;
+  overflow: auto;
+  padding: 40px;
+}
+
+#overview.open { display: block; }
+
+#overview .grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 12px;
+}
+
+#overview button {
+  border: 1px solid var(--line);
+  background: var(--paper);
+  padding: 14px;
+  text-align: left;
+  cursor: pointer;
+  font-family: var(--sans);
+  min-height: 88px;
+}
+
+#overview button:hover { border-color: var(--ink); }
+#overview button .i { font-family: var(--mono); font-size: 11px; color: var(--slate); }
+#overview button .t { margin-top: 6px; font-size: 13px; font-weight: 600; line-height: 1.3; }
+
+@media print {
+  html, body { overflow: visible; }
+  .slide { display: flex !important; position: relative; page-break-after: always; height: 100vh; }
+  #chrome, #progress, #overview { display: none !important; }
+}

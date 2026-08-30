@@ -1,6 +1,7 @@
 1. Create a separate branch called `presentation`, then install a skill to remove/update ai slop in the code.
 2. Build full HTML page.
 3. How can I create a minimal dashboard in plain HTML, CSS, and JS? Just tell me the possible options.
+4. Hide AI files and folders.
 
 
 ## Issues

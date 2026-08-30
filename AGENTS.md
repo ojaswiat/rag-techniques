@@ -84,7 +84,7 @@ graphify update .
 ## Known Discrepancies (Trust the Code, Not Stale Docs)
 
 - `README.md` repository layout is stale (describes `claude/`, omits `project/`, `resources/`)
-- `README.md` names only Apple — corpus is AAPL/MSFT/TSLA × 3 years (9 filings)
+- `README.md` names only Apple — corpus is AAPL/MSFT/TSLA × FY2023–2025 plus JPM/JNJ × FY2023–2024 (13 filings)
 - `resources/specs/` remain binding for implementation
 - `Architecture.md` (v2) wins when docs disagree
 

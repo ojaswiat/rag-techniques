@@ -8,7 +8,7 @@ This file governs how the Claude Code agent operates within this repository. Rea
 
 This is the workspace for a **COMP702 M.Sc. Dissertation**: a comparative benchmark of three RAG retrieval paradigms (semantic vector, statistical BM25, structural summary-tree) evaluated against SEC 10-K financial filings.
 
-**Current state:** Phases 1 to 6 of `resources/specs/Phase Plan.md` are built and tested. Ingestion is complete (13 filings, 26,050 nodes), dataset generation is complete (100 PQ, 20 GQ, 20 JEQ in `project/benchmark.db`), all three pipelines and the Judge are implemented, and the test suite stands at 339 passing. The Judge's >80% agreement gate has not been run, the `results` table is empty, and Phase 7 (the full 900-run benchmark) is the next milestone.
+**Current state:** Phases 1 to 6 of `resources/specs/Phase Plan.md` are built and tested. Ingestion is complete (13 filings, 18,297 nodes), dataset generation is complete (100 PQ, 20 GQ, 20 JEQ in `project/benchmark.db`), all three pipelines and the Judge are implemented, and the test suite stands at 339 passing. The Judge's >80% agreement gate has not been run, the `results` table is empty, and Phase 7 (the full 900-run benchmark) is the next milestone.
 
 ### Repository Layout
 
@@ -55,7 +55,6 @@ All documents, slides, and Word files in this project follow the rules below. Pu
   - Code: **Consolas**
 - **Language**: British English throughout
 - **Punctuation**: No em dashes — use commas, semicolons (rarely). Use simple/spoken English punctuations.
-- **Diagrams / charts / tables**: Built with native Word/PowerPoint features only — never attached images
 - **References**: Harvard style with real, high-citation sources
 - **Labelling**: `Figure X.Y` / `Table X.Y` (section.number)
 

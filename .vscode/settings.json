@@ -1,0 +1,21 @@
+{
+  // Hides agent/AI tooling from the Explorer only. Nothing is deleted, and the
+  // files still load normally for the tools that read them.
+  "files.exclude": {
+    ".agents": true,
+    ".claude": true,
+    ".claude-mem": true,
+    ".superpowers": true,
+    ".opencode": true,
+    ".playwright-mcp": true,
+    ".mcp.json": true,
+    ".graphifyignore": true,
+    "graphify-out": true,
+    "openwiki": true,
+    "docs": true,
+    "AGENTS.md": true,
+    "CLAUDE.md": true,
+    "opencode.json": true,
+    "skills-lock.json": true
+  }
+}

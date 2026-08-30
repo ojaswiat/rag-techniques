@@ -100,7 +100,7 @@
         <mxCell id="c32" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#14b8a6;strokeColor=none;fontColor=#FFFFFF;fontSize=12;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;verticalAlign=middle;align=center;shadow=0;glass=0;spacingLeft=8;spacingRight=8;spacingTop=6;spacingBottom=6;arcSize=0;fontStyle=1;" value="3  CONCURRENCY" vertex="1">
           <mxGeometry height="48" width="300" x="80" y="852" as="geometry" />
         </mxCell>
-        <mxCell id="c33" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#14b8a6;strokeColor=none;fontColor=#FFFFFF;fontSize=12;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;verticalAlign=middle;align=left;shadow=0;glass=0;spacingLeft=18;spacingRight=18;spacingTop=6;spacingBottom=6;arcSize=0;" value="GROQ / NIM / OPENROUTER _MAX_CONCURRENCY = 5 — a separate axis from RPM" vertex="1">
+        <mxCell id="c33" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#14b8a6;strokeColor=none;fontColor=#FFFFFF;fontSize=12;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;verticalAlign=middle;align=left;shadow=0;glass=0;spacingLeft=18;spacingRight=18;spacingTop=6;spacingBottom=6;arcSize=0;" value="GROQ / NIM / OPENROUTER _MAX_CONCURRENCY = 5, a separate axis from RPM" vertex="1">
           <mxGeometry height="48" width="1030" x="390" y="852" as="geometry" />
         </mxCell>
         <mxCell id="c34" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#10b981;strokeColor=none;fontColor=#FFFFFF;fontSize=12;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;verticalAlign=middle;align=center;shadow=0;glass=0;spacingLeft=8;spacingRight=8;spacingTop=6;spacingBottom=6;arcSize=0;fontStyle=1;" value="4  RETRY" vertex="1">
@@ -112,10 +112,10 @@
         <mxCell id="c36" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#22c55e;strokeColor=none;fontColor=#FFFFFF;fontSize=12;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;verticalAlign=middle;align=center;shadow=0;glass=0;spacingLeft=8;spacingRight=8;spacingTop=6;spacingBottom=6;arcSize=0;fontStyle=1;" value="5  RESUMABILITY" vertex="1">
           <mxGeometry height="48" width="300" x="80" y="968" as="geometry" />
         </mxCell>
-        <mxCell id="c37" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#22c55e;strokeColor=none;fontColor=#FFFFFF;fontSize=12;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;verticalAlign=middle;align=left;shadow=0;glass=0;spacingLeft=18;spacingRight=18;spacingTop=6;spacingBottom=6;arcSize=0;" value="hit the cap, stop, resume tomorrow — the UNIQUE key guarantees nothing is lost or repeated" vertex="1">
+        <mxCell id="c37" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#22c55e;strokeColor=none;fontColor=#FFFFFF;fontSize=12;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;verticalAlign=middle;align=left;shadow=0;glass=0;spacingLeft=18;spacingRight=18;spacingTop=6;spacingBottom=6;arcSize=0;" value="hit the cap, stop, resume tomorrow: the UNIQUE key guarantees nothing is lost or repeated" vertex="1">
           <mxGeometry height="48" width="1030" x="390" y="968" as="geometry" />
         </mxCell>
-        <mxCell id="t38" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontColor=#ef4444;fontSize=12;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;shadow=0;fontStyle=1;" value="THE BINDING CONSTRAINT IS TOKENS-PER-DAY, NOT REQUESTS-PER-MINUTE — the Answerer&#39;s ~100K TPD ceiling is what sets the multi-week timeline." vertex="1">
+        <mxCell id="t38" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontColor=#ef4444;fontSize=12;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;shadow=0;fontStyle=1;" value="TOKENS-PER-DAY IS THE BINDING CONSTRAINT, NOT REQUESTS-PER-MINUTE. The Answerer&#39;s ~100K TPD ceiling sets the multi-week timeline." vertex="1">
           <mxGeometry height="26" width="1340" x="80" y="1026" as="geometry" />
         </mxCell>
       </root>

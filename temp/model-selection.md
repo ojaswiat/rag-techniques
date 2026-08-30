@@ -1,6 +1,6 @@
 Summary: P3 summarization-model suitability discussion
 
-Trigger: clarified llama-3.1-8b-instant is Phase 3's P3 tree-index summarizer (not LlamaParse, a separate unrelated parsing service). This is the model that hit Groq's daily TPD cap while building indices for the new JPM/JNJ/WMT filings.
+Trigger: clarified llama-3.1-8b-instant is Phase 3's P3 tree-index summarizer (not LlamaParse, a separate unrelated parsing service). This is the model that hit Groq's daily TPD cap while building indices for the new JPM/JNJ filings.
 
 Critical concern raised: P3's retrieval works entirely off stored summary text (embedding similarity, no raw-text fallback), so summarizer fidelity is a hard ceiling on P3's whole retrieval quality. An 8B model is the smallest in the entire pipeline (vs. Generator 120B, Answerer 70B, Critic/Judge 27B) doing arguably one of the more fidelity-sensitive jobs — permanent, one-time, no-fallback compression of dense financial/numeric content. Real risk: if P3 underperforms on table-heavy quadrants, that could be an 8B-summarizer artifact rather than evidence about the summary-tree retrieval paradigm itself — muddying the dissertation's core causal claim.
 
@@ -19,7 +19,7 @@ Status: not decided. Also unresolved: whether switching models for the 6 new fil
 
 Addendum: current model routing, end-to-end
 
-LlamaParse (Phase 2, not Groq — separate document-parsing service): converts each raw SEC 10-K filing into structured markdown, then into nodes rows in the DB (node_type = text/table). This step is complete for all 18 filings; unrelated to any Groq model.
+LlamaParse (Phase 2, not Groq — separate document-parsing service): converts each raw SEC 10-K filing into structured markdown, then into nodes rows in the DB (node_type = text/table). This step is complete for all 13 filings; unrelated to any Groq model.
 
 Groq-hosted models, by role and phase:
 
