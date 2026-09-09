@@ -18,7 +18,12 @@ _STAGE = "answerer"
 
 # Markers are kept in pipeline_output rather than stripped, so a stored
 # answer stays auditable against its own citations.
-_CITATION_PATTERN = re.compile(r"\[\[node:([\w\-]+)\]\]")
+#
+# Fullwidth brackets are accepted alongside ASCII ones. Some models emit
+# U+3010/U+3011 for a doubled square bracket regardless of what the system
+# prompt asks for, and a citation lost to a delimiter substitution would
+# be scored as an uncited claim by the Citation Audit.
+_CITATION_PATTERN = re.compile(r"(?:\[\[|\u3010)node:([\w\-]+)(?:\]\]|\u3011)")
 
 _SYSTEM_PROMPT = (
     "You answer questions using only the numbered sources provided. "
@@ -26,6 +31,9 @@ _SYSTEM_PROMPT = (
     "contain the answer, say so plainly. "
     "After any claim drawn from a source, immediately append "
     "[[node:<node_id>]] citing the exact node it came from. "
+    "Write that marker with plain ASCII square brackets, U+005B and "
+    "U+005D, doubled on each side. Never substitute fullwidth or CJK "
+    "bracket characters. "
     "Use the node_id exactly as given. Answer concisely."
 )
 
