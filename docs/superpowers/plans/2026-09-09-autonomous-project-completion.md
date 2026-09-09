@@ -27,6 +27,7 @@ Every task's requirements implicitly include this section.
 - **`LOCAL_TEST_THROTTLE` is defined once** in `project/llm_client/config.py` alongside `THROTTLE_LIMIT = 3`. Loop scripts apply it via `loop_template.apply_throttle()` and never declare their own cap. Every loop runs clean end-to-end at throttle before it is released to the full batch.
 - **Anti-leakage (Guardrails §3):** `queries` (100 PQ) / `golden_queries` (20 GQ) / `judge_validation` (20 JEQ) stay disjoint. GQ feeds the Judge only. JEQ feeds no prompt. Pipelines receive only the query plus their own retrieved nodes.
 - **Anti-self-grading (Guardrails §2):** Generator ≠ Critic family; Answerer ≠ Judge family. Llama answerer vs Qwen judge satisfies this and must stay satisfied after the provider move.
+- **`project/benchmark.db` is git-ignored and has never been tracked.** Do not `git add` it and never force-add it: it is an 11 MB binary that grows with every run, and committing it 13 times would bloat the repository for no gain. The reproducible record is the code that writes it (`write_gq_labels.py`, `loop_executor.py`, `judge_rows()`), all of which are idempotent. The consequence is that the database has no version history, so **after every step that spends money or takes hours, snapshot it with `project/scripts/backup_data.sh`** before doing anything else. `scripts/reload_backup.sh` restores. A lost database after Task 9 costs roughly $1 of paid API calls and about 90 minutes of runtime to rebuild.
 - **Resumability:** `results.UNIQUE(source_set, query_id, pipeline, k_value)` is the crash-resume key. Never delete `results` rows to "retry"; the resume path re-picks absent keys automatically.
 - **`K_VALUES = (2, 3, 5)`** in `loop_executor.py`; the DB enforces `CHECK (k_value IN (2,3,5))`. The gate runs at a single `K=5`.
 - **British English** in all prose. **No em dashes** — use commas or semicolons.
@@ -672,7 +673,11 @@ Two worked examples, using real rows from this database:
     ),
 },
 
-# Q4_Implicit_Table, 4th position -> bad, output rewritten
+# Q4_Implicit_Table, 4th position -> bad, output rewritten.
+# NOTE: the query_id below is illustrative of the SHAPE of a bad entry only.
+# The allocation table above is normative: resolve each row's polarity from
+# its position in query_id order within its quadrant, not from this example.
+# (QT4_GQ_001 is 1st in its quadrant and is therefore actually a good entry.)
 {
     "query_id": "QT4_GQ_001",
     # query: "...total potential loss in fair value resulting from a 100 basis
@@ -799,7 +804,7 @@ Append to `resources/research/deviations.md`:
 
 ```bash
 cd /Users/ojaswi/Projects/rag-techniques
-git add project/database_manager.py project/dataset_generation/write_gq_labels.py project/tests/test_gq_calibration.py resources/research/deviations.md project/benchmark.db
+git add project/database_manager.py project/dataset_generation/write_gq_labels.py project/tests/test_gq_calibration.py resources/research/deviations.md
 git commit -m "feat(judge): write the 20 calibration exemplars with a per-quadrant good/bad split"
 ```
 
@@ -865,11 +870,13 @@ sqlite3 benchmark.db "SELECT AVG(input_tokens), AVG(output_tokens), AVG(latency_
 
 Multiply by 1,860 (900 answerer + 900 judge + the 60 gate rows) and check the projection against the roughly $1 to $1.55 estimate. If the projected total exceeds $4, stop and report rather than proceeding to Task 8.
 
-- [ ] **Step 5: Commit the rehearsal state**
+- [ ] **Step 5: Record the rehearsal**
+
+The rehearsal changed no tracked files: its only output is three rows inside the git-ignored `benchmark.db`. There is nothing to commit. Tick this task's boxes in the plan, commit that, and log the run through monitor:
 
 ```bash
 cd /Users/ojaswi/Projects/rag-techniques
-git add project/benchmark.db
+git add docs/superpowers/plans/2026-09-09-autonomous-project-completion.md
 git commit -m "chore(gate): throttled rehearsal of the validation gate on OpenRouter"
 ```
 
@@ -923,10 +930,13 @@ Expected exactly: `rows=60, missing_judge=0, missing_output=0, queries=20, pipel
 
 If `failures` was non-empty, re-run Step 2. The resume path skips everything already written, so a re-run only retries the gaps.
 
-- [ ] **Step 4: Restore the throttle**
+- [ ] **Step 4: Snapshot the database, then restore the throttle**
+
+The 60 gate rows cost real money and cannot be recovered without re-spending. Snapshot before anything else:
 
 ```bash
 cd /Users/ojaswi/Projects/rag-techniques/project
+bash scripts/backup_data.sh
 sed -i '' 's/^LOCAL_TEST_THROTTLE=false/LOCAL_TEST_THROTTLE=true/' .env
 ```
 
@@ -934,7 +944,7 @@ sed -i '' 's/^LOCAL_TEST_THROTTLE=false/LOCAL_TEST_THROTTLE=true/' .env
 
 ```bash
 cd /Users/ojaswi/Projects/rag-techniques
-git add project/benchmark.db project/logs/validation_gate_full.log
+git add project/logs/validation_gate_full.log
 git commit -m "feat(gate): generate and judge all 60 validation-gate rows at K=5"
 ```
 
@@ -1226,7 +1236,7 @@ Append to `resources/research/deviations.md`:
 
 ```bash
 cd /Users/ojaswi/Projects/rag-techniques
-git add project/gate_reference_scores.py project/score_gate_outputs.py project/tests/test_score_gate_outputs.py project/benchmark.db resources/research/deviations.md
+git add project/gate_reference_scores.py project/score_gate_outputs.py project/tests/test_score_gate_outputs.py resources/research/deviations.md
 git commit -m "feat(gate): add non-interactive reference scoring and report concordance"
 ```
 
@@ -1507,13 +1517,16 @@ Expected: `rows=900, queries=100, pipelines=3, ks=3, missing_output=0`, and nine
 | Run dies silently | Session halt, not a code failure | Expected on a long run. Re-run; see the Session Resume Protocol |
 | Spend climbing past the Task 4 projection | Retries, or larger prompts than sampled | Stop at $4 and report. Do not let it run past that unattended |
 
-- [ ] **Step 5: Restore the throttle and commit**
+- [ ] **Step 5: Snapshot, restore the throttle, and commit**
+
+900 answered cells is the single most expensive artefact in the project. Snapshot before anything else:
 
 ```bash
 cd /Users/ojaswi/Projects/rag-techniques/project
+bash scripts/backup_data.sh
 sed -i '' 's/^LOCAL_TEST_THROTTLE=false/LOCAL_TEST_THROTTLE=true/' .env
 cd /Users/ojaswi/Projects/rag-techniques
-git add project/benchmark.db project/logs/benchmark_pq_run.log
+git add project/logs/benchmark_pq_run.log
 git commit -m "feat(benchmark): execute all 900 PQ cells across three pipelines and K in 2,3,5"
 ```
 
@@ -1595,13 +1608,14 @@ Expected: `null_em` equals `n` for `Q2_Implicit_Text` and `Q4_Implicit_Table`, a
 | `null_em` above 0 for Q1 or Q3 | Numeric normalisation failed on those answers | Not fatal. Inspect the affected rows in `judge/numeric_normalizer.py`; `exact_match` is a secondary metric and the judge score stands regardless |
 | Mean judge score near 10 across every pipeline | Calibration ceiling: the exemplars taught only the high end | Re-check Task 3's per-quadrant good/bad split before trusting the analysis |
 
-- [ ] **Step 4: Restore the throttle and commit**
+- [ ] **Step 4: Snapshot, restore the throttle, and commit**
 
 ```bash
 cd /Users/ojaswi/Projects/rag-techniques/project
+bash scripts/backup_data.sh
 sed -i '' 's/^LOCAL_TEST_THROTTLE=false/LOCAL_TEST_THROTTLE=true/' .env
 cd /Users/ojaswi/Projects/rag-techniques
-git add project/benchmark.db project/logs/benchmark_pq_judging.log
+git add project/logs/benchmark_pq_judging.log
 git commit -m "feat(benchmark): score all 900 PQ rows with the judge and code metrics"
 ```
 
