@@ -67,7 +67,7 @@ def build_prompt(query_text: str, nodes: list[NodeWithScore]) -> str:
 class Answerer:
     def __init__(
         self,
-        model: str = "meta-llama/llama-3.3-70b-instruct",
+        model: str | None = None,
         temperature: float = 0.0,
     ):
         routed_model = config.MODEL_ROUTING[_STAGE]["model"]
@@ -75,7 +75,10 @@ class Answerer:
         # already applied when LLMFactory builds the client. These
         # parameters exist only to reject a contradicting value outright,
         # since a benchmark run that thinks it used a different model or
-        # temperature would be unreproducible.
+        # temperature would be unreproducible. The default is derived from
+        # MODEL_ROUTING rather than a literal, so a future repoint of
+        # "answerer" cannot silently go stale here.
+        model = model or routed_model
         if model != routed_model:
             raise ValueError(
                 f"Answerer model is fixed to {routed_model!r} by "

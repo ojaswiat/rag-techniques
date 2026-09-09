@@ -9,6 +9,7 @@ import pytest
 from llama_index.core.schema import NodeWithScore, TextNode
 from llama_index.llms.openai_like import OpenAILike
 
+import llm_client.config as config
 from pipelines.answerer import Answerer, build_prompt, parse_citations
 
 
@@ -166,6 +167,12 @@ async def test_answer_keeps_markers_in_raw_text():
 
 
 # --- fixed model routing / temperature ---
+
+
+def test_answerer_default_model_tracks_model_routing():
+    """The no-args default must be derived from MODEL_ROUTING, not a literal,
+    so a future repoint of "answerer" cannot silently go stale here."""
+    assert Answerer().model == config.MODEL_ROUTING["answerer"]["model"]
 
 
 def test_answerer_rejects_a_model_other_than_the_routed_one():
