@@ -310,6 +310,27 @@ async def update_golden_query_labels(
             raise ValueError(f"No golden_query found with query_id={query_id!r} -- check for a typo")
 
 
+async def update_golden_query_example_output(db_path: str, query_id: str, example_output: str) -> None:
+    """Replace one exemplar's candidate answer.
+
+    Separate from update_golden_query_labels because the two are written at
+    different times and for different reasons: the labels are a judgement
+    about a candidate, while this rewrites the candidate itself when the
+    calibration set needs a deliberately imperfect example.
+    """
+    if not example_output or not example_output.strip():
+        raise ValueError(f"{query_id}: example_output must be a non-empty string")
+
+    async with aiosqlite.connect(db_path) as conn:
+        cursor = await conn.execute(
+            "UPDATE golden_queries SET example_output = ? WHERE query_id = ?",
+            (example_output, query_id),
+        )
+        await conn.commit()
+        if cursor.rowcount == 0:
+            raise ValueError(f"No golden_query found with query_id={query_id!r} -- check for a typo")
+
+
 async def get_results(db_path: str, source_set: str) -> list[dict]:
     """Every results row for one source_set, JSON node-id columns decoded.
 
