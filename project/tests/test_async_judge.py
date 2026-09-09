@@ -255,13 +255,19 @@ def test_rubric_does_not_ask_the_judge_to_grade_citations():
     assert "source" not in rubric
 
 
-def test_rubric_states_the_supportability_criterion_the_exemplars_apply():
-    """Four good exemplars are scored 9 rather than 10 for being correct but
-    unauditable. A criterion the exemplars price must be one the rubric
-    states, or the Judge is inferring an unstated deduction."""
+def test_rubric_avoids_words_that_misdescribe_exemplars():
+    """The rubric is calibrated against exemplars that show no citations, so
+    words like 'basis', 'verify', 'audit', or 'check it against' (which presume
+    citations) would teach the Judge a standard it is never shown evidence for.
+
+    Real pipeline answers carry [[node:id]] markers; bare exemplars do not.
+    Embedding one but not the other invites the Judge to anchor low on all
+    real answers for a property it never saw fail in exemplars.
+    """
     rubric = async_judge._RUBRIC.lower()
-    assert "9" in async_judge._RUBRIC
-    assert any(word in rubric for word in ("audit", "support", "verif"))
+    forbidden = ("basis", "verify", "verifiable", "audit", "check it against")
+    for word in forbidden:
+        assert word not in rubric, f"forbidden word '{word}' found in rubric"
 
 
 def test_rubric_still_pins_the_json_response_shape():

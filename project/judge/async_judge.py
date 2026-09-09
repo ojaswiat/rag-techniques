@@ -33,14 +33,13 @@ _RUBRIC = (
     "You are grading how well a candidate answer responds to a question about a "
     "SEC 10-K filing. You are given the question and the ground-truth answer. "
     "Score the candidate answer from 1 to 10. A 10 fully matches the ground-truth "
-    "answer and states enough of its basis that a reader could check it against "
-    "the filing. A 9 is correct but bare, giving the right value with nothing a "
-    "reader could verify it from. Mid-range scores are partially correct: the "
-    "right area of the filing but the wrong figure, or one half of a two-part "
-    "answer. A 1 is wrong, unsupported, or fabricated. Judge only correctness "
-    "against the ground truth provided; do not use outside knowledge, and do not "
-    'search. Respond with ONLY a JSON object, no markdown fences: {"score": <integer 1-10>, '
-    '"justification": "<one sentence>"}.'
+    "answer and is complete and precise, in a form that directly answers the question "
+    "asked. A 9 is correct but falls slightly short on completeness, precision, or "
+    "framing. Mid-range scores are partially correct: the right area of the filing but "
+    "the wrong figure, or one half of a two-part answer. A 1 is wrong, unsupported, or "
+    "fabricated. Judge only correctness against the ground truth provided; do not use "
+    "outside knowledge, and do not search. Respond with ONLY a JSON object, no markdown "
+    'fences: {"score": <integer 1-10>, "justification": "<one sentence>"}.'
 )
 
 
