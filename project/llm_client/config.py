@@ -19,10 +19,16 @@ SEC_EDGAR_USER_AGENT: str = os.getenv("SEC_EDGAR_USER_AGENT", "rag-techniques-be
 LOCAL_TEST_THROTTLE: bool = os.getenv("LOCAL_TEST_THROTTLE", "true").lower() == "true"
 THROTTLE_LIMIT: int = 3
 
+# Reasoning-tuned models: without a cap, reasoning tokens exhaust the
+# completion budget and leave message.content=None, crashing json.loads()
+# in the caller. effort="none" is rejected by some endpoints; "low" is
+# accepted everywhere tested and still bounds the spend.
+_REASONING_LOW = {"reasoning": {"effort": "low"}}
+
 # Guardrails.md §2 — fixed model routing matrix. Do not change without updating the spec.
 MODEL_ROUTING: dict[str, dict] = {
-    "generator":     {"model": "nvidia/nemotron-3-super-120b-a12b:free", "provider": "openrouter"},
-    "critic":        {"model": "openai/gpt-oss-20b:free", "provider": "openrouter"},
+    "generator":     {"model": "nvidia/nemotron-3-super-120b-a12b:free", "provider": "openrouter", "extra_body": _REASONING_LOW},
+    "critic":        {"model": "openai/gpt-oss-20b:free", "provider": "openrouter", "extra_body": _REASONING_LOW},
     "p3_index_build":{"model": "nvidia/nemotron-3-super-120b-a12b", "provider": "nvidia"},
     "answerer":      {"model": "llama-3.3-70b-versatile","provider": "groq"},
     "judge":         {"model": "qwen/qwen3.6-27b",        "provider": "groq"},
