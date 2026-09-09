@@ -112,3 +112,20 @@ def test_openrouter_stage_without_extra_body_sends_none(monkeypatch):
     monkeypatch.setattr(config, "OPENROUTER_API_KEY", "test-key")
     llm = LLMFactory.get_client_for_stage("answerer")
     assert "extra_body" not in llm.additional_kwargs
+
+
+def test_generator_and_critic_receive_reasoning_from_live_routing(monkeypatch):
+    """Generator and critic stages receive _REASONING_LOW from the real, unpatched
+    config.MODEL_ROUTING. This is the regression guard for the hardcoded-default
+    removal: a future edit that drops extra_body from either entry will fail here
+    rather than silently changing what those stages send to OpenRouter.
+    """
+    monkeypatch.setattr(config, "OPENROUTER_API_KEY", "test-key")
+
+    # Test generator
+    gen_llm = LLMFactory.get_client_for_stage("generator")
+    assert gen_llm.additional_kwargs["extra_body"] == {"reasoning": {"effort": "low"}}
+
+    # Test critic
+    crit_llm = LLMFactory.get_client_for_stage("critic")
+    assert crit_llm.additional_kwargs["extra_body"] == {"reasoning": {"effort": "low"}}
