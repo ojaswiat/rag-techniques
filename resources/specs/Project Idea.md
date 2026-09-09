@@ -274,7 +274,7 @@ This project benchmarks **three in-scope retrieval architectures (P1, P2, P3)**.
 
 Pipelines are audited across three independent pillars. Both retrieval-bearing pipelines and P3 are tested at **three values of K**:
 
-$$\mathbf{K \in \{3, 5, 10\}}$$
+$$\mathbf{K \in \{2, 3, 5\}}$$
 
 Evaluation runs in two distinct phases. **Phase 2 (judge validation) is a hard gate that runs before the expensive Phase 3 (full benchmark)** — so a broken judge can never silently grade the entire matrix.
 
@@ -299,7 +299,7 @@ PHASE 2 — JUDGE VALIDATION GATE  (cheap; runs FIRST)
 
 PHASE 3 — FULL BENCHMARK  (expensive; runs only after the gate passes)
 ----------------------------------------------------------------------
-  Run PQ (100) on P1, P2, P3  x  K = {3, 5, 10}   ->   900 runs
+  Run PQ (100) on P1, P2, P3  x  K = {2, 3, 5}    ->   900 runs
         |
         v
   Trusted Judge + deterministic code metrics score every run
@@ -417,7 +417,7 @@ PHASE 2 — JUDGE VALIDATION   (GATE: runs BEFORE the full benchmark)
 
 PHASE 3 — FULL BENCHMARK   (uses PQ + the trusted judge)
 --------------------------------------------------------
-   [ Run PQ (100) on P1, P2, P3  x  K = {3, 5, 10} ]  =  900 runs
+   [ Run PQ (100) on P1, P2, P3  x  K = {2, 3, 5} ]   =  900 runs
      Answerer (shared): llama-3.3-70b-versatile
             |
             v
@@ -457,7 +457,7 @@ HUMAN-IN-THE-LOOP:
 |  100 Pipeline Queries (PQ; 25 per quadrant)                           |
 |                                                                       |
 |  In-scope pipelines: P1 (Vector), P2 (BM25), P3 (Structural)          |
-|  Each runs at K = 3, 5, 10                                            |
+|  Each runs at K = 2, 3, 5                                             |
 |                                                                       |
 |  3 Pipelines x 3 K-Values = 9                                         |
 |  9 x 100 Queries = 900 runs                                           |

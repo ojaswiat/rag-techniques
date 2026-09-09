@@ -58,7 +58,7 @@
 ## How do we test them fairly?
 
 - Every pipeline gets the exact same 100 test questions.
-- Each pipeline runs at three retrieval depths, K = 3, 5, 10 (how many chunks it retrieves).
+- Each pipeline runs at three retrieval depths, K = 2, 3, 5 (how many chunks it retrieves).
 - Pipelines never see the correct answer, only the question and their own retrieved text.
 - Total: 3 pipelines times 3 depths times 100 questions equals 900 test runs.
 

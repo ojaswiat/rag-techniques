@@ -60,7 +60,7 @@ CREATE TABLE IF NOT EXISTS results (
     source_set          TEXT NOT NULL CHECK (source_set IN ('PQ','JEQ')),
     query_id            TEXT NOT NULL,
     pipeline            TEXT NOT NULL CHECK (pipeline IN ('P1_vector','P2_bm25','P3_structural')),
-    k_value             INTEGER NOT NULL CHECK (k_value IN (3,5,10)),
+    k_value             INTEGER NOT NULL CHECK (k_value IN (2,3,5)),
     retrieved_node_ids  TEXT NOT NULL,
     pipeline_output     TEXT,
     cited_node_ids      TEXT,

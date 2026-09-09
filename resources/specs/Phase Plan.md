@@ -157,7 +157,7 @@ Run the 900-cell matrix and score every output. Kicks off the instant the gate p
 **Weeks 7–9 onward (background, ~2–3 weeks)**
 
 ## Goals
-1. Execute **PQ (100) × {P1, P2, P3} × K∈{3, 5, 10} = 900 runs**, each once at `temperature = 0`.
+1. Execute **PQ (100) × {P1, P2, P3} × K∈{2, 3, 5} = 900 runs**, each once at `temperature = 0`.
 2. Score every run with the validated Judge + deterministic code metrics; flag coincidental correctness via the Citation Audit.
 3. Pace the token-heavy answering phase across days; **commit to `results` after each run and resume from the last written row** on restart.
 4. Hold the strict-$0 path by default; invoke the paid Developer tier only if the schedule demands compression.

@@ -239,7 +239,7 @@ CREATE TABLE results (
     source_set            TEXT NOT NULL CHECK (source_set IN ('PQ','JEQ')),
     query_id              TEXT NOT NULL,   -- FK -> queries.query_id (PQ) or judge_validation.query_id (JEQ)
     pipeline               TEXT NOT NULL CHECK (pipeline IN ('P1_vector','P2_bm25','P3_structural')),
-    k_value                 INTEGER NOT NULL CHECK (k_value IN (3,5,10)),
+    k_value                 INTEGER NOT NULL CHECK (k_value IN (2,3,5)),
     retrieved_node_ids       TEXT NOT NULL,   -- JSON array of node_id
     pipeline_output           TEXT,
     cited_node_ids             TEXT,         -- JSON array of node_id
@@ -442,7 +442,7 @@ async_generator.py        search_tool.py          async_critic.py       cross_ch
 * **`aiosqlite` for the async write path** over the `sqlite3`-defined schema in §3.2 — commits never block the event loop.
 * **`LOCAL_TEST_THROTTLE` stays hardcoded per script**, never centralized — `Guardrails.md` §7 requires it be consciously toggled in each file individually.
 * **Filing manifest instead of a discovery package** — `data/filings_manifest.json` lists the ~6–9 known filings; `requests` downloads them. No `sec-edgar-downloader`-style package is needed for a fixed, small, known list.
-* **P3 retrieval stays local** — `TreeIndex.as_retriever(retriever_mode="select_leaf_embedding")` scores summary nodes by embedding similarity (reusing `bge-small-en-v1.5`), never calling Groq at query time, per `Guardrails.md` §1 ("P3 retrieval at query time is local"). This is also how K∈{3,5,10} applies to P3, matching `Project_Idea.md` §7's requirement that all three pipelines are tested at all three K values.
+* **P3 retrieval stays local** — `TreeIndex.as_retriever(retriever_mode="select_leaf_embedding")` scores summary nodes by embedding similarity (reusing `bge-small-en-v1.5`), never calling Groq at query time, per `Guardrails.md` §1 ("P3 retrieval at query time is local"). This is also how K∈{2,3,5} applies to P3, matching `Project_Idea.md` §7's requirement that all three pipelines are tested at all three K values.
 * **The Critic's search tool is self-contained** — a standalone `rank_bm25` instance scoped to one document, not a forward import of Phase 5's P2 module (Phase 4 runs before Phase 5 per the week numbers in §8).
 
 ---
