@@ -810,6 +810,154 @@ git commit -m "feat(judge): write the 20 calibration exemplars with a per-quadra
 
 ---
 
+## Task 3b: Reconcile the Judge's rubric with its calibration set
+
+Task 3's review found the rubric and the exemplars teaching different standards. Both must agree before the gate spends money on 60 rows, because a gate that validates a self-contradicting Judge validates nothing.
+
+Three concrete disagreements, all verified in the code:
+
+1. **`_RUBRIC` grades citations; Guardrails §4b forbids that.** It says a 10 means the answer "fully matches the ground-truth answer **and cites only valid sources**". Guardrails §4b is explicit: *"Citation matching is code, not LLM. The check 'are the output's cited node IDs a subset of `gt_citations`?' must be computed deterministically in code, not delegated to the Judge."* That check already exists as `citation_audit()` in `judge/metrics.py`, written to `results.citation_match`. The rubric is asking the Judge to duplicate it.
+2. **Every exemplar appears to cite nothing.** `_format_exemplar()` prints "Valid source node ids: [...]" and then a "Candidate answer" that is a bare value with no citation markers. Real pipeline answers *do* carry `[node_id]` markers, which `parse_citations()` extracts. So the Judge is shown 20 examples that look uncited, told citation validity matters, and then handed cited answers to score. It could rationally anchor low on all of them.
+3. **The exemplars apply a criterion the rubric never states.** Four good exemplars are scored 9 rather than 10 for giving "a bare number that cannot be audited from the answer". Nothing in `_RUBRIC` mentions supportability, so the Judge must infer a standing deduction it was never told about.
+
+**Files:**
+- Modify: `project/judge/async_judge.py`
+- Modify: `project/dataset_generation/write_gq_labels.py`
+- Modify: `project/dataset_generation/gq_label_export.py`
+- Modify: `project/dataset_generation/gq_label_import.py`
+- Test: `project/tests/test_async_judge.py`
+
+**Interfaces:**
+- Consumes: Task 3's 20 calibrated exemplars.
+- Produces: a `_RUBRIC` whose stated criteria match what the exemplars demonstrate. `build_prefix()`, `_format_exemplar()` and `Judge.score_row()` keep their signatures.
+
+- [ ] **Step 1: Write the failing test**
+
+Append to `project/tests/test_async_judge.py`:
+
+```python
+def test_rubric_does_not_ask_the_judge_to_grade_citations():
+    """Guardrails 4b reserves citation matching for deterministic code.
+
+    citation_audit() already computes it into results.citation_match, so a
+    rubric clause about citing valid sources both duplicates that check and
+    invites the Judge to dock marks for a property no exemplar demonstrates.
+    """
+    rubric = async_judge._RUBRIC.lower()
+    assert "cite" not in rubric
+    assert "citation" not in rubric
+    assert "source" not in rubric
+
+
+def test_rubric_states_the_supportability_criterion_the_exemplars_apply():
+    """Four good exemplars are scored 9 rather than 10 for being correct but
+    unauditable. A criterion the exemplars price must be one the rubric
+    states, or the Judge is inferring an unstated deduction."""
+    rubric = async_judge._RUBRIC.lower()
+    assert "9" in async_judge._RUBRIC
+    assert any(word in rubric for word in ("audit", "support", "verif"))
+
+
+def test_rubric_still_pins_the_json_response_shape():
+    """parse_judge_score() prefers the JSON object; the rubric must keep
+    asking for it."""
+    assert '{"score"' in async_judge._RUBRIC
+    assert "justification" in async_judge._RUBRIC
+```
+
+- [ ] **Step 2: Run the tests to verify they fail**
+
+```bash
+cd /Users/ojaswi/Projects/rag-techniques/project
+.venv/bin/python -m pytest tests/test_async_judge.py -q
+```
+
+Expected: the first two FAIL (the rubric currently says "cites only valid sources" and says nothing about auditability); the third passes already.
+
+- [ ] **Step 3: Rewrite the rubric**
+
+In `project/judge/async_judge.py`, replace `_RUBRIC`:
+
+```python
+# Scores content only. Citation validity is deliberately absent: Guardrails
+# 4b assigns that to citation_audit() in judge/metrics.py, and asking the
+# Judge for it as well would both duplicate a deterministic check and let a
+# model's guess override it. The 9-versus-10 band is stated explicitly
+# because the calibration exemplars price it; an unstated criterion would
+# leave the Judge inferring a deduction it was never told about.
+_RUBRIC = (
+    "You are grading how well a candidate answer responds to a question about a "
+    "SEC 10-K filing. You are given the question and the ground-truth answer. "
+    "Score the candidate answer from 1 to 10. A 10 fully matches the ground-truth "
+    "answer and states enough of its basis that a reader could check it against "
+    "the filing. A 9 is correct but bare, giving the right value with nothing a "
+    "reader could verify it from. Mid-range scores are partially correct: the "
+    "right area of the filing but the wrong figure, or one half of a two-part "
+    "answer. A 1 is wrong, unsupported, or fabricated. Judge only correctness "
+    "against the ground truth provided; do not assess which sources the answer "
+    "cites, do not use outside knowledge, and do not search. Respond with ONLY a "
+    'JSON object, no markdown fences: {"score": <integer 1-10>, '
+    '"justification": "<one sentence>"}.'
+)
+```
+
+- [ ] **Step 4: Stop showing the Judge citation ids it must not grade**
+
+`_format_exemplar()` and `_build_target_message()` both print a "Valid source node ids" line. With citations out of the rubric's scope, that line is context the Judge cannot act on and might anchor against. Remove it from **both** functions so the exemplar shape and the target shape stay identical.
+
+Do not change `gt_citations` anywhere else: `compute_deterministic_metrics()` still needs it, and it stays in the database untouched.
+
+- [ ] **Step 5: Run the tests**
+
+```bash
+cd /Users/ojaswi/Projects/rag-techniques/project
+.venv/bin/python -m pytest tests/test_async_judge.py -q
+```
+
+Expected: all pass. Existing tests asserting the old prompt shape may need updating; update them to the new shape rather than weakening them, and say which you changed in the report.
+
+- [ ] **Step 6: Close the two durability gaps Task 3's review flagged**
+
+Both are cheap and both protect the calibration set:
+
+1. In `project/dataset_generation/write_gq_labels.py`, the 10 good entries carry `example_output = None`, meaning "leave the stored value alone". That makes the file a complete record only while the database already holds the right value. Write those 10 strings explicitly so re-running it reproduces the full state from scratch, and update the module docstring to say it is self-contained.
+
+2. `gq_label_export.py` and `gq_label_import.py` predate this work and their markdown template has no `example_output` field, so running the importer against a stale file would silently revert half the calibration. Add a short note to the top of **both** module docstrings pointing at `write_gq_labels.py` as the authority for the current calibration set, and warning that the markdown round-trip does not carry `example_output`.
+
+- [ ] **Step 7: Verify the rendered prompt by eye**
+
+```bash
+cd /Users/ojaswi/Projects/rag-techniques/project
+.venv/bin/python - <<'PYEOF'
+import asyncio
+import database_manager as dbm
+from judge.async_judge import build_prefix
+
+async def main():
+    ex = await dbm.get_golden_queries_by_quadrant("benchmark.db", "Q1_Direct_Text")
+    print(build_prefix("Q1_Direct_Text", ex))
+
+asyncio.run(main())
+PYEOF
+```
+
+Confirm: no "Valid source node ids" line remains, the rubric no longer mentions citations, the 9-versus-10 rule is stated, and the five "Correct score" values still span a usable range.
+
+- [ ] **Step 8: Full suite, then commit**
+
+```bash
+.venv/bin/python -m pytest -q
+cd /Users/ojaswi/Projects/rag-techniques
+git add project/judge/async_judge.py project/dataset_generation/write_gq_labels.py project/dataset_generation/gq_label_export.py project/dataset_generation/gq_label_import.py project/tests/test_async_judge.py
+git commit -m "fix(judge): align the rubric with the calibration set and drop citation grading"
+```
+
+- [ ] **Step 9: Log the deviation**
+
+Append entry 31 to `resources/research/deviations.md` in the file's 5-point format, renumbering the later entries this plan adds. It must record that the rubric previously asked the Judge to grade citation validity in direct conflict with Guardrails 4b, that no exemplar demonstrated a citation failure so the clause was unteachable as written, that the 9-versus-10 supportability band the exemplars price is now stated rather than inferred, and that the "Valid source node ids" line was removed from both the exemplar and target prompts so the Judge is never shown data it is instructed not to use.
+
+---
+
 ## Task 4: Throttled end-to-end rehearsal of the validation gate
 
 Guardrails §7 requires every loop to run clean at throttle before the full batch. This is the first run that spends OpenRouter credit through the real pipelines, so rehearse it at `THROTTLE_LIMIT = 3` before committing to 60 rows.
