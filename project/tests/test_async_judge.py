@@ -237,3 +237,35 @@ async def test_judge_jeq_rows_scores_and_writes(monkeypatch):
     assert row["evidence_hit"] == 1
     assert row["citation_match"] == 1
     assert row["exact_match"] == 1
+
+
+# --- rubric/exemplar consistency (Task 3b) ---
+
+
+def test_rubric_does_not_ask_the_judge_to_grade_citations():
+    """Guardrails 4b reserves citation matching for deterministic code.
+
+    citation_audit() already computes it into results.citation_match, so a
+    rubric clause about citing valid sources both duplicates that check and
+    invites the Judge to dock marks for a property no exemplar demonstrates.
+    """
+    rubric = async_judge._RUBRIC.lower()
+    assert "cite" not in rubric
+    assert "citation" not in rubric
+    assert "source" not in rubric
+
+
+def test_rubric_states_the_supportability_criterion_the_exemplars_apply():
+    """Four good exemplars are scored 9 rather than 10 for being correct but
+    unauditable. A criterion the exemplars price must be one the rubric
+    states, or the Judge is inferring an unstated deduction."""
+    rubric = async_judge._RUBRIC.lower()
+    assert "9" in async_judge._RUBRIC
+    assert any(word in rubric for word in ("audit", "support", "verif"))
+
+
+def test_rubric_still_pins_the_json_response_shape():
+    """parse_judge_score() prefers the JSON object; the rubric must keep
+    asking for it."""
+    assert '{"score"' in async_judge._RUBRIC
+    assert "justification" in async_judge._RUBRIC

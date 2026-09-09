@@ -7,14 +7,17 @@ shows the Judge only the 5 exemplars matching the target row's quadrant,
 which is why each quadrant needs its own low anchor rather than the set
 merely balancing overall.
 
+Self-contained: every LABELS entry, good or bad, carries its own
+example_output string. Re-running this module against a fresh database
+reproduces the full calibration set from scratch; it never depends on a
+candidate answer already sitting in golden_queries from an earlier step.
+
 Idempotent: re-running it rewrites the same values.
 """
 import asyncio
 
 import database_manager as dbm
 
-# example_output=None leaves the stored candidate answer untouched; a string
-# replaces it with a deliberately imperfect one.
 LABELS: list[dict] = [
     # ------------------------------------------------------------------
     # Q1_Direct_Text
@@ -23,7 +26,7 @@ LABELS: list[dict] = [
     # ------------------------------------------------------------------
     {
         "query_id": "QT1_GQ_001",
-        "example_output": None,
+        "example_output": "December 7, 2023",
         "is_good": True,
         "human_score": 100,
         "human_reasoning": (
@@ -34,7 +37,7 @@ LABELS: list[dict] = [
     },
     {
         "query_id": "QT1_GQ_002",
-        "example_output": None,
+        "example_output": "up to 115,500 shares",
         "is_good": True,
         "human_score": 90,
         "human_reasoning": (
@@ -83,7 +86,7 @@ LABELS: list[dict] = [
     },
     {
         "query_id": "QT1_GQ_005",
-        "example_output": None,
+        "example_output": "within 120 days after the end of the fiscal year to which this report relates.",
         "is_good": True,
         "human_score": 93,
         "human_reasoning": (
@@ -101,7 +104,7 @@ LABELS: list[dict] = [
     # ------------------------------------------------------------------
     {
         "query_id": "QT2_GQ_001",
-        "example_output": None,
+        "example_output": "Apple Inc., 2023 Form 10-K, page 19",
         "is_good": True,
         "human_score": 97,
         "human_reasoning": (
@@ -112,7 +115,13 @@ LABELS: list[dict] = [
     },
     {
         "query_id": "QT2_GQ_002",
-        "example_output": None,
+        "example_output": (
+            "The Company states that the Compensation Committee report is "
+            "incorporated by reference but is deemed furnished, not filed, and is "
+            "not incorporated by reference into any filing under the Securities "
+            "Act of 1933 or the Securities Exchange Act of 1934, except to the "
+            "extent the Company specifically incorporates it by reference."
+        ),
         "is_good": True,
         "human_score": 88,
         "human_reasoning": (
@@ -187,7 +196,7 @@ LABELS: list[dict] = [
     # ------------------------------------------------------------------
     {
         "query_id": "QT3_GQ_001",
-        "example_output": None,
+        "example_output": "40",
         "is_good": True,
         "human_score": 97,
         "human_reasoning": (
@@ -199,7 +208,7 @@ LABELS: list[dict] = [
     },
     {
         "query_id": "QT3_GQ_002",
-        "example_output": None,
+        "example_output": "1,603,278",
         "is_good": True,
         "human_score": 90,
         "human_reasoning": (
@@ -245,7 +254,7 @@ LABELS: list[dict] = [
     },
     {
         "query_id": "QT3_GQ_005",
-        "example_output": None,
+        "example_output": "$ (1,343)",
         "is_good": True,
         "human_score": 93,
         "human_reasoning": (
@@ -264,7 +273,7 @@ LABELS: list[dict] = [
     # ------------------------------------------------------------------
     {
         "query_id": "QT4_GQ_001",
-        "example_output": None,
+        "example_output": "$(1,868)",
         "is_good": True,
         "human_score": 98,
         "human_reasoning": (
@@ -278,7 +287,7 @@ LABELS: list[dict] = [
     },
     {
         "query_id": "QT4_GQ_002",
-        "example_output": None,
+        "example_output": "14",
         "is_good": True,
         "human_score": 93,
         "human_reasoning": (

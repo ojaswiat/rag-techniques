@@ -23,15 +23,24 @@ logger = logging.getLogger(__name__)
 
 _STAGE = "judge"
 
+# Scores content only. Citation validity is deliberately absent: Guardrails
+# 4b assigns that to citation_audit() in judge/metrics.py, and asking the
+# Judge for it as well would both duplicate a deterministic check and let a
+# model's guess override it. The 9-versus-10 band is stated explicitly
+# because the calibration exemplars price it; an unstated criterion would
+# leave the Judge inferring a deduction it was never told about.
 _RUBRIC = (
     "You are grading how well a candidate answer responds to a question about a "
-    "SEC 10-K filing. You are given the question, the ground-truth answer, and "
-    "the set of valid source node ids. Score the candidate answer from 1 to 10, "
-    "where 10 means it fully matches the ground-truth answer and cites only valid "
-    "sources, and 1 means it is wrong, unsupported, or fabricated. Judge only "
-    "correctness against the ground truth provided; do not use outside knowledge "
-    "and do not search. Respond with ONLY a JSON object, no markdown fences: "
-    '{"score": <integer 1-10>, "justification": "<one sentence>"}.'
+    "SEC 10-K filing. You are given the question and the ground-truth answer. "
+    "Score the candidate answer from 1 to 10. A 10 fully matches the ground-truth "
+    "answer and states enough of its basis that a reader could check it against "
+    "the filing. A 9 is correct but bare, giving the right value with nothing a "
+    "reader could verify it from. Mid-range scores are partially correct: the "
+    "right area of the filing but the wrong figure, or one half of a two-part "
+    "answer. A 1 is wrong, unsupported, or fabricated. Judge only correctness "
+    "against the ground truth provided; do not use outside knowledge, and do not "
+    'search. Respond with ONLY a JSON object, no markdown fences: {"score": <integer 1-10>, '
+    '"justification": "<one sentence>"}.'
 )
 
 
@@ -44,7 +53,6 @@ def _format_exemplar(ex: dict) -> str:
     return (
         f"Question: {ex['query_text']}\n"
         f"Ground-truth answer: {ex['ground_truth_answer']}\n"
-        f"Valid source node ids: {ex['gt_citations']}\n"
         f"Candidate answer: {ex['example_output']}\n"
         f"Correct score (1-10): {_rescale_to_1_10(ex['human_score'])}\n"
         f"Reason: {ex['human_reasoning']}"
@@ -70,7 +78,6 @@ def _build_target_message(row: dict) -> str:
     return (
         f"Question: {row['query_text']}\n"
         f"Ground-truth answer: {row['ground_truth_answer']}\n"
-        f"Valid source node ids: {row['gt_citations']}\n"
         f"Candidate answer: {row['pipeline_output']}\n"
         "Score the candidate answer now."
     )

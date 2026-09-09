@@ -1,4 +1,12 @@
-"""Reads the filled-in golden_queries_to_label.md back into golden_queries."""
+"""Reads the filled-in golden_queries_to_label.md back into golden_queries.
+
+write_gq_labels.py is the authority for the current calibration set. The
+markdown template this module reads has no example_output field, so it never
+writes that column. Importing a stale golden_queries_to_label.md (one
+predating write_gq_labels.py's calibration) would overwrite human_score,
+human_reasoning and is_good with old values while leaving example_output
+exactly as write_gq_labels.py left it, silently mismatching the two halves
+of the calibration."""
 import asyncio
 import re
 
