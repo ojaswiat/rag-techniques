@@ -24,3 +24,25 @@ def test_throttle_limit_is_three():
 
 def test_concurrency_cap_is_five():
     assert config.GROQ_MAX_CONCURRENCY == 5
+
+def test_answerer_and_judge_route_to_openrouter_with_pinned_provider():
+    """Both benchmark stages run on OpenRouter, pinned to one upstream host.
+
+    OpenRouter load-balances across hosts that differ in quantisation, so an
+    unpinned run would mix fp8 and bf16 outputs across the 900 cells and
+    break the single-temp-0-run-per-cell reproducibility claim.
+    """
+    for stage in ("answerer", "judge"):
+        entry = config.MODEL_ROUTING[stage]
+        assert entry["provider"] == "openrouter", stage
+        pin = entry["extra_body"]["provider"]
+        assert pin["allow_fallbacks"] is False, stage
+        assert len(pin["order"]) == 1, stage
+
+
+def test_answerer_and_judge_remain_different_families():
+    """Guardrails §2: no model may grade its own output."""
+    answerer = config.MODEL_ROUTING["answerer"]["model"]
+    judge = config.MODEL_ROUTING["judge"]["model"]
+    assert "llama" in answerer.lower()
+    assert "qwen" in judge.lower()

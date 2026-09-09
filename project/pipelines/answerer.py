@@ -67,7 +67,7 @@ def build_prompt(query_text: str, nodes: list[NodeWithScore]) -> str:
 class Answerer:
     def __init__(
         self,
-        model: str = "llama-3.3-70b-versatile",
+        model: str = "meta-llama/llama-3.3-70b-instruct",
         temperature: float = 0.0,
     ):
         routed_model = config.MODEL_ROUTING[_STAGE]["model"]

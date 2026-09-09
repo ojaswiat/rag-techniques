@@ -25,13 +25,21 @@ THROTTLE_LIMIT: int = 3
 # accepted everywhere tested and still bounds the spend.
 _REASONING_LOW = {"reasoning": {"effort": "low"}}
 
+# Single-upstream pinning. OpenRouter load-balances across hosts whose
+# quantisation differs (fp8 vs bf16), so an unpinned run would mix
+# numerically different backends across the 900 cells. allow_fallbacks=False
+# makes a host outage fail loudly and resume later rather than silently
+# switching backend mid-run.
+_PIN_DEEPINFRA = {"provider": {"order": ["DeepInfra"], "allow_fallbacks": False}}
+_PIN_CHUTES = {"provider": {"order": ["Chutes"], "allow_fallbacks": False}}
+
 # Guardrails.md §2 — fixed model routing matrix. Do not change without updating the spec.
 MODEL_ROUTING: dict[str, dict] = {
     "generator":     {"model": "nvidia/nemotron-3-super-120b-a12b:free", "provider": "openrouter", "extra_body": _REASONING_LOW},
     "critic":        {"model": "openai/gpt-oss-20b:free", "provider": "openrouter", "extra_body": _REASONING_LOW},
     "p3_index_build":{"model": "nvidia/nemotron-3-super-120b-a12b", "provider": "nvidia"},
-    "answerer":      {"model": "llama-3.3-70b-versatile","provider": "groq"},
-    "judge":         {"model": "qwen/qwen3.6-27b",        "provider": "groq"},
+    "answerer":      {"model": "meta-llama/llama-3.3-70b-instruct", "provider": "openrouter", "extra_body": _PIN_DEEPINFRA},
+    "judge":         {"model": "qwen/qwen3.6-27b", "provider": "openrouter", "extra_body": _PIN_CHUTES},
     "debug":         {"model": "llama-3.1-8b-instant",   "provider": "groq"},
 }
 
