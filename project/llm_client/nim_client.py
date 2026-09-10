@@ -68,9 +68,13 @@ def get_nim_client(model: str) -> AsyncOpenAI:
             except Exception as exc:
                 # Logged before re-raising so a retry that eventually
                 # succeeds still leaves a record of the failed attempt. This
-                # also catches asyncio.TimeoutError from the wait_for above.
+                # also catches asyncio.TimeoutError from the wait_for above,
+                # which is why the exception is rendered with %r: an
+                # asyncio.TimeoutError carries no message, so %s logged it as
+                # a blank and made a timeout indistinguishable from a
+                # successful call with an empty error field.
                 logger.warning(
-                    "NIMClient call failed: model=%s, error=%s",
+                    "NIMClient call failed: model=%s, error=%r",
                     model,
                     exc,
                 )
