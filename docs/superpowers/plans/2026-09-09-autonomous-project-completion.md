@@ -186,7 +186,7 @@ The OpenRouter branch of `LLMFactory` applies one hardcoded `extra_body` to ever
   - `LLMFactory.get_client(provider: str, model: str, callback_manager: CallbackManager | None = None, extra_body: dict | None = None) -> Any`
   - `LLMFactory.get_client_for_stage(stage: str, callback_manager: CallbackManager | None = None) -> Any` — unchanged signature; now reads `extra_body` off the routing entry.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Append to `project/tests/test_llm_factory.py`:
 
@@ -226,7 +226,7 @@ def test_openrouter_stage_without_extra_body_sends_none(monkeypatch):
 
 Check the file's existing imports; add `import llm_client.config as config` and `from llm_client.llm_factory import LLMFactory` only if they are not already there.
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 ```bash
 cd /Users/ojaswi/Projects/rag-techniques/project
@@ -235,7 +235,7 @@ cd /Users/ojaswi/Projects/rag-techniques/project
 
 Expected: both new tests FAIL. The first with a `KeyError`/assertion on `additional_kwargs`, the second because the hardcoded `reasoning` block is present.
 
-- [ ] **Step 3: Thread `extra_body` through the factory**
+- [x] **Step 3: Thread `extra_body` through the factory**
 
 In `project/llm_client/llm_factory.py`, change the `get_client` signature:
 
@@ -287,7 +287,7 @@ Then have `get_client_for_stage` read it:
         )
 ```
 
-- [ ] **Step 4: Give the existing OpenRouter stages their `extra_body` explicitly**
+- [x] **Step 4: Give the existing OpenRouter stages their `extra_body` explicitly**
 
 In `project/llm_client/config.py`, the generator and critic must keep the reasoning cap they relied on. Replace the two entries:
 
@@ -310,7 +310,7 @@ MODEL_ROUTING: dict[str, dict] = {
 
 Note the answerer/judge rows are **unchanged in this task** — Task 2 moves them. This task is a pure refactor with identical runtime behaviour.
 
-- [ ] **Step 5: Run the tests to verify they pass**
+- [x] **Step 5: Run the tests to verify they pass**
 
 ```bash
 cd /Users/ojaswi/Projects/rag-techniques/project
@@ -319,7 +319,7 @@ cd /Users/ojaswi/Projects/rag-techniques/project
 
 Expected: `tests/test_llm_factory.py` all pass; full suite `341 passed, 2 skipped`.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 cd /Users/ojaswi/Projects/rag-techniques
@@ -343,7 +343,7 @@ Groq's free tier is token-bound (TPM/TPD), which forces the 900-run matrix into 
 - Consumes: Task 1's `extra_body` routing key.
 - Produces: `config.MODEL_ROUTING["answerer"]` and `["judge"]` both route to `provider="openrouter"` with a pinned single upstream. No function signature changes; every later task calls `LLMFactory.get_client_for_stage("answerer"|"judge")` exactly as before.
 
-- [ ] **Step 1: Confirm both models and their endpoints are live**
+- [x] **Step 1: Confirm both models and their endpoints are live**
 
 ```bash
 cd /Users/ojaswi/Projects/rag-techniques/project
@@ -359,7 +359,7 @@ done
 
 Expected (as verified 2026-09-09): Llama's cheapest endpoint is **DeepInfra** at `$0.10/M` in, `$0.32/M` out, 131k context. Qwen's cheapest is **Chutes** at `$0.30/M` in, `$2.00/M` out, 262k context. If either name has changed, use the cheapest listed endpoint that offers at least 128k context and record the substitution in the Step 6 deviation.
 
-- [ ] **Step 2: Write the failing test**
+- [x] **Step 2: Write the failing test**
 
 Append to `project/tests/test_config.py`:
 
@@ -387,7 +387,7 @@ def test_answerer_and_judge_remain_different_families():
     assert "qwen" in judge.lower()
 ```
 
-- [ ] **Step 3: Run the test to verify it fails**
+- [x] **Step 3: Run the test to verify it fails**
 
 ```bash
 cd /Users/ojaswi/Projects/rag-techniques/project
@@ -396,7 +396,7 @@ cd /Users/ojaswi/Projects/rag-techniques/project
 
 Expected: `test_answerer_and_judge_route_to_openrouter_with_pinned_provider` FAILS with `AssertionError: answerer` (still `"groq"`). The families test passes already.
 
-- [ ] **Step 4: Repoint the two stages**
+- [x] **Step 4: Repoint the two stages**
 
 In `project/llm_client/config.py`, replace the `answerer` and `judge` entries:
 
@@ -419,7 +419,7 @@ and inside `MODEL_ROUTING`:
 
 Leave `debug` on Groq — it is throwaway and costs nothing.
 
-- [ ] **Step 5: Run the tests to verify they pass, then smoke one live call per stage**
+- [x] **Step 5: Run the tests to verify they pass, then smoke one live call per stage**
 
 ```bash
 cd /Users/ojaswi/Projects/rag-techniques/project
@@ -459,7 +459,7 @@ Expected: both print a non-empty reply.
 | `400` naming an unsupported parameter | The model rejects something in `extra_body` | Re-check the endpoint's `supported_parameters` from Step 1 and drop the offending key |
 | `402` / insufficient credit | Balance exhausted | Hard stop, report it |
 
-- [ ] **Step 6: Sync the spec and log the deviation**
+- [x] **Step 6: Sync the spec and log the deviation**
 
 In `resources/specs/Guardrails.md`, edit the two rows of the §2 ASCII matrix. **Preserve the box alignment** — every line must stay the same width, so pad with spaces to match:
 
@@ -489,7 +489,7 @@ Then append to `resources/research/deviations.md`, matching the file's existing 
 5. **Why we did it:** OpenRouter is request-bound rather than token-bound, so 1,800 calls complete in roughly 95 minutes at the client's 20 RPM ceiling for around $1 to $1.55 in total. The model families are unchanged, so the Answerer is not equal to Judge anti-self-grading invariant still holds. Pinning to a single host matters because OpenRouter otherwise load-balances across backends of differing quantisation, which would mix numerically different models across the 900 cells and undermine the single run per cell at temperature 0 reproducibility claim.
 ```
 
-- [ ] **Step 7: Full suite, then commit**
+- [x] **Step 7: Full suite, then commit**
 
 ```bash
 .venv/bin/python -m pytest -q
@@ -522,7 +522,7 @@ Two problems, one fix. First the scores are wrong. Second, even corrected, 20 ex
   - `database_manager.update_golden_query_example_output(db_path: str, query_id: str, example_output: str) -> None`
   - After this task, all 20 `golden_queries` rows have `human_reasoning != 'PENDING_HUMAN_LABEL'`, `human_score` spanning 0–100, and `is_good` set to exactly 10 `True` and 10 `False`. Task 5's `build_prefix()` consumes these unchanged.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `project/tests/test_gq_calibration.py`:
 
@@ -587,7 +587,7 @@ async def test_reasoning_is_substantive(golden_queries):
         assert len(g["human_reasoning"].split()) >= 6, g["query_id"]
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 ```bash
 cd /Users/ojaswi/Projects/rag-techniques/project
@@ -596,7 +596,7 @@ cd /Users/ojaswi/Projects/rag-techniques/project
 
 Expected: 6 FAILURES, starting with `test_no_placeholder_labels_remain` listing all 20 query ids.
 
-- [ ] **Step 3: Add the `example_output` writer**
+- [x] **Step 3: Add the `example_output` writer**
 
 `update_golden_query_labels()` cannot touch `example_output`. Add this to `project/database_manager.py`, directly after `update_golden_query_labels`:
 
@@ -624,7 +624,7 @@ async def update_golden_query_example_output(db_path: str, query_id: str, exampl
 
 Add it to the module's `__all__` if one exists.
 
-- [ ] **Step 4: Read the 20 golden queries and compose the labels**
+- [x] **Step 4: Read the 20 golden queries and compose the labels**
 
 ```bash
 cd /Users/ojaswi/Projects/rag-techniques/project
@@ -699,7 +699,7 @@ Two worked examples, using real rows from this database:
 
 Write all 20 entries in the same shape. `example_output = None` means "leave the existing value alone".
 
-- [ ] **Step 5: Write the label-application script**
+- [x] **Step 5: Write the label-application script**
 
 Create `project/dataset_generation/write_gq_labels.py`:
 
@@ -747,7 +747,7 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-- [ ] **Step 6: Back up the database, apply the labels, verify**
+- [x] **Step 6: Back up the database, apply the labels, verify**
 
 ```bash
 cd /Users/ojaswi/Projects/rag-techniques/project
@@ -758,7 +758,7 @@ sqlite3 -header benchmark.db "SELECT quadrant, is_good, COUNT(*), MIN(human_scor
 
 Expected: `Applied 20 calibration labels`, then 8 rows (4 quadrants x 2 polarities), with the good rows in the high bands and the bad rows in the low bands.
 
-- [ ] **Step 7: Run the tests to verify they pass**
+- [x] **Step 7: Run the tests to verify they pass**
 
 ```bash
 cd /Users/ojaswi/Projects/rag-techniques/project
@@ -767,7 +767,7 @@ cd /Users/ojaswi/Projects/rag-techniques/project
 
 Expected: `tests/test_gq_calibration.py` 6 passed; full suite `349 passed, 2 skipped`.
 
-- [ ] **Step 8: Inspect one rendered prompt prefix by eye**
+- [x] **Step 8: Inspect one rendered prompt prefix by eye**
 
 The exemplars only matter through `build_prefix()`. Read one before trusting it:
 
@@ -788,7 +788,7 @@ PY
 
 Expected: the rubric, then 5 blocks. Confirm the "Correct score (1-10)" lines are **not** all the same number and that the low-scoring blocks show a candidate answer that visibly differs from the ground truth.
 
-- [ ] **Step 9: Log the deviation and commit**
+- [x] **Step 9: Log the deviation and commit**
 
 Append to `resources/research/deviations.md`:
 
@@ -831,7 +831,7 @@ Three concrete disagreements, all verified in the code:
 - Consumes: Task 3's 20 calibrated exemplars.
 - Produces: a `_RUBRIC` whose stated criteria match what the exemplars demonstrate. `build_prefix()`, `_format_exemplar()` and `Judge.score_row()` keep their signatures.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Append to `project/tests/test_async_judge.py`:
 
@@ -865,7 +865,7 @@ def test_rubric_still_pins_the_json_response_shape():
     assert "justification" in async_judge._RUBRIC
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 ```bash
 cd /Users/ojaswi/Projects/rag-techniques/project
@@ -874,7 +874,7 @@ cd /Users/ojaswi/Projects/rag-techniques/project
 
 Expected: the first two FAIL (the rubric currently says "cites only valid sources" and says nothing about auditability); the third passes already.
 
-- [ ] **Step 3: Rewrite the rubric**
+- [x] **Step 3: Rewrite the rubric**
 
 In `project/judge/async_judge.py`, replace `_RUBRIC`:
 
@@ -901,13 +901,13 @@ _RUBRIC = (
 )
 ```
 
-- [ ] **Step 4: Stop showing the Judge citation ids it must not grade**
+- [x] **Step 4: Stop showing the Judge citation ids it must not grade**
 
 `_format_exemplar()` and `_build_target_message()` both print a "Valid source node ids" line. With citations out of the rubric's scope, that line is context the Judge cannot act on and might anchor against. Remove it from **both** functions so the exemplar shape and the target shape stay identical.
 
 Do not change `gt_citations` anywhere else: `compute_deterministic_metrics()` still needs it, and it stays in the database untouched.
 
-- [ ] **Step 5: Run the tests**
+- [x] **Step 5: Run the tests**
 
 ```bash
 cd /Users/ojaswi/Projects/rag-techniques/project
@@ -916,7 +916,7 @@ cd /Users/ojaswi/Projects/rag-techniques/project
 
 Expected: all pass. Existing tests asserting the old prompt shape may need updating; update them to the new shape rather than weakening them, and say which you changed in the report.
 
-- [ ] **Step 6: Close the two durability gaps Task 3's review flagged**
+- [x] **Step 6: Close the two durability gaps Task 3's review flagged**
 
 Both are cheap and both protect the calibration set:
 
@@ -924,7 +924,7 @@ Both are cheap and both protect the calibration set:
 
 2. `gq_label_export.py` and `gq_label_import.py` predate this work and their markdown template has no `example_output` field, so running the importer against a stale file would silently revert half the calibration. Add a short note to the top of **both** module docstrings pointing at `write_gq_labels.py` as the authority for the current calibration set, and warning that the markdown round-trip does not carry `example_output`.
 
-- [ ] **Step 7: Verify the rendered prompt by eye**
+- [x] **Step 7: Verify the rendered prompt by eye**
 
 ```bash
 cd /Users/ojaswi/Projects/rag-techniques/project
@@ -943,7 +943,7 @@ PYEOF
 
 Confirm: no "Valid source node ids" line remains, the rubric no longer mentions citations, the 9-versus-10 rule is stated, and the five "Correct score" values still span a usable range.
 
-- [ ] **Step 8: Full suite, then commit**
+- [x] **Step 8: Full suite, then commit**
 
 ```bash
 .venv/bin/python -m pytest -q
@@ -952,7 +952,7 @@ git add project/judge/async_judge.py project/dataset_generation/write_gq_labels.
 git commit -m "fix(judge): align the rubric with the calibration set and drop citation grading"
 ```
 
-- [ ] **Step 9: Log the deviation**
+- [x] **Step 9: Log the deviation**
 
 Append entry 31 to `resources/research/deviations.md` in the file's 5-point format, renumbering the later entries this plan adds. It must record that the rubric previously asked the Judge to grade citation validity in direct conflict with Guardrails 4b, that no exemplar demonstrated a citation failure so the clause was unteachable as written, that the 9-versus-10 supportability band the exemplars price is now stated rather than inferred, and that the "Valid source node ids" line was removed from both the exemplar and target prompts so the Judge is never shown data it is instructed not to use.
 
@@ -970,7 +970,7 @@ Guardrails §7 requires every loop to run clean at throttle before the full batc
 - Consumes: Task 2's routing, Task 3's exemplars.
 - Produces: 3 `results` rows tagged `source_set='JEQ'` carrying `pipeline_output`, `judge_score` and the deterministic metrics. These stay in the database and are picked up as already-complete by Task 5's resume path.
 
-- [ ] **Step 1: Confirm the throttle is on**
+- [x] **Step 1: Confirm the throttle is on**
 
 ```bash
 cd /Users/ojaswi/Projects/rag-techniques/project
@@ -979,7 +979,7 @@ grep -n "LOCAL_TEST_THROTTLE" .env
 
 Expected: `LOCAL_TEST_THROTTLE=true`. If it reads `false`, set it to `true` before continuing.
 
-- [ ] **Step 2: Run the gate at throttle**
+- [x] **Step 2: Run the gate at throttle**
 
 ```bash
 cd /Users/ojaswi/Projects/rag-techniques/project
@@ -988,7 +988,7 @@ cd /Users/ojaswi/Projects/rag-techniques/project
 
 Expected: a summary dict with `generation.completed == 3`, `generation.failures == []`, and `judging.judged == 3`. Loading three retrievers takes a couple of minutes on first call because fastembed downloads and warms the embedding and rerank models.
 
-- [ ] **Step 3: Inspect the three rows**
+- [x] **Step 3: Inspect the three rows**
 
 ```bash
 cd /Users/ojaswi/Projects/rag-techniques/project
@@ -1009,7 +1009,7 @@ Expected: 3 rows, `k_value = 5` on all of them, `judge_score` between 1 and 10 a
 | First call hangs for minutes | fastembed is downloading the embedding and rerank models | Not a failure. Wait |
 | `input_tokens`/`output_tokens` are NULL | Usage not returned by the pinned host | Non-blocking. Note it and carry on; it only affects the efficiency pillar's completeness |
 
-- [ ] **Step 4: Record the observed unit cost**
+- [x] **Step 4: Record the observed unit cost**
 
 ```bash
 cd /Users/ojaswi/Projects/rag-techniques/project
@@ -1018,7 +1018,7 @@ sqlite3 benchmark.db "SELECT AVG(input_tokens), AVG(output_tokens), AVG(latency_
 
 Multiply by 1,860 (900 answerer + 900 judge + the 60 gate rows) and check the projection against the roughly $1 to $1.55 estimate. If the projected total exceeds $4, stop and report rather than proceeding to Task 8.
 
-- [ ] **Step 5: Record the rehearsal**
+- [x] **Step 5: Record the rehearsal**
 
 The rehearsal changed no tracked files: its only output is three rows inside the git-ignored `benchmark.db`. There is nothing to commit. Tick this task's boxes in the plan, commit that, and log the run through monitor:
 
