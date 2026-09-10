@@ -86,7 +86,7 @@
 
 ## How do we grade the pipeline answers?
 
-- An AI judge scores each answer from 1 to 10 against the correct answer.
+- An AI judge scores each answer from 1 to 5 against the correct answer.
 - We also run automatic checks: did it retrieve the right passages, did it cite the right source.
 - A human manually scores a small sample first, to confirm the AI judge is trustworthy.
 - The AI judge must agree with the human over 80% of the time before it is trusted for the full test.

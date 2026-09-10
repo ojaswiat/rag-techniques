@@ -136,7 +136,7 @@ async def test_update_result_scores_writes_all_columns():
             "citation_match": 1,
             "token_f1": 0.95,
             "exact_match": 1,
-            "judge_score": 9,
+            "judge_score": 5,
         },
     )
 
@@ -148,7 +148,7 @@ async def test_update_result_scores_writes_all_columns():
     assert row["citation_match"] == 1
     assert row["token_f1"] == 0.95
     assert row["exact_match"] == 1
-    assert row["judge_score"] == 9
+    assert row["judge_score"] == 5
 
 
 @pytest.mark.asyncio
@@ -157,12 +157,12 @@ async def test_update_result_scores_allows_null_exact_match():
     await dbm.insert_judge_validation(TEST_DB, _jeq("JEQ_002", "Q2_Implicit_Text"))
     await dbm.upsert_result(TEST_DB, _result_row("R9", "JEQ_002", "P2_bm25"))
 
-    await dbm.update_result_scores(TEST_DB, "R9", {"exact_match": None, "judge_score": 7})
+    await dbm.update_result_scores(TEST_DB, "R9", {"exact_match": None, "judge_score": 4})
 
     rows = await dbm.get_results(TEST_DB, "JEQ")
     row = next(r for r in rows if r["result_id"] == "R9")
     assert row["exact_match"] is None
-    assert row["judge_score"] == 7
+    assert row["judge_score"] == 4
 
 
 @pytest.mark.asyncio
@@ -191,10 +191,10 @@ async def test_update_result_human_score():
     await dbm.insert_judge_validation(TEST_DB, _jeq("JEQ_001", "Q3_Direct_Table"))
     await dbm.upsert_result(TEST_DB, _result_row("R1", "JEQ_001", "P1_vector"))
 
-    await dbm.update_result_human_score(TEST_DB, "R1", 8)
+    await dbm.update_result_human_score(TEST_DB, "R1", 4)
 
     rows = await dbm.get_results(TEST_DB, "JEQ")
-    assert next(r for r in rows if r["result_id"] == "R1")["human_score"] == 8
+    assert next(r for r in rows if r["result_id"] == "R1")["human_score"] == 4
 
 
 @pytest.mark.asyncio
@@ -203,5 +203,110 @@ async def test_update_result_human_score_rejects_out_of_range():
     await dbm.insert_judge_validation(TEST_DB, _jeq("JEQ_001", "Q3_Direct_Table"))
     await dbm.upsert_result(TEST_DB, _result_row("R1", "JEQ_001", "P1_vector"))
 
-    with pytest.raises(ValueError, match="1.*10"):
-        await dbm.update_result_human_score(TEST_DB, "R1", 11)
+    with pytest.raises(ValueError, match="1.*5"):
+        await dbm.update_result_human_score(TEST_DB, "R1", 6)
+
+
+# --- results score CHECK migration (1-10 -> 1-5) ---
+
+
+async def _build_under_old_schema(db_path):
+    """A results table carrying the retired 1-10 CHECK, with one real row."""
+    import sqlite3
+
+    conn = sqlite3.connect(db_path)
+    conn.executescript(dbm._SCHEMA.replace("BETWEEN 1 AND 5", "BETWEEN 1 AND 10"))
+    conn.commit()
+    conn.close()
+    await dbm.insert_judge_validation(db_path, {
+        "query_id": "JEQ_001", "quadrant": "Q3_Direct_Table", "query_text": "q?",
+        "ground_truth_answer": "$1", "gt_citations": ["n1"], "document_id": "D1",
+    })
+    await dbm.upsert_result(db_path, {
+        "result_id": "R1", "source_set": "JEQ", "query_id": "JEQ_001",
+        "pipeline": "P1_vector", "k_value": 5, "retrieved_node_ids": ["n1"],
+        "pipeline_output": "x", "cited_node_ids": ["n1"],
+    })
+
+
+async def _results_ddl(db_path):
+    import sqlite3
+
+    conn = sqlite3.connect(db_path)
+    try:
+        return conn.execute(
+            "SELECT sql FROM sqlite_master WHERE name='results'"
+        ).fetchone()[0]
+    finally:
+        conn.close()
+
+
+@pytest.mark.asyncio
+async def test_init_db_tightens_results_score_checks_and_keeps_rows(tmp_path):
+    """SQLite cannot alter a CHECK and CREATE TABLE IF NOT EXISTS never touches
+    an existing table, so a database built before the 1-5 collapse would keep a
+    constraint two bands wider than the scale. The rebuild must preserve the
+    rows, since 1-5 is a subset of 1-10 and every stored score is still valid."""
+    db_path = str(tmp_path / "old.db")
+    await _build_under_old_schema(db_path)
+    await dbm.update_result_human_score(db_path, "R1", 4)
+    assert "BETWEEN 1 AND 10" in await _results_ddl(db_path)
+
+    await dbm.init_db(db_path)
+
+    ddl = await _results_ddl(db_path)
+    assert "judge_score BETWEEN 1 AND 5" in ddl
+    assert "human_score BETWEEN 1 AND 5" in ddl
+    rows = await dbm.get_results(db_path, "JEQ")
+    assert len(rows) == 1
+    assert rows[0]["human_score"] == 4
+
+
+@pytest.mark.asyncio
+async def test_results_migration_recreates_the_indexes(tmp_path):
+    """DROP TABLE takes its indexes with it, and the crash-resume path queries
+    by query_id and by (pipeline, k_value)."""
+    import sqlite3
+
+    db_path = str(tmp_path / "old.db")
+    await _build_under_old_schema(db_path)
+    await dbm.init_db(db_path)
+
+    conn = sqlite3.connect(db_path)
+    try:
+        names = {
+            r[0] for r in conn.execute(
+                "SELECT name FROM sqlite_master WHERE type='index' "
+                "AND tbl_name='results' AND name NOT LIKE 'sqlite_%'"
+            )
+        }
+    finally:
+        conn.close()
+    assert names == {"idx_results_query_id", "idx_results_pipeline_k"}
+
+
+@pytest.mark.asyncio
+async def test_results_migration_refuses_to_rebuild_over_retired_scale_scores(tmp_path):
+    """A leftover 6-10 score predates the collapse. The rebuild would carry it
+    into a table whose CHECK forbids it, so abort loudly instead."""
+    import sqlite3
+
+    db_path = str(tmp_path / "old.db")
+    await _build_under_old_schema(db_path)
+    conn = sqlite3.connect(db_path)
+    conn.execute("UPDATE results SET judge_score = 9 WHERE result_id = 'R1'")
+    conn.commit()
+    conn.close()
+
+    with pytest.raises(RuntimeError, match="retired 1-10 scale"):
+        await dbm.init_db(db_path)
+
+
+@pytest.mark.asyncio
+async def test_results_migration_is_idempotent(tmp_path):
+    db_path = str(tmp_path / "old.db")
+    await _build_under_old_schema(db_path)
+    await dbm.init_db(db_path)
+    first = await _results_ddl(db_path)
+    await dbm.init_db(db_path)
+    assert await _results_ddl(db_path) == first

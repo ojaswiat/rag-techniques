@@ -1,6 +1,6 @@
 """async_judge: quadrant-filtered few-shot, no search tool, folded metrics.
 
-The Judge scores each JEQ output 1-10. It sees only the 5 golden_queries
+The Judge scores each JEQ output 1-5. It sees only the 5 golden_queries
 exemplars sharing the row's quadrant, never a search tool, and never a JEQ row
 as an exemplar. The same pass computes the deterministic metrics in code, so a
 scored row is written complete in one update.
@@ -19,6 +19,7 @@ import database_manager as dbm
 from judge import async_judge
 from judge.async_judge import (
     Judge,
+    _rescale_to_1_5,
     build_prefix,
     compute_deterministic_metrics,
     parse_judge_score,
@@ -89,24 +90,24 @@ def _exemplar(query_id, quadrant, score=90, output="It was $1B. [[node:n1]]"):
 
 
 def test_parse_score_from_json():
-    assert parse_judge_score('{"score": 8, "justification": "good"}') == 8
+    assert parse_judge_score('{"score": 4, "justification": "good"}') == 4
 
 
 def test_parse_score_from_json_alt_key():
-    assert parse_judge_score('{"judge_score": 6}') == 6
+    assert parse_judge_score('{"judge_score": 3}') == 3
 
 
 def test_parse_score_from_string_value():
-    assert parse_judge_score('{"score": "9"}') == 9
+    assert parse_judge_score('{"score": "5"}') == 5
 
 
 def test_parse_score_clamps_out_of_range():
-    assert parse_judge_score('{"score": 12}') == 10
+    assert parse_judge_score('{"score": 12}') == 5
     assert parse_judge_score('{"score": 0}') == 1
 
 
 def test_parse_score_bare_integer_fallback():
-    assert parse_judge_score("I would rate this a 7 out of 10.") == 7
+    assert parse_judge_score("I would rate this a 4 out of 5.") == 4
 
 
 def test_parse_score_unparseable_raises():
@@ -158,12 +159,32 @@ def test_prefix_includes_quadrant_exemplars_only():
     assert "exemplar question GQ_T1" not in prefix  # no other-quadrant leakage
 
 
-def test_prefix_rescales_exemplar_scores_to_1_10():
-    """golden_queries.human_score is 0-100; the judge outputs 1-10, so the
+def test_prefix_rescales_exemplar_scores_to_1_5():
+    """golden_queries.human_score is 0-100; the judge outputs 1-5, so the
     teaching scores are shown on the judge's own scale."""
     prefix = build_prefix("Q3_Direct_Table", [_exemplar("GQ_T3_1", "Q3_Direct_Table", score=90)])
-    assert "9" in prefix  # 90/100 -> 9/10
+    assert "Correct score (1-5): 5" in prefix
     assert "90" not in prefix
+
+
+@pytest.mark.parametrize(
+    "native,band",
+    [(100, 5), (90, 5), (89, 4), (75, 4), (74, 3), (50, 3), (49, 2), (25, 2), (24, 1), (0, 1)],
+)
+def test_rescale_band_floors(native, band):
+    """Band edges are explicit, not round(score / 20): banker's rounding would
+    send the two 50-scored 'half the question answered' exemplars into band 2,
+    where they would read as wrong-value answers rather than partial ones."""
+    assert _rescale_to_1_5(native) == band
+
+
+def test_every_band_is_demonstrated_by_at_least_one_exemplar():
+    """The 1-10 scale left bands 1, 3, 6, 7 and 8 with no exemplar, so the
+    Judge never emitted them and a reference scorer using them could not be
+    matched. The 1-5 mapping must not reintroduce an unreachable band."""
+    native_labels = [100, 98, 97, 97, 93, 93, 93, 90, 90, 88,
+                     50, 50, 45, 45, 25, 22, 20, 18, 15, 15]
+    assert {_rescale_to_1_5(n) for n in native_labels} == {1, 2, 3, 4, 5}
 
 
 # --- Judge scoring: no tool call, judge model enforced ---
@@ -181,11 +202,11 @@ def test_judge_rejects_nonzero_temperature():
 
 @pytest.mark.asyncio
 async def test_score_row_uses_plain_chat_not_tools():
-    client = _fake_judge_client('{"score": 8}')
+    client = _fake_judge_client('{"score": 4}')
     prefix = build_prefix("Q3_Direct_Table", [_exemplar("GQ_T3_1", "Q3_Direct_Table")])
     with patch("judge.async_judge.LLMFactory.get_client_for_stage", return_value=client):
         score = await Judge().score_row(_row(), prefix)
-    assert score == 8
+    assert score == 4
     # plain achat path -> chat.completions.create, and never a search tool.
     client._aclient.chat.completions.create.assert_awaited()
     sent = client._aclient.chat.completions.create.call_args.kwargs
@@ -224,14 +245,14 @@ async def test_judge_jeq_rows_scores_and_writes(monkeypatch):
     }
     await dbm.upsert_result(TEST_DB, result_row)
 
-    client = _fake_judge_client('{"score": 9}')
+    client = _fake_judge_client('{"score": 5}')
     with patch("judge.async_judge.LLMFactory.get_client_for_stage", return_value=client):
         summary = await async_judge.judge_jeq_rows(TEST_DB)
 
     assert summary["judged"] == 1
     rows = await dbm.get_results(TEST_DB, "JEQ")
     row = next(r for r in rows if r["result_id"] == "R1")
-    assert row["judge_score"] == 9
+    assert row["judge_score"] == 5
     assert row["precision_at_k"] == 0.2
     assert row["recall_at_k"] == 1.0
     assert row["evidence_hit"] == 1

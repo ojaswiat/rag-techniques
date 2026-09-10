@@ -3,7 +3,12 @@
 Collects a reference score for each of the 60 JEQ gate rows, then measures
 how closely the automated Judge agrees with it. Both scores are rescaled to
 0-100; a row agrees when they differ by no more than 10 points on that
-scale, and the gate requires a Concordance Rate strictly above 80%. The
+scale, and the gate requires a Concordance Rate strictly above 80%. On the
+1-5 scale adjacent bands are 20 points apart after rescaling, so the
+tolerance admits only exact band agreement. That is deliberate: carrying
+the old plus-or-minus-one-band rule down to five bands would have widened
+the acceptance window from 30% to 60% of the scale and handed the gate a
+pass it had not earned. The
 scorer never sees the Judge's score, keeping the two judgements
 independent. On a run where the agent supplies the reference scores this
 figure is cross-model concordance, not external human validation.
@@ -16,14 +21,18 @@ import database_manager as dbm
 
 logger = logging.getLogger(__name__)
 
-# Per-row agreement band and gate threshold, both on the 0-100 scale.
+# Scores are stored 1-5; RESCALE_FACTOR maps that onto the 0-100 scale the
+# tolerance is expressed in, so one band step is 20 points.
+RESCALE_FACTOR = 20
+# Per-row agreement band and gate threshold, both on the 0-100 scale. A
+# tolerance below RESCALE_FACTOR means only identical bands agree.
 AGREEMENT_TOLERANCE = 10
 GATE_THRESHOLD = 80.0
 
 
 def rows_agree(human_score: int, judge_score: int, *, tolerance: int = AGREEMENT_TOLERANCE) -> bool:
-    """True when the two 1-10 scores agree within the tolerance band on 0-100."""
-    return abs(human_score * 10 - judge_score * 10) <= tolerance
+    """True when the two 1-5 scores agree within the tolerance band on 0-100."""
+    return abs(human_score * RESCALE_FACTOR - judge_score * RESCALE_FACTOR) <= tolerance
 
 
 def compute_agreement_rate(rows: list[dict], *, tolerance: int = AGREEMENT_TOLERANCE) -> dict:
@@ -59,7 +68,7 @@ def compute_agreement_rate(rows: list[dict], *, tolerance: int = AGREEMENT_TOLER
 def _render_row_for_human(row: dict) -> str:
     """What the researcher sees before scoring one row: no judge_score."""
     return (
-        "\n--- Score this answer 1-10 ---\n"
+        "\n--- Score this answer 1-5 ---\n"
         f"Question: {row['query_text']}\n"
         f"Ground-truth answer: {row['ground_truth_answer']}\n"
         f"Valid source node ids: {row['gt_citations']}\n"
@@ -69,17 +78,17 @@ def _render_row_for_human(row: dict) -> str:
 
 
 def _read_score(input_fn, output_fn) -> int:
-    """Read a 1-10 integer, re-prompting until the input is valid."""
+    """Read a 1-5 integer, re-prompting until the input is valid."""
     while True:
-        raw = input_fn("human_score (1-10): ")
+        raw = input_fn("human_score (1-5): ")
         try:
             score = int(str(raw).strip())
         except (TypeError, ValueError):
-            output_fn(f"not an integer: {raw!r} -- enter a whole number 1-10")
+            output_fn(f"not an integer: {raw!r} -- enter a whole number 1-5")
             continue
-        if 1 <= score <= 10:
+        if 1 <= score <= 5:
             return score
-        output_fn(f"out of range: {score} -- enter a whole number 1-10")
+        output_fn(f"out of range: {score} -- enter a whole number 1-5")
 
 
 async def prompt_human_scores(db_path: str, *, input_fn=input, output_fn=print) -> int:
@@ -104,7 +113,7 @@ async def prompt_human_scores(db_path: str, *, input_fn=input, output_fn=print) 
 def _render_verdict(summary: dict) -> str:
     head = (
         f"Concordance Rate: {summary['agreement_rate']:.1f}% "
-        f"({summary['agreements']}/{summary['n']} rows within +/-1) "
+        f"({summary['agreements']}/{summary['n']} rows in the same band) "
         f"-- gate is > {GATE_THRESHOLD:.0f}%"
     )
     if summary["gate_passed"]:
@@ -144,5 +153,6 @@ __all__ = [
     "prompt_human_scores",
     "run_scoring_gate",
     "AGREEMENT_TOLERANCE",
+    "RESCALE_FACTOR",
     "GATE_THRESHOLD",
 ]

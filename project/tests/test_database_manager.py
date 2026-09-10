@@ -138,7 +138,7 @@ async def test_upsert_result_and_get_completed_keys():
         "citation_match": 1,
         "token_f1": 0.9,
         "exact_match": 1,
-        "judge_score": 8,
+        "judge_score": 4,
         "human_score": None,
         "latency_sec": 1.2,
         "input_tokens": 500,

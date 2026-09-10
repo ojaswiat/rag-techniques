@@ -4,8 +4,12 @@ This is the only module that touches raw JSON strings for node-id list
 columns; everything else works with list[str].
 """
 import json
+import logging
+import re
 
 import aiosqlite
+
+logger = logging.getLogger(__name__)
 
 _SCHEMA = """
 CREATE TABLE IF NOT EXISTS nodes (
@@ -70,8 +74,8 @@ CREATE TABLE IF NOT EXISTS results (
     citation_match      INTEGER CHECK (citation_match IN (0,1)),
     token_f1            REAL,
     exact_match         INTEGER CHECK (exact_match IN (0,1)),
-    judge_score         INTEGER CHECK (judge_score BETWEEN 1 AND 10),
-    human_score         INTEGER CHECK (human_score BETWEEN 1 AND 10),
+    judge_score         INTEGER CHECK (judge_score BETWEEN 1 AND 5),
+    human_score         INTEGER CHECK (human_score BETWEEN 1 AND 5),
     latency_sec         REAL,
     input_tokens        INTEGER,
     output_tokens        INTEGER,
@@ -87,6 +91,7 @@ async def init_db(db_path: str) -> None:
         await conn.execute("PRAGMA journal_mode=WAL;")
         await conn.executescript(_SCHEMA)
         await _migrate_golden_queries_schema(conn)
+        await _migrate_results_score_checks(conn)
         await conn.commit()
 
 
@@ -115,6 +120,74 @@ async def _migrate_golden_queries_schema(conn: aiosqlite.Connection) -> None:
 
     await conn.execute("DROP TABLE golden_queries")
     await conn.executescript(_SCHEMA)
+
+
+_RESULTS_DDL_RE = re.compile(
+    r"CREATE TABLE IF NOT EXISTS results \(.*?\n\);", re.DOTALL
+)
+
+
+async def _migrate_results_score_checks(conn: aiosqlite.Connection) -> None:
+    """Tightens results' judge_score/human_score CHECKs from 1-10 to 1-5.
+
+    The scoring scale was collapsed to 1-5 (deviations entry 33), but SQLite
+    cannot alter a CHECK constraint and CREATE TABLE IF NOT EXISTS never
+    touches an existing table, so a database built under the old schema keeps
+    a constraint two bands wider than the scale. Unlike
+    _migrate_golden_queries_schema this preserves the rows: 1-5 is a subset of
+    1-10, so every stored score is already valid. A row that is not (a
+    leftover 6-10 from before the collapse) aborts the migration rather than
+    being silently dropped by the rebuild.
+    """
+    cursor = await conn.execute(
+        "SELECT sql FROM sqlite_master WHERE type='table' AND name='results'"
+    )
+    row = await cursor.fetchone()
+    if row is None or "BETWEEN 1 AND 10" not in row[0]:
+        return
+
+    cursor = await conn.execute(
+        "SELECT COUNT(*) FROM results WHERE judge_score > 5 OR human_score > 5"
+    )
+    (stale,) = await cursor.fetchone()
+    if stale:
+        raise RuntimeError(
+            f"results holds {stale} row(s) scored above 5 on the retired 1-10 "
+            "scale; rescore or clear them before tightening the CHECK constraint."
+        )
+
+    match = _RESULTS_DDL_RE.search(_SCHEMA)
+    if match is None:  # pragma: no cover - guards a future edit to _SCHEMA
+        raise RuntimeError("could not extract the results DDL from _SCHEMA")
+    new_ddl = match.group(0).replace(
+        "CREATE TABLE IF NOT EXISTS results (", "CREATE TABLE results_new ("
+    )
+
+    cursor = await conn.execute("SELECT COUNT(*) FROM results")
+    (before,) = await cursor.fetchone()
+
+    await conn.execute(new_ddl)
+    await conn.execute(
+        "INSERT INTO results_new SELECT "
+        + ", ".join(
+            col[1] for col in await (await conn.execute("PRAGMA table_info(results)")).fetchall()
+        )
+        + " FROM results"
+    )
+    cursor = await conn.execute("SELECT COUNT(*) FROM results_new")
+    (after,) = await cursor.fetchone()
+    if after != before:
+        raise RuntimeError(f"results migration would lose rows: {before} -> {after}")
+
+    await conn.execute("DROP TABLE results")
+    await conn.execute("ALTER TABLE results_new RENAME TO results")
+    await conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_results_query_id   ON results(query_id)"
+    )
+    await conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_results_pipeline_k ON results(pipeline, k_value)"
+    )
+    logger.info("migrated results score CHECK constraints from 1-10 to 1-5 (%s rows)", after)
 
 
 async def insert_node(db_path: str, node: dict) -> None:
@@ -448,9 +521,9 @@ async def update_result_scores(db_path: str, result_id: str, scores: dict) -> No
 
 
 async def update_result_human_score(db_path: str, result_id: str, human_score: int) -> None:
-    """Record the researcher's hand-score for one JEQ gate row (1-10)."""
-    if not isinstance(human_score, int) or isinstance(human_score, bool) or not (1 <= human_score <= 10):
-        raise ValueError(f"human_score {human_score!r} must be an integer in 1-10")
+    """Record the researcher's hand-score for one JEQ gate row (1-5)."""
+    if not isinstance(human_score, int) or isinstance(human_score, bool) or not (1 <= human_score <= 5):
+        raise ValueError(f"human_score {human_score!r} must be an integer in 1-5")
     async with aiosqlite.connect(db_path) as conn:
         cursor = await conn.execute(
             "UPDATE results SET human_score = ? WHERE result_id = ?",

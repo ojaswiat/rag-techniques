@@ -127,47 +127,79 @@ was found and closed. A reviewer who spots that ordering can encode identity wil
 
 ## 6. Gate result
 
-Threshold: concordance strictly above 80%, where two scores agree if they differ by no more
-than 10 points after rescaling 1-10 onto 0-100, that is within one point natively.
+Threshold: concordance strictly above 80%. Scores are stored on a 1 to 5 scale and rescaled to
+0-100 by multiplying by 20; the tolerance is 10 points, so adjacent bands never agree and the
+rule is **exact band match**.
 
-**Result: 88.3%, 53 of 60 rows. The gate passed.**
+**Result: 86.7%, 52 of 60 rows. The gate passed.**
 
-The disagreement structure matters more than the headline:
+### The scale, and why the tolerance rule is load-bearing
 
-- Only 7 rows disagree.
-- **Six of the seven are the reference scorer being more generous**, by 2 or 3 points. The
-  Judge is systematically harsher on partial credit, reaching for 1 where the reference gives 3.
-- **Three of the seven are the same question** (`QT1_JEQ_005`) disagreeing across all three
-  pipelines, so that cluster is a single ambiguous item rather than scattered noise.
-- Only one row runs the other way.
+Scoring originally ran on a 1 to 10 scale with agreement counted within one native point. That
+scale was never anchored across its range: the 20 calibration exemplars rescaled onto only five
+distinct values (10, 9, 5, 4 and 2), so the Judge had never seen an exemplar scored 1, 3, 6, 7
+or 8. Half the scale was undemonstrated, both score distributions were bimodal, and
+disagreements clustered on exactly that gap. Collapsing to five bands, each backed by at least
+one exemplar, removed the artefact. See `resources/research/deviations.md` entry 33.
 
-A coherent one-directional bias is the better failure mode: the two graders agree on what is
-right and what is wrong, and differ only on how much credit a partial answer earns.
+Tightening the tolerance at the same time was deliberate, and the numbers show why it mattered.
+Carrying the old plus-or-minus-one-band rule onto a five-band scale would have widened the
+acceptance window from 30% of the scale to 60%. Against the final data:
 
-Eight rows are flat refusals of the form "the sources do not contain the answer" where a ground
-truth exists. The reference scorer flagged in advance that agreement would collapse on these if
-the Judge treated refusals as mid-range. It did not; both treat an unsupported refusal as a
-failure.
+| Agreement rule | Window | Concordance |
+|---|---|---|
+| Exact band match (used) | 20% of scale | **86.7%**, 52/60 |
+| Plus or minus one band (rejected) | 60% of scale | 100.0%, 60/60 |
+
+A rule that returns 60 out of 60 is not measuring the Judge. Reporting the looser figure would
+have been an artefact of band width, not evidence. The exact-match window is also slightly
+stricter than the retired 1-10 gate's, so the ">80%" threshold did not quietly become easier.
+
+### Disagreement structure
+
+**All eight disagreements are exactly one band.** There is no row where the two graders differ
+by two bands or more, on either the strong or the weak end. Their aggregate agreement is closer
+still: per-pipeline mean scores differ by at most 0.05.
+
+- Five rows: the Judge is one band more generous.
+- Three rows: the reference is one band more generous, and these are the same question
+  (`QT4_JEQ_001`) disagreeing across all three pipelines, so that cluster is one ambiguous item
+  rather than scattered noise. It is a derived percentage differing from the ground truth by
+  0.05 percentage points; the rubric's 0.1-point rounding allowance puts it at 5 while the Judge
+  read it as a precision shortfall at 4.
+- `QT1_JEQ_001` accounts for three more, again the same question across all three pipelines.
+
+Two of the eight disagreements are therefore really two ambiguous questions, not eight
+independent grader failures.
+
+Nine rows are flat refusals of the form "the sources do not contain the answer" where a ground
+truth exists. Both graders treat an unsupported refusal as a failure rather than as mid-range
+partial credit.
 
 ---
 
 ## 7. Gate outputs at K = 5, all three pipelines
 
-| Pipeline | mean judge score | mean recall@5 | citation_match |
-|---|---|---|---|
-| P1_vector | 8.35 | 0.62 | 15/20 |
-| P2_bm25 | 7.95 | 0.68 | 16/20 |
-| P3_structural | 6.90 | 0.45 | 9/20 |
+Scores are on the 1 to 5 scale.
 
-Two observations worth carrying into the results chapter:
+| Pipeline | mean judge score | mean reference score | mean recall@5 | citation_match |
+|---|---|---|---|---|
+| P1_vector | 4.30 | 4.30 | 0.62 | 15/20 |
+| P2_bm25 | 4.10 | 4.05 | 0.68 | 16/20 |
+| P3_structural | 3.70 | 3.65 | 0.45 | 9/20 |
+
+Three observations worth carrying into the results chapter:
 
 - **P3 degrades as predicted**, on both answer quality and retrieval, and its citation
   behaviour is markedly worse (9/20 against 15 and 16). This is consistent with the expectation
   that hierarchical summarisation loses exact detail.
 - **The metrics disagree in ordering between P1 and P2.** BM25 retrieves better (0.68 against
-  0.62) while the vector pipeline answers better (8.35 against 7.95). That tension is precisely
+  0.62) while the vector pipeline answers better (4.30 against 4.10). That tension is precisely
   the semantic-versus-statistical contrast the project is built to expose, and it should not be
   flattened into a single ranking.
+- **The Judge and the reference scorer rank the three pipelines identically**, and their means
+  differ by at most 0.05. Whatever disagreement exists at row level does not propagate to the
+  comparison the dissertation actually reports.
 
 These are 20 questions at one depth and are indicative only. The 900-run matrix is the evidence.
 

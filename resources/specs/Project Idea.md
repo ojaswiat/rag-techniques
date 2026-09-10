@@ -219,7 +219,7 @@ For each of the 20 GQ, the researcher records: the query and quadrant, an exampl
 Teaching is not the same as proving the teaching worked. To certify the automated Judge before trusting it at scale:
 
 1. The 20 JEQ are run through the in-scope pipelines (see Section 7, Phase 2) to produce real outputs.
-2. **The researcher hand-scores those outputs** on the same 1–10 rubric.
+2. **The researcher hand-scores those outputs** on the same 1–5 rubric.
 3. The Judge scores the same outputs, blind to the human scores.
 4. The **LLM-Judge Agreement Rate** is computed across the JEQ outputs. The Judge must reach **>80% agreement** before it is permitted to grade the full benchmark. If it fails, the Judge's rubric or model is changed and the check repeats.
 
@@ -324,7 +324,7 @@ $$\text{Recall}@K = \frac{|\{\text{distinct GT nodes appearing in top-}K\}|}{|\{
 
 ### Pillar 2 — Answer-Quality Metrics
 
-* **LLM-as-a-Judge (1–10) — PRIMARY.** The Judge (`qwen/qwen3.6-27b`) scores each pipeline output against the stored `ground_truth_answer` using the fixed rubric plus the 5 quadrant-matched GQ exemplars. Because it scores semantic correctness against a reference, it handles the long, multi-phrased answers in Q2/Q4 that string metrics cannot.
+* **LLM-as-a-Judge (1–5) — PRIMARY.** The Judge (`qwen/qwen3.6-27b`) scores each pipeline output against the stored `ground_truth_answer` using the fixed rubric plus the 5 quadrant-matched GQ exemplars. Because it scores semantic correctness against a reference, it handles the long, multi-phrased answers in Q2/Q4 that string metrics cannot.
 * **Token-level F1 — SECONDARY (lexical).** Overlap between output and ground-truth text. Reported throughout but never primary.
 * **Exact Match — Q1/Q3 ONLY.** EM requires an exact string match, which is meaningful only for short canonical answers (direct extraction). It is reported for Q1/Q3 with **numeric normalisation** (so `$394.3B` = `394,300 million`) and is **not** used for Q2/Q4. For numeric answers a tolerance check (parse and compare within ε) is preferred over raw string match.
 * **Citation Audit — deterministic, code-only.** A code layer checks whether the node IDs cited in the output are a subset of the query's `gt_citations`. A correct-looking answer with mismatched citations is flagged as **coincidental correctness** and its score downgraded. This check is computed in code (not asked of the Judge), because LLMs are unreliable at comparing ID strings.

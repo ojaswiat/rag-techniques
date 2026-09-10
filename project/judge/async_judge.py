@@ -1,4 +1,4 @@
-"""Scores each JEQ gate output 1-10 against its ground truth and writes the
+"""Scores each JEQ gate output 1-5 against its ground truth and writes the
 deterministic metrics in the same pass, so a scored row is complete in one
 UPDATE.
 
@@ -26,26 +26,44 @@ _STAGE = "judge"
 # Scores content only. Citation validity is deliberately absent: Guardrails
 # 4b assigns that to citation_audit() in judge/metrics.py, and asking the
 # Judge for it as well would both duplicate a deterministic check and let a
-# model's guess override it. The 9-versus-10 band is stated explicitly
-# because the calibration exemplars price it; an unstated criterion would
-# leave the Judge inferring a deduction it was never told about.
+# model's guess override it. Each band is stated explicitly because the
+# calibration exemplars price them; an unstated criterion would leave the
+# Judge inferring a deduction it was never told about. The prose here is the
+# compressed form of resources/judge_scoring_criteria.md, which is the
+# expanded guide a reference scorer works from; the two must agree.
 _RUBRIC = (
     "You are grading how well a candidate answer responds to a question about a "
     "SEC 10-K filing. You are given the question and the ground-truth answer. "
-    "Score the candidate answer from 1 to 10. A 10 fully matches the ground-truth "
+    "Score the candidate answer from 1 to 5. A 5 fully matches the ground-truth "
     "answer and is complete and precise, in a form that directly answers the question "
-    "asked. A 9 is correct but falls slightly short on completeness, precision, or "
-    "framing. Mid-range scores are partially correct: the right area of the filing but "
-    "the wrong figure, or one half of a two-part answer. A 1 is wrong, unsupported, or "
-    "fabricated. Judge only correctness against the ground truth provided; do not use "
-    "outside knowledge, and do not search. Respond with ONLY a JSON object, no markdown "
-    'fences: {"score": <integer 1-10>, "justification": "<one sentence>"}.'
+    "asked. A 4 is correct on the value but falls short on completeness, precision or "
+    "framing. A 3 is partially correct: one half of a two-part answer, with the other "
+    "half absent. A 2 reaches the right area of the filing but reports the wrong "
+    "figure, the wrong ordinal or the wrong scope. A 1 is wrong, unsupported, "
+    "fabricated, or a refusal to answer. Judge only correctness against the ground "
+    "truth provided; do not use outside knowledge, and do not search. Respond with "
+    "ONLY a JSON object, no markdown fences: "
+    '{"score": <integer 1-5>, "justification": "<one sentence>"}.'
 )
 
 
-def _rescale_to_1_10(human_score_0_100: int) -> int:
-    """Rescales a 0-100 human score to the Judge's 1-10 scale, clamped."""
-    return max(1, min(10, round(human_score_0_100 / 10)))
+# Band edges for the 0-100 to 1-5 rescale, as (inclusive floor, band).
+# Explicit thresholds rather than round(score / 20) because arithmetic
+# rounding is banker's rounding in Python and sends the two "half the
+# question answered" exemplars at 50 down to band 2, where they read as
+# wrong-value answers rather than the partially-correct answers they are.
+# These edges also keep every one of the five bands populated by at least
+# one exemplar, which round(score / 20) does not.
+_BAND_FLOORS = ((90, 5), (75, 4), (50, 3), (25, 2), (0, 1))
+
+
+def _rescale_to_1_5(human_score_0_100: int) -> int:
+    """Rescales a 0-100 human score to the Judge's 1-5 scale, clamped."""
+    score = max(0, min(100, human_score_0_100))
+    for floor, band in _BAND_FLOORS:
+        if score >= floor:
+            return band
+    return 1
 
 
 def _format_exemplar(ex: dict) -> str:
@@ -53,7 +71,7 @@ def _format_exemplar(ex: dict) -> str:
         f"Question: {ex['query_text']}\n"
         f"Ground-truth answer: {ex['ground_truth_answer']}\n"
         f"Candidate answer: {ex['example_output']}\n"
-        f"Correct score (1-10): {_rescale_to_1_10(ex['human_score'])}\n"
+        f"Correct score (1-5): {_rescale_to_1_5(ex['human_score'])}\n"
         f"Reason: {ex['human_reasoning']}"
     )
 
@@ -83,10 +101,10 @@ def _build_target_message(row: dict) -> str:
 
 
 def parse_judge_score(raw_text: str) -> int:
-    """Pull a 1-10 integer out of the Judge's reply, clamped into range.
+    """Pull a 1-5 integer out of the Judge's reply, clamped into range.
 
     Prefers the JSON object the rubric asks for; falls back to the first bare
-    1-10 integer so a model that adds prose around the number is still usable.
+    1-5 integer so a model that adds prose around the number is still usable.
     """
     try:
         obj = json.loads(raw_text)
@@ -95,12 +113,12 @@ def parse_judge_score(raw_text: str) -> int:
     if isinstance(obj, dict):
         for key in ("score", "judge_score"):
             if key in obj:
-                return max(1, min(10, round(float(obj[key]))))
+                return max(1, min(5, round(float(obj[key]))))
 
-    match = re.search(r"\b(10|[1-9])\b", raw_text)
+    match = re.search(r"\b([1-5])\b", raw_text)
     if match:
         return int(match.group(1))
-    raise ValueError(f"could not parse a 1-10 judge score from: {raw_text!r}")
+    raise ValueError(f"could not parse a 1-5 judge score from: {raw_text!r}")
 
 
 def compute_deterministic_metrics(row: dict) -> dict:
@@ -205,7 +223,10 @@ async def judge_jeq_rows(db_path: str, judge: Judge | None = None) -> dict:
     for row, outcome in zip(rows, results):
         if isinstance(outcome, Exception):
             logger.exception("judging failed for result_id=%s", row["result_id"], exc_info=outcome)
-            failures.append({"result_id": row["result_id"], "error": str(outcome)})
+            # repr, not str: an asyncio.TimeoutError from the client's
+            # request timeout carries no message, so str() records a
+            # timeout as an empty string.
+            failures.append({"result_id": row["result_id"], "error": repr(outcome)})
 
     return {"judged": judged, "attempted": len(rows), "failures": failures}
 

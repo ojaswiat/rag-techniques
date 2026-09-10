@@ -1,9 +1,10 @@
-"""score_gate_outputs: human scoring and the Agreement-Rate gate.
+"""score_gate_outputs: reference scoring and the Concordance-Rate gate.
 
-Two jobs: collect the researcher's human_score for each of the 60 JEQ rows
-without showing them the Judge's score, then compute the human-judge Agreement
-Rate and enforce the > 80% gate. A row agrees when the two scores, rescaled to
-0-100, differ by no more than 10 points.
+Two jobs: collect the reference human_score for each of the 60 JEQ rows
+without showing the scorer the Judge's score, then compute the Concordance
+Rate and enforce the > 80% gate. Scores are 1-5; a row agrees when the two,
+rescaled to 0-100 by RESCALE_FACTOR, differ by no more than 10 points. One
+band step is 20 points, so only identical bands agree.
 """
 import os
 
@@ -36,27 +37,38 @@ def _rows(pairs):
     ]
 
 
-# --- per-row agreement (0-100 scale, +/-10 band) ---
+# --- per-row agreement (0-100 scale, +/-10 band = exact band match) ---
 
 
 def test_agreement_exact():
     assert sg.rows_agree(5, 5) is True
+    assert sg.rows_agree(1, 1) is True
 
 
-def test_agreement_within_one_point():
-    assert sg.rows_agree(8, 9) is True
-    assert sg.rows_agree(8, 7) is True
+def test_adjacent_bands_do_not_agree():
+    """One band step is RESCALE_FACTOR (20) points, above the 10-point
+    tolerance. Carrying the old 1-10 scale's plus-or-minus-one-band rule down
+    to five bands would have widened the acceptance window from 30% of the
+    scale to 60%, inflating the Concordance Rate without the Judge improving."""
+    assert sg.rows_agree(4, 5) is False
+    assert sg.rows_agree(4, 3) is False
 
 
-def test_disagreement_two_points():
-    assert sg.rows_agree(8, 6) is False
+def test_disagreement_two_bands():
+    assert sg.rows_agree(4, 2) is False
+
+
+def test_tolerance_is_narrower_than_one_band():
+    """Guards the gate's strictness against a tolerance edit that would
+    silently re-admit adjacent bands."""
+    assert sg.AGREEMENT_TOLERANCE < sg.RESCALE_FACTOR
 
 
 # --- Agreement Rate + gate ---
 
 
 def test_agreement_rate_all_agree_passes():
-    summary = sg.compute_agreement_rate(_rows([(9, 9), (8, 8), (7, 6)]))
+    summary = sg.compute_agreement_rate(_rows([(5, 5), (4, 4), (3, 3)]))
     assert summary["n"] == 3
     assert summary["agreement_rate"] == 100.0
     assert summary["gate_passed"] is True
@@ -64,14 +76,14 @@ def test_agreement_rate_all_agree_passes():
 
 def test_agreement_rate_eighty_percent_fails_strict_gate():
     # 4 of 5 agree -> 80.0%, and the gate is strictly > 80.
-    summary = sg.compute_agreement_rate(_rows([(9, 9), (8, 8), (7, 7), (6, 6), (5, 2)]))
+    summary = sg.compute_agreement_rate(_rows([(5, 5), (4, 4), (3, 3), (2, 2), (1, 4)]))
     assert summary["agreement_rate"] == 80.0
     assert summary["gate_passed"] is False
 
 
 def test_agreement_rate_just_above_threshold_passes():
     # 9 of 10 agree -> 90%.
-    pairs = [(8, 8)] * 9 + [(8, 3)]
+    pairs = [(4, 4)] * 9 + [(4, 1)]
     summary = sg.compute_agreement_rate(_rows(pairs))
     assert summary["agreement_rate"] == 90.0
     assert summary["gate_passed"] is True
@@ -79,7 +91,7 @@ def test_agreement_rate_just_above_threshold_passes():
 
 def test_compute_agreement_rate_requires_both_scores():
     with pytest.raises(ValueError, match="missing"):
-        sg.compute_agreement_rate(_rows([(9, None)]))
+        sg.compute_agreement_rate(_rows([(5, None)]))
 
 
 def test_compute_agreement_rate_empty_raises():
@@ -129,16 +141,16 @@ async def _seed_row(db_path, result_id="R1", query_id="JEQ_001", *, judge_score=
 
 @pytest.mark.asyncio
 async def test_prompt_human_scores_writes_and_hides_judge_score():
-    await _seed_row(TEST_DB, "R1", "JEQ_001", judge_score=9)  # judge already scored
+    await _seed_row(TEST_DB, "R1", "JEQ_001", judge_score=5)  # judge already scored
 
     shown: list[str] = []
     scored = await sg.prompt_human_scores(
-        TEST_DB, input_fn=lambda _prompt="": "7", output_fn=shown.append
+        TEST_DB, input_fn=lambda _prompt="": "4", output_fn=shown.append
     )
 
     assert scored == 1
     rows = await dbm.get_results(TEST_DB, "JEQ")
-    assert rows[0]["human_score"] == 7
+    assert rows[0]["human_score"] == 4
     # The researcher must not be shown the judge's verdict before scoring.
     blob = "\n".join(shown).lower()
     assert "judge" not in blob
@@ -146,7 +158,7 @@ async def test_prompt_human_scores_writes_and_hides_judge_score():
 
 @pytest.mark.asyncio
 async def test_prompt_human_scores_skips_already_scored():
-    await _seed_row(TEST_DB, "R1", "JEQ_001", judge_score=9, human_score=8)
+    await _seed_row(TEST_DB, "R1", "JEQ_001", judge_score=5, human_score=4)
 
     scored = await sg.prompt_human_scores(
         TEST_DB, input_fn=lambda _prompt="": "1", output_fn=lambda _s: None
@@ -156,14 +168,14 @@ async def test_prompt_human_scores_skips_already_scored():
 
 @pytest.mark.asyncio
 async def test_prompt_human_scores_reprompts_on_invalid():
-    await _seed_row(TEST_DB, "R1", "JEQ_001", judge_score=9)
+    await _seed_row(TEST_DB, "R1", "JEQ_001", judge_score=5)
 
-    answers = iter(["fifteen", "12", "6"])  # non-int, out-of-range, then valid
+    answers = iter(["fifteen", "12", "4"])  # non-int, out-of-range, then valid
     await sg.prompt_human_scores(
         TEST_DB, input_fn=lambda _prompt="": next(answers), output_fn=lambda _s: None
     )
     rows = await dbm.get_results(TEST_DB, "JEQ")
-    assert rows[0]["human_score"] == 6
+    assert rows[0]["human_score"] == 4
 
 
 # --- run_scoring_gate: prompt then compute ---
@@ -172,10 +184,10 @@ async def test_prompt_human_scores_reprompts_on_invalid():
 @pytest.mark.asyncio
 async def test_run_scoring_gate_end_to_end():
     for i in range(2):
-        await _seed_row(TEST_DB, f"R{i}", f"JEQ_00{i}", judge_score=8)
+        await _seed_row(TEST_DB, f"R{i}", f"JEQ_00{i}", judge_score=4)
 
     summary = await sg.run_scoring_gate(
-        TEST_DB, input_fn=lambda _prompt="": "8", output_fn=lambda _s: None
+        TEST_DB, input_fn=lambda _prompt="": "4", output_fn=lambda _s: None
     )
     assert summary["n"] == 2
     assert summary["agreement_rate"] == 100.0
@@ -190,7 +202,7 @@ async def test_rendered_rows_never_carry_the_judge_score(tmp_path):
     path, so the judge_score must be absent from the rendering by
     construction rather than by the caller's restraint."""
     db_path = str(tmp_path / "t.db")
-    await _seed_row(db_path, judge_score=9)
+    await _seed_row(db_path, judge_score=5)
     rows = await gate_reference_scores.render_rows_for_scoring(db_path)
     assert rows
     for row in rows:
@@ -207,7 +219,7 @@ async def test_rendered_rows_are_blind_to_pipeline_and_citation_evidence(tmp_pat
     miss result_id's leak, since the pipeline name sits inside its *value*
     -- so this scans every rendered value, not just the field names."""
     db_path = str(tmp_path / "t.db")
-    await _seed_row(db_path, judge_score=9)
+    await _seed_row(db_path, judge_score=5)
     rows = await gate_reference_scores.render_rows_for_scoring(db_path)
     assert rows
     for row in rows:
@@ -280,19 +292,19 @@ async def test_token_order_does_not_track_pipeline(tmp_path):
 
 async def test_apply_scores_writes_every_supplied_row(tmp_path):
     db_path = str(tmp_path / "t.db")
-    await _seed_row(db_path, judge_score=9)
+    await _seed_row(db_path, judge_score=5)
     rows = await gate_reference_scores.render_rows_for_scoring(db_path)
     written = await gate_reference_scores.apply_scores(
-        db_path, {row["token"]: 8 for row in rows}
+        db_path, {row["token"]: 4 for row in rows}
     )
     assert written == len(rows)
     stored = await dbm.get_results(db_path, "JEQ")
-    assert all(r["human_score"] == 8 for r in stored)
+    assert all(r["human_score"] == 4 for r in stored)
 
 
 async def test_apply_scores_rejects_an_unknown_token(tmp_path):
     db_path = str(tmp_path / "t.db")
-    await _seed_row(db_path, judge_score=9)
+    await _seed_row(db_path, judge_score=5)
     with pytest.raises(ValueError, match="no results row"):
         await gate_reference_scores.apply_scores(db_path, {"row_9999": 5})
 

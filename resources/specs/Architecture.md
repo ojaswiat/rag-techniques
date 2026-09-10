@@ -249,8 +249,8 @@ CREATE TABLE results (
     citation_match                 INTEGER CHECK (citation_match IN (0,1)),
     token_f1                         REAL,
     exact_match                       INTEGER CHECK (exact_match IN (0,1)),   -- NULL for Q2/Q4
-    judge_score                        INTEGER CHECK (judge_score BETWEEN 1 AND 10),
-    human_score                         INTEGER CHECK (human_score BETWEEN 1 AND 10),  -- only for source_set='JEQ'
+    judge_score                        INTEGER CHECK (judge_score BETWEEN 1 AND 5),
+    human_score                         INTEGER CHECK (human_score BETWEEN 1 AND 5),  -- only for source_set='JEQ'
     latency_sec                          REAL,
     input_tokens                          INTEGER,
     output_tokens                          INTEGER,

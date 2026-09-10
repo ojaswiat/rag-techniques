@@ -225,7 +225,7 @@ Lives in `judge/async_judge.py`.
 
 It reads back a `results` row and produces two kinds of score:
 
-- **Model score**: Qwen3.6-27B grades the answer 1 to 10 against the ground truth, returning JSON with a one-sentence justification.
+- **Model score**: Qwen3.6-27B grades the answer 1 to 5 against the ground truth, returning JSON with a one-sentence justification.
 - **Deterministic metrics**: `token_f1`, `exact_match`, `citation_match`, `evidence_hit`. All computed in code, never delegated to the model.
 
 The citation check in particular stays in code on purpose. Asking a model to verify citations would make the metric unreproducible.
