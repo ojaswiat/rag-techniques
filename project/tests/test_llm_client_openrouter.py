@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
@@ -82,3 +83,48 @@ def test_get_openrouter_client_raises_without_api_key(monkeypatch):
     monkeypatch.setattr("llm_client.config.OPENROUTER_API_KEY", None)
     with pytest.raises(ValueError):
         openrouter_client_mod.get_openrouter_client("test-model")
+
+
+@pytest.mark.asyncio
+async def test_requests_do_not_serialise_behind_one_slow_call(monkeypatch):
+    """The pacing lock must gate when a request STARTS, not span the call.
+
+    Holding it across the await made the semaphore useless and let a single
+    hung call block every other waiter, which stalled a full gate run.
+    """
+    monkeypatch.setattr("llm_client.config.OPENROUTER_API_KEY", "dummy-key")
+    monkeypatch.setattr("llm_client.openrouter_client._MIN_REQUEST_INTERVAL", 0.0)
+    monkeypatch.setattr("llm_client.openrouter_client._last_request_time", 0.0)
+
+    in_flight = 0
+    peak = 0
+
+    class MockClient:
+        def __init__(self):
+            self.chat = SimpleNamespace()
+            self.chat.completions = SimpleNamespace()
+
+    async def fake_create(**kwargs):
+        nonlocal in_flight, peak
+        in_flight += 1
+        peak = max(peak, in_flight)
+        await asyncio.sleep(0.05)
+        in_flight -= 1
+        return _FakeCompletion(content="ok")
+
+    mock_client = MockClient()
+    mock_client.chat.completions.create = fake_create
+
+    def mock_constructor(*args, **kwargs):
+        return mock_client
+
+    # Same reasoning as test_openrouter_client_accomplete_calls_openai_client:
+    # AsyncOpenAI must be patched where openrouter_client.py looks it up.
+    monkeypatch.setattr("llm_client.openrouter_client.AsyncOpenAI", mock_constructor)
+
+    client = openrouter_client_mod.get_openrouter_client("test-model")
+    wrapped = client.chat.completions.create
+
+    await asyncio.gather(*(wrapped(messages=[]) for _ in range(4)))
+
+    assert peak > 1, "requests serialised; the lock still spans the API call"

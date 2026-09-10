@@ -46,3 +46,17 @@ def test_answerer_and_judge_remain_different_families():
     judge = config.MODEL_ROUTING["judge"]["model"]
     assert "llama" in answerer.lower()
     assert "qwen" in judge.lower()
+
+
+def test_every_openrouter_stage_caps_reasoning():
+    """A reasoning-tuned model with no cap can emit an unbounded chain and hang
+    the batch behind it. The judge lost its cap when it moved from Groq to
+    OpenRouter and stalled a 60-row run for 15 minutes with no error, so this
+    asserts the invariant rather than naming the stages that happened to have
+    caps at the time."""
+    for stage, entry in config.MODEL_ROUTING.items():
+        if entry["provider"] != "openrouter":
+            continue
+        reasoning = (entry.get("extra_body") or {}).get("reasoning")
+        assert reasoning is not None, f"{stage} routes to OpenRouter with no reasoning cap"
+        assert reasoning.get("effort") in {"low", "medium", "high"}, stage

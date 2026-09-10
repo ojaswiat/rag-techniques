@@ -34,12 +34,19 @@ _PIN_DEEPINFRA = {"provider": {"order": ["DeepInfra"], "allow_fallbacks": False}
 _PIN_CHUTES = {"provider": {"order": ["Chutes"], "allow_fallbacks": False}}
 
 # Guardrails.md §2 — fixed model routing matrix. Do not change without updating the spec.
+#
+# Every OpenRouter stage carries _REASONING_LOW, even "answerer" whose Llama
+# 3.3 70B model does not support the `reasoning` parameter. OpenRouter drops
+# unsupported request fields rather than erroring, and sending the cap
+# uniformly is what keeps the invariant simple and total instead of having
+# to track which models happen to support it. Do not "clean up" by removing
+# it from answerer.
 MODEL_ROUTING: dict[str, dict] = {
     "generator":     {"model": "nvidia/nemotron-3-super-120b-a12b:free", "provider": "openrouter", "extra_body": _REASONING_LOW},
     "critic":        {"model": "openai/gpt-oss-20b:free", "provider": "openrouter", "extra_body": _REASONING_LOW},
     "p3_index_build":{"model": "nvidia/nemotron-3-super-120b-a12b", "provider": "nvidia"},
-    "answerer":      {"model": "meta-llama/llama-3.3-70b-instruct", "provider": "openrouter", "extra_body": _PIN_DEEPINFRA},
-    "judge":         {"model": "qwen/qwen3.6-27b", "provider": "openrouter", "extra_body": _PIN_CHUTES},
+    "answerer":      {"model": "meta-llama/llama-3.3-70b-instruct", "provider": "openrouter", "extra_body": {**_PIN_DEEPINFRA, **_REASONING_LOW}},
+    "judge":         {"model": "qwen/qwen3.6-27b", "provider": "openrouter", "extra_body": {**_PIN_CHUTES, **_REASONING_LOW}},
     "debug":         {"model": "llama-3.1-8b-instant",   "provider": "groq"},
 }
 
