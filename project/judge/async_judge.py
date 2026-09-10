@@ -7,6 +7,7 @@ target row's quadrant, never all 20. The citation check is deterministic
 code, never delegated to the model.
 """
 import asyncio
+import hashlib
 import json
 import logging
 import re
@@ -22,6 +23,14 @@ from loop_template import LOCAL_TEST_THROTTLE, apply_throttle
 logger = logging.getLogger(__name__)
 
 _STAGE = "judge"
+
+# In-run retry for the Judge call. The Judge is pinned to a single provider
+# host for determinism, so its dominant failure is a transient stall on that
+# host rather than a bad request; the 60-row gate lost 15 rows to exactly
+# that. Three attempts with 2s then 4s of backoff costs seconds on a healthy
+# run and saves a whole re-run on an unhealthy one.
+_DEFAULT_ATTEMPTS = 3
+_RETRY_BASE_DELAY_SEC = 2.0
 
 # Scores content only. Citation validity is deliberately absent: Guardrails
 # 4b assigns that to citation_audit() in judge/metrics.py, and asking the
@@ -180,30 +189,85 @@ class Judge:
         return parse_judge_score(response.message.content or "")
 
 
-async def judge_jeq_rows(db_path: str, judge: Judge | None = None) -> dict:
-    """Scores every JEQ gate row: deterministic metrics plus judge_score, one write each.
+def rubric_fingerprint(system_prompt: str, model: str) -> str:
+    """A short digest of everything that determines a judge score.
 
-    Reads the 60 rows joined to their ground truth, builds each quadrant's
-    prompt prefix once, then scores the rows and writes the full metric vector
-    back per row. Honours LOCAL_TEST_THROTTLE: under throttle only the first
-    THROTTLE_LIMIT rows run.
+    The system prompt already contains the rubric text, the quadrant's five
+    exemplars, and their rescaled band labels, so hashing it with the model
+    name covers every input that could change a score. Stored beside the
+    score so a later run can tell a score produced by the current rubric from
+    one produced by a retired rubric, which is a distinction "has a score"
+    cannot make: when the scale moved from 1-10 to 1-5, retired scores in the
+    1-5 range remained individually plausible and would have been silently
+    kept, mixing two rubrics in one reported figure.
+    """
+    digest = hashlib.sha256(f"{model}\n{system_prompt}".encode()).hexdigest()
+    return digest[:16]
+
+
+async def _score_with_retry(judge: "Judge", row: dict, prompt: str, attempts: int) -> int:
+    """Scores one row, retrying transient failures with exponential backoff.
+
+    The Judge is pinned to one provider host for determinism, so a stalled or
+    rate-limited host is the expected failure rather than an exceptional one;
+    retrying in-run costs one call where failing out costs a whole re-run.
+    """
+    for attempt in range(1, attempts + 1):
+        try:
+            return await judge.score_row(row, prompt)
+        except Exception:
+            if attempt == attempts:
+                raise
+            await asyncio.sleep(_RETRY_BASE_DELAY_SEC * 2 ** (attempt - 1))
+    raise AssertionError("unreachable")
+
+
+async def judge_rows(
+    db_path: str,
+    source_set: str = "JEQ",
+    judge: Judge | None = None,
+    *,
+    resume: bool = True,
+    attempts: int = _DEFAULT_ATTEMPTS,
+) -> dict:
+    """Scores one source set: deterministic metrics plus judge_score, one write each.
+
+    Reads the source set's rows joined to their ground truth, builds each
+    quadrant's prompt prefix once, then scores and writes the full metric
+    vector per row. Honours LOCAL_TEST_THROTTLE: under throttle only the
+    first THROTTLE_LIMIT rows run.
+
+    With `resume` set, a row is skipped only when it already carries a score
+    *and* the fingerprint of the rubric that produced it matches the current
+    one. A row scored under a retired rubric is re-judged rather than kept,
+    which is the whole point: a resume keyed on "has a score" cannot see the
+    difference and would leave two rubrics mixed in one set of results.
     """
     if judge is None:
         judge = Judge()
 
-    rows = await dbm.get_jeq_judging_rows(db_path)
-    rows = apply_throttle(rows)
+    rows = await dbm.get_judging_rows(db_path, source_set)
 
     # Build each quadrant's cacheable prefix once, up front, so concurrent
     # scoring never races on the exemplar reads.
     prefixes: dict[str, str] = {}
+    fingerprints: dict[str, str] = {}
     for quadrant in {row["quadrant"] for row in rows}:
         exemplars = await dbm.get_golden_queries_by_quadrant(db_path, quadrant)
         prefixes[quadrant] = build_prefix(quadrant, exemplars)
+        fingerprints[quadrant] = rubric_fingerprint(prefixes[quadrant], judge.model)
+
+    total = len(rows)
+    if resume:
+        rows = [row for row in rows
+                if row["judge_score"] is None
+                or row.get("judge_fingerprint") != fingerprints[row["quadrant"]]]
+    skipped = total - len(rows)
+    rows = apply_throttle(rows)
 
     logger.info(
-        "judging %d JEQ row(s)%s",
-        len(rows),
+        "judging %d of %d %s row(s); %d already scored under the current rubric%s",
+        len(rows), total, source_set, skipped,
         " (LOCAL_TEST_THROTTLE)" if LOCAL_TEST_THROTTLE else "",
     )
 
@@ -212,8 +276,12 @@ async def judge_jeq_rows(db_path: str, judge: Judge | None = None) -> dict:
 
     async def _score_and_write(row: dict) -> None:
         nonlocal judged
+        quadrant = row["quadrant"]
         metrics = compute_deterministic_metrics(row)
-        metrics["judge_score"] = await judge.score_row(row, prefixes[row["quadrant"]])
+        metrics["judge_score"] = await _score_with_retry(judge, row, prefixes[quadrant], attempts)
+        # Written in the same UPDATE as the score: a score whose fingerprint
+        # failed to land would look stale forever and be re-judged on every run.
+        metrics["judge_fingerprint"] = fingerprints[quadrant]
         await dbm.update_result_scores(db_path, row["result_id"], metrics)
         judged += 1
 
@@ -228,7 +296,13 @@ async def judge_jeq_rows(db_path: str, judge: Judge | None = None) -> dict:
             # timeout as an empty string.
             failures.append({"result_id": row["result_id"], "error": repr(outcome)})
 
-    return {"judged": judged, "attempted": len(rows), "failures": failures}
+    return {"judged": judged, "attempted": len(rows), "skipped": skipped,
+            "total": total, "failures": failures}
+
+
+async def judge_jeq_rows(db_path: str, judge: Judge | None = None) -> dict:
+    """Scores the JEQ gate rows. Thin wrapper over judge_rows for the gate path."""
+    return await judge_rows(db_path, "JEQ", judge)
 
 
 __all__ = [
@@ -236,5 +310,7 @@ __all__ = [
     "build_prefix",
     "compute_deterministic_metrics",
     "judge_jeq_rows",
+    "judge_rows",
     "parse_judge_score",
+    "rubric_fingerprint",
 ]

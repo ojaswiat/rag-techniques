@@ -75,6 +75,7 @@ CREATE TABLE IF NOT EXISTS results (
     token_f1            REAL,
     exact_match         INTEGER CHECK (exact_match IN (0,1)),
     judge_score         INTEGER CHECK (judge_score BETWEEN 1 AND 5),
+    judge_fingerprint   TEXT,
     human_score         INTEGER CHECK (human_score BETWEEN 1 AND 5),
     latency_sec         REAL,
     input_tokens        INTEGER,
@@ -92,7 +93,24 @@ async def init_db(db_path: str) -> None:
         await conn.executescript(_SCHEMA)
         await _migrate_golden_queries_schema(conn)
         await _migrate_results_score_checks(conn)
+        await _migrate_results_add_judge_fingerprint(conn)
         await conn.commit()
+
+
+async def _migrate_results_add_judge_fingerprint(conn: aiosqlite.Connection) -> None:
+    """Adds results.judge_fingerprint to a database built before it existed.
+
+    Unlike a CHECK constraint, a new nullable column can be added in place, so
+    this is an ALTER rather than a table rebuild. Existing rows are left NULL,
+    which is the correct reading: a score written before fingerprints were
+    recorded cannot be shown to have come from the current rubric, so resume
+    treats it as stale and re-judges it.
+    """
+    cursor = await conn.execute("PRAGMA table_info(results)")
+    columns = {row[1] for row in await cursor.fetchall()}
+    if "judge_fingerprint" in columns:
+        return
+    await conn.execute("ALTER TABLE results ADD COLUMN judge_fingerprint TEXT")
 
 
 async def _migrate_golden_queries_schema(conn: aiosqlite.Connection) -> None:
@@ -426,8 +444,15 @@ async def get_results(db_path: str, source_set: str) -> list[dict]:
     return result
 
 
-async def get_jeq_judging_rows(db_path: str) -> list[dict]:
-    """The 60 gate rows, each joined to its judge_validation ground truth.
+# Each source set draws its ground truth from a different table. The join is
+# keyed on this rather than on a parameter so a caller cannot pair the JEQ
+# results with the PQ answer keys, which would score rows against the wrong
+# ground truth and fail silently rather than loudly.
+_GROUND_TRUTH_TABLES = {"JEQ": "judge_validation", "PQ": "queries"}
+
+
+async def get_judging_rows(db_path: str, source_set: str) -> list[dict]:
+    """One source set's results rows, each joined to its own ground truth.
 
     async_judge.py scores one results row at a time but needs that row's
     quadrant, ground-truth answer, and gt_citations, none of which live in
@@ -435,15 +460,21 @@ async def get_jeq_judging_rows(db_path: str) -> list[dict]:
     tables itself; JSON list columns from both tables are decoded to
     list[str].
     """
+    if source_set not in _GROUND_TRUTH_TABLES:
+        raise ValueError(
+            f"source_set must be one of {sorted(_GROUND_TRUTH_TABLES)}; got {source_set!r}"
+        )
+    table = _GROUND_TRUTH_TABLES[source_set]
     async with aiosqlite.connect(db_path) as conn:
         conn.row_factory = aiosqlite.Row
         cursor = await conn.execute(
-            """SELECT r.*, jv.quadrant, jv.query_text, jv.ground_truth_answer,
-                      jv.gt_citations, jv.document_id
-               FROM results r
-               JOIN judge_validation jv ON jv.query_id = r.query_id
-               WHERE r.source_set = 'JEQ'
-               ORDER BY r.result_id"""
+            f"""SELECT r.*, gt.quadrant, gt.query_text, gt.ground_truth_answer,
+                       gt.gt_citations, gt.document_id
+                FROM results r
+                JOIN {table} gt ON gt.query_id = r.query_id
+                WHERE r.source_set = ?
+                ORDER BY r.result_id""",
+            (source_set,),
         )
         rows = await cursor.fetchall()
     result = []
@@ -454,6 +485,11 @@ async def get_jeq_judging_rows(db_path: str) -> list[dict]:
         d["gt_citations"] = _loads(d["gt_citations"])
         result.append(d)
     return result
+
+
+async def get_jeq_judging_rows(db_path: str) -> list[dict]:
+    """The 60 gate rows, joined to their judge_validation ground truth."""
+    return await get_judging_rows(db_path, "JEQ")
 
 
 async def get_golden_queries_by_quadrant(db_path: str, quadrant: str) -> list[dict]:
@@ -490,6 +526,10 @@ _UPDATABLE_SCORE_COLUMNS = frozenset(
         "token_f1",
         "exact_match",
         "judge_score",
+        # Written in the same UPDATE as judge_score, never separately: a score
+        # and the fingerprint of the rubric that produced it must land
+        # together or resume cannot trust either.
+        "judge_fingerprint",
     }
 )
 

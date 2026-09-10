@@ -250,6 +250,7 @@ CREATE TABLE results (
     token_f1                         REAL,
     exact_match                       INTEGER CHECK (exact_match IN (0,1)),   -- NULL for Q2/Q4
     judge_score                        INTEGER CHECK (judge_score BETWEEN 1 AND 5),
+    judge_fingerprint                  TEXT,   -- digest of the rubric+exemplars+model that produced judge_score
     human_score                         INTEGER CHECK (human_score BETWEEN 1 AND 5),  -- only for source_set='JEQ'
     latency_sec                          REAL,
     input_tokens                          INTEGER,
@@ -297,7 +298,7 @@ Real corpus (expanded from the original illustrative 9-filing example to 13):
 
 **`results`** — one PQ row, one Q2/Q4-style row showing `exact_match = NULL`, and two JEQ-gate rows for the same validation query across two pipelines (demonstrating how 60 gate outputs fit into one table):
 
-| result_id | source_set | query_id | pipeline | k_value | retrieved_node_ids | pipeline_output | cited_node_ids | precision_at_k | recall_at_k | evidence_hit | citation_match | token_f1 | exact_match | judge_score | human_score | latency_sec | input_tokens | output_tokens |
+| result_id | source_set | query_id | pipeline | k_value | retrieved_node_ids | pipeline_output | cited_node_ids | precision_at_k | recall_at_k | evidence_hit | citation_match | token_f1 | exact_match | judge_score | judge_fingerprint | human_score | latency_sec | input_tokens | output_tokens |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | `R_000457` | PQ | `QT3_PQ_017` | P1_vector | 5 | `["AAPL_2025_n0421","AAPL_2025_n0420"]` | "Apple's FY2025 net sales were $394.3B. [[node:AAPL_2025_n0421]]" | `["AAPL_2025_n0421"]` | 0.20 | 1.0 | 1 | 1 | 0.95 | 1 | 9 | NULL | 1.84 | 2100 | 40 |
 | `R_000312` | PQ | `QT2_PQ_044` | P3_structural | 10 | `["TSLA_2023_n0299", "TSLA_2023_n0301"]` | "Management cited higher production at the Texas and Berlin gigafactories. [[node:TSLA_2023_n0299]]" | `["TSLA_2023_n0299"]` | 0.30 | 1.0 | 1 | 1 | 0.58 | NULL | 7 | NULL | 2.40 | 3100 | 85 |
