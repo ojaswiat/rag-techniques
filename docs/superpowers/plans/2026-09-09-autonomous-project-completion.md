@@ -1039,7 +1039,7 @@ git commit -m "chore(gate): throttled rehearsal of the validation gate on OpenRo
 - Consumes: Task 4's rehearsal rows (skipped by the resume path).
 - Produces: exactly 60 `results` rows with `source_set='JEQ'`, `k_value=5`, each carrying `judge_score` and the full deterministic metric vector. `human_score` stays NULL; Task 6 fills it.
 
-- [ ] **Step 1: Turn the throttle off**
+- [x] **Step 1: Turn the throttle off**
 
 ```bash
 cd /Users/ojaswi/Projects/rag-techniques/project
@@ -1049,7 +1049,7 @@ grep -n "LOCAL_TEST_THROTTLE" .env
 
 Expected: `LOCAL_TEST_THROTTLE=false # Change to false when building P3 Summary Tree`.
 
-- [ ] **Step 2: Run the gate**
+- [x] **Step 2: Run the gate**
 
 Run this in the background — it makes roughly 114 sequential API calls at 20 RPM, so allow around 10 minutes:
 
@@ -1060,7 +1060,7 @@ cd /Users/ojaswi/Projects/rag-techniques/project
 
 Expected: `generation.outstanding == 57` (60 minus Task 4's 3), `generation.completed == 57`, `generation.failures == []`, `judging.judged == 60`.
 
-- [ ] **Step 3: Verify all 60 rows are complete**
+- [x] **Step 3: Verify all 60 rows are complete**
 
 ```bash
 cd /Users/ojaswi/Projects/rag-techniques/project
@@ -1078,7 +1078,7 @@ Expected exactly: `rows=60, missing_judge=0, missing_output=0, queries=20, pipel
 
 If `failures` was non-empty, re-run Step 2. The resume path skips everything already written, so a re-run only retries the gaps.
 
-- [ ] **Step 4: Snapshot the database, then restore the throttle**
+- [x] **Step 4: Snapshot the database, then restore the throttle**
 
 The 60 gate rows cost real money and cannot be recovered without re-spending. Snapshot before anything else:
 
@@ -1088,7 +1088,7 @@ bash scripts/backup_data.sh
 sed -i '' 's/^LOCAL_TEST_THROTTLE=false/LOCAL_TEST_THROTTLE=true/' .env
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 cd /Users/ojaswi/Projects/rag-techniques
