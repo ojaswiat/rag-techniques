@@ -27,6 +27,7 @@ Every task's requirements implicitly include this section.
 - **`LOCAL_TEST_THROTTLE` is defined once** in `project/llm_client/config.py` alongside `THROTTLE_LIMIT = 3`. Loop scripts apply it via `loop_template.apply_throttle()` and never declare their own cap. Every loop runs clean end-to-end at throttle before it is released to the full batch.
 - **Anti-leakage (Guardrails §3):** `queries` (100 PQ) / `golden_queries` (20 GQ) / `judge_validation` (20 JEQ) stay disjoint. GQ feeds the Judge only. JEQ feeds no prompt. Pipelines receive only the query plus their own retrieved nodes.
 - **Anti-self-grading (Guardrails §2):** Generator ≠ Critic family; Answerer ≠ Judge family. Llama answerer vs Qwen judge satisfies this and must stay satisfied after the provider move.
+- **`project/logs/` is git-ignored too**, so run logs cannot be committed either. Keep them on disk for diagnosis and quote the numbers that matter into the task's report and the ledger instead.
 - **`project/benchmark.db` is git-ignored and has never been tracked.** Do not `git add` it and never force-add it: it is an 11 MB binary that grows with every run, and committing it 13 times would bloat the repository for no gain. The reproducible record is the code that writes it (`write_gq_labels.py`, `loop_executor.py`, `judge_rows()`), all of which are idempotent. The consequence is that the database has no version history, so **after every step that spends money or takes hours, snapshot it with `project/scripts/backup_data.sh`** before doing anything else. `scripts/reload_backup.sh` restores. A lost database after Task 9 costs roughly $1 of paid API calls and about 90 minutes of runtime to rebuild.
 - **Resumability:** `results.UNIQUE(source_set, query_id, pipeline, k_value)` is the crash-resume key. Never delete `results` rows to "retry"; the resume path re-picks absent keys automatically.
 - **`K_VALUES = (2, 3, 5)`** in `loop_executor.py`; the DB enforces `CHECK (k_value IN (2,3,5))`. The gate runs at a single `K=5`.
@@ -1674,7 +1675,7 @@ cd /Users/ojaswi/Projects/rag-techniques/project
 bash scripts/backup_data.sh
 sed -i '' 's/^LOCAL_TEST_THROTTLE=false/LOCAL_TEST_THROTTLE=true/' .env
 cd /Users/ojaswi/Projects/rag-techniques
-git add project/logs/benchmark_pq_run.log
+git add docs/superpowers/plans/2026-09-09-autonomous-project-completion.md
 git commit -m "feat(benchmark): execute all 900 PQ cells across three pipelines and K in 2,3,5"
 ```
 
@@ -1763,7 +1764,7 @@ cd /Users/ojaswi/Projects/rag-techniques/project
 bash scripts/backup_data.sh
 sed -i '' 's/^LOCAL_TEST_THROTTLE=false/LOCAL_TEST_THROTTLE=true/' .env
 cd /Users/ojaswi/Projects/rag-techniques
-git add project/logs/benchmark_pq_judging.log
+git add docs/superpowers/plans/2026-09-09-autonomous-project-completion.md
 git commit -m "feat(benchmark): score all 900 PQ rows with the judge and code metrics"
 ```
 
