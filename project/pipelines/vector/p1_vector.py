@@ -18,6 +18,7 @@ from llama_index.vector_stores.chroma import ChromaVectorStore
 import pipelines.vector.build_vector_index as bvi
 from pipelines.base import Retriever
 from pipelines.vector.fastembed_reranker import FastEmbedReranker
+from model_cache import model_cache_dir
 
 _PREFETCH_MULTIPLIER = 4
 _MIN_PREFETCH = 20
@@ -33,7 +34,7 @@ class P1VectorRetriever(Retriever):
             storage_root = bvi.STORAGE_ROOT
         collection = bvi.get_collection(storage_root)
         vector_store = ChromaVectorStore(chroma_collection=collection)
-        embed_model = FastEmbedEmbedding(model_name=bvi.EMBED_MODEL_NAME)
+        embed_model = FastEmbedEmbedding(model_name=bvi.EMBED_MODEL_NAME, cache_dir=model_cache_dir())
         self._index = VectorStoreIndex.from_vector_store(vector_store, embed_model=embed_model)
         self._reranker = FastEmbedReranker()
 

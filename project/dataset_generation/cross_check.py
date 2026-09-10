@@ -7,6 +7,7 @@ citations, on the numbers in the answer and on the answer's overall meaning.
 import re
 
 from fastembed import TextEmbedding
+from model_cache import model_cache_dir
 
 _NUMBER_RE = re.compile(r"-?\d[\d,]*\.?\d*")
 
@@ -29,7 +30,7 @@ def _get_embedding_model() -> TextEmbedding:
     """Lazily construct and cache the embedding model (expensive to load)."""
     global _embedding_model
     if _embedding_model is None:
-        _embedding_model = TextEmbedding(model_name=_EMBEDDING_MODEL_NAME)
+        _embedding_model = TextEmbedding(model_name=_EMBEDDING_MODEL_NAME, cache_dir=model_cache_dir())
     return _embedding_model
 
 
