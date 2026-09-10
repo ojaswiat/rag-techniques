@@ -225,6 +225,59 @@ async def test_rendered_rows_are_blind_to_pipeline_and_citation_evidence(tmp_pat
                 assert substring not in text
 
 
+_PIPELINES = ("P1_vector", "P2_bm25", "P3_structural")
+
+
+async def _seed_all_pipelines(db_path, n_queries=5):
+    """n_queries JEQ queries, each with a JEQ row for all three pipelines --
+    the natural result_id order this produces (queries.ORDER BY result_id)
+    is exactly the pipeline-sorted-within-query cycle that a naive
+    positional token would reproduce."""
+    await dbm.init_db(db_path)
+    for qi in range(n_queries):
+        query_id = f"JEQ_{qi:03d}"
+        await dbm.insert_judge_validation(db_path, _jv(query_id))
+        for pipeline in _PIPELINES:
+            row = {
+                "result_id": f"R_JEQ_{query_id}_{pipeline}_K5",
+                "source_set": "JEQ",
+                "query_id": query_id,
+                "pipeline": pipeline,
+                "k_value": 5,
+                "retrieved_node_ids": ["AAPL_2025_n0421"],
+                "pipeline_output": f"answer from {pipeline} for {query_id}",
+                "cited_node_ids": ["AAPL_2025_n0421"],
+            }
+            await dbm.upsert_result(db_path, row)
+
+
+async def test_token_order_does_not_track_pipeline(tmp_path):
+    """The field whitelist alone is not enough: get_jeq_judging_rows orders
+    by result_id, which sorts alphabetically by pipeline within each query,
+    so assigning tokens in that natural order would let token_index % 3
+    recover the pipeline even though no rendered field names it. Builds
+    JEQ rows across all three pipelines for several queries and asserts the
+    pipeline sequence behind the tokens is not that repeating cycle."""
+    db_path = str(tmp_path / "t.db")
+    await _seed_all_pipelines(db_path)
+
+    rows = await gate_reference_scores.render_rows_for_scoring(db_path)
+    token_map = await gate_reference_scores._token_map(db_path)
+    pipeline_by_result_id = {
+        r["result_id"]: r["pipeline"] for r in await dbm.get_results(db_path, "JEQ")
+    }
+    pipeline_sequence = [pipeline_by_result_id[token_map[row["token"]]] for row in rows]
+
+    # The natural (unshuffled) order would put every 3rd row on the same
+    # pipeline -- token_index % 3 recovering the pipeline exactly.
+    natural_cycle = [_PIPELINES[i % 3] for i in range(len(pipeline_sequence))]
+    assert pipeline_sequence != natural_cycle
+    # Same check the leak report used directly: indices 0, 3, 6, ... are
+    # not all the same pipeline.
+    stride_three = pipeline_sequence[0::3]
+    assert len(set(stride_three)) > 1
+
+
 async def test_apply_scores_writes_every_supplied_row(tmp_path):
     db_path = str(tmp_path / "t.db")
     await _seed_row(db_path, judge_score=9)
