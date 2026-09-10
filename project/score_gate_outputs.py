@@ -1,11 +1,12 @@
-"""Human scoring and the Judge validation gate.
+"""Reference scoring and the Judge validation gate.
 
-Collects a human_score for each of the 60 JEQ gate rows, then measures how
-closely the automated Judge agrees with that human standard. Both scores are
-rescaled to 0-100; a row agrees when they differ by no more than 10 points
-on that scale, and the gate requires an Agreement Rate strictly above 80%.
-The human never sees the Judge's score while scoring, keeping the two
-judgements independent.
+Collects a reference score for each of the 60 JEQ gate rows, then measures
+how closely the automated Judge agrees with it. Both scores are rescaled to
+0-100; a row agrees when they differ by no more than 10 points on that
+scale, and the gate requires a Concordance Rate strictly above 80%. The
+scorer never sees the Judge's score, keeping the two judgements
+independent. On a run where the agent supplies the reference scores this
+figure is cross-model concordance, not external human validation.
 """
 import argparse
 import asyncio
@@ -102,7 +103,7 @@ async def prompt_human_scores(db_path: str, *, input_fn=input, output_fn=print) 
 
 def _render_verdict(summary: dict) -> str:
     head = (
-        f"Agreement Rate: {summary['agreement_rate']:.1f}% "
+        f"Concordance Rate: {summary['agreement_rate']:.1f}% "
         f"({summary['agreements']}/{summary['n']} rows within +/-1) "
         f"-- gate is > {GATE_THRESHOLD:.0f}%"
     )

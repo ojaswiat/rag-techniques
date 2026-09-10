@@ -10,6 +10,7 @@ import os
 import pytest
 
 import database_manager as dbm
+import gate_reference_scores
 import score_gate_outputs as sg
 
 TEST_DB = "test_benchmark_score_gate.db"
@@ -100,7 +101,15 @@ def _jv(query_id, quadrant="Q3_Direct_Table"):
     }
 
 
-async def _seed_row(result_id, query_id, *, judge_score=None, human_score=None):
+async def _seed_row(db_path, result_id="R1", query_id="JEQ_001", *, judge_score=None, human_score=None):
+    """Seed one JEQ gate row plus its judge_validation ground truth.
+
+    Self-contained (creates the schema and the judge_validation row itself)
+    so a test can seed a fresh db_path -- e.g. one under tmp_path -- with a
+    single call.
+    """
+    await dbm.init_db(db_path)
+    await dbm.insert_judge_validation(db_path, _jv(query_id))
     row = {
         "result_id": result_id,
         "source_set": "JEQ",
@@ -111,18 +120,16 @@ async def _seed_row(result_id, query_id, *, judge_score=None, human_score=None):
         "pipeline_output": "Net sales were $394.3B. [[node:AAPL_2025_n0421]]",
         "cited_node_ids": ["AAPL_2025_n0421"],
     }
-    await dbm.upsert_result(TEST_DB, row)
+    await dbm.upsert_result(db_path, row)
     if judge_score is not None:
-        await dbm.update_result_scores(TEST_DB, result_id, {"judge_score": judge_score})
+        await dbm.update_result_scores(db_path, result_id, {"judge_score": judge_score})
     if human_score is not None:
-        await dbm.update_result_human_score(TEST_DB, result_id, human_score)
+        await dbm.update_result_human_score(db_path, result_id, human_score)
 
 
 @pytest.mark.asyncio
 async def test_prompt_human_scores_writes_and_hides_judge_score():
-    await dbm.init_db(TEST_DB)
-    await dbm.insert_judge_validation(TEST_DB, _jv("JEQ_001"))
-    await _seed_row("R1", "JEQ_001", judge_score=9)  # judge already scored
+    await _seed_row(TEST_DB, "R1", "JEQ_001", judge_score=9)  # judge already scored
 
     shown: list[str] = []
     scored = await sg.prompt_human_scores(
@@ -139,9 +146,7 @@ async def test_prompt_human_scores_writes_and_hides_judge_score():
 
 @pytest.mark.asyncio
 async def test_prompt_human_scores_skips_already_scored():
-    await dbm.init_db(TEST_DB)
-    await dbm.insert_judge_validation(TEST_DB, _jv("JEQ_001"))
-    await _seed_row("R1", "JEQ_001", judge_score=9, human_score=8)
+    await _seed_row(TEST_DB, "R1", "JEQ_001", judge_score=9, human_score=8)
 
     scored = await sg.prompt_human_scores(
         TEST_DB, input_fn=lambda _prompt="": "1", output_fn=lambda _s: None
@@ -151,9 +156,7 @@ async def test_prompt_human_scores_skips_already_scored():
 
 @pytest.mark.asyncio
 async def test_prompt_human_scores_reprompts_on_invalid():
-    await dbm.init_db(TEST_DB)
-    await dbm.insert_judge_validation(TEST_DB, _jv("JEQ_001"))
-    await _seed_row("R1", "JEQ_001", judge_score=9)
+    await _seed_row(TEST_DB, "R1", "JEQ_001", judge_score=9)
 
     answers = iter(["fifteen", "12", "6"])  # non-int, out-of-range, then valid
     await sg.prompt_human_scores(
@@ -168,10 +171,8 @@ async def test_prompt_human_scores_reprompts_on_invalid():
 
 @pytest.mark.asyncio
 async def test_run_scoring_gate_end_to_end():
-    await dbm.init_db(TEST_DB)
     for i in range(2):
-        await dbm.insert_judge_validation(TEST_DB, _jv(f"JEQ_00{i}"))
-        await _seed_row(f"R{i}", f"JEQ_00{i}", judge_score=8)
+        await _seed_row(TEST_DB, f"R{i}", f"JEQ_00{i}", judge_score=8)
 
     summary = await sg.run_scoring_gate(
         TEST_DB, input_fn=lambda _prompt="": "8", output_fn=lambda _s: None
@@ -179,3 +180,44 @@ async def test_run_scoring_gate_end_to_end():
     assert summary["n"] == 2
     assert summary["agreement_rate"] == 100.0
     assert summary["gate_passed"] is True
+
+
+# --- gate_reference_scores: non-interactive path, judge_score excluded by construction ---
+
+
+async def test_rendered_rows_never_carry_the_judge_score(tmp_path):
+    """Independence is the only property the gate figure retains on this
+    path, so the judge_score must be absent from the rendering by
+    construction rather than by the caller's restraint."""
+    db_path = str(tmp_path / "t.db")
+    await _seed_row(db_path, judge_score=9)
+    rows = await gate_reference_scores.render_rows_for_scoring(db_path)
+    assert rows
+    for row in rows:
+        assert "judge_score" not in row
+
+
+async def test_apply_scores_writes_every_supplied_row(tmp_path):
+    db_path = str(tmp_path / "t.db")
+    await _seed_row(db_path, judge_score=9)
+    rows = await gate_reference_scores.render_rows_for_scoring(db_path)
+    written = await gate_reference_scores.apply_scores(
+        db_path, {row["result_id"]: 8 for row in rows}
+    )
+    assert written == len(rows)
+    stored = await dbm.get_results(db_path, "JEQ")
+    assert all(r["human_score"] == 8 for r in stored)
+
+
+async def test_apply_scores_rejects_an_unknown_result_id(tmp_path):
+    db_path = str(tmp_path / "t.db")
+    await _seed_row(db_path, judge_score=9)
+    with pytest.raises(ValueError, match="no results row"):
+        await gate_reference_scores.apply_scores(db_path, {"R_nope": 5})
+
+
+def test_verdict_uses_concordance_wording():
+    summary = {"agreement_rate": 91.0, "agreements": 55, "n": 60, "gate_passed": True}
+    text = sg._render_verdict(summary)
+    assert "Concordance" in text
+    assert "human" not in text.lower()
