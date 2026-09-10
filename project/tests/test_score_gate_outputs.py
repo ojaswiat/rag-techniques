@@ -197,23 +197,51 @@ async def test_rendered_rows_never_carry_the_judge_score(tmp_path):
         assert "judge_score" not in row
 
 
+_PIPELINE_SUBSTRINGS = ("P1_vector", "P2_bm25", "P3_structural")
+
+
+async def test_rendered_rows_are_blind_to_pipeline_and_citation_evidence(tmp_path):
+    """Two more leaks beyond judge_score: pipeline identity (both the
+    `pipeline` column and `result_id`, which embeds it verbatim) and
+    citation evidence the Judge itself never sees. Checking only keys would
+    miss result_id's leak, since the pipeline name sits inside its *value*
+    -- so this scans every rendered value, not just the field names."""
+    db_path = str(tmp_path / "t.db")
+    await _seed_row(db_path, judge_score=9)
+    rows = await gate_reference_scores.render_rows_for_scoring(db_path)
+    assert rows
+    for row in rows:
+        for forbidden_key in (
+            "judge_score",
+            "pipeline",
+            "result_id",
+            "gt_citations",
+            "cited_node_ids",
+        ):
+            assert forbidden_key not in row
+        for value in row.values():
+            text = str(value)
+            for substring in _PIPELINE_SUBSTRINGS:
+                assert substring not in text
+
+
 async def test_apply_scores_writes_every_supplied_row(tmp_path):
     db_path = str(tmp_path / "t.db")
     await _seed_row(db_path, judge_score=9)
     rows = await gate_reference_scores.render_rows_for_scoring(db_path)
     written = await gate_reference_scores.apply_scores(
-        db_path, {row["result_id"]: 8 for row in rows}
+        db_path, {row["token"]: 8 for row in rows}
     )
     assert written == len(rows)
     stored = await dbm.get_results(db_path, "JEQ")
     assert all(r["human_score"] == 8 for r in stored)
 
 
-async def test_apply_scores_rejects_an_unknown_result_id(tmp_path):
+async def test_apply_scores_rejects_an_unknown_token(tmp_path):
     db_path = str(tmp_path / "t.db")
     await _seed_row(db_path, judge_score=9)
     with pytest.raises(ValueError, match="no results row"):
-        await gate_reference_scores.apply_scores(db_path, {"R_nope": 5})
+        await gate_reference_scores.apply_scores(db_path, {"row_9999": 5})
 
 
 def test_verdict_uses_concordance_wording():
