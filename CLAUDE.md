@@ -8,7 +8,7 @@ This file governs how the Claude Code agent operates within this repository. Rea
 
 This is the workspace for a **COMP702 M.Sc. Dissertation**: a comparative benchmark of three RAG retrieval paradigms (semantic vector, statistical BM25, structural summary-tree) evaluated against SEC 10-K financial filings.
 
-**Current state:** Phases 1 to 6 of `resources/specs/Phase Plan.md` are built and tested. Ingestion is complete (13 filings, 18,297 nodes), dataset generation is complete (100 PQ, 20 GQ, 20 JEQ in `project/benchmark.db`), all three pipelines and the Judge are implemented, and the test suite stands at 339 passing. The Judge's >80% agreement gate has not been run, the `results` table is empty, and Phase 7 (the full 900-run benchmark) is the next milestone.
+**Current state:** Phases 1 to 8 of `resources/specs/Phase Plan.md` are built and tested. Ingestion is complete (13 filings, 18,297 nodes), dataset generation is complete (100 PQ, 20 GQ, 20 JEQ in `project/benchmark.db`), and all three pipelines and the Judge are implemented. The Judge cleared its concordance gate at 86.7% (52/60) on the 1-5 scale, and the full 900-cell benchmark has been executed and scored: `results` holds 900 PQ rows plus the 60 JEQ gate rows, every one carrying a judge score and its rubric fingerprint. Aggregation and figures are in `project/aggregate_results.py` and `project/build_figures.py`. The test suite stands at 451 passing. Headline: P1_vector and P2_bm25 are statistically indistinguishable (paired difference -0.160, 95% CI [-0.340, +0.013]); P3_structural trails both by roughly two judge points with intervals far from zero.
 
 ### Repository Layout
 

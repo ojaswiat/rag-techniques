@@ -89,7 +89,7 @@ Produce the 140-query benchmark via cross-family generation and critique, then s
 2. **Critic (`Qwen3.6-27B`) — a different family — with a search tool over *all* nodes of the filing:** blind verification (answer + citations redacted), independently locating and citing evidence.
 3. **Automated code cross-check:** compare Critic's cited nodes + value against the Generator's ground truth → Auto-Verify or discard-and-regenerate.
 4. Split the verified pool into three **disjoint** sets: **PQ 100 / GQ 20 / JEQ 20**, 25/5/5 per quadrant.
-5. **Human-label the 20 GQ** with "why this answer is good" notes and example 1–10 scores (the few-shot teaching material).
+5. **Human-label the 20 GQ** with "why this answer is good" notes and example scores (the few-shot teaching material). Labels are stored on a native 0-100 scale and rescaled to the Judge's 1-5 bands at prompt-build time; see deviations entry 33.
 
 ## Evaluations
 1. Generator never injects a full filing in one call; per-section context stays in-window.
@@ -178,7 +178,7 @@ Turn the raw `results` table into the analysis artefacts the dissertation will d
 **Weeks 8–10 (overlapping the write-up reservation)**
 
 ## Goals
-1. Aggregate `results` across the **tri-pillar** framework: retrieval (Precision/Recall/Hit Rate), answer quality (Judge 1–10 primary; F1/EM secondary), efficiency (latency, tokens, index-build cost).
+1. Aggregate `results` across the **tri-pillar** framework: retrieval (Precision/Recall/Hit Rate), answer quality (Judge 1-5 primary, reported as both mean and pass rate because the distribution is bimodal; F1/EM secondary), efficiency (latency, tokens, index-build cost).
 2. Break results down **per quadrant** to expose where each paradigm wins and fails (esp. the semantic-vs-statistical contrast and P3's expected Q3/Q4 degradation).
 3. Generate the comparison tables and charts the write-up will reference.
 
