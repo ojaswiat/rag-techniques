@@ -143,7 +143,7 @@ Without that variable the first line of output reads `None of PyTorch, TensorFlo
 >
 > The corpus size is a counted number rather than an estimate: thirteen filings, five companies, eighteen thousand two hundred and ninety-seven nodes.
 >
-> The test suite covers every stage, three hundred and thirty-nine tests across ingestion, all three retrieval arms, dataset generation and the judge.
+> The test suite covers every stage, four hundred and ninety-four tests across ingestion, all three retrieval arms, dataset generation and the judge.
 >
 > And the reading includes financial question answering directly, starting from FinQA by Chen and colleagues. The dissertation widens that section.
 
@@ -158,7 +158,7 @@ Without that variable the first line of output reads `None of PyTorch, TensorFlo
 
 > Where the project stands today. Six phases are built and tested. The benchmark itself has not run.
 >
-> Everything in green comes from the live database. Thirteen filings ingested, a hundred and forty questions generated, three hundred and thirty-nine tests passing.
+> Everything in green comes from the live database. Thirteen filings ingested, a hundred and forty questions generated, four hundred and ninety-four tests passing.
 >
 > Two numbers are red, and they are the honest part of this slide. Twenty golden questions still need hand-labelling, and until that is done the judge cannot be validated. The results table holds zero rows because the executor has never been run. I would rather say that plainly than imply a result I do not have.
 
@@ -236,7 +236,7 @@ sqlite3 benchmark.db "select count(*) from results;"
 
 **Say:**
 
-> The test suite, run just before recording. Three hundred and thirty-nine passing, with two live-API tests deselected so nothing spends quota. It takes about forty-five seconds, so I am showing you the finished output rather than making you watch it.
+> The test suite, run just before recording. Four hundred and ninety-four passing, with two live-API tests deselected so nothing spends quota. It takes about a minute and a half, so I am showing you the finished output rather than making you watch it.
 
 **Do:** switch back to the deck. Advance to slide 9.
 
@@ -340,7 +340,7 @@ Short answers, ready to go.
 
 | Number | Where it appears | How to check |
 |---|---|---|
-| 339 tests | Slides 6, 7, 8 and beat D4 | `uv run pytest -q -m "not live"` |
+| 494 tests | Slides 6, 7, 8 and beat D4 | `uv run pytest -q -m "not live"` |
 | 0 results rows | Slide 7 and beat D3 | `sqlite3 benchmark.db "select count(*) from results;"` |
 | 20 labels outstanding | Slide 7 | `sqlite3 benchmark.db "select count(*) from golden_queries where human_reasoning like '%PENDING%';"` |
 | Demo figures | Slide 9 | re-run the demo, the numbers are deterministic |

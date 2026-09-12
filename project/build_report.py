@@ -16,6 +16,7 @@ from pathlib import Path
 
 import aggregate_results as agg
 import build_figures as bf
+import retrieval_diagnostics as diag
 
 PIPELINE_LABELS = bf.PIPELINE_LABELS
 QUADRANT_TITLES = {
@@ -108,14 +109,91 @@ def comparison_table(report: dict) -> str:
     return "\n".join(rows)
 
 
-def build_html(db_path: str, figures_dir: Path) -> str:
+def _duration(seconds: float | None) -> str:
+    """Build times here span four orders of magnitude, so the unit varies."""
+    if seconds is None:
+        return "-"
+    if seconds >= 3600:
+        return f"{seconds / 3600:.1f} h"
+    if seconds >= 60:
+        return f"{seconds / 60:.1f} min"
+    return f"{seconds:.1f} s"
+
+
+def _bytes(value: int | None) -> str:
+    return "-" if value is None else f"{value / 1024 ** 2:.0f} MB"
+
+
+def build_cost_table(report: dict) -> str:
+    snapshot = report.get("index_build")
+    if not snapshot:
+        return ""
+    rows = []
+    for pipeline in agg.PIPELINES:
+        b = snapshot["pipelines"].get(pipeline)
+        if not b:
+            continue
+        tokens = "none" if not b["uses_llm"] else (
+            f"{b['input_tokens']:,} in / {b['output_tokens']:,} out")
+        lead = ' class="lead"' if b["uses_llm"] else ""
+        rows.append(f"""          <tr{lead}>
+            <th scope="row">{PIPELINE_LABELS[pipeline]}</th>
+            <td>{_duration(b['wall_clock_sec'])}</td>
+            <td>{_duration(b['median_filing_sec'])}</td>
+            <td>{b['sec_per_1k_nodes']:.1f} s</td>
+            <td>{tokens}</td>
+            <td>{_bytes(b['storage_bytes'])}</td>
+          </tr>""")
+    return "\n".join(rows)
+
+
+def build_cost_note(report: dict) -> str:
+    """States the build-cost gap as a ratio, computed rather than asserted."""
+    snapshot = report.get("index_build")
+    if not snapshot:
+        return ('  <p class="note">Index build cost is not in this report: the snapshot '
+                'in <code>data/index_build_costs.json</code> has not been taken. Run '
+                '<code>index_build_cost.py</code> to take one.</p>')
+    blocks = snapshot["pipelines"]
+    structural = blocks["P3_structural"]
+    cheapest = min((b for name, b in blocks.items() if not b["uses_llm"]),
+                   key=lambda b: b["wall_clock_sec"])
+    ratio = structural["wall_clock_sec"] / cheapest["wall_clock_sec"]
+    later = structural["later_attempt_sec"]
+    retries = ""
+    if later > 0:
+        retries = (f" A further {_duration(later)} went on rebuilds and resumed runs on top "
+                   f"of that first pass, so the real outlay was "
+                   f"{_duration(structural['wall_clock_sec'] + later)}.")
+    missing = structural.get("filings_missing_tokens") or []
+    caveat = ""
+    if missing:
+        caveat = (f" The token figure is a floor: it covers "
+                  f"{structural['filings_with_tokens']} of {structural['filings']} "
+                  f"filings, {' and '.join(missing)} having been built before the build "
+                  f"log recorded token counts.")
+    return f'''  <p class="note">The structural index took
+  {_duration(structural["wall_clock_sec"])} to build against
+  {_duration(cheapest["wall_clock_sec"])} for the cheapest local index, a factor of
+  {ratio:,.0f}, and consumed {structural["input_tokens"] + structural["output_tokens"]:,}
+  tokens where the other two consumed none.{retries}{caveat} This is a one-off cost per
+  corpus, not per query, but it is paid before a single question can be asked.</p>'''
+
+
+def build_html(db_path: str, figures_dir: Path,
+               build_cost_path=agg.index_build_cost.SNAPSHOT_PATH) -> str:
     conn = sqlite3.connect(db_path)
-    report = agg.build_report(conn, "PQ")
+    report = agg.build_report(conn, "PQ", build_cost_path=build_cost_path)
     gate = conn.execute(
         "SELECT COUNT(*), SUM(judge_score = human_score) FROM results WHERE source_set = 'JEQ'"
     ).fetchone()
     nodes, filings = conn.execute(
         "SELECT COUNT(*), COUNT(DISTINCT document_id) FROM nodes").fetchone()
+
+    # Diversity and miss distance for the structural-pipeline diagnosis, computed
+    # rather than quoted, so the paragraph cannot outlive the data behind it.
+    dx = diag.diagnose_all(conn)
+    p3d, p1d, p2d = dx["P3_structural"], dx["P1_vector"], dx["P2_bm25"]
 
     p1p2 = next(c for c in report["comparisons"]
                 if c["metric"] == "judge_score" and c["left"] == "P1_vector"
@@ -387,20 +465,50 @@ def build_html(db_path: str, figures_dir: Path) -> str:
 </div>
 
 <main class="wrap">
+  <h2>What it costs to build</h2>
+  <p>Latency and tokens describe what a question costs once the index exists. They
+  leave out the one-off cost of creating that index, which is where the three
+  paradigms diverge hardest. Two of them build locally from the same
+  {nodes:,} nodes with no model call at all. The third drives an LLM over every
+  node of every filing to write the summaries its tree is made of.</p>
+
+  <div class="scroll">
+    <table>
+      <caption>Table 5.3 &mdash; One-off index build cost over the whole corpus: one build
+      from scratch per filing, measured on the same machine. Wall clock is as observed,
+      including time spent waiting on the LLM provider.</caption>
+      <thead><tr><th>Pipeline</th><th>Total build</th><th>Median per filing</th>
+        <th>Per 1k nodes</th><th>Build tokens</th><th>On disk</th></tr></thead>
+      <tbody>
+{build_cost_table(report)}
+      </tbody>
+    </table>
+  </div>
+
+{build_cost_note(report)}
+
   <h2>Why the structural pipeline fails</h2>
   <p>It is worth being precise, because a result this lopsided invites the suspicion
   that something is simply broken. It is not. The pipeline returns valid node
   identifiers from the correct filing, its traversal is driven by embeddings rather than
   a stub model, and its retrieval diversity is the <em>highest</em> of the three at
-  0.867 distinct nodes per returned slot. It returns varied, query-specific nodes. They
-  are the wrong ones.</p>
+  {_num(p3d['diversity'])} distinct nodes per returned slot, against
+  {_num(p1d['diversity'])} and {_num(p2d['diversity'])}. It responds to the query and
+  returns varied nodes. They are the wrong ones.</p>
   <p>The mechanism is visible in the miss distances. Tree traversal descends by
   comparing the query against <em>summaries</em> of each branch, and a summary is
-  precisely the artefact from which a specific figure has been compressed away. The
-  median retrieved node sits at ordinal 818 against a gold node at 406: the right region
-  of the filing, the wrong node within it. On a benchmark dominated by extraction, that
-  is fatal. It would not be on a benchmark of thematic or whole-document questions,
-  which is the use this index structure was designed for.</p>
+  precisely the artefact from which a specific figure has been compressed away. Only
+  {_pct(p3d['on_evidence_share'])} of the nodes it returns are evidence nodes, against
+  {_pct(p2d['on_evidence_share'])} for BM25, and where it misses, the nearest evidence
+  sits a median of {p3d['median_miss_nodes']:.0f} nodes away, or
+  {_pct(p3d['median_miss_share'])} of the filing it was searching. BM25 misses by
+  {p2d['median_miss_nodes']:.0f} nodes, or {_pct(p2d['median_miss_share'])}. So this is
+  not a retriever landing in the right region and choosing the wrong paragraph within
+  it; it is landing in the wrong part of the document, biased late, with a median
+  returned node at {_num(p3d['median_retrieved_share'])} of the way through a filing
+  whose evidence sits at {_num(p3d['median_gold_share'])}. On a benchmark dominated by
+  extraction that is fatal. It would not be on a benchmark of thematic or
+  whole-document questions, which is the use this index structure was designed for.</p>
 
   <h2>What would weaken these findings</h2>
   <ul>
@@ -430,8 +538,11 @@ def build_html(db_path: str, figures_dir: Path) -> str:
   <h2>Reproducing this</h2>
   <p>Every number and figure above is generated from the <code>results</code> table with
   no manual step between: <code>aggregate_results.py</code> produces the tables and the
-  paired statistics, <code>build_figures.py</code> renders Figures 5.1 to 5.6, and this
-  page is assembled by <code>build_report.py</code> from both. The answer-key corrections
+  paired statistics, <code>build_figures.py</code> renders Figures 5.1 to 5.6,
+  <code>index_build_cost.py</code> measures and records Table 5.3,
+  <code>retrieval_diagnostics.py</code> computes the diversity and miss distances
+  quoted above, and this
+  page is assembled by <code>build_report.py</code> from all three. The answer-key corrections
   replay from <code>repair_answer_keys.py</code> and reproduce the corrected database
   exactly. Judging records the fingerprint of the rubric that produced each score, so a
   rescored run cannot silently mix two rubrics.</p>
@@ -450,8 +561,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--db", default="benchmark.db")
     parser.add_argument("--figures", default="../resources/artifacts/figures")
     parser.add_argument("--out", default="../resources/artifacts/results-report.html")
+    parser.add_argument("--build-cost", default=str(agg.index_build_cost.SNAPSHOT_PATH),
+                        help="the committed index build cost snapshot")
     args = parser.parse_args(argv)
-    html = build_html(args.db, Path(args.figures))
+    html = build_html(args.db, Path(args.figures), args.build_cost)
     Path(args.out).write_text(html)
     print(f"wrote {args.out} ({len(html) / 1024:.0f} KB)")
     return 0

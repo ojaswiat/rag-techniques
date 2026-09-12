@@ -400,20 +400,78 @@
 </div>
 
 <main class="wrap">
+  <h2>What it costs to build</h2>
+  <p>Latency and tokens describe what a question costs once the index exists. They
+  leave out the one-off cost of creating that index, which is where the three
+  paradigms diverge hardest. Two of them build locally from the same
+  18,297 nodes with no model call at all. The third drives an LLM over every
+  node of every filing to write the summaries its tree is made of.</p>
+
+  <div class="scroll">
+    <table>
+      <caption>Table 5.3 &mdash; One-off index build cost over the whole corpus: one build
+      from scratch per filing, measured on the same machine. Wall clock is as observed,
+      including time spent waiting on the LLM provider.</caption>
+      <thead><tr><th>Pipeline</th><th>Total build</th><th>Median per filing</th>
+        <th>Per 1k nodes</th><th>Build tokens</th><th>On disk</th></tr></thead>
+      <tbody>
+          <tr>
+            <th scope="row">P1 Vector</th>
+            <td>22.3 min</td>
+            <td>1.2 min</td>
+            <td>73.2 s</td>
+            <td>none</td>
+            <td>129 MB</td>
+          </tr>
+          <tr>
+            <th scope="row">P2 BM25</th>
+            <td>0.9 s</td>
+            <td>0.1 s</td>
+            <td>0.0 s</td>
+            <td>none</td>
+            <td>7 MB</td>
+          </tr>
+          <tr class="lead">
+            <th scope="row">P3 Structural</th>
+            <td>10.6 h</td>
+            <td>35.0 min</td>
+            <td>2080.0 s</td>
+            <td>1,602,673 in / 892,034 out</td>
+            <td>27 MB</td>
+          </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p class="note">The structural index took
+  10.6 h to build against
+  0.9 s for the cheapest local index, a factor of
+  41,985, and consumed 2,494,707
+  tokens where the other two consumed none. A further 5.0 h went on rebuilds and resumed runs on top of that first pass, so the real outlay was 15.5 h. The token figure is a floor: it covers 11 of 13 filings, JPM_2023 and JPM_2024 having been built before the build log recorded token counts. This is a one-off cost per
+  corpus, not per query, but it is paid before a single question can be asked.</p>
+
   <h2>Why the structural pipeline fails</h2>
   <p>It is worth being precise, because a result this lopsided invites the suspicion
   that something is simply broken. It is not. The pipeline returns valid node
   identifiers from the correct filing, its traversal is driven by embeddings rather than
   a stub model, and its retrieval diversity is the <em>highest</em> of the three at
-  0.867 distinct nodes per returned slot. It returns varied, query-specific nodes. They
-  are the wrong ones.</p>
+  0.506 distinct nodes per returned slot, against
+  0.430 and 0.424. It responds to the query and
+  returns varied nodes. They are the wrong ones.</p>
   <p>The mechanism is visible in the miss distances. Tree traversal descends by
   comparing the query against <em>summaries</em> of each branch, and a summary is
-  precisely the artefact from which a specific figure has been compressed away. The
-  median retrieved node sits at ordinal 818 against a gold node at 406: the right region
-  of the filing, the wrong node within it. On a benchmark dominated by extraction, that
-  is fatal. It would not be on a benchmark of thematic or whole-document questions,
-  which is the use this index structure was designed for.</p>
+  precisely the artefact from which a specific figure has been compressed away. Only
+  6.9% of the nodes it returns are evidence nodes, against
+  29.1% for BM25, and where it misses, the nearest evidence
+  sits a median of 324 nodes away, or
+  29.2% of the filing it was searching. BM25 misses by
+  38 nodes, or 3.0%. So this is
+  not a retriever landing in the right region and choosing the wrong paragraph within
+  it; it is landing in the wrong part of the document, biased late, with a median
+  returned node at 0.596 of the way through a filing
+  whose evidence sits at 0.354. On a benchmark dominated by
+  extraction that is fatal. It would not be on a benchmark of thematic or
+  whole-document questions, which is the use this index structure was designed for.</p>
 
   <h2>What would weaken these findings</h2>
   <ul>
@@ -443,15 +501,18 @@
   <h2>Reproducing this</h2>
   <p>Every number and figure above is generated from the <code>results</code> table with
   no manual step between: <code>aggregate_results.py</code> produces the tables and the
-  paired statistics, <code>build_figures.py</code> renders Figures 5.1 to 5.6, and this
-  page is assembled by <code>build_report.py</code> from both. The answer-key corrections
+  paired statistics, <code>build_figures.py</code> renders Figures 5.1 to 5.6,
+  <code>index_build_cost.py</code> measures and records Table 5.3,
+  <code>retrieval_diagnostics.py</code> computes the diversity and miss distances
+  quoted above, and this
+  page is assembled by <code>build_report.py</code> from all three. The answer-key corrections
   replay from <code>repair_answer_keys.py</code> and reproduce the corrected database
   exactly. Judging records the fingerprint of the rubric that produced each score, so a
   rescored run cannot silently mix two rubrics.</p>
 
   <footer>
     <p>COMP702 M.Sc. dissertation &middot; 900 cells &middot;
-    18,297 nodes across 13 filings &middot; generated 2026-09-11
+    18,297 nodes across 13 filings &middot; generated 2026-09-12
     from <code>benchmark.db</code></p>
   </footer>
 </main>

@@ -31,3 +31,21 @@ Output Token Cost: 958,129 (measured, exact)
 Wall Clock: 15.5 hours
 Reason: The exact sum of all 24 successful build runs recorded in `index_build_costs.json`, as distinct from the one-pass cost above. It is higher in wall clock and lower in tokens than the one-pass figure for two different reasons. Higher wall clock: AAPL_2023, AAPL_2024 and AAPL_2025 were built more than once, and every filing has additional resumed runs that re-walked already-persisted work and logged 0 tokens while still consuming time. Lower tokens: the two JPM builds contributed 0 to this sum because of the logging defect noted above. This is the honest "what was actually spent" number, and the gap between it and the one-pass estimate is the cost of resumability and rebuilds, which is a real cost of the $0 free-tier constraint rather than an accounting error.
 
+## Phase 7 — Pipeline Answering, Full Benchmark (900 cells)
+
+Input Token Cost: 550,193 (measured, exact)
+Output Token Cost: 48,206 (measured, exact)
+Wall Clock: 6.5 s average per cell
+Reason: The exact sum of `results.input_tokens` and `results.output_tokens` over the 900 PQ rows, which the pipeline answerer records per cell as it runs. Split by pipeline: P1_vector 164,498 in / 16,139 out, P2_bm25 158,621 / 16,352, P3_structural 227,074 / 15,715. All three answer the same 100 questions at the same three depths through the same Groq model, so the input spread is a direct measure of how much text each paradigm puts in front of the answerer for the same question. P3 sends 43% more input than P2 for the same k because tree nodes carry their summaries, which are longer than the raw leaf nodes P1 and P2 return; it is the most expensive to query as well as the most expensive to build, while scoring lowest. Output tokens are near-identical across the three (15.7K to 16.4K) because the answer format is fixed by the prompt, not by the retrieval paradigm. Average latency is 6.18 s (P2), 6.40 s (P1) and 6.87 s (P3) per cell, dominated by the shared Groq call rather than by local retrieval.
+
+## Phase 6 — Judge, Validation Gate (60 outputs)
+
+Input Token Cost: 66,941 (measured, exact)
+Output Token Cost: 4,122 (measured, exact)
+Reason: The sum over the 60 JEQ rows, which is the answering spend for the 20 judge-validation questions across three pipelines. These are the outputs the gate then scored. Recorded the same way as the benchmark rows above, through the answerer's own usage accounting.
+
+## Phase 6 — Judge Scoring, Full Benchmark (900 cells)
+
+Input Token Cost: ~1.21M (estimated, not recorded)
+Output Token Cost: ~2.7K (estimated, not recorded)
+Reason: This is the one operation in the project whose token spend was never captured, and the honest entry is an estimate with its basis stated rather than a measured figure. `results.input_tokens` and `results.output_tokens` are written once, by the pipeline answerer during generation; judging updates only the metric columns and the rubric fingerprint (`_UPDATABLE_SCORE_COLUMNS` in `database_manager.py` contains no token column), so the judge's own calls pass through unaccounted. The estimate reconstructs the prompts deterministically instead of guessing: each row's prompt is its quadrant's cacheable system prefix (4,219 to 6,499 characters, being the rubric plus that quadrant's five graded exemplars) plus a target message carrying the question, the ground-truth answer and the candidate answer. Summed across all 900 rows that is 4,824,234 characters, which at roughly four characters per token gives about 1.21M input tokens. Output is small and bounded by construction: the judge returns a single integer per row, so 900 rows is on the order of 2,700 tokens. The real input figure is likely lower than 1.21M in wall-clock billing terms, because the per-quadrant prefix is identical for every row of that quadrant and is written to be cacheable, so a prompt-caching provider charges those exemplar tokens once per quadrant rather than 225 times. Treat 1.21M as the uncached upper bound and the measured answering spend as the only exact figure for Phase 7.

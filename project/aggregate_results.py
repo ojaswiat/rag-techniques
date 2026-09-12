@@ -14,6 +14,12 @@ independent samples, since every pipeline answers exactly the same cells; the
 pairing removes per-question difficulty, which is the dominant source of
 variance in the set.
 
+Efficiency has a third leg beside latency and tokens: what it cost to
+build each index in the first place. That figure is per corpus rather than
+per cell, so it is carried alongside the per-cell tables rather than inside
+them, and it is read from the committed snapshot described in
+index_build_cost.
+
 Significance is reported as a bootstrap interval and an exact sign test
 rather than a t-test: the per-cell scores are ordinal, bounded and bimodal,
 so a test assuming approximate normality of the underlying values would be
@@ -26,6 +32,8 @@ import math
 import random
 import sqlite3
 from collections import defaultdict
+
+import index_build_cost
 
 # A judged answer counts as a pass at 4 or better: correct on the value, with
 # at most a shortfall in completeness or framing. See judge/async_judge.py.
@@ -166,7 +174,8 @@ def compare(rows: list[dict], left: str, right: str, metric: str = "judge_score"
     }
 
 
-def build_report(conn: sqlite3.Connection, source_set: str = "PQ") -> dict:
+def build_report(conn: sqlite3.Connection, source_set: str = "PQ",
+                 build_cost_path=index_build_cost.SNAPSHOT_PATH) -> dict:
     """The complete aggregation: overall, per k, per quadrant, and comparisons."""
     rows = load_rows(conn, source_set)
     comparisons = []
@@ -182,6 +191,9 @@ def build_report(conn: sqlite3.Connection, source_set: str = "PQ") -> dict:
         "by_quadrant": {f"{k[0]}|{k[1]}": v for k, v in group_by(rows, "quadrant", "pipeline").items()},
         "by_document": {f"{k[0]}|{k[1]}": v for k, v in group_by(rows, "document_id", "pipeline").items()},
         "comparisons": comparisons,
+        # Per corpus, not per cell, so it sits beside the tables rather than
+        # in them. None when the snapshot has not been taken.
+        "index_build": index_build_cost.load_snapshot(build_cost_path),
     }
 
 
@@ -219,8 +231,44 @@ def print_report(report: dict) -> None:
         print(f"{c['metric']:<14}{c['left'] + ' vs ' + c['right']:<32}{c['mean_difference']:>+8.3f}"
               f"{ci:>18}{wlt:>14}{c['sign_test_p']:>9.2e}  {'yes' if c['significant'] else 'no'}")
 
+    print_index_build(report.get("index_build"))
+
     print("\nNote: one temperature-0 run per cell, so these intervals describe "
           "variation across questions, not run-to-run variance.\n")
+
+
+def _hours(seconds: float) -> str:
+    return f"{seconds / 3600:.2f}h" if seconds >= 3600 else f"{seconds:.1f}s"
+
+
+def print_index_build(snapshot: dict | None) -> None:
+    """The one-off cost of building each index, the third efficiency leg."""
+    if not snapshot:
+        print("\nINDEX BUILD COST\n  no snapshot; run index_build_cost.py to take one")
+        return
+
+    print(f"\nINDEX BUILD COST (one off, {snapshot['corpus_nodes']:,} nodes)\n"
+          f"{'pipeline':<16}{'LLM':>5}{'filings':>9}{'total':>10}{'median':>10}"
+          f"{'s/1k nodes':>12}{'in tok':>12}{'out tok':>12}{'later':>9}")
+    for pipeline in PIPELINES:
+        b = snapshot["pipelines"].get(pipeline)
+        if not b:
+            continue
+        median = f"{b['median_filing_sec'] / 60:.1f}m" if b["median_filing_sec"] else "-"
+        print(f"{pipeline:<16}{'yes' if b['uses_llm'] else 'no':>5}{b['filings']:>9}"
+              f"{_hours(b['wall_clock_sec']):>10}{median:>10}"
+              f"{b['sec_per_1k_nodes']:>12.1f}{b['input_tokens']:>12,}"
+              f"{b['output_tokens']:>12,}{_hours(b['later_attempt_sec']):>9}")
+    print("  One build from scratch per filing. Wall clock as measured, including "
+          "time spent\n  waiting on the LLM provider. 'later' is time spent on "
+          "rebuilds and resumed runs\n  on top of that first build.")
+    for pipeline in PIPELINES:
+        b = snapshot["pipelines"].get(pipeline) or {}
+        missing = b.get("filings_missing_tokens") or []
+        if missing:
+            print(f"  {pipeline}: token counts are a floor over "
+                  f"{b['filings_with_tokens']} of {b['filings']} filings; "
+                  f"{', '.join(missing)} built before the token log recorded them.")
 
 
 def main(argv: list[str] | None = None) -> int:

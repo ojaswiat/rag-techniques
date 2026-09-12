@@ -1,0 +1,707 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Three Ways to Read a 10-K &middot; Findings</title>
+<style>
+:root {
+  --ink:#0A1F33; --body:#1A1D21; --muted:#54595F; --faint:#7A8087;
+  --rule:#E2E5E9; --hair:#EEF0F3; --paper:#FFFFFF; --wash:#F7F9FB;
+  --gold:#D4A017; --gold-wash:#FEF7E4;
+  --p1:#3D5AFE; --p2:#00A5A8; --p3:#FF4D6D;
+  --serif:"EB Garamond",Garamond,"Times New Roman",serif;
+  --sans:Calibri,Carlito,"Segoe UI",system-ui,-apple-system,sans-serif;
+  --mono:Consolas,"SF Mono",Menlo,monospace;
+}
+* { box-sizing:border-box; }
+body { margin:0; background:var(--paper); color:var(--body);
+       font-family:var(--serif); font-size:17px; line-height:1.65;
+       -webkit-font-smoothing:antialiased; }
+.wrap { max-width:1080px; margin:0 auto; padding-inline:24px; }
+h1,h2,h3,h4 { font-family:var(--sans); color:var(--ink); text-wrap:balance; margin:0; }
+h1 { font-size:clamp(2rem,5vw,3.1rem); font-weight:700; letter-spacing:-.02em; line-height:1.1; }
+h2 { font-size:clamp(1.3rem,3vw,1.8rem); font-weight:700; letter-spacing:-.01em; }
+h3 { font-size:1.12rem; font-weight:700; }
+h4 { font-size:.82rem; font-weight:700; text-transform:uppercase;
+     letter-spacing:.09em; color:var(--muted); margin-bottom:.9rem; }
+p { margin:0 0 1rem; max-width:68ch; }
+a { color:var(--p1); }
+
+/* masthead */
+header { border-top:6px solid var(--ink); padding-block:3.2rem 2.2rem; }
+.eyebrow { font-family:var(--sans); font-size:.74rem; font-weight:700;
+           text-transform:uppercase; letter-spacing:.16em; color:var(--p2); margin:0 0 .9rem; }
+.stand { font-size:1.2rem; color:var(--muted); max-width:60ch; margin-top:1.1rem; }
+.rule-bar { display:flex; height:5px; margin-top:2rem; }
+.rule-bar i { flex:1; }
+
+/* facts */
+.facts { display:grid; grid-template-columns:repeat(6,1fr); gap:1px;
+         background:var(--rule); border-block:1px solid var(--rule); margin-block:2.4rem; }
+.fact { background:var(--paper); padding:1.1rem .9rem; text-align:center; }
+.fact b { display:block; font-family:var(--sans); font-size:1.55rem;
+          font-weight:700; color:var(--ink); line-height:1.15; }
+.fact span { display:block; font-family:var(--sans); font-size:.72rem;
+             text-transform:uppercase; letter-spacing:.05em; color:var(--faint); margin-top:.3rem; }
+
+section { padding-block:2.6rem; border-top:1px solid var(--hair); }
+section > h2 { margin-bottom:.4rem; }
+.lede { color:var(--muted); margin-bottom:1.8rem; }
+
+/* key finding */
+.finding { background:var(--gold-wash); border-left:5px solid var(--gold);
+           padding:1.4rem 1.6rem; margin-block:1.6rem; }
+.finding p { margin:0; max-width:none; }
+.finding p + p { margin-top:.7rem; }
+.finding b { color:var(--ink); }
+
+/* scoreboard */
+.cards { display:grid; grid-template-columns:repeat(3,1fr); gap:1rem; margin-top:1.4rem; }
+.card { border:1px solid var(--rule); border-top:4px solid var(--hue);
+        padding:1.3rem 1.2rem; background:var(--paper); }
+.card-top { display:flex; gap:.85rem; align-items:flex-start; }
+.rank { flex:none; width:30px; height:30px; border-radius:50%; background:var(--wash);
+        color:var(--hue); font-family:var(--sans); font-weight:700; font-size:.95rem;
+        display:grid; place-items:center; }
+.card h3 { line-height:1.25; }
+.card-top p { font-size:.88rem; color:var(--faint); margin:.25rem 0 0; }
+.card-nums { display:grid; grid-template-columns:repeat(3,1fr); gap:.5rem;
+             margin-top:1.2rem; padding-top:1rem; border-top:1px solid var(--hair); }
+.card-nums b { display:block; font-family:var(--sans); font-size:1.35rem;
+               font-weight:700; color:var(--hue); }
+.card-nums span { display:block; font-family:var(--sans); font-size:.68rem;
+                  text-transform:uppercase; letter-spacing:.05em; color:var(--faint); }
+
+/* tables */
+.scroll { overflow-x:auto; margin-block:1.4rem; }
+table { border-collapse:collapse; width:100%; font-family:var(--sans);
+        font-size:.88rem; min-width:640px; }
+caption { caption-side:top; text-align:left; font-family:var(--sans); font-size:.8rem;
+          color:var(--faint); padding-bottom:.7rem; }
+th,td { padding:.62rem .7rem; text-align:right; border-bottom:1px solid var(--hair);
+        font-variant-numeric:tabular-nums; }
+thead th { text-align:right; font-size:.72rem; text-transform:uppercase; letter-spacing:.05em;
+           color:#fff; background:var(--ink); border-bottom:none; font-weight:700; }
+thead th:first-child, tbody th { text-align:left; }
+tbody th { font-weight:700; color:var(--ink); white-space:nowrap; }
+tbody tr:nth-child(even) { background:var(--wash); }
+.dot { display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:.5rem; }
+.mono { font-family:var(--mono); font-size:.82rem; }
+.pill { display:inline-block; font-size:.7rem; font-weight:700; padding:.2em .65em;
+        border-radius:2px; text-transform:uppercase; letter-spacing:.04em; }
+.pill.yes { background:var(--gold); color:#3A2C00; }
+.pill.no { background:#E9ECEF; color:var(--muted); }
+
+/* bars */
+.pair { display:grid; grid-template-columns:1fr 1fr; gap:2.4rem; margin-top:1.2rem; }
+.bar { display:grid; grid-template-columns:6.6rem 1fr 4.2rem; align-items:center;
+       gap:.7rem; margin-bottom:.55rem; font-family:var(--sans); font-size:.83rem; }
+.bar-l { color:var(--muted); }
+.bar-t { background:var(--hair); height:16px; overflow:hidden; }
+.bar-f { display:block; height:100%; }
+.bar-v { text-align:right; font-weight:700; color:var(--ink); font-variant-numeric:tabular-nums; }
+
+/* distribution */
+.dist-wrap { margin-top:1.2rem; }
+.dist { display:grid; grid-template-columns:6.6rem 1fr; align-items:center;
+        gap:.7rem; margin-bottom:.5rem; font-family:var(--sans); font-size:.83rem; }
+.dist-l { color:var(--muted); }
+.dist-t { display:flex; height:30px; overflow:hidden; }
+.seg { display:grid; place-items:center; color:#fff; font-size:.72rem; font-weight:700; }
+.key { display:flex; flex-wrap:wrap; align-items:center; gap:.75rem; margin-top:1rem;
+       font-family:var(--sans); font-size:.75rem; color:var(--faint); }
+.key span { display:inline-flex; align-items:center; gap:.35rem; }
+.key i { width:13px; height:13px; display:inline-block; }
+.key em { font-style:normal; }
+
+/* svg charts */
+.chart { margin-top:1.2rem; }
+.chart svg { width:100%; height:auto; display:block; overflow:visible; }
+.grid { stroke:var(--hair); stroke-width:1; }
+.axis { stroke:var(--rule); stroke-width:1.5; }
+.zero { stroke:var(--faint); stroke-width:1.5; stroke-dasharray:4 4; }
+.ax { font-family:Calibri,Carlito,system-ui,sans-serif; font-size:13px; fill:var(--faint); }
+.lbl { font-family:Calibri,Carlito,system-ui,sans-serif; font-size:14px;
+       font-weight:700; fill:var(--ink); }
+.cap { font-family:var(--sans); font-size:.78rem; color:var(--faint); margin-top:.9rem; }
+.swatch { display:inline-block; width:11px; height:11px; vertical-align:-1px; }
+
+/* quadrants */
+.quads { display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-top:1.4rem; }
+.quad { border:1px solid var(--rule); padding:1.2rem; }
+.quad .eyebrow { color:var(--faint); margin-bottom:.4rem; }
+.quad h4 { font-size:1.02rem; text-transform:none; letter-spacing:0;
+           color:var(--ink); margin-bottom:.3rem; }
+.blurb { font-size:.9rem; color:var(--faint); margin-bottom:1rem; }
+.flip { display:inline-block; margin-top:.5rem; font-family:var(--sans); font-size:.72rem;
+        font-weight:700; background:var(--gold-wash); color:#6B5200;
+        padding:.25em .6em; text-transform:uppercase; letter-spacing:.04em; }
+
+/* log bars + heatmap */
+.logbars { margin-top:1.2rem; }
+.heat { margin-top:1.2rem; font-family:var(--sans); font-size:.8rem; }
+.hm-row { display:grid; grid-template-columns:7.5rem 4.4rem repeat(3,1fr); gap:2px; margin-bottom:2px; }
+.hm-head .hm-h { font-size:.7rem; text-transform:uppercase; letter-spacing:.05em;
+                 color:var(--faint); text-align:center; padding-bottom:.3rem;
+                 white-space:nowrap; overflow:hidden; }
+.hm-head b { font-weight:700; }
+.sm { display:none; }
+.hm-r { display:flex; align-items:center; color:var(--muted); font-variant-numeric:tabular-nums; }
+.hm-n { display:grid; place-items:center; color:var(--faint); font-size:.72rem;
+        font-variant-numeric:tabular-nums; }
+.hm-head .hm-n { text-transform:uppercase; letter-spacing:.05em; padding-bottom:.3rem; }
+.hm-c { display:grid; place-items:center; padding:.5rem 0; font-weight:700;
+        font-variant-numeric:tabular-nums; }
+
+.note { font-size:.95rem; color:var(--muted); border-left:3px solid var(--rule);
+        padding-left:1rem; }
+ul { padding-left:1.15rem; max-width:68ch; }
+li { margin-bottom:.55rem; }
+li b { color:var(--ink); }
+footer { border-top:1px solid var(--rule); margin-top:2rem; padding-block:1.6rem 3rem;
+         font-family:var(--sans); font-size:.78rem; color:var(--faint); }
+footer code { font-family:var(--mono); }
+
+@media (max-width:900px) {
+  .facts { grid-template-columns:repeat(3,1fr); }
+  .cards, .pair, .quads { grid-template-columns:1fr; }
+}
+@media (max-width:560px) {
+  body { font-size:16px; }
+  .facts { grid-template-columns:repeat(2,1fr); }
+  .bar, .dist { grid-template-columns:5rem 1fr 3.4rem; }
+  .dist { grid-template-columns:5rem 1fr; }
+  .hm-row { grid-template-columns:4.8rem 1.9rem repeat(3,1fr); }
+  .hm-head .hm-h, .hm-head .hm-n { font-size:.66rem; letter-spacing:.02em; }
+  .lg { display:none; }
+  .sm { display:inline; }
+  .hm-r, .hm-c { font-size:.76rem; }
+}
+@media print { section { break-inside:avoid; } }
+</style>
+</head>
+<body>
+
+<header class="wrap">
+  <p class="eyebrow">COMP702 benchmark &middot; results</p>
+  <h1>Three ways to read a 10-K</h1>
+  <p class="stand">Semantic, statistical and structural retrieval answer the same
+  100 questions over 13 SEC annual reports, at three retrieval
+  depths, judged on the same scale. These are the findings.</p>
+  <div class="rule-bar">
+    <i style="background:var(--p1)"></i><i style="background:var(--p2)"></i>
+    <i style="background:var(--p3)"></i><i style="background:var(--gold)"></i>
+  </div>
+</header>
+
+<div class="wrap">
+    <div class="facts">
+      <div class="fact"><b>13</b><span>SEC 10-K filings</span></div>
+      <div class="fact"><b>18,297</b><span>indexed nodes</span></div>
+      <div class="fact"><b>100</b><span>benchmark questions</span></div>
+      <div class="fact"><b>3</b><span>retrieval paradigms</span></div>
+      <div class="fact"><b>900</b><span>scored cells</span></div>
+      <div class="fact"><b>86.7%</b><span>judge concordance</span></div>
+    </div>
+</div>
+
+<div class="wrap">
+<section style="border-top:none;padding-top:0">
+  <h2>The headline</h2>
+  <div class="finding">
+    <p><b>Semantic and statistical retrieval are indistinguishable on this benchmark.</b>
+    BM25 leads the vector pipeline on every point estimate, but the paired difference in
+    judge score is -0.160 with a 95% interval of
+    [-0.340, +0.013], which spans zero. They tie on
+    231 of 300 cells.</p>
+    <p><b>The structural pipeline trails both by roughly two judge points</b>, with
+    intervals nowhere near zero, and it is also the most expensive of the three to build
+    and to query.</p>
+  </div>
+  <div class="cards">
+      <div class="card" style="--hue:#00A5A8;--wash:#DFF5F5">
+        <div class="card-top"><span class="rank">1</span>
+          <div><h3>P2 BM25</h3><p>rank_bm25 only, purely statistical</p></div></div>
+        <div class="card-nums">
+          <div><b>4.02</b><span>judge mean</span></div>
+          <div><b>74%</b><span>pass rate</span></div>
+          <div><b>0.706</b><span>recall</span></div>
+        </div>
+      </div>
+      <div class="card" style="--hue:#3D5AFE;--wash:#E8ECFF">
+        <div class="card-top"><span class="rank">2</span>
+          <div><h3>P1 Vector</h3><p>ChromaDB and fastembed, reranked by a local cross-encoder</p></div></div>
+        <div class="card-nums">
+          <div><b>3.86</b><span>judge mean</span></div>
+          <div><b>69%</b><span>pass rate</span></div>
+          <div><b>0.668</b><span>recall</span></div>
+        </div>
+      </div>
+      <div class="card" style="--hue:#FF4D6D;--wash:#FFE7EB">
+        <div class="card-top"><span class="rank">3</span>
+          <div><h3>P3 Structural</h3><p>a LlamaIndex summary tree per filing</p></div></div>
+        <div class="card-nums">
+          <div><b>1.88</b><span>judge mean</span></div>
+          <div><b>21%</b><span>pass rate</span></div>
+          <div><b>0.181</b><span>recall</span></div>
+        </div>
+      </div>
+  </div>
+</section>
+
+<section>
+  <h2>All three pillars</h2>
+  <p class="lede">Retrieval quality, answer quality and efficiency, over all
+  900 cells.</p>
+  <div class="scroll">
+    <table>
+      <caption>Table 1. Every metric, 300 cells per pipeline. Pass counts 4 and 5; fail counts 1.</caption>
+      <thead><tr><th>Pipeline</th><th>Judge</th><th>Pass</th><th>Fail</th><th>Recall</th>
+        <th>Precision</th><th>Hit rate</th><th>Citations</th><th>Token F1</th><th>Latency</th></tr></thead>
+      <tbody>
+        <tr>
+          <th scope="row"><span class="dot" style="background:#00A5A8"></span>P2 BM25</th>
+          <td>4.02</td><td>74.3%</td>
+          <td>20.7%</td><td>0.706</td>
+          <td>0.326</td><td>84.0%</td>
+          <td>77.3%</td><td>0.295</td>
+          <td>6.18 s</td>
+        </tr>
+        <tr>
+          <th scope="row"><span class="dot" style="background:#3D5AFE"></span>P1 Vector</th>
+          <td>3.86</td><td>69.0%</td>
+          <td>23.3%</td><td>0.668</td>
+          <td>0.314</td><td>80.7%</td>
+          <td>71.7%</td><td>0.270</td>
+          <td>6.40 s</td>
+        </tr>
+        <tr>
+          <th scope="row"><span class="dot" style="background:#FF4D6D"></span>P3 Structural</th>
+          <td>1.88</td><td>21.3%</td>
+          <td>75.7%</td><td>0.181</td>
+          <td>0.070</td><td>20.7%</td>
+          <td>35.7%</td><td>0.138</td>
+          <td>6.87 s</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <h2>Answer quality</h2>
+  <p class="lede">The pass rate is the more honest summary, for the reason the next
+  chart makes plain.</p>
+      <div class="pair">
+        <div><h4>Mean judge score</h4><div class="bar">
+      <span class="bar-l">P2 BM25</span>
+      <span class="bar-t"><span class="bar-f" style="width:80.3%;background:#00A5A8"></span></span>
+      <span class="bar-v">4.02 / 5</span>
+    </div><div class="bar">
+      <span class="bar-l">P1 Vector</span>
+      <span class="bar-t"><span class="bar-f" style="width:77.1%;background:#3D5AFE"></span></span>
+      <span class="bar-v">3.86 / 5</span>
+    </div><div class="bar">
+      <span class="bar-l">P3 Structural</span>
+      <span class="bar-t"><span class="bar-f" style="width:37.6%;background:#FF4D6D"></span></span>
+      <span class="bar-v">1.88 / 5</span>
+    </div></div>
+        <div><h4>Pass rate, scoring 4 or 5</h4><div class="bar">
+      <span class="bar-l">P2 BM25</span>
+      <span class="bar-t"><span class="bar-f" style="width:74.3%;background:#00A5A8"></span></span>
+      <span class="bar-v">74.3%</span>
+    </div><div class="bar">
+      <span class="bar-l">P1 Vector</span>
+      <span class="bar-t"><span class="bar-f" style="width:69.0%;background:#3D5AFE"></span></span>
+      <span class="bar-v">69.0%</span>
+    </div><div class="bar">
+      <span class="bar-l">P3 Structural</span>
+      <span class="bar-t"><span class="bar-f" style="width:21.3%;background:#FF4D6D"></span></span>
+      <span class="bar-v">21.3%</span>
+    </div></div>
+      </div>
+</section>
+
+<section>
+  <h2>The scores are bimodal, not spread</h2>
+  <p class="lede">Almost every answer is either fully correct or wholly wrong. A mean of
+  3.0 over this shape would describe no answer that any pipeline actually gave, which is
+  why a pass rate is reported beside it.</p>
+      <div class="dist-wrap">
+        <div class="dist">
+          <span class="dist-l">P2 BM25</span>
+          <span class="dist-t"><span class="seg" style="width:20.67%;background:#FF4D6D" title="score 1: 62 cells">62</span><span class="seg" style="width:2.67%;background:#FF8A5B" title="score 2: 8 cells"></span><span class="seg" style="width:2.33%;background:#FFC145" title="score 3: 7 cells"></span><span class="seg" style="width:3.00%;background:#7BC96F" title="score 4: 9 cells"></span><span class="seg" style="width:71.33%;background:#00A5A8" title="score 5: 214 cells">214</span></span>
+        </div>
+        <div class="dist">
+          <span class="dist-l">P1 Vector</span>
+          <span class="dist-t"><span class="seg" style="width:23.33%;background:#FF4D6D" title="score 1: 70 cells">70</span><span class="seg" style="width:3.67%;background:#FF8A5B" title="score 2: 11 cells"></span><span class="seg" style="width:4.00%;background:#FFC145" title="score 3: 12 cells"></span><span class="seg" style="width:2.00%;background:#7BC96F" title="score 4: 6 cells"></span><span class="seg" style="width:67.00%;background:#00A5A8" title="score 5: 201 cells">201</span></span>
+        </div>
+        <div class="dist">
+          <span class="dist-l">P3 Structural</span>
+          <span class="dist-t"><span class="seg" style="width:75.67%;background:#FF4D6D" title="score 1: 227 cells">227</span><span class="seg" style="width:2.33%;background:#FF8A5B" title="score 2: 7 cells"></span><span class="seg" style="width:0.67%;background:#FFC145" title="score 3: 2 cells"></span><span class="seg" style="width:1.00%;background:#7BC96F" title="score 4: 3 cells"></span><span class="seg" style="width:20.33%;background:#00A5A8" title="score 5: 61 cells">61</span></span>
+        </div>
+        <div class="key"><span><i style="background:#FF4D6D"></i>1</span><span><i style="background:#FF8A5B"></i>2</span><span><i style="background:#FFC145"></i>3</span><span><i style="background:#7BC96F"></i>4</span><span><i style="background:#00A5A8"></i>5</span><em>judge score, 1 wrong to 5 correct</em></div>
+      </div>
+</section>
+
+<section>
+  <h2>Depth helps, but it does not rescue</h2>
+  <p class="lede">Every pipeline improves as k rises from 2 to 5. The structural pipeline
+  improves the most in relative terms and is still far below where the other two start.</p>
+      <div class="chart">
+        <svg viewBox="0 0 760 296" role="img" aria-label="Judge score against retrieval depth">
+          <line x1="74" y1="250.0" x2="566" y2="250.0" class="grid"/><line x1="74" y1="206.8" x2="566" y2="206.8" class="grid"/><line x1="74" y1="163.6" x2="566" y2="163.6" class="grid"/><line x1="74" y1="120.4" x2="566" y2="120.4" class="grid"/><line x1="74" y1="77.2" x2="566" y2="77.2" class="grid"/><line x1="74" y1="34.0" x2="566" y2="34.0" class="grid"/>
+          <line x1="74" y1="34" x2="74" y2="250" class="axis"/>
+          <line x1="74" y1="250" x2="566" y2="250" class="axis"/>
+          <text x="62" y="254.0" class="ax" text-anchor="end">0</text><text x="62" y="210.8" class="ax" text-anchor="end">1</text><text x="62" y="167.6" class="ax" text-anchor="end">2</text><text x="62" y="124.4" class="ax" text-anchor="end">3</text><text x="62" y="81.2" class="ax" text-anchor="end">4</text><text x="62" y="38.0" class="ax" text-anchor="end">5</text><text x="74.0" y="276" class="ax" text-anchor="middle">k = 2</text><text x="320.0" y="276" class="ax" text-anchor="middle">k = 3</text><text x="566.0" y="276" class="ax" text-anchor="middle">k = 5</text>
+          <path d="M74.0,86.3 L320.0,85.8 L566.0,78.1" fill="none" stroke="#3D5AFE" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="74.0" cy="86.3" r="5" fill="#3D5AFE"/><circle cx="320.0" cy="85.8" r="5" fill="#3D5AFE"/><circle cx="566.0" cy="78.1" r="5" fill="#3D5AFE"/><line x1="572.0" y1="78.1" x2="578.0" y2="84.3" stroke="#3D5AFE" stroke-width="1.5"/><text x="582.0" y="88.3" class="lbl" fill="#3D5AFE">P1 Vector</text><path d="M74.0,83.2 L320.0,78.9 L566.0,67.3" fill="none" stroke="#00A5A8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="74.0" cy="83.2" r="5" fill="#00A5A8"/><circle cx="320.0" cy="78.9" r="5" fill="#00A5A8"/><circle cx="566.0" cy="67.3" r="5" fill="#00A5A8"/><text x="582.0" y="71.3" class="lbl" fill="#00A5A8">P2 BM25</text><path d="M74.0,179.6 L320.0,170.1 L566.0,156.7" fill="none" stroke="#FF4D6D" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="74.0" cy="179.6" r="5" fill="#FF4D6D"/><circle cx="320.0" cy="170.1" r="5" fill="#FF4D6D"/><circle cx="566.0" cy="156.7" r="5" fill="#FF4D6D"/><text x="582.0" y="160.7" class="lbl" fill="#FF4D6D">P3 Structural</text>
+        </svg>
+      </div>
+</section>
+
+<section>
+  <h2>Where the ordering changes</h2>
+  <p class="lede">The question set is a genuine two by two: stated directly or inferred,
+  crossed with prose or table. BM25 wins three of the four.</p>
+  <div class="quads">
+        <div class="quad">
+          <p class="eyebrow">Q1</p>
+          <h4>Direct, text</h4><p class="blurb">One explicit statement in continuous prose.</p>
+          <div class="bar">
+      <span class="bar-l">P2 BM25</span>
+      <span class="bar-t"><span class="bar-f" style="width:96.0%;background:#00A5A8"></span></span>
+      <span class="bar-v">4.80</span>
+    </div><div class="bar">
+      <span class="bar-l">P1 Vector</span>
+      <span class="bar-t"><span class="bar-f" style="width:89.3%;background:#3D5AFE"></span></span>
+      <span class="bar-v">4.47</span>
+    </div><div class="bar">
+      <span class="bar-l">P3 Structural</span>
+      <span class="bar-t"><span class="bar-f" style="width:38.9%;background:#FF4D6D"></span></span>
+      <span class="bar-v">1.95</span>
+    </div>
+        </div>
+        <div class="quad">
+          <p class="eyebrow">Q2</p>
+          <h4>Implicit, text</h4><p class="blurb">Synthesis across several narrative passages.</p>
+          <div class="bar">
+      <span class="bar-l">P2 BM25</span>
+      <span class="bar-t"><span class="bar-f" style="width:78.4%;background:#00A5A8"></span></span>
+      <span class="bar-v">3.92</span>
+    </div><div class="bar">
+      <span class="bar-l">P1 Vector</span>
+      <span class="bar-t"><span class="bar-f" style="width:68.3%;background:#3D5AFE"></span></span>
+      <span class="bar-v">3.41</span>
+    </div><div class="bar">
+      <span class="bar-l">P3 Structural</span>
+      <span class="bar-t"><span class="bar-f" style="width:34.1%;background:#FF4D6D"></span></span>
+      <span class="bar-v">1.71</span>
+    </div>
+        </div>
+        <div class="quad">
+          <p class="eyebrow">Q3</p>
+          <h4>Direct, table</h4><p class="blurb">Exact extraction of a single table cell.</p>
+          <div class="bar">
+      <span class="bar-l">P2 BM25</span>
+      <span class="bar-t"><span class="bar-f" style="width:86.9%;background:#00A5A8"></span></span>
+      <span class="bar-v">4.35</span>
+    </div><div class="bar">
+      <span class="bar-l">P1 Vector</span>
+      <span class="bar-t"><span class="bar-f" style="width:86.1%;background:#3D5AFE"></span></span>
+      <span class="bar-v">4.31</span>
+    </div><div class="bar">
+      <span class="bar-l">P3 Structural</span>
+      <span class="bar-t"><span class="bar-f" style="width:38.9%;background:#FF4D6D"></span></span>
+      <span class="bar-v">1.95</span>
+    </div>
+        </div>
+        <div class="quad">
+          <p class="eyebrow">Q4</p>
+          <h4>Implicit, table</h4><p class="blurb">A calculation or inference over a table.</p>
+          <div class="bar">
+      <span class="bar-l">P2 BM25</span>
+      <span class="bar-t"><span class="bar-f" style="width:60.0%;background:#00A5A8"></span></span>
+      <span class="bar-v">3.00</span>
+    </div><div class="bar">
+      <span class="bar-l">P1 Vector</span>
+      <span class="bar-t"><span class="bar-f" style="width:64.8%;background:#3D5AFE"></span></span>
+      <span class="bar-v">3.24</span>
+    </div><div class="bar">
+      <span class="bar-l">P3 Structural</span>
+      <span class="bar-t"><span class="bar-f" style="width:38.4%;background:#FF4D6D"></span></span>
+      <span class="bar-v">1.92</span>
+    </div><span class="flip">P1 Vector leads here</span>
+        </div>
+  </div>
+  <p class="note" style="margin-top:1.4rem">The exception is
+  Implicit, table, the one quadrant where the answer never appears
+  verbatim anywhere in the filing. P1 Vector leads there at
+  3.24 against 3.00 for BM25, which is what you would expect
+  once exact term matching has nothing exact to match.</p>
+</section>
+
+<section>
+  <h2>Is the difference real</h2>
+  <p class="lede">Every pipeline answers exactly the same cells, so comparisons are
+  paired on question and depth. Significance is a bootstrap interval and an exact sign
+  test, not a t-test: these scores are ordinal, bounded and bimodal.</p>
+      <div class="chart">
+        <h4>Judge score, 1 to 5</h4>
+        <svg viewBox="0 0 810 208" role="img" aria-label="Paired differences in Judge score, 1 to 5">
+          <line x1="395.5" y1="26" x2="395.5" y2="178" class="zero"/>
+          <text x="395.5" y="17" class="ax" text-anchor="middle">no difference</text>
+          <text x="12" y="55" class="lbl">P1 Vector vs P2 BM25</text><line x1="353.6" y1="50" x2="397.2" y2="50" stroke="#767C84" stroke-width="3" stroke-linecap="round"/><circle cx="375.8" cy="50" r="6" fill="#767C84"/><text x="750" y="55" class="ax" text-anchor="start">-0.160</text><text x="12" y="101" class="lbl">P1 Vector vs P3 Structural</text><line x1="610.7" y1="96" x2="668.7" y2="96" stroke="#D4A017" stroke-width="3" stroke-linecap="round"/><circle cx="639.5" cy="96" r="6" fill="#D4A017"/><text x="750" y="101" class="ax" text-anchor="start">+1.977</text><text x="12" y="147" class="lbl">P2 BM25 vs P3 Structural</text><line x1="629.6" y1="142" x2="688.4" y2="142" stroke="#D4A017" stroke-width="3" stroke-linecap="round"/><circle cx="659.2" cy="142" r="6" fill="#D4A017"/><text x="750" y="147" class="ax" text-anchor="start">+2.137</text>
+          <text x="300" y="198" class="ax" text-anchor="start">-0.77</text>
+          <text x="742" y="198" class="ax" text-anchor="end">+2.81</text>
+        </svg>
+      </div>
+      <div class="chart">
+        <h4>Recall at k, 0 to 1</h4>
+        <svg viewBox="0 0 810 208" role="img" aria-label="Paired differences in Recall at k, 0 to 1">
+          <line x1="394.3" y1="26" x2="394.3" y2="178" class="zero"/>
+          <text x="394.3" y="17" class="ax" text-anchor="middle">no difference</text>
+          <text x="12" y="55" class="lbl">P1 Vector vs P2 BM25</text><line x1="353.6" y1="50" x2="396.5" y2="50" stroke="#767C84" stroke-width="3" stroke-linecap="round"/><circle cx="375.3" cy="50" r="6" fill="#767C84"/><text x="750" y="55" class="ax" text-anchor="start">-0.038</text><text x="12" y="101" class="lbl">P1 Vector vs P3 Structural</text><line x1="610.7" y1="96" x2="668.3" y2="96" stroke="#D4A017" stroke-width="3" stroke-linecap="round"/><circle cx="639.4" cy="96" r="6" fill="#D4A017"/><text x="750" y="101" class="ax" text-anchor="start">+0.487</text><text x="12" y="147" class="lbl">P2 BM25 vs P3 Structural</text><line x1="629.2" y1="142" x2="688.4" y2="142" stroke="#D4A017" stroke-width="3" stroke-linecap="round"/><circle cx="658.4" cy="142" r="6" fill="#D4A017"/><text x="750" y="147" class="ax" text-anchor="start">+0.525</text>
+          <text x="300" y="198" class="ax" text-anchor="start">-0.19</text>
+          <text x="742" y="198" class="ax" text-anchor="end">+0.69</text>
+        </svg>
+      </div>
+      <p class="cap"><span class="swatch" style="background:#D4A017"></span> interval clear of zero, a difference is supported &nbsp; <span class="swatch" style="background:#767C84"></span> interval spans zero, it is not</p>
+  <div class="scroll">
+    <table>
+      <caption>Table 2. Paired differences. W/L/T counts cells won, lost and tied.</caption>
+      <thead><tr><th>Comparison</th><th>Metric</th><th>Difference</th><th>95% interval</th>
+        <th>W / L / T</th><th>Sign test</th><th>Verdict</th></tr></thead>
+      <tbody>
+        <tr>
+          <th scope="row">P1 Vector vs P2 BM25</th>
+          <td>Judge score</td>
+          <td>-0.160</td>
+          <td class="mono">[-0.340, +0.013]</td>
+          <td>27 / 42 / 231</td>
+          <td class="mono">9.1e-02</td>
+          <td><span class="pill no">indistinguishable</span></td>
+        </tr>
+        <tr>
+          <th scope="row">P1 Vector vs P3 Structural</th>
+          <td>Judge score</td>
+          <td>+1.977</td>
+          <td class="mono">[+1.743, +2.213]</td>
+          <td>169 / 11 / 120</td>
+          <td class="mono">1.6e-37</td>
+          <td><span class="pill yes">difference</span></td>
+        </tr>
+        <tr>
+          <th scope="row">P2 BM25 vs P3 Structural</th>
+          <td>Judge score</td>
+          <td>+2.137</td>
+          <td class="mono">[+1.897, +2.373]</td>
+          <td>180 / 12 / 108</td>
+          <td class="mono">1.3e-39</td>
+          <td><span class="pill yes">difference</span></td>
+        </tr>
+        <tr>
+          <th scope="row">P1 Vector vs P2 BM25</th>
+          <td>Recall</td>
+          <td>-0.038</td>
+          <td class="mono">[-0.081, +0.004]</td>
+          <td>32 / 42 / 226</td>
+          <td class="mono">3.0e-01</td>
+          <td><span class="pill no">indistinguishable</span></td>
+        </tr>
+        <tr>
+          <th scope="row">P1 Vector vs P3 Structural</th>
+          <td>Recall</td>
+          <td>+0.487</td>
+          <td class="mono">[+0.430, +0.544]</td>
+          <td>187 / 8 / 105</td>
+          <td class="mono">1.9e-45</td>
+          <td><span class="pill yes">difference</span></td>
+        </tr>
+        <tr>
+          <th scope="row">P2 BM25 vs P3 Structural</th>
+          <td>Recall</td>
+          <td>+0.525</td>
+          <td class="mono">[+0.466, +0.584]</td>
+          <td>202 / 13 / 85</td>
+          <td class="mono">9.4e-45</td>
+          <td><span class="pill yes">difference</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <h2>What it costs to build</h2>
+  <p class="lede">Latency and tokens describe what a question costs once the index
+  exists. They leave out the one-off cost of creating it, which is where the three
+  paradigms diverge hardest. Two build locally from the same 18,297 nodes with no
+  model call. The third drives an LLM over every node of every filing.</p>
+      <div class="logbars"><div class="bar">
+          <span class="bar-l">P1 Vector</span>
+          <span class="bar-t"><span class="bar-f" style="width:68.3%;background:#3D5AFE"></span></span>
+          <span class="bar-v">22.3 min</span>
+        </div><div class="bar">
+          <span class="bar-l">P2 BM25</span>
+          <span class="bar-t"><span class="bar-f" style="width:6.1%;background:#00A5A8"></span></span>
+          <span class="bar-v">0.9 s</span>
+        </div><div class="bar">
+          <span class="bar-l">P3 Structural</span>
+          <span class="bar-t"><span class="bar-f" style="width:100.0%;background:#FF4D6D"></span></span>
+          <span class="bar-v">10.6 h</span>
+        </div><p class="cap">Log scale. The spread is four orders of magnitude, so a linear axis would render the two local builds invisible.</p></div>
+  <div class="scroll">
+    <table>
+      <caption>Table 3. One build from scratch per filing, measured on the same machine.
+      Wall clock includes time spent waiting on the LLM provider.</caption>
+      <thead><tr><th>Pipeline</th><th>LLM</th><th>Total build</th><th>Median per filing</th>
+        <th>Per 1k nodes</th><th>Build tokens</th><th>On disk</th></tr></thead>
+      <tbody>
+        <tr>
+          <th scope="row"><span class="dot" style="background:#3D5AFE"></span>P1 Vector</th>
+          <td>no</td>
+          <td>22.3 min</td>
+          <td>1.2 min</td>
+          <td>73.2 s</td>
+          <td>none</td>
+          <td>129 MB</td>
+        </tr>
+        <tr>
+          <th scope="row"><span class="dot" style="background:#00A5A8"></span>P2 BM25</th>
+          <td>no</td>
+          <td>0.9 s</td>
+          <td>0.1 s</td>
+          <td>0.05 s</td>
+          <td>none</td>
+          <td>7 MB</td>
+        </tr>
+        <tr>
+          <th scope="row"><span class="dot" style="background:#FF4D6D"></span>P3 Structural</th>
+          <td>yes</td>
+          <td>10.6 h</td>
+          <td>35.0 min</td>
+          <td>2,080 s</td>
+          <td>1,602,673 in / 892,034 out</td>
+          <td>27 MB</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note">The structural index took 10.6 h
+  against 0.9 s for the cheapest
+  local index, a factor of 41,985, and consumed
+  2,494,707 tokens where
+  the other two consumed none. That token count covers
+  11 of 13 filings,
+  so it is a floor. A further 5.0 h went on
+  rebuilds and resumed runs.</p>
+</section>
+
+<section>
+  <h2>What it costs to ask</h2>
+  <p class="lede">Answering spend over the 900 cells, recorded per call.</p>
+  <div class="scroll">
+    <table>
+      <caption>Table 4. Answering tokens only. The judge's own calls are not recorded.</caption>
+      <thead><tr><th>Pipeline</th><th>Input tokens</th><th>Output tokens</th>
+        <th>Input per cell</th><th>Mean latency</th></tr></thead>
+      <tbody>
+        <tr>
+          <th scope="row"><span class="dot" style="background:#3D5AFE"></span>P1 Vector</th>
+          <td>164,498</td><td>16,139</td>
+          <td>548</td><td>6.40 s</td>
+        </tr>
+        <tr>
+          <th scope="row"><span class="dot" style="background:#00A5A8"></span>P2 BM25</th>
+          <td>158,621</td><td>16,352</td>
+          <td>529</td><td>6.18 s</td>
+        </tr>
+        <tr>
+          <th scope="row"><span class="dot" style="background:#FF4D6D"></span>P3 Structural</th>
+          <td>227,074</td><td>15,715</td>
+          <td>757</td><td>6.87 s</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note">The structural pipeline sends the most text to the answerer for the
+  same question, because tree nodes carry summaries rather than raw passages. It is the
+  most expensive to query as well as to build, while scoring lowest.</p>
+</section>
+
+<section>
+  <h2>Filing by filing</h2>
+  <p class="lede">Mean judge score for each of the 13 filings. BM25 leads
+  outright on six, the vector pipeline on three, and they tie on two more. The structural
+  pipeline is last on eleven of thirteen, and on the two where it is not, all three score
+  identically.</p>
+      <div class="heat">
+        <div class="hm-row hm-head"><span class="hm-r"></span><span class="hm-n"><b class="lg">questions</b><b class="sm">n</b></span><span class="hm-h"><b class="lg">P1 Vector</b><b class="sm">P1</b></span><span class="hm-h"><b class="lg">P2 BM25</b><b class="sm">P2</b></span><span class="hm-h"><b class="lg">P3 Structural</b><b class="sm">P3</b></span></div>
+        <div class="hm-row"><span class="hm-r">AAPL_2023</span><span class="hm-n">11</span><span class="hm-c" style="background:#7BC96F;color:#0A1F33">3.97</span><span class="hm-c" style="background:#7BC96F;color:#0A1F33">4.48</span><span class="hm-c" style="background:#FF8A5B;color:#0A1F33">2.33</span></div><div class="hm-row"><span class="hm-r">AAPL_2024</span><span class="hm-n">2</span><span class="hm-c" style="background:#00A5A8;color:#fff">5.00</span><span class="hm-c" style="background:#00A5A8;color:#fff">5.00</span><span class="hm-c" style="background:#FF8A5B;color:#0A1F33">2.50</span></div><div class="hm-row"><span class="hm-r">AAPL_2025</span><span class="hm-n">1</span><span class="hm-c" style="background:#FF4D6D;color:#fff">1.00</span><span class="hm-c" style="background:#FF4D6D;color:#fff">1.00</span><span class="hm-c" style="background:#FF4D6D;color:#fff">1.00</span></div><div class="hm-row"><span class="hm-r">JNJ_2023</span><span class="hm-n">13</span><span class="hm-c" style="background:#7BC96F;color:#0A1F33">3.56</span><span class="hm-c" style="background:#7BC96F;color:#0A1F33">3.79</span><span class="hm-c" style="background:#FF8A5B;color:#0A1F33">1.62</span></div><div class="hm-row"><span class="hm-r">JNJ_2024</span><span class="hm-n">5</span><span class="hm-c" style="background:#FFC145;color:#0A1F33">3.00</span><span class="hm-c" style="background:#7BC96F;color:#0A1F33">4.20</span><span class="hm-c" style="background:#FF8A5B;color:#0A1F33">1.53</span></div><div class="hm-row"><span class="hm-r">JPM_2023</span><span class="hm-n">17</span><span class="hm-c" style="background:#7BC96F;color:#0A1F33">4.12</span><span class="hm-c" style="background:#7BC96F;color:#0A1F33">4.35</span><span class="hm-c" style="background:#FF8A5B;color:#0A1F33">1.61</span></div><div class="hm-row"><span class="hm-r">JPM_2024</span><span class="hm-n">5</span><span class="hm-c" style="background:#FFC145;color:#0A1F33">3.07</span><span class="hm-c" style="background:#FFC145;color:#0A1F33">3.07</span><span class="hm-c" style="background:#FF4D6D;color:#fff">1.00</span></div><div class="hm-row"><span class="hm-r">MSFT_2023</span><span class="hm-n">16</span><span class="hm-c" style="background:#7BC96F;color:#0A1F33">4.46</span><span class="hm-c" style="background:#00A5A8;color:#fff">4.73</span><span class="hm-c" style="background:#FF4D6D;color:#fff">1.38</span></div><div class="hm-row"><span class="hm-r">MSFT_2024</span><span class="hm-n">7</span><span class="hm-c" style="background:#FFC145;color:#0A1F33">3.05</span><span class="hm-c" style="background:#FFC145;color:#0A1F33">2.81</span><span class="hm-c" style="background:#FFC145;color:#0A1F33">2.62</span></div><div class="hm-row"><span class="hm-r">MSFT_2025</span><span class="hm-n">5</span><span class="hm-c" style="background:#7BC96F;color:#0A1F33">3.67</span><span class="hm-c" style="background:#FF8A5B;color:#0A1F33">2.07</span><span class="hm-c" style="background:#FF8A5B;color:#0A1F33">1.80</span></div><div class="hm-row"><span class="hm-r">TSLA_2023</span><span class="hm-n">13</span><span class="hm-c" style="background:#7BC96F;color:#0A1F33">4.41</span><span class="hm-c" style="background:#00A5A8;color:#fff">4.64</span><span class="hm-c" style="background:#FFC145;color:#0A1F33">2.54</span></div><div class="hm-row"><span class="hm-r">TSLA_2024</span><span class="hm-n">3</span><span class="hm-c" style="background:#FFC145;color:#0A1F33">3.33</span><span class="hm-c" style="background:#FFC145;color:#0A1F33">3.22</span><span class="hm-c" style="background:#FF8A5B;color:#0A1F33">2.33</span></div><div class="hm-row"><span class="hm-r">TSLA_2025</span><span class="hm-n">2</span><span class="hm-c" style="background:#FFC145;color:#0A1F33">3.00</span><span class="hm-c" style="background:#FFC145;color:#0A1F33">3.00</span><span class="hm-c" style="background:#FFC145;color:#0A1F33">3.00</span></div>
+        <div class="key"><span><i style="background:#FF4D6D"></i>1</span><span><i style="background:#FF8A5B"></i>2</span><span><i style="background:#FFC145"></i>3</span><span><i style="background:#7BC96F"></i>4</span><span><i style="background:#00A5A8"></i>5</span><em>mean judge score for that filing</em></div>
+      </div>
+  <p class="note">Read the rows against their question counts. The questions were drawn
+  by quadrant rather than evenly by filing, so one filing carries seventeen of them and
+  another carries one. A row built on a single question is an observation, not a rate.</p>
+</section>
+
+<section>
+  <h2>Why the structural pipeline trails</h2>
+  <p class="lede">A result this lopsided invites the suspicion that something is broken.
+  The numbers say otherwise.</p>
+  <ul>
+    <li><b>It retrieves, it just retrieves the wrong nodes.</b> Hit rate is
+    20.7% against
+    84.0% for P2 BM25: on most questions the
+    supporting node is never returned at all.</li>
+    <li><b>Answer quality tracks retrieval almost exactly.</b> Recall of
+    0.181 against
+    0.706 produces a judge mean of
+    1.88 against 4.02.
+    When the evidence is absent the answering model mostly declines rather than
+    fabricating.</li>
+    <li><b>Its best quadrant is the inferential one.</b> Tree traversal descends by
+    comparing the query against summaries, and a summary is exactly the artefact from
+    which a specific figure has been compressed away. On a benchmark dominated by
+    extraction that is fatal. It would not be on a benchmark of thematic questions,
+    which is the use this structure was designed for.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>What would weaken these findings</h2>
+  <ul>
+    <li><b>One run per cell.</b> Every call is temperature zero and each cell runs once,
+    so these intervals describe variation across questions, not run to run variance.
+    Nothing here estimates the latter.</li>
+    <li><b>The judge gate is a pragmatic check.</b>
+    86.7% concordance on 60 outputs is
+    evidence the judge is usable, not proof it is correct, and it is cross-model
+    concordance rather than external human validation.</li>
+    <li><b>The answer key needed correcting.</b> The question generator returned whole
+    section citation lists on 24 of 100 questions, making full recall arithmetically
+    unreachable on those rows. Citations were re-derived to the minimal set that
+    demonstrably yields the answer, and one answer key was rewritten. Both corrections
+    replay from the repository.</li>
+    <li><b>Build tokens are incomplete.</b> Two filings were built before the build log
+    recorded token counts, so the structural token figure is a floor over
+    11 of 13
+    filings.</li>
+    <li><b>Corpus artefacts survive.</b> A handful of nodes carry identifiers where a
+    figure belongs, and some carry unescaped HTML entities. All three pipelines index the
+    identical corpus, so none is advantaged.</li>
+  </ul>
+</section>
+
+<footer>
+  <p>Generated 2026-09-12 from <code>benchmark.db</code> by
+  <code>project/build_findings_page.py</code>. Every figure on this page is read from the
+  database at build time through <code>aggregate_results.py</code>, with no manual step.
+  900 cells &middot; 18,297 nodes &middot; 13 filings
+  &middot; one temperature-zero run per cell.</p>
+</footer>
+</div>
+
+</body>
+</html>
