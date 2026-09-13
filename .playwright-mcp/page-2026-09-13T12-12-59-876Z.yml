@@ -1,0 +1,324 @@
+- generic [active] [ref=f2e1]:
+  - banner [ref=f2e2]:
+    - generic [ref=f2e3]:
+      - heading "Dissertation figures" [level=1] [ref=f2e4]
+      - paragraph [ref=f2e5]: Every diagram from the report, exported standalone at 2× resolution.
+      - generic [ref=f2e6]: 31 figures
+  - generic [ref=f2e7]:
+    - generic [ref=f2e8]:
+      - figure "00 The verdict Act 0 · Prologue 00_headline_scoreboard.png" [ref=f2e9]:
+        - link [ref=f2e10] [cursor=pointer]:
+          - /url: 00_headline_scoreboard.png
+          - img "The verdict" [ref=f2e11]
+        - generic [ref=f2e12]:
+          - generic [ref=f2e13]: "00"
+          - generic [ref=f2e14]:
+            - strong [ref=f2e15]: The verdict
+            - generic [ref=f2e16]: Act 0 · Prologue
+            - code [ref=f2e17]: 00_headline_scoreboard.png
+      - figure "01 How one question becomes one scored row Act I · The Design 01_data_flow.png" [ref=f2e18]:
+        - link [ref=f2e19] [cursor=pointer]:
+          - /url: 01_data_flow.png
+          - img "How one question becomes one scored row" [ref=f2e20]
+        - generic [ref=f2e21]:
+          - generic [ref=f2e22]: "01"
+          - generic [ref=f2e23]:
+            - strong [ref=f2e24]: How one question becomes one scored row
+            - generic [ref=f2e25]: Act I · The Design
+            - code [ref=f2e26]: 01_data_flow.png
+      - figure "02 System architecture by layer Act I · The Design 02_system_architecture.png" [ref=f2e27]:
+        - link [ref=f2e28] [cursor=pointer]:
+          - /url: 02_system_architecture.png
+          - img "System architecture by layer" [ref=f2e29]
+        - generic [ref=f2e30]:
+          - generic [ref=f2e31]: "02"
+          - generic [ref=f2e32]:
+            - strong [ref=f2e33]: System architecture by layer
+            - generic [ref=f2e34]: Act I · The Design
+            - code [ref=f2e35]: 02_system_architecture.png
+      - figure "03 The five-table schema Act I · The Design 03_database_schema.png" [ref=f2e36]:
+        - link [ref=f2e37] [cursor=pointer]:
+          - /url: 03_database_schema.png
+          - img "The five-table schema" [ref=f2e38]
+        - generic [ref=f2e39]:
+          - generic [ref=f2e40]: "03"
+          - generic [ref=f2e41]:
+            - strong [ref=f2e42]: The five-table schema
+            - generic [ref=f2e43]: Act I · The Design
+            - code [ref=f2e44]: 03_database_schema.png
+      - figure "04 The tri-pillar measurement frame Act I · The Design 04_measurement_framework.png" [ref=f2e45]:
+        - link [ref=f2e46] [cursor=pointer]:
+          - /url: 04_measurement_framework.png
+          - img "The tri-pillar measurement frame" [ref=f2e47]
+        - generic [ref=f2e48]:
+          - generic [ref=f2e49]: "04"
+          - generic [ref=f2e50]:
+            - strong [ref=f2e51]: The tri-pillar measurement frame
+            - generic [ref=f2e52]: Act I · The Design
+            - code [ref=f2e53]: 04_measurement_framework.png
+      - figure "05 The indexed corpus, filing by filing Act I · The Design 05_corpus_by_filing.png" [ref=f2e54]:
+        - link [ref=f2e55] [cursor=pointer]:
+          - /url: 05_corpus_by_filing.png
+          - img "The indexed corpus, filing by filing" [ref=f2e56]
+        - generic [ref=f2e57]:
+          - generic [ref=f2e58]: "05"
+          - generic [ref=f2e59]:
+            - strong [ref=f2e60]: The indexed corpus, filing by filing
+            - generic [ref=f2e61]: Act I · The Design
+            - code [ref=f2e62]: 05_corpus_by_filing.png
+      - figure "06 The question taxonomy Act I · The Design 06_question_quadrants.png" [ref=f2e63]:
+        - link [ref=f2e64] [cursor=pointer]:
+          - /url: 06_question_quadrants.png
+          - img "The question taxonomy" [ref=f2e65]
+        - generic [ref=f2e66]:
+          - generic [ref=f2e67]: "06"
+          - generic [ref=f2e68]:
+            - strong [ref=f2e69]: The question taxonomy
+            - generic [ref=f2e70]: Act I · The Design
+            - code [ref=f2e71]: 06_question_quadrants.png
+      - figure "07 How much evidence each question has Act I · The Design 07_evidence_set_sizes.png" [ref=f2e72]:
+        - link [ref=f2e73] [cursor=pointer]:
+          - /url: 07_evidence_set_sizes.png
+          - img "How much evidence each question has" [ref=f2e74]
+        - generic [ref=f2e75]:
+          - generic [ref=f2e76]: "07"
+          - generic [ref=f2e77]:
+            - strong [ref=f2e78]: How much evidence each question has
+            - generic [ref=f2e79]: Act I · The Design
+            - code [ref=f2e80]: 07_evidence_set_sizes.png
+      - figure "08 The eight-phase build schedule Act II · The Build 08_phase_gantt.png" [ref=f2e81]:
+        - link [ref=f2e82] [cursor=pointer]:
+          - /url: 08_phase_gantt.png
+          - img "The eight-phase build schedule" [ref=f2e83]
+        - generic [ref=f2e84]:
+          - generic [ref=f2e85]: "08"
+          - generic [ref=f2e86]:
+            - strong [ref=f2e87]: The eight-phase build schedule
+            - generic [ref=f2e88]: Act II · The Build
+            - code [ref=f2e89]: 08_phase_gantt.png
+      - figure "09 Commits per active day Act II · The Build 09_commit_activity.png" [ref=f2e90]:
+        - link [ref=f2e91] [cursor=pointer]:
+          - /url: 09_commit_activity.png
+          - img "Commits per active day" [ref=f2e92]
+        - generic [ref=f2e93]:
+          - generic [ref=f2e94]: "09"
+          - generic [ref=f2e95]:
+            - strong [ref=f2e96]: Commits per active day
+            - generic [ref=f2e97]: Act II · The Build
+            - code [ref=f2e98]: 09_commit_activity.png
+      - figure "10 Source against test volume Act II · The Build 10_source_vs_tests.png" [ref=f2e99]:
+        - link [ref=f2e100] [cursor=pointer]:
+          - /url: 10_source_vs_tests.png
+          - img "Source against test volume" [ref=f2e101]
+        - generic [ref=f2e102]:
+          - generic [ref=f2e103]: "10"
+          - generic [ref=f2e104]:
+            - strong [ref=f2e105]: Source against test volume
+            - generic [ref=f2e106]: Act II · The Build
+            - code [ref=f2e107]: 10_source_vs_tests.png
+      - figure "11 Test count at each recorded milestone Act II · The Build 11_test_growth.png" [ref=f2e108]:
+        - link [ref=f2e109] [cursor=pointer]:
+          - /url: 11_test_growth.png
+          - img "Test count at each recorded milestone" [ref=f2e110]
+        - generic [ref=f2e111]:
+          - generic [ref=f2e112]: "11"
+          - generic [ref=f2e113]:
+            - strong [ref=f2e114]: Test count at each recorded milestone
+            - generic [ref=f2e115]: Act II · The Build
+            - code [ref=f2e116]: 11_test_growth.png
+      - figure "12 Fifteen major bugs on the calendar Act III · The Trials 12_bug_calendar.png" [ref=f2e117]:
+        - link [ref=f2e118] [cursor=pointer]:
+          - /url: 12_bug_calendar.png
+          - img "Fifteen major bugs on the calendar" [ref=f2e119]
+        - generic [ref=f2e120]:
+          - generic [ref=f2e121]: "12"
+          - generic [ref=f2e122]:
+            - strong [ref=f2e123]: Fifteen major bugs on the calendar
+            - generic [ref=f2e124]: Act III · The Trials
+            - code [ref=f2e125]: 12_bug_calendar.png
+      - figure "13 Major bugs by severity Act III · The Trials 13_bug_severity.png" [ref=f2e126]:
+        - link [ref=f2e127] [cursor=pointer]:
+          - /url: 13_bug_severity.png
+          - img "Major bugs by severity" [ref=f2e128]
+        - generic [ref=f2e129]:
+          - generic [ref=f2e130]: "13"
+          - generic [ref=f2e131]:
+            - strong [ref=f2e132]: Major bugs by severity
+            - generic [ref=f2e133]: Act III · The Trials
+            - code [ref=f2e134]: 13_bug_severity.png
+      - figure "14 Thirty-eight deviations by cause Act III · The Trials 14_deviations_by_cause.png" [ref=f2e135]:
+        - link [ref=f2e136] [cursor=pointer]:
+          - /url: 14_deviations_by_cause.png
+          - img "Thirty-eight deviations by cause" [ref=f2e137]
+        - generic [ref=f2e138]:
+          - generic [ref=f2e139]: "14"
+          - generic [ref=f2e140]:
+            - strong [ref=f2e141]: Thirty-eight deviations by cause
+            - generic [ref=f2e142]: Act III · The Trials
+            - code [ref=f2e143]: 14_deviations_by_cause.png
+      - figure "15 Three provider migrations Act III · The Trials 15_provider_migrations.png" [ref=f2e144]:
+        - link [ref=f2e145] [cursor=pointer]:
+          - /url: 15_provider_migrations.png
+          - img "Three provider migrations" [ref=f2e146]
+        - generic [ref=f2e147]:
+          - generic [ref=f2e148]: "15"
+          - generic [ref=f2e149]:
+            - strong [ref=f2e150]: Three provider migrations
+            - generic [ref=f2e151]: Act III · The Trials
+            - code [ref=f2e152]: 15_provider_migrations.png
+      - figure "16 The judge rubric, five bands Act IV · The Instrument 16_judge_rubric.png" [ref=f2e153]:
+        - link [ref=f2e154] [cursor=pointer]:
+          - /url: 16_judge_rubric.png
+          - img "The judge rubric, five bands" [ref=f2e155]
+        - generic [ref=f2e156]:
+          - generic [ref=f2e157]: "16"
+          - generic [ref=f2e158]:
+            - strong [ref=f2e159]: The judge rubric, five bands
+            - generic [ref=f2e160]: Act IV · The Instrument
+            - code [ref=f2e161]: 16_judge_rubric.png
+      - figure "17 Judge against reference scoring Act IV · The Instrument 17_gate_confusion.png" [ref=f2e162]:
+        - link [ref=f2e163] [cursor=pointer]:
+          - /url: 17_gate_confusion.png
+          - img "Judge against reference scoring" [ref=f2e164]
+        - generic [ref=f2e165]:
+          - generic [ref=f2e166]: "17"
+          - generic [ref=f2e167]:
+            - strong [ref=f2e168]: Judge against reference scoring
+            - generic [ref=f2e169]: Act IV · The Instrument
+            - code [ref=f2e170]: 17_gate_confusion.png
+      - figure "18 The answer-key repair Act V · The Run 18_answer_key_repair.png" [ref=f2e171]:
+        - link [ref=f2e172] [cursor=pointer]:
+          - /url: 18_answer_key_repair.png
+          - img "The answer-key repair" [ref=f2e173]
+        - generic [ref=f2e174]:
+          - generic [ref=f2e175]: "18"
+          - generic [ref=f2e176]:
+            - strong [ref=f2e177]: The answer-key repair
+            - generic [ref=f2e178]: Act V · The Run
+            - code [ref=f2e179]: 18_answer_key_repair.png
+      - figure "19 Judge scores are bimodal Act V · The Run 19_score_distribution.png" [ref=f2e180]:
+        - link [ref=f2e181] [cursor=pointer]:
+          - /url: 19_score_distribution.png
+          - img "Judge scores are bimodal" [ref=f2e182]
+        - generic [ref=f2e183]:
+          - generic [ref=f2e184]: "19"
+          - generic [ref=f2e185]:
+            - strong [ref=f2e186]: Judge scores are bimodal
+            - generic [ref=f2e187]: Act V · The Run
+            - code [ref=f2e188]: 19_score_distribution.png
+      - figure "20 Judge score against retrieval depth Act V · The Run 20_retrieval_depth.png" [ref=f2e189]:
+        - link [ref=f2e190] [cursor=pointer]:
+          - /url: 20_retrieval_depth.png
+          - img "Judge score against retrieval depth" [ref=f2e191]
+        - generic [ref=f2e192]:
+          - generic [ref=f2e193]: "20"
+          - generic [ref=f2e194]:
+            - strong [ref=f2e195]: Judge score against retrieval depth
+            - generic [ref=f2e196]: Act V · The Run
+            - code [ref=f2e197]: 20_retrieval_depth.png
+      - figure "21 Results by question quadrant Act V · The Run 21_quadrant_results.png" [ref=f2e198]:
+        - link [ref=f2e199] [cursor=pointer]:
+          - /url: 21_quadrant_results.png
+          - img "Results by question quadrant" [ref=f2e200]
+        - generic [ref=f2e201]:
+          - generic [ref=f2e202]: "21"
+          - generic [ref=f2e203]:
+            - strong [ref=f2e204]: Results by question quadrant
+            - generic [ref=f2e205]: Act V · The Run
+            - code [ref=f2e206]: 21_quadrant_results.png
+      - figure "22 Vector minus BM25, by quadrant Act V · The Run 22_quadrant_flip.png" [ref=f2e207]:
+        - link [ref=f2e208] [cursor=pointer]:
+          - /url: 22_quadrant_flip.png
+          - img "Vector minus BM25, by quadrant" [ref=f2e209]
+        - generic [ref=f2e210]:
+          - generic [ref=f2e211]: "22"
+          - generic [ref=f2e212]:
+            - strong [ref=f2e213]: Vector minus BM25, by quadrant
+            - generic [ref=f2e214]: Act V · The Run
+            - code [ref=f2e215]: 22_quadrant_flip.png
+      - figure "23 Paired differences in judge score Act V · The Run 23_forest_judge.png" [ref=f2e216]:
+        - link [ref=f2e217] [cursor=pointer]:
+          - /url: 23_forest_judge.png
+          - img "Paired differences in judge score" [ref=f2e218]
+        - generic [ref=f2e219]:
+          - generic [ref=f2e220]: "23"
+          - generic [ref=f2e221]:
+            - strong [ref=f2e222]: Paired differences in judge score
+            - generic [ref=f2e223]: Act V · The Run
+            - code [ref=f2e224]: 23_forest_judge.png
+      - figure "24 Paired differences in recall Act V · The Run 24_forest_recall.png" [ref=f2e225]:
+        - link [ref=f2e226] [cursor=pointer]:
+          - /url: 24_forest_recall.png
+          - img "Paired differences in recall" [ref=f2e227]
+        - generic [ref=f2e228]:
+          - generic [ref=f2e229]: "24"
+          - generic [ref=f2e230]:
+            - strong [ref=f2e231]: Paired differences in recall
+            - generic [ref=f2e232]: Act V · The Run
+            - code [ref=f2e233]: 24_forest_recall.png
+      - figure "25 Mean judge score, filing by filing Act V · The Run 25_filing_heatmap.png" [ref=f2e234]:
+        - link [ref=f2e235] [cursor=pointer]:
+          - /url: 25_filing_heatmap.png
+          - img "Mean judge score, filing by filing" [ref=f2e236]
+        - generic [ref=f2e237]:
+          - generic [ref=f2e238]: "25"
+          - generic [ref=f2e239]:
+            - strong [ref=f2e240]: Mean judge score, filing by filing
+            - generic [ref=f2e241]: Act V · The Run
+            - code [ref=f2e242]: 25_filing_heatmap.png
+      - figure "26 Retrieval decides the answer Act V · The Run 26_retrieval_contingency.png" [ref=f2e243]:
+        - link [ref=f2e244] [cursor=pointer]:
+          - /url: 26_retrieval_contingency.png
+          - img "Retrieval decides the answer" [ref=f2e245]
+        - generic [ref=f2e246]:
+          - generic [ref=f2e247]: "26"
+          - generic [ref=f2e248]:
+            - strong [ref=f2e249]: Retrieval decides the answer
+            - generic [ref=f2e250]: Act V · The Run
+            - code [ref=f2e251]: 26_retrieval_contingency.png
+      - figure "27 What each pipeline hands the model Act V · The Run 27_node_types_retrieved.png" [ref=f2e252]:
+        - link [ref=f2e253] [cursor=pointer]:
+          - /url: 27_node_types_retrieved.png
+          - img "What each pipeline hands the model" [ref=f2e254]
+        - generic [ref=f2e255]:
+          - generic [ref=f2e256]: "27"
+          - generic [ref=f2e257]:
+            - strong [ref=f2e258]: What each pipeline hands the model
+            - generic [ref=f2e259]: Act V · The Run
+            - code [ref=f2e260]: 27_node_types_retrieved.png
+      - figure "28 Where each pipeline looked Act V · The Run 28_retrieval_position.png" [ref=f2e261]:
+        - link [ref=f2e262] [cursor=pointer]:
+          - /url: 28_retrieval_position.png
+          - img "Where each pipeline looked" [ref=f2e263]
+        - generic [ref=f2e264]:
+          - generic [ref=f2e265]: "28"
+          - generic [ref=f2e266]:
+            - strong [ref=f2e267]: Where each pipeline looked
+            - generic [ref=f2e268]: Act V · The Run
+            - code [ref=f2e269]: 28_retrieval_position.png
+      - figure "29 Index build cost Act V · The Run 29_index_build_cost.png" [ref=f2e270]:
+        - link [ref=f2e271] [cursor=pointer]:
+          - /url: 29_index_build_cost.png
+          - img "Index build cost" [ref=f2e272]
+        - generic [ref=f2e273]:
+          - generic [ref=f2e274]: "29"
+          - generic [ref=f2e275]:
+            - strong [ref=f2e276]: Index build cost
+            - generic [ref=f2e277]: Act V · The Run
+            - code [ref=f2e278]: 29_index_build_cost.png
+      - figure "30 Latency spread per pipeline Act V · The Run 30_latency_spread.png" [ref=f2e279]:
+        - link [ref=f2e280] [cursor=pointer]:
+          - /url: 30_latency_spread.png
+          - img "Latency spread per pipeline" [ref=f2e281]
+        - generic [ref=f2e282]:
+          - generic [ref=f2e283]: "30"
+          - generic [ref=f2e284]:
+            - strong [ref=f2e285]: Latency spread per pipeline
+            - generic [ref=f2e286]: Act V · The Run
+            - code [ref=f2e287]: 30_latency_spread.png
+    - contentinfo [ref=f2e288]:
+      - text: Rendered from
+      - code [ref=f2e289]: resources/research/dissertation.html
+      - text: . Source markup for each figure sits in
+      - code [ref=f2e290]: html/
+      - text: .
