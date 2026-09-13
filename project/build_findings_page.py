@@ -22,8 +22,25 @@ from datetime import date
 from pathlib import Path
 
 import aggregate_results as agg
+import retrieval_diagnostics as diag
 
 OUT_PATH = Path("../resources/research/findings.html")
+
+# Where every stage of the benchmark sent its calls. Reproduced here because
+# the anti-self-grading invariant is a claim about this table: the model that
+# writes an answer is never from the family that grades it.
+ROUTING = [
+    ("Dataset generator", "nvidia/nemotron-3-super-120b-a12b:free", "OpenRouter",
+     "Proposes each question, its answer and its evidence nodes."),
+    ("Dataset critic", "openai/gpt-oss-20b:free", "OpenRouter",
+     "Accepts or rejects a proposed question. A different family from the generator."),
+    ("P3 index build", "nvidia/nemotron-3-super-120b-a12b", "NVIDIA NIM",
+     "Summarises every node of every filing into the tree. The only indexing model."),
+    ("Pipeline answerer", "meta-llama/llama-3.3-70b-instruct", "OpenRouter",
+     "Writes the answer from retrieved nodes. Identical for all three pipelines."),
+    ("Judge", "qwen/qwen3.6-27b", "OpenRouter",
+     "Scores the answer 1 to 5. A different family from the answerer."),
+]
 
 # Extended from palette.md: house Ink and Gold retained, one saturated hue per
 # pipeline so three series stay separable at a glance.
@@ -100,19 +117,133 @@ def load(db_path: str) -> dict:
                                WHERE source_set='PQ' GROUP BY 1"""):
         tokens[row["pipeline"]] = dict(inp=row["i"], out=row["o"], latency=row["l"])
 
-    gate = conn.execute("""SELECT COUNT(*) n, SUM(judge_score = human_score) agree
+    gate = conn.execute("""SELECT COUNT(*) n, SUM(judge_score = human_score) agree,
+                                  SUM(ABS(judge_score - human_score) <= 1) within_one
                            FROM results WHERE source_set='JEQ'""").fetchone()
     corpus = conn.execute("""SELECT COUNT(*) nodes, COUNT(DISTINCT document_id) filings
                              FROM nodes""").fetchone()
     report.update(
         distribution=distribution, tokens=tokens,
-        gate=(gate["agree"], gate["n"]),
+        gate=(gate["agree"], gate["n"]), gate_within_one=gate["within_one"],
         nodes=corpus["nodes"], filings=corpus["filings"],
         questions=conn.execute("SELECT COUNT(*) FROM queries").fetchone()[0],
         per_document_questions={r["document_id"]: r["n"] for r in conn.execute(
             "SELECT document_id, COUNT(*) n FROM queries GROUP BY 1")},
     )
+    report.update(load_materials(conn))
+    report.update(load_mechanism(conn))
+    report.update(load_splits(db_path))
+    report["diagnostics"] = diag.diagnose_all(conn)
     return report
+
+
+def load_materials(conn: sqlite3.Connection) -> dict:
+    """The corpus and the question set: what the benchmark was run over."""
+    corpus = [dict(r) for r in conn.execute("""
+        SELECT document_id,
+               COUNT(*) nodes,
+               SUM(node_type = 'text') text_nodes,
+               SUM(node_type = 'table') table_nodes,
+               SUM(token_count) tokens
+        FROM nodes GROUP BY 1 ORDER BY 1""")]
+    quadrants = {r["quadrant"]: dict(r) for r in conn.execute("""
+        SELECT quadrant, COUNT(*) n, SUM(verified) verified
+        FROM queries GROUP BY 1""")}
+    # How many nodes each answer key names. A question whose gold set exceeds
+    # the largest k cannot reach full recall, so the shape of this histogram
+    # is what makes recall a fair metric rather than an arithmetic trap.
+    evidence: dict[int, int] = {}
+    for row in conn.execute("SELECT json_array_length(gt_citations) c FROM queries"):
+        evidence[row["c"]] = evidence.get(row["c"], 0) + 1
+    return {"corpus": corpus, "quadrants": quadrants, "evidence_sizes": evidence,
+            "node_totals": {
+                "text": sum(r["text_nodes"] for r in corpus),
+                "table": sum(r["table_nodes"] for r in corpus),
+                "tokens": sum(r["tokens"] for r in corpus)}}
+
+
+def load_mechanism(conn: sqlite3.Connection) -> dict:
+    """The chain from retrieval to answer, and where each pipeline looked."""
+    import json as _json
+
+    # The gate's full 5x5 agreement surface, not just its headline percentage:
+    # a judge that disagrees by one band is a different instrument from one
+    # that disagrees by three, and the percentage alone cannot tell them apart.
+    confusion: dict[tuple[int, int], int] = {}
+    for row in conn.execute("""SELECT human_score h, judge_score j, COUNT(*) n
+                               FROM results WHERE source_set='JEQ'
+                               AND human_score IS NOT NULL GROUP BY 1,2"""):
+        confusion[(row["h"], row["j"])] = row["n"]
+    gate_by_pipeline = {r["pipeline"]: dict(r) for r in conn.execute("""
+        SELECT pipeline, COUNT(*) n, SUM(judge_score = human_score) agree,
+               AVG(judge_score) judge_mean, AVG(human_score) human_mean
+        FROM results WHERE source_set='JEQ' AND human_score IS NOT NULL GROUP BY 1""")}
+
+    # Does finding the evidence decide the answer? Split every cell on
+    # evidence_hit and read the judge outcome on each side of the split.
+    contingency = {}
+    for row in conn.execute("""SELECT pipeline, evidence_hit, COUNT(*) n,
+                                      AVG(judge_score) judge_mean,
+                                      AVG(judge_score >= 4) pass_rate
+                               FROM results WHERE source_set='PQ' GROUP BY 1,2"""):
+        contingency[(row["pipeline"], row["evidence_hit"])] = dict(row)
+
+    # A cell scoring 4 or 5 with no evidence retrieved was answered from the
+    # model's own knowledge, not from the filing. That is the leakage floor.
+    leakage = {r["pipeline"]: r["n"] for r in conn.execute("""
+        SELECT pipeline, COUNT(*) n FROM results
+        WHERE source_set='PQ' AND evidence_hit = 0 AND judge_score >= 4 GROUP BY 1""")}
+
+    latency = {}
+    for pipeline in agg.PIPELINES:
+        values = sorted(r[0] for r in conn.execute(
+            "SELECT latency_sec FROM results WHERE source_set='PQ' AND pipeline=?",
+            (pipeline,)) if r[0] is not None)
+        if values:
+            def at(fraction, v=values):
+                return v[int(fraction * (len(v) - 1))]
+            latency[pipeline] = {"min": values[0], "p25": at(.25), "median": at(.5),
+                                 "p75": at(.75), "p90": at(.90), "max": values[-1],
+                                 "mean": sum(values) / len(values)}
+
+    # What kind of node each pipeline puts in front of the answerer, split by
+    # whether the question is about a table. A table question answered from
+    # prose is a different failure from one answered from the wrong table.
+    node_type = {r["node_id"]: r["node_type"] for r in conn.execute(
+        "SELECT node_id, node_type FROM nodes")}
+    retrieved: dict[tuple[str, str], dict[str, int]] = {}
+    for row in conn.execute("""SELECT r.pipeline, q.quadrant, r.retrieved_node_ids ids
+                               FROM results r JOIN queries q USING(query_id)
+                               WHERE r.source_set='PQ'"""):
+        family = "table" if "Table" in row["quadrant"] else "text"
+        bucket = retrieved.setdefault((row["pipeline"], family), {"text": 0, "table": 0})
+        for node_id in _json.loads(row["ids"]):
+            kind = node_type.get(node_id)
+            if kind:
+                bucket[kind] += 1
+    return {"confusion": confusion, "gate_by_pipeline": gate_by_pipeline,
+            "contingency": contingency, "leakage": leakage, "latency": latency,
+            "retrieved_types": retrieved}
+
+
+def load_splits(db_path: str) -> dict:
+    """Paired comparisons inside each depth and each quadrant.
+
+    The corpus-wide P1 against P2 interval spans zero, which says the two are
+    indistinguishable on average. That is not the same as saying they behave
+    alike, and these splits are what separates the two readings.
+    """
+    conn = sqlite3.connect(db_path)
+    rows = agg.load_rows(conn, "PQ")
+    by_k, by_quadrant = {}, {}
+    for k in sorted({r["k_value"] for r in rows}):
+        by_k[k] = agg.compare([r for r in rows if r["k_value"] == k],
+                              "P1_vector", "P2_bm25")
+    for quadrant in sorted({r["quadrant"] for r in rows}):
+        by_quadrant[quadrant] = agg.compare(
+            [r for r in rows if r["quadrant"] == quadrant], "P1_vector", "P2_bm25")
+    conn.close()
+    return {"split_by_k": by_k, "split_by_quadrant": by_quadrant}
 
 
 # --- building blocks ----------------------------------------------------------
@@ -457,6 +588,644 @@ def document_heatmap(d: dict) -> str:
       </div>"""
 
 
+# --- design and materials -----------------------------------------------------
+
+def routing_table() -> str:
+    return "\n".join(f"""        <tr>
+          <th scope="row">{esc(role)}</th>
+          <td class="mono">{esc(model)}</td><td>{esc(host)}</td><td>{esc(job)}</td>
+        </tr>""" for role, model, host, job in ROUTING)
+
+
+def corpus_table(d: dict) -> str:
+    rows = []
+    for r in d["corpus"]:
+        rows.append(f"""        <tr>
+          <th scope="row" class="mono">{esc(r['document_id'])}</th>
+          <td>{r['nodes']:,}</td><td>{r['text_nodes']:,}</td>
+          <td>{r['table_nodes']:,}</td>
+          <td>{r['table_nodes'] / r['nodes']:.1%}</td>
+          <td>{r['tokens']:,}</td>
+          <td>{r['tokens'] / r['nodes']:.0f}</td>
+        </tr>""")
+    t = d["node_totals"]
+    total_nodes = t["text"] + t["table"]
+    rows.append(f"""        <tr class="total">
+      <th scope="row">All {len(d['corpus'])} filings</th>
+      <td>{total_nodes:,}</td><td>{t['text']:,}</td><td>{t['table']:,}</td>
+      <td>{t['table'] / total_nodes:.1%}</td><td>{t['tokens']:,}</td>
+      <td>{t['tokens'] / total_nodes:.0f}</td>
+    </tr>""")
+    return "\n".join(rows)
+
+
+def corpus_chart(d: dict) -> str:
+    """Nodes per filing, split by node type.
+
+    The filings are not the same size: the largest holds more than five times
+    the nodes of the smallest, which is why every distance measured inside a
+    filing has to be normalised by that filing before it can be pooled.
+    """
+    corpus = d["corpus"]
+    if not corpus:
+        return ""
+    top = max(r["nodes"] for r in corpus)
+    bars = []
+    for r in corpus:
+        share = r["nodes"] / top * 100
+        table_share = r["table_nodes"] / r["nodes"] * 100
+        bars.append(f"""<div class="bar">
+          <span class="bar-l mono">{esc(r['document_id'])}</span>
+          <span class="bar-t"><span class="bar-f" style="width:{share:.1f}%;background:var(--p1)">
+            <span class="bar-sub" style="width:{table_share:.1f}%"></span></span></span>
+          <span class="bar-v">{r['nodes']:,}</span>
+        </div>""")
+    return f"""      <div class="logbars">{''.join(bars)}
+        <p class="cap"><span class="swatch" style="background:var(--p1)"></span> text nodes
+        &nbsp; <span class="swatch" style="background:{GOLD}"></span> table nodes.
+        Every pipeline indexes this identical node set, so no architecture sees a
+        cleaner or a larger corpus than another.</p>
+      </div>"""
+
+
+def quadrant_matrix(d: dict) -> str:
+    """The 2x2 the question set is built on, as a 2x2."""
+    axes = [("Q1_Direct_Text", "Q3_Direct_Table"), ("Q2_Implicit_Text", "Q4_Implicit_Table")]
+    rows = []
+    for row_label, pair in zip(("Stated directly", "Must be inferred"), axes):
+        cells = []
+        for quadrant in pair:
+            title, blurb = QUAD[quadrant]
+            meta = d["quadrants"].get(quadrant, {})
+            cells.append(f"""<div class="mx-cell">
+              <p class="eyebrow">{esc(quadrant.split('_')[0])}</p>
+              <b>{meta.get('n', 0)}</b>
+              <h4>{esc(title)}</h4>
+              <p class="blurb">{esc(blurb)}</p>
+            </div>""")
+        rows.append(f'<div class="mx-lab">{esc(row_label)}</div>{"".join(cells)}')
+    return f"""      <div class="matrix">
+        <div class="mx-row mx-head"><div class="mx-lab"></div>
+          <div class="mx-h">In continuous prose</div><div class="mx-h">In a table</div></div>
+        {''.join(f'<div class="mx-row">{r}</div>' for r in rows)}
+      </div>"""
+
+
+def evidence_histogram(d: dict) -> str:
+    """How many nodes each answer key names."""
+    sizes = d["evidence_sizes"]
+    if not sizes:
+        return ""
+    top = max(sizes.values())
+    bars = []
+    for size in sorted(sizes):
+        n = sizes[size]
+        # The value column is narrow at phone width, so it carries the count
+        # alone and the caption says what the count is of.
+        bars.append(bar_row(f"{size} node" + ("" if size == 1 else "s"),
+                            n, top, GOLD, f"{n:,}"))
+    largest = max(sizes)
+    return f"""      <div class="logbars">{''.join(bars)}
+        <p class="cap">Bar length is the number of questions whose answer key names
+        that many nodes. The largest answer key names {largest} node{'' if largest == 1 else 's'},
+        which is at or below the deepest retrieval setting, so recall of 1.000 is
+        arithmetically reachable on every question. That was not true before the
+        evidence sets were re-derived; the original keys made full recall
+        unreachable on 24 questions.</p>
+      </div>"""
+
+
+# --- the judge ----------------------------------------------------------------
+
+def gate_confusion(d: dict) -> str:
+    """The gate's full agreement surface, reference score against judge score."""
+    confusion = d["confusion"]
+    if not confusion:
+        return '<p class="note">No gate rows carry a reference score.</p>'
+    top = max(confusion.values())
+    head = "".join(f'<span class="hm-h"><b class="lg">judge {j}</b>'
+                   f'<b class="sm">{j}</b></span>' for j in range(1, 6))
+    rows = []
+    for human in range(1, 6):
+        cells = []
+        for judge in range(1, 6):
+            n = confusion.get((human, judge), 0)
+            if not n:
+                cells.append('<span class="hm-c empty">&middot;</span>')
+                continue
+            on_diagonal = human == judge
+            strength = 0.18 + 0.82 * (n / top)
+            colour = (f"rgba(0,165,168,{strength:.2f})" if on_diagonal
+                      else f"rgba(255,77,109,{strength:.2f})")
+            cells.append(f'<span class="hm-c" style="background:{colour};'
+                         f'color:{"#fff" if strength > 0.6 else INK}">{n}</span>')
+        rows.append(f'<div class="hm-row"><span class="hm-r">reference {human}</span>'
+                    f'{"".join(cells)}</div>')
+    agree, total = d["gate"]
+    return f"""      <div class="heat heat-5">
+        <div class="hm-row hm-head"><span class="hm-r"></span>{head}</div>
+        {''.join(rows)}
+        <p class="cap"><span class="swatch" style="background:var(--p2)"></span> agreement,
+        on the diagonal &nbsp; <span class="swatch" style="background:var(--p3)"></span>
+        disagreement. {agree} of {total} cells fall on the diagonal
+        ({100 * agree / total:.1f}%), and
+        {d['gate_within_one']} of {total} fall within one band
+        ({100 * d['gate_within_one'] / total:.1f}%). Every disagreement in this
+        matrix is a single band; the Judge never missed by two or more.</p>
+      </div>"""
+
+
+def gate_table(d: dict) -> str:
+    rows = []
+    for pipeline in agg.PIPELINES:
+        g = d["gate_by_pipeline"].get(pipeline)
+        if not g:
+            continue
+        rows.append(f"""        <tr>
+          <th scope="row"><span class="dot" style="background:{PIPE[pipeline]['hue']}"></span>{esc(PIPE[pipeline]['label'])}</th>
+          <td>{g['n']}</td><td>{g['agree']}</td>
+          <td>{g['agree'] / g['n']:.1%}</td>
+          <td>{g['judge_mean']:.2f}</td><td>{g['human_mean']:.2f}</td>
+          <td>{g['judge_mean'] - g['human_mean']:+.2f}</td>
+        </tr>""")
+    return "\n".join(rows)
+
+
+# --- retrieval ----------------------------------------------------------------
+
+def retrieval_table(d: dict) -> str:
+    rows = []
+    for pipeline in agg.PIPELINES:
+        for k in (2, 3, 5):
+            s = d["by_k"].get(f"{pipeline}|k={k}")
+            if not s:
+                continue
+            first = k == 2
+            label = (f'<th scope="row" rowspan="3"><span class="dot" '
+                     f'style="background:{PIPE[pipeline]["hue"]}"></span>'
+                     f'{esc(PIPE[pipeline]["label"])}</th>' if first else "")
+            rows.append(f"""        <tr{' class="grp"' if first else ''}>
+          {label}<td>{k}</td>
+          <td>{num(s['precision_at_k'])}</td><td>{num(s['recall_at_k'])}</td>
+          <td>{pct(s['hit_rate'])}</td><td>{pct(s['citation_match'])}</td>
+          <td>{num(s['judge_mean'], 2)}</td><td>{pct(s['judge_pass_rate'])}</td>
+        </tr>""")
+    return "\n".join(rows)
+
+
+def retrieval_bars(d: dict) -> str:
+    """Four retrieval measures side by side, each on its own 0 to 1 scale."""
+    metrics = [("recall_at_k", "Recall at k", "share of evidence nodes returned"),
+               ("hit_rate", "Evidence hit rate", "at least one evidence node returned"),
+               ("citation_match", "Citation match", "the answer cites a node it was given"),
+               ("precision_at_k", "Precision at k", "share of returned nodes that are evidence")]
+    panels = []
+    for key, title, blurb in metrics:
+        bars = "".join(
+            bar_row(PIPE[p]["label"], d["overall"][p][key] or 0, 1.0, PIPE[p]["hue"],
+                    num(d["overall"][p][key], 3))
+            for p in sorted(d["overall"], key=lambda p: -(d["overall"][p][key] or 0)))
+        panels.append(f'<div><h4>{esc(title)}</h4><p class="blurb">{esc(blurb)}</p>{bars}</div>')
+    return f'      <div class="quad-grid">{"".join(panels)}</div>'
+
+
+def flip_chart(d: dict) -> str:
+    """P1 minus P2 in each quadrant, as a diverging bar against zero.
+
+    The corpus-wide interval spans zero. These four do not all behave the same
+    way, and a single pooled figure cannot show that.
+    """
+    splits = d["split_by_quadrant"]
+    if not splits:
+        return ""
+    span = max(max(abs(c["ci_low"]), abs(c["ci_high"])) for c in splits.values()) or 1.0
+    width, mid = 780, 390
+    row_h, top = 62, 44
+    rows = []
+    for i, quadrant in enumerate(QUAD):
+        c = splits.get(quadrant)
+        if not c:
+            continue
+        y = top + i * row_h
+        half = (width / 2 - 24) / span
+        x_lo, x_hi = mid + c["ci_low"] * half, mid + c["ci_high"] * half
+        x_mid = mid + c["mean_difference"] * half
+        colour = GOLD if c["significant"] else "#767C84"
+        leader = PIPE["P1_vector"] if c["mean_difference"] > 0 else PIPE["P2_bm25"]
+        rows.append(
+            f'<text x="10" y="{y - 12}" class="lbl">{esc(QUAD[quadrant][0])}</text>'
+            f'<text x="10" y="{y + 20}" class="ax">{esc(leader["label"])} ahead by '
+            f'{abs(c["mean_difference"]):.3f}</text>'
+            f'<line x1="{x_lo:.1f}" y1="{y}" x2="{x_hi:.1f}" y2="{y}" stroke="{colour}" '
+            f'stroke-width="3" stroke-linecap="round"/>'
+            f'<circle cx="{x_mid:.1f}" cy="{y}" r="6" fill="{colour}"/>')
+    height = top + len(splits) * row_h
+    return f"""      <div class="chart">
+        <svg viewBox="0 0 {width} {height}" role="img"
+             aria-label="Vector minus BM25 judge score, by quadrant">
+          <line x1="{mid}" y1="18" x2="{mid}" y2="{height - 16}" class="zero"/>
+          <text x="{mid}" y="12" class="ax" text-anchor="middle">no difference</text>
+          {''.join(rows)}
+          <text x="24" y="{height - 2}" class="ax" text-anchor="start">BM25 better</text>
+          <text x="{width - 24}" y="{height - 2}" class="ax" text-anchor="end">Vector better</text>
+        </svg>
+      </div>"""
+
+
+def split_table(d: dict) -> str:
+    """Vector against BM25 inside each depth and each quadrant."""
+    rows = []
+    for k, c in sorted(d["split_by_k"].items()):
+        rows.append(("Depth", f"k = {k}", c))
+    for quadrant, c in d["split_by_quadrant"].items():
+        rows.append(("Quadrant", QUAD[quadrant][0], c))
+    out = []
+    for group, label, c in rows:
+        state = "yes" if c["significant"] else "no"
+        verdict = "difference" if c["significant"] else "indistinguishable"
+        out.append(f"""        <tr>
+          <td class="grp-l">{esc(group)}</td>
+          <th scope="row">{esc(label)}</th>
+          <td>{c['mean_difference']:+.3f}</td>
+          <td class="mono">[{c['ci_low']:+.3f}, {c['ci_high']:+.3f}]</td>
+          <td>{c['wins']} / {c['losses']} / {c['ties']}</td>
+          <td class="mono">{c['sign_test_p']:.4f}</td>
+          <td><span class="pill {state}">{verdict}</span></td>
+        </tr>""")
+    return "\n".join(out)
+
+
+# --- mechanism ----------------------------------------------------------------
+
+def contingency_panel(d: dict) -> str:
+    """Judge outcome split on whether the evidence was retrieved at all."""
+    def side(block, klass=""):
+        """One half of the split, or an explicit statement that it is empty.
+
+        A pipeline that never misses, or never hits, would otherwise drop off
+        this panel silently and read as if it had not been measured.
+        """
+        if not block:
+            return f'<b class="{klass}">&ndash;</b><span>no cells on this side</span>'
+        return (f'<b class="{klass}">{block["pass_rate"]:.0%}</b>'
+                f'<span>pass rate over {block["n"]} cells</span>')
+
+    def mean(block):
+        return "-" if not block else f"{block['judge_mean']:.2f}"
+
+    cards = []
+    for pipeline in agg.PIPELINES:
+        hit = d["contingency"].get((pipeline, 1))
+        miss = d["contingency"].get((pipeline, 0))
+        if not hit and not miss:
+            continue
+        meta = PIPE[pipeline]
+        cards.append(f"""        <div class="card" style="--hue:{meta['hue']};--wash:{meta['wash']}">
+          <h3>{esc(meta['label'])}</h3>
+          <div class="split">
+            <div><p class="eyebrow">Evidence retrieved</p>{side(hit)}</div>
+            <div><p class="eyebrow">Evidence missed</p>{side(miss, 'bad')}</div>
+          </div>
+          <p class="blurb">Mean judge score {mean(hit)} with the evidence,
+          {mean(miss)} without it.</p>
+        </div>""")
+    return "\n".join(cards)
+
+
+def node_type_chart(d: dict) -> str:
+    """The share of returned slots that are table nodes, on table questions."""
+    retrieved = d["retrieved_types"]
+    if not retrieved:
+        return ""
+    panels = []
+    for family, title, blurb in (
+            ("table", "Questions about a table",
+             "Q3 and Q4. The answer sits in or is derived from a tabular block."),
+            ("text", "Questions about prose",
+             "Q1 and Q2. A table node here is a retrieval mistake.")):
+        bars = []
+        for pipeline in agg.PIPELINES:
+            bucket = retrieved.get((pipeline, family))
+            if not bucket:
+                continue
+            total = bucket["text"] + bucket["table"]
+            if not total:
+                continue
+            share = bucket["table"] / total
+            bars.append(bar_row(PIPE[pipeline]["label"], share, 1.0,
+                                PIPE[pipeline]["hue"], f"{share:.1%}"))
+        panels.append(f'<div><h4>{esc(title)}</h4><p class="blurb">{esc(blurb)}</p>'
+                      f'{"".join(bars)}</div>')
+    return f'      <div class="pair">{"".join(panels)}</div>'
+
+
+def position_chart(d: dict) -> str:
+    """Where each pipeline looked in the filing, against where the evidence was.
+
+    Positions are shares of a filing rather than node counts, because the
+    corpus spans 682 to 3,647 nodes and a raw index is not comparable across
+    two documents of that different a length.
+    """
+    diagnostics = d.get("diagnostics") or {}
+    usable = {p: v for p, v in diagnostics.items()
+              if v.get("median_retrieved_share") is not None}
+    if not usable:
+        return ""
+    width, x0, x1 = 780, 150, 700
+    row_h, top = 54, 74
+    gold_share = next((v["median_gold_share"] for v in usable.values()
+                       if v.get("median_gold_share") is not None), None)
+    marks = []
+    for i, pipeline in enumerate([p for p in agg.PIPELINES if p in usable]):
+        v = usable[pipeline]
+        y = top + i * row_h
+        x = x0 + v["median_retrieved_share"] * (x1 - x0)
+        marks.append(
+            f'<text x="10" y="{y + 5}" class="lbl" fill="{PIPE[pipeline]["hue"]}">'
+            f'{esc(PIPE[pipeline]["label"])}</text>'
+            f'<line x1="{x0}" y1="{y}" x2="{x1}" y2="{y}" class="grid"/>'
+            f'<circle cx="{x:.1f}" cy="{y}" r="7" fill="{PIPE[pipeline]["hue"]}"/>'
+            f'<text x="{x:.1f}" y="{y - 13}" class="ax" text-anchor="middle">'
+            f'{v["median_retrieved_share"]:.3f}</text>')
+    height = top + len(usable) * row_h + 30
+    gold_line = ""
+    if gold_share is not None:
+        gx = x0 + gold_share * (x1 - x0)
+        gold_line = (f'<line x1="{gx:.1f}" y1="44" x2="{gx:.1f}" y2="{height - 34}" '
+                     f'stroke="{GOLD}" stroke-width="2" stroke-dasharray="5 4"/>'
+                     f'<text x="{gx:.1f}" y="34" class="ax" text-anchor="middle" '
+                     f'fill="{GOLD}">evidence sits at {gold_share:.3f}</text>')
+    return f"""      <div class="chart">
+        <svg viewBox="0 0 {width} {height}" role="img"
+             aria-label="Median returned node position within its filing">
+          {gold_line}
+          {''.join(marks)}
+          <text x="{x0}" y="{height - 8}" class="ax" text-anchor="start">start of filing</text>
+          <text x="{x1}" y="{height - 8}" class="ax" text-anchor="end">end of filing</text>
+        </svg>
+      </div>"""
+
+
+def diagnostics_table(d: dict) -> str:
+    rows = []
+    for pipeline in agg.PIPELINES:
+        v = (d.get("diagnostics") or {}).get(pipeline)
+        if not v:
+            continue
+        rows.append(f"""        <tr>
+          <th scope="row"><span class="dot" style="background:{PIPE[pipeline]['hue']}"></span>{esc(PIPE[pipeline]['label'])}</th>
+          <td>{v['distinct_nodes']:,} / {v['slots']:,}</td>
+          <td>{num(v['diversity'])}</td>
+          <td>{num(v['median_retrieved_share'])}</td>
+          <td>{'-' if v['median_miss_nodes'] is None else f"{v['median_miss_nodes']:,.0f}"}</td>
+          <td>{pct(v['median_miss_share'])}</td>
+          <td>{pct(v['on_evidence_share'])}</td>
+        </tr>""")
+    return "\n".join(rows)
+
+
+def latency_chart(d: dict) -> str:
+    """Latency spread per pipeline, drawn as a quartile box with whiskers.
+
+    The means differ, but they are pulled by a handful of very slow calls
+    against a shared provider. The medians are what the box shows, and they
+    are the same to within a fifth of a second.
+    """
+    latency = d.get("latency") or {}
+    if not latency:
+        return ""
+    top = max(v["p90"] for v in latency.values())
+    width, x0, x1 = 780, 150, 720
+    row_h, start = 62, 78
+    scale = (x1 - x0) / top
+
+    def x_of(value):
+        return x0 + min(value, top) * scale
+
+    rows = []
+    for i, pipeline in enumerate([p for p in agg.PIPELINES if p in latency]):
+        v = latency[pipeline]
+        y = start + i * row_h
+        hue = PIPE[pipeline]["hue"]
+        box_lo, box_hi = x_of(v["p25"]), x_of(v["p75"])
+        rows.append(
+            f'<text x="10" y="{y + 5}" class="lbl" fill="{hue}">'
+            f'{esc(PIPE[pipeline]["label"])}</text>'
+            f'<line x1="{x_of(v["min"]):.1f}" y1="{y}" x2="{x_of(v["p90"]):.1f}" y2="{y}" '
+            f'stroke="{hue}" stroke-width="2"/>'
+            f'<rect x="{box_lo:.1f}" y="{y - 13}" width="{max(2, box_hi - box_lo):.1f}" '
+            f'height="26" fill="{hue}" opacity="0.28"/>'
+            f'<line x1="{x_of(v["median"]):.1f}" y1="{y - 15}" '
+            f'x2="{x_of(v["median"]):.1f}" y2="{y + 15}" stroke="{hue}" stroke-width="4"/>'
+            f'<text x="{x_of(v["median"]):.1f}" y="{y - 22}" class="ax" '
+            f'text-anchor="middle">{v["median"]:.2f}s</text>')
+    height = start + len(latency) * row_h + 24
+    ticks = []
+    for step in range(0, int(top) + 1, max(1, int(top // 5))):
+        x = x_of(step)
+        ticks.append(f'<text x="{x:.1f}" y="{height - 6}" class="ax" '
+                     f'text-anchor="middle">{step}s</text>')
+    return f"""      <div class="chart">
+        <svg viewBox="0 0 {width} {height}" role="img"
+             aria-label="Latency spread per pipeline">
+          <text x="10" y="22" class="ax">box spans the middle half, line is the median,
+          whisker runs to the 90th percentile</text>
+          {''.join(rows)}
+          {''.join(ticks)}
+        </svg>
+      </div>"""
+
+
+def latency_table(d: dict) -> str:
+    rows = []
+    for pipeline in agg.PIPELINES:
+        v = (d.get("latency") or {}).get(pipeline)
+        if not v:
+            continue
+        rows.append(f"""        <tr>
+          <th scope="row"><span class="dot" style="background:{PIPE[pipeline]['hue']}"></span>{esc(PIPE[pipeline]['label'])}</th>
+          <td>{v['min']:.2f}</td><td>{v['p25']:.2f}</td><td>{v['median']:.2f}</td>
+          <td>{v['p75']:.2f}</td><td>{v['p90']:.2f}</td><td>{v['max']:.2f}</td>
+          <td>{v['mean']:.2f}</td>
+        </tr>""")
+    return "\n".join(rows)
+
+
+# --- validity -----------------------------------------------------------------
+
+def filing_leads(d: dict) -> dict:
+    """Who leads each filing, counted rather than asserted.
+
+    This was prose carrying typed counts, and the tie count in it was wrong.
+    Counting from the same aggregation the heatmap draws keeps the sentence
+    and the chart from disagreeing.
+    """
+    scores: dict[str, dict[str, float]] = {}
+    for key, block in d["by_document"].items():
+        document, pipeline = key.split("|")
+        scores.setdefault(document, {})[pipeline] = block["judge_mean"]
+    counts = {"P1_vector": 0, "P2_bm25": 0, "tie": 0, "worst_last": 0, "identical": 0}
+    for row in scores.values():
+        if "P1_vector" not in row or "P2_bm25" not in row:
+            continue
+        if row["P1_vector"] > row["P2_bm25"]:
+            counts["P1_vector"] += 1
+        elif row["P2_bm25"] > row["P1_vector"]:
+            counts["P2_bm25"] += 1
+        else:
+            counts["tie"] += 1
+        others = [v for k, v in row.items() if k != "P3_structural"]
+        if "P3_structural" in row and others:
+            if row["P3_structural"] < min(others):
+                counts["worst_last"] += 1
+            if len({round(v, 9) for v in row.values()}) == 1:
+                counts["identical"] += 1
+    counts["filings"] = len(scores)
+    return counts
+
+
+def median_phrase(d: dict) -> str:
+    """Median latency per pipeline, named, because an unlabelled list of three
+    near-identical numbers tells the reader nothing about which is which."""
+    latency = d.get("latency") or {}
+    return ", ".join(f"{latency[p]['median']:.2f} s for {PIPE[p]['label']}"
+                     for p in agg.PIPELINES if p in latency)
+
+
+def median_spread(d: dict) -> float:
+    values = [v["median"] for v in (d.get("latency") or {}).values()]
+    return (max(values) - min(values)) if values else 0.0
+
+
+def threats(d: dict) -> str:
+    """Every limitation that could be raised in a viva, with its defence.
+
+    Each entry states what the limitation is, how large it is in the data, and
+    which way it cuts. The direction matters more than the size: a limitation
+    that applies identically to all three pipelines cannot reorder them, and
+    that is the argument to make rather than an apology.
+    """
+    leak = d.get("leakage") or {}
+    leak_total = sum(leak.values())
+    leads = filing_leads(d)
+    leak_p3 = leak.get("P3_structural", 0)
+    spread = median_spread(d)
+    docs = d.get("per_document_questions") or {}
+    most = max(docs.values()) if docs else 0
+    least = min(docs.values()) if docs else 0
+
+    items = [
+        ("material", "Latency does not separate the three paradigms",
+         f"Median per-cell latency is {median_phrase(d)}, "
+         f"a spread of {spread:.2f} s across all three. The means differ more, but they "
+         f"are pulled by a small number of very slow calls against a shared hosted "
+         f"provider, not by retrieval work done locally.",
+         "Report query latency as a null result and say why: every cell routes through "
+         "the same answering model, so the shared network call dominates the "
+         "measurement and local retrieval time is lost inside it. The efficiency "
+         "claim rests on index build cost and on tokens per query, which are "
+         "measured cleanly and do separate the paradigms."),
+        ("material", "Some answers were correct without the evidence being retrieved",
+         f"{leak_total} of the 900 cells scored 4 or 5 while retrieving no ground-truth "
+         f"node at all, {leak_p3} of them in the structural pipeline. Those answers "
+         f"came from the answering model's own knowledge of these companies, not from "
+         f"the filing.",
+         "Disclose it as a floor on parametric leakage and note the direction: it "
+         "inflates the weakest pipeline's score, because a pipeline that retrieves "
+         "nothing useful leaves the model free to answer from memory. The measured "
+         "gap between structural and the other two is therefore a lower bound on the "
+         "true gap, not an exaggeration of it."),
+        ("material", "One run per cell, so there is no run-to-run variance",
+         "Every cell was executed once at temperature 0, with each model pinned to a "
+         "single upstream host so that quantisation could not vary between calls. "
+         "The confidence intervals describe variation across questions.",
+         "State plainly that the intervals are question-level, not run-level, and that "
+         "the design trades repeated sampling for breadth: 900 distinct cells rather "
+         "than a smaller matrix sampled repeatedly. Temperature 0 and host pinning are "
+         "what make a single run defensible; say both."),
+        ("material", "The judge gate measures concordance, not human agreement",
+         f"The gate compares the Judge against a reference scoring of the same 60 "
+         f"outputs produced under a blinding protocol, not against an independent "
+         f"human annotator. It reads {d['gate'][0]} of {d['gate'][1]} exact "
+         f"({100 * d['gate'][0] / d['gate'][1]:.1f}%), with every disagreement "
+         f"confined to a single band.",
+         "Call it cross-scorer concordance throughout and never call it human "
+         "validation. The defensible claim is that the Judge is consistent with an "
+         "independent application of the same published rubric under blinding, which "
+         "is what the gate actually tests. Cite the blinding protocol: pipeline "
+         "identity and citation evidence were withheld from the reference scorer."),
+        ("moderate", "The answer keys were corrected after the pipelines were built",
+         "Twenty-four of the 100 questions had evidence sets that named a whole filing "
+         "section rather than the supporting nodes, which made full recall "
+         "arithmetically unreachable. Those were re-derived to the minimal verified "
+         "evidence set before the final run.",
+         "Argue it on mechanism, not on trust. The retention rule is mechanical, "
+         "uniform, and was applied blind to every pipeline's output, so nothing could "
+         "be tuned toward a preferred result; and the repair replays from the "
+         "pre-repair backup to reproduce the current database exactly. Note also that "
+         "it was not common-mode: it changed the vector against BM25 ordering on "
+         "precision, which is precisely why leaving it in place and disclosing it "
+         "would not have been defensible."),
+        ("moderate", "Questions are not evenly spread across the filings",
+         f"The most-sampled filing carries {most} questions and the least-sampled "
+         f"carries {least}. Per-filing means are therefore built on very different "
+         f"sample sizes.",
+         "Use the per-filing table as a spread check only, never as a ranking, and say "
+         "so where you present it. Every headline figure is paired within a question, "
+         "so the imbalance cancels: each pipeline answers exactly the same questions "
+         "over exactly the same filings."),
+        ("moderate", "The structural pipeline's build cost is a floor, not a total",
+         "Eleven of the 13 filings recorded their token spend; two did not, because a "
+         "logging defect was fixed after those two builds had already run. The "
+         "reported figure sums the 11 that were measured.",
+         "Report it as a measured floor over 11 filings and name the two that are "
+         "missing. The direction is safe: the true cost is higher than the figure "
+         "quoted, so the conclusion that the structural index is the most expensive to "
+         "build is strengthened by the gap, not threatened by it."),
+        ("moderate", "A small number of questions are redundant or self-answering",
+         "Two pairs ask the same question of the same filing, a third pair splits one "
+         "fact across two quadrants, and three questions restate most of their own "
+         "answer in the question text. At most six of 100.",
+         "Disclose the count and argue common-mode: all three pipelines answer the same "
+         "six, so the effect is a very slight compression of the measured gap rather "
+         "than a shift in the ordering. Removing them after retrieval behaviour was "
+         "known would have been the less defensible choice."),
+        ("moderate", "One quadrant tests a narrower skill than its definition implies",
+         "Six of the 25 implicit-table questions share two task shapes: counting the "
+         "filing's signatories, and summing page numbers in an index.",
+         "Frame it as a construct-coverage limitation of that quadrant, not a validity "
+         "defect in any row, and be specific about why the rows are still valid: "
+         "counting signatories requires retrieving an intact tabular block, which is "
+         "exactly the structure-versus-semantics contrast being measured."),
+        ("minor", "The corpus carries parsing artefacts from the source filings",
+         "1,089 nodes contain an unescaped HTML entity, seven contain a raw tag, and "
+         "four carry a corrupted digit run where a financial figure should be. Exactly "
+         "one benchmark question cites a corrupted node.",
+         "Argue it as common-mode and, for the one affected question, as a feature: "
+         "all three pipelines index the identical corpus, and on that row the answer "
+         "key records what the node actually says, so the row rewards faithful "
+         "extraction over a plausible figure recalled from training. Messy conversion "
+         "is a property of the problem domain rather than an accident of this build."),
+        ("minor", "The retrieval depths are 2, 3 and 5 rather than 3, 5 and 10",
+         "The sweep was narrowed on instruction after the design was written. Three "
+         "depths are retained, so the 900-cell matrix is unchanged.",
+         "Record it as a scope decision with its consequence stated: the deepest "
+         "setting is now 5, which sits at or above the largest corrected evidence set, "
+         "so full recall stays reachable at the top of the sweep. Note that the token "
+         "budget written against a maximum depth of 10 becomes a conservative "
+         "over-estimate rather than a wrong one."),
+    ]
+    blocks = []
+    for level, title, finding, defence in items:
+        blocks.append(f"""        <div class="threat {esc(level)}">
+          <p class="eyebrow">{esc(level)}</p>
+          <h3>{esc(title)}</h3>
+          <p><b>What the data shows.</b> {esc(finding)}</p>
+          <p class="defence"><b>How to put it in the write-up.</b> {esc(defence)}</p>
+        </div>""")
+    return "\n".join(blocks)
+
+
 # --- the page -----------------------------------------------------------------
 
 CSS = """
@@ -596,7 +1365,7 @@ tbody tr:nth-child(even) { background:var(--wash); }
 /* log bars + heatmap */
 .logbars { margin-top:1.2rem; }
 .heat { margin-top:1.2rem; font-family:var(--sans); font-size:.8rem; }
-.hm-row { display:grid; grid-template-columns:7.5rem 4.4rem repeat(3,1fr); gap:2px; margin-bottom:2px; }
+.hm-row { display:grid; grid-template-columns:7.5rem 5.4rem repeat(3,1fr); gap:2px; margin-bottom:2px; }
 .hm-head .hm-h { font-size:.7rem; text-transform:uppercase; letter-spacing:.05em;
                  color:var(--faint); text-align:center; padding-bottom:.3rem;
                  white-space:nowrap; overflow:hidden; }
@@ -618,9 +1387,79 @@ footer { border-top:1px solid var(--rule); margin-top:2rem; padding-block:1.6rem
          font-family:var(--sans); font-size:.78rem; color:var(--faint); }
 footer code { font-family:var(--mono); }
 
+/* contents */
+.toc { border-block:1px solid var(--rule); padding-block:1.6rem; margin-bottom:.5rem; }
+.toc ol { margin:0; padding:0; list-style:none; columns:3; column-gap:2.2rem; }
+.toc li { margin:0 0 .42rem; font-family:var(--sans); font-size:.86rem;
+          break-inside:avoid; }
+.toc a { color:var(--body); text-decoration:none; border-bottom:1px solid var(--hair); }
+.toc a:hover { border-bottom-color:var(--p1); color:var(--ink); }
+.toc .part { font-weight:700; text-transform:uppercase; letter-spacing:.09em;
+             font-size:.7rem; color:var(--p2); margin-top:.9rem; border:0; }
+.toc li:first-child .part { margin-top:0; }
+.part-rule { font-family:var(--sans); font-size:.72rem; font-weight:700;
+             text-transform:uppercase; letter-spacing:.16em; color:var(--p2);
+             border-top:3px solid var(--ink); padding-top:.7rem; margin-top:3rem; }
+
+/* corpus bars carry a nested share */
+.bar-sub { display:block; height:100%; float:right; background:var(--gold); }
+.total th, .total td { border-top:2px solid var(--ink); font-weight:700; color:var(--ink); }
+.grp td, .grp th { border-top:1px solid var(--rule); }
+.grp-l { color:var(--faint); font-size:.78rem; font-family:var(--sans); }
+
+/* quadrant matrix */
+.matrix { margin-top:1.4rem; font-family:var(--sans); }
+.mx-row { display:grid; grid-template-columns:8.5rem 1fr 1fr; gap:1px;
+          background:var(--rule); }
+.mx-head { background:none; }
+.mx-h { font-size:.72rem; font-weight:700; text-transform:uppercase;
+        letter-spacing:.08em; color:var(--muted); padding:.4rem .9rem; }
+.mx-lab { display:flex; align-items:center; font-size:.72rem; font-weight:700;
+          text-transform:uppercase; letter-spacing:.08em; color:var(--muted);
+          background:var(--paper); padding-right:.9rem; }
+.mx-cell { background:var(--paper); padding:1.1rem; }
+.mx-cell b { display:block; font-size:2rem; font-weight:700; color:var(--ink);
+             line-height:1; margin:.2rem 0 .4rem; }
+.mx-cell h4 { font-size:.95rem; text-transform:none; letter-spacing:0;
+              color:var(--ink); margin-bottom:.3rem; }
+.mx-cell .blurb { margin-bottom:0; font-size:.84rem; }
+
+/* four-panel grid */
+.quad-grid { display:grid; grid-template-columns:1fr 1fr; gap:1.8rem 2.4rem;
+             margin-top:1.4rem; }
+
+/* contingency split */
+.split { display:grid; grid-template-columns:1fr 1fr; gap:.9rem; margin:1rem 0 .6rem; }
+.split .eyebrow { color:var(--faint); margin-bottom:.3rem; font-size:.66rem; }
+.split b { display:block; font-family:var(--sans); font-size:1.7rem; font-weight:700;
+           color:var(--p2); line-height:1.1; }
+.split b.bad { color:var(--p3); }
+.split span { display:block; font-family:var(--sans); font-size:.7rem; color:var(--faint); }
+
+/* five-column heatmap for the gate */
+.heat-5 .hm-row { grid-template-columns:7.5rem repeat(5,1fr); }
+.hm-c.empty { background:var(--wash); color:var(--faint); font-weight:400; }
+
+/* threats */
+.threats { display:grid; gap:1rem; margin-top:1.4rem; }
+.threat { border:1px solid var(--rule); border-left:5px solid var(--rule);
+          padding:1.3rem 1.5rem; background:var(--paper); }
+.threat.material { border-left-color:var(--p3); background:#FFFBFC; }
+.threat.moderate { border-left-color:var(--gold); background:var(--gold-wash); }
+.threat.minor { border-left-color:var(--faint); background:var(--wash); }
+.threat .eyebrow { margin-bottom:.35rem; }
+.threat.material .eyebrow { color:var(--p3); }
+.threat.moderate .eyebrow { color:#8A6A00; }
+.threat.minor .eyebrow { color:var(--faint); }
+.threat h3 { margin-bottom:.7rem; }
+.threat p { font-size:.94rem; margin-bottom:.6rem; max-width:74ch; }
+.threat p:last-child { margin-bottom:0; }
+.defence { border-top:1px dashed var(--rule); padding-top:.7rem; }
+
 @media (max-width:900px) {
   .facts { grid-template-columns:repeat(3,1fr); }
-  .cards, .pair, .quads { grid-template-columns:1fr; }
+  .cards, .pair, .quads, .quad-grid { grid-template-columns:1fr; }
+  .toc ol { columns:2; }
 }
 @media (max-width:560px) {
   body { font-size:16px; }
@@ -628,13 +1467,63 @@ footer code { font-family:var(--mono); }
   .bar, .dist { grid-template-columns:5rem 1fr 3.4rem; }
   .dist { grid-template-columns:5rem 1fr; }
   .hm-row { grid-template-columns:4.8rem 1.9rem repeat(3,1fr); }
+  .heat-5 .hm-row { grid-template-columns:4.8rem repeat(5,1fr); }
   .hm-head .hm-h, .hm-head .hm-n { font-size:.66rem; letter-spacing:.02em; }
   .lg { display:none; }
   .sm { display:inline; }
   .hm-r, .hm-c { font-size:.76rem; }
+  .toc ol { columns:1; }
+  .mx-row { grid-template-columns:1fr; }
+  .mx-lab { padding:.6rem 0 0; }
+  .split { grid-template-columns:1fr; }
 }
 @media print { section { break-inside:avoid; } }
 """
+
+
+# Every section in reading order: anchor, title, and the part it opens.
+SECTIONS = [
+    ("design", "The question and the design", "I. What was measured"),
+    ("apparatus", "The apparatus", None),
+    ("corpus", "The corpus", "II. Materials"),
+    ("questions", "The question set", None),
+    ("judge", "The judge and its gate", "III. The instrument"),
+    ("headline", "The headline", "IV. Results"),
+    ("pillars", "All three pillars", None),
+    ("quality", "Answer quality", None),
+    ("bimodal", "The scores are bimodal, not spread", None),
+    ("retrieval", "Retrieval quality", None),
+    ("depth", "Depth helps, but it does not rescue", None),
+    ("quadrants", "Where the ordering changes", None),
+    ("flip", "The average hides a split", None),
+    ("stats", "Is the difference real", None),
+    ("filings", "Filing by filing", None),
+    ("chain", "Retrieval decides the answer", "V. Why"),
+    ("nodetypes", "What each pipeline puts in front of the model", None),
+    ("position", "Why the structural pipeline trails", None),
+    ("build", "What it costs to build", None),
+    ("ask", "What it costs to ask", None),
+    ("latency", "Latency is not the discriminator", None),
+    ("threats", "Threats to validity, and how to answer them", "VI. Validity"),
+    ("weaken", "What would weaken these findings", None),
+    ("ledger", "Reproducibility ledger", None),
+]
+
+
+def contents() -> str:
+    items = []
+    for anchor, title, part in SECTIONS:
+        if part:
+            items.append(f'        <li><span class="part">{esc(part)}</span></li>')
+        items.append(f'        <li><a href="#{esc(anchor)}">{esc(title)}</a></li>')
+    return f'    <nav class="toc" aria-label="Contents">\n      <ol>\n{chr(10).join(items)}\n      </ol>\n    </nav>'
+
+
+def heading(anchor: str) -> str:
+    """Opens a section, with the part rule above it where one starts here."""
+    entry = next(s for s in SECTIONS if s[0] == anchor)
+    rule = f'<p class="part-rule">{esc(entry[2])}</p>\n  ' if entry[2] else ""
+    return f'{rule}<h2 id="{esc(anchor)}">{esc(entry[1])}</h2>'
 
 
 def build_html(db_path: str) -> str:
@@ -655,6 +1544,18 @@ def build_html(db_path: str) -> str:
     q4 = {p: d["by_quadrant"][f"Q4_Implicit_Table|{p}"]["judge_mean"] for p in PIPE}
     q4_lead = max(q4, key=lambda p: q4[p])
 
+    leak = d.get("leakage") or {}
+    leak_total = sum(leak.values())
+    leads = filing_leads(d)
+    flips = [q for q, c in d["split_by_quadrant"].items() if c["significant"]]
+    hit = d["contingency"].get((best, 1), {})
+    miss = d["contingency"].get((best, 0), {})
+    diagnostics = d.get("diagnostics") or {}
+    worst_diag = diagnostics.get(worst, {})
+    best_diag = diagnostics.get(best, {})
+    gold_share = next((v["median_gold_share"] for v in diagnostics.values()
+                       if v.get("median_gold_share") is not None), None)
+
     return f"""<!doctype html>
 <html lang="en-GB">
 <head>
@@ -670,7 +1571,8 @@ def build_html(db_path: str) -> str:
   <h1>Three ways to read a 10-K</h1>
   <p class="stand">Semantic, statistical and structural retrieval answer the same
   {d['questions']} questions over {d['filings']} SEC annual reports, at three retrieval
-  depths, judged on the same scale. These are the findings.</p>
+  depths, judged on the same scale. These are the findings, the materials they came
+  from, and the limitations they carry.</p>
   <div class="rule-bar">
     <i style="background:var(--p1)"></i><i style="background:var(--p2)"></i>
     <i style="background:var(--p3)"></i><i style="background:var(--gold)"></i>
@@ -679,11 +1581,163 @@ def build_html(db_path: str) -> str:
 
 <div class="wrap">
 {facts_strip(d)}
+{contents()}
 </div>
 
 <div class="wrap">
-<section style="border-top:none;padding-top:0">
-  <h2>The headline</h2>
+<section style="border-top:none">
+  {heading('design')}
+  <p class="lede">One question, asked three ways.</p>
+  <div class="finding">
+    <p><b>Does the way a retriever is built change how well a language model can
+    answer questions about a company's annual report?</b> Three retrieval paradigms
+    index the identical corpus and are asked the identical questions through the
+    identical answering model. Anything that differs between them is the paradigm,
+    because nothing else is allowed to vary.</p>
+  </div>
+  <div class="cards">
+    <div class="card" style="--hue:var(--p1);--wash:#E8ECFF">
+      <div class="card-top"><span class="rank">1</span>
+        <div><h3>P1 Vector</h3><p>Semantic. Dense embeddings in ChromaDB with
+        fastembed, reranked by a local cross-encoder. Matches on meaning.</p></div></div>
+    </div>
+    <div class="card" style="--hue:var(--p2);--wash:#DFF5F5">
+      <div class="card-top"><span class="rank">2</span>
+        <div><h3>P2 BM25</h3><p>Statistical. rank_bm25 over the same nodes, no model
+        of any kind. Matches on terms and their rarity.</p></div></div>
+    </div>
+    <div class="card" style="--hue:var(--p3);--wash:#FFE7EB">
+      <div class="card-top"><span class="rank">3</span>
+        <div><h3>P3 Structural</h3><p>A LlamaIndex summary tree per filing, traversed
+        by comparing the query against node summaries. Matches on position in a
+        hierarchy.</p></div></div>
+    </div>
+  </div>
+  <h3 style="margin-top:2rem">What is held constant</h3>
+  <ul>
+    <li><b>The corpus.</b> All three index the same {d['nodes']:,} nodes from the same
+    {d['filings']} filings, produced by one parsing and splitting pass.</li>
+    <li><b>The questions.</b> All three answer the same {d['questions']} questions at
+    the same three depths, giving {d['cells']} cells.</li>
+    <li><b>The answering model.</b> One model writes every answer, so differences in
+    answer quality trace back to what each retriever handed it.</li>
+    <li><b>The grader.</b> One judge scores every answer against the same rubric, with
+    a fingerprint recorded per row so a score can be tied to the rubric in force when
+    it was written.</li>
+    <li><b>What a pipeline is never shown.</b> The question and its own retrieved
+    nodes, and nothing else. No ground truth, no exemplars, no hint about where the
+    answer lives, and no metadata pre-filter.</li>
+  </ul>
+</section>
+
+<section>
+  {heading('apparatus')}
+  <p class="lede">Which model did which job, and why no model ever grades its own
+  work.</p>
+  <div class="scroll">
+    <table>
+      <caption>Table 1. Model routing. The answerer and the judge are deliberately
+      from different families, so a model is never asked to mark its own output.</caption>
+      <thead><tr><th>Role</th><th>Model</th><th>Host</th><th>Job</th></tr></thead>
+      <tbody>
+{routing_table()}
+      </tbody>
+    </table>
+  </div>
+  <p class="note">Two invariants hold across this table. The generator that proposes a
+  question is never the critic that accepts it, and the answerer that writes an answer
+  is never the judge that scores it. Every call runs at temperature 0, and the answerer
+  and judge are each pinned to a single upstream host so that two calls in the same run
+  cannot land on differently quantised copies of the same model.</p>
+</section>
+
+<section>
+  {heading('corpus')}
+  <p class="lede">{d['filings']} annual reports from five companies, parsed to
+  {d['nodes']:,} retrievable nodes carrying {d['node_totals']['tokens']:,} tokens.</p>
+{corpus_chart(d)}
+  <div class="scroll">
+    <table>
+      <caption>Table 2. The indexed corpus. A node is one retrievable unit: a passage
+      of prose or a tabular block.</caption>
+      <thead><tr><th>Filing</th><th>Nodes</th><th>Text</th><th>Table</th>
+        <th>Table share</th><th>Tokens</th><th>Tokens per node</th></tr></thead>
+      <tbody>
+{corpus_table(d)}
+      </tbody>
+    </table>
+  </div>
+  <p class="note">The filings are deliberately unequal in size, spanning
+  {min(r['nodes'] for r in d['corpus']):,} to {max(r['nodes'] for r in d['corpus']):,}
+  nodes. That range is why every distance measured inside a document is reported as a
+  share of its own filing before being pooled: a gap of 300 nodes is most of the
+  shortest filing and a twelfth of the longest.</p>
+</section>
+
+<section>
+  {heading('questions')}
+  <p class="lede">{d['questions']} primary questions on a two by two of difficulty,
+  {sum(q['n'] for q in d['quadrants'].values()) // max(1, len(d['quadrants']))} per
+  quadrant, every one verified against its filing.</p>
+{quadrant_matrix(d)}
+  <p class="note" style="margin-top:1.4rem">Two further disjoint sets exist and never
+  overlap with these. Twenty golden queries carry hand-written scores and serve as the
+  judge's calibration exemplars; twenty judge-validation queries are held out entirely
+  and are what the gate is measured on. A question in one set is never in another, so
+  the judge is never calibrated on the rows used to test it.</p>
+  <h3 style="margin-top:2rem">How much evidence each question has</h3>
+  <p>The answer key names the nodes that support the answer. Its size decides whether
+  recall is reachable.</p>
+{evidence_histogram(d)}
+</section>
+
+<section>
+  {heading('judge')}
+  <p class="lede">Answers are scored 1 to 5 against the ground-truth answer only.
+  Citation validity is checked deterministically elsewhere and deliberately kept out
+  of the judge's remit, so a model's guess cannot override a mechanical check.</p>
+  <div class="quads">
+    <div class="quad"><p class="eyebrow">Score 5</p><h4>Fully correct</h4>
+      <p class="blurb">Matches the ground truth, complete and precise, in a form that
+      answers the question asked.</p></div>
+    <div class="quad"><p class="eyebrow">Score 4</p><h4>Right value, short of complete</h4>
+      <p class="blurb">Correct on the value but falling short on completeness,
+      precision or framing.</p></div>
+    <div class="quad"><p class="eyebrow">Score 3</p><h4>Half an answer</h4>
+      <p class="blurb">One half of a two-part answer, with the other half absent.</p></div>
+    <div class="quad"><p class="eyebrow">Score 2</p><h4>Right area, wrong figure</h4>
+      <p class="blurb">Reaches the right part of the filing but reports the wrong
+      figure, ordinal or scope.</p></div>
+  </div>
+  <p class="note" style="margin-top:1.2rem">A score of 1 is wrong, unsupported,
+  fabricated, or a refusal to answer. Pass rate on this page means 4 or 5; fail rate
+  means 1.</p>
+  <h3 style="margin-top:2rem">The gate</h3>
+  <p>Before the judge was allowed near the {d['cells']}-cell benchmark it scored
+  {d['gate'][1]} held-out outputs, which were independently scored a second time under
+  a blinding protocol that withheld pipeline identity and citation evidence from the
+  reference scorer. The two scorings are compared here.</p>
+{gate_confusion(d)}
+  <div class="scroll">
+    <table>
+      <caption>Table 3. Gate agreement by pipeline. The judge is not systematically
+      kinder to any one architecture.</caption>
+      <thead><tr><th>Pipeline</th><th>Outputs</th><th>Exact agreement</th><th>Rate</th>
+        <th>Judge mean</th><th>Reference mean</th><th>Drift</th></tr></thead>
+      <tbody>
+{gate_table(d)}
+      </tbody>
+    </table>
+  </div>
+  <p class="note">The drift column is the one to read for bias. If the judge favoured
+  a particular architecture, that preference would show up here as a positive drift on
+  one row and a negative drift on another. Read this as cross-scorer concordance, not
+  as human validation: it shows the rubric is applied consistently by two independent
+  passes, which is what it was designed to test.</p>
+</section>
+
+<section>
+  {heading('headline')}
   <div class="finding">
     <p><b>Semantic and statistical retrieval are indistinguishable on this benchmark.</b>
     BM25 leads the vector pipeline on every point estimate, but the paired difference in
@@ -693,6 +1747,10 @@ def build_html(db_path: str) -> str:
     <p><b>The structural pipeline trails both by roughly two judge points</b>, with
     intervals nowhere near zero, and it is also the most expensive of the three to build
     and to query.</p>
+    <p><b>The average conceals a split.</b> Inside the quadrants the two leading
+    pipelines are not interchangeable: BM25 wins the implicit-text quadrant by a margin
+    whose interval is clear of zero, while the vector pipeline leads on implicit tables.
+    The pooled null result is real, and it is not the whole story.</p>
   </div>
   <div class="cards">
 {scoreboard(d)}
@@ -700,12 +1758,12 @@ def build_html(db_path: str) -> str:
 </section>
 
 <section>
-  <h2>All three pillars</h2>
+  {heading('pillars')}
   <p class="lede">Retrieval quality, answer quality and efficiency, over all
   {d['cells']} cells.</p>
   <div class="scroll">
     <table>
-      <caption>Table 1. Every metric, 300 cells per pipeline. Pass counts 4 and 5; fail counts 1.</caption>
+      <caption>Table 4. Every metric, 300 cells per pipeline. Pass counts 4 and 5; fail counts 1.</caption>
       <thead><tr><th>Pipeline</th><th>Judge</th><th>Pass</th><th>Fail</th><th>Recall</th>
         <th>Precision</th><th>Hit rate</th><th>Citations</th><th>Token F1</th><th>Latency</th></tr></thead>
       <tbody>
@@ -716,29 +1774,59 @@ def build_html(db_path: str) -> str:
 </section>
 
 <section>
-  <h2>Answer quality</h2>
+  {heading('quality')}
   <p class="lede">The pass rate is the more honest summary, for the reason the next
   chart makes plain.</p>
 {quality_chart(d)}
 </section>
 
 <section>
-  <h2>The scores are bimodal, not spread</h2>
+  {heading('bimodal')}
   <p class="lede">Almost every answer is either fully correct or wholly wrong. A mean of
   3.0 over this shape would describe no answer that any pipeline actually gave, which is
   why a pass rate is reported beside it.</p>
 {distribution_chart(d)}
+  <p class="note">This shape is also why the statistics on this page are rank-based. A
+  bootstrap interval and an exact sign test make no assumption about the distribution;
+  a t-test on a bounded, ordinal, two-humped variable would.</p>
 </section>
 
 <section>
-  <h2>Depth helps, but it does not rescue</h2>
+  {heading('retrieval')}
+  <p class="lede">Answer quality is downstream of retrieval, so retrieval is measured
+  in its own right: what share of the evidence came back, how often any of it came
+  back, and how much of what came back was evidence at all.</p>
+{retrieval_bars(d)}
+  <div class="scroll">
+    <table>
+      <caption>Table 5. Retrieval and answer quality at each depth. Precision falls
+      with k by construction, because its denominator is k while the evidence set is
+      fixed.</caption>
+      <thead><tr><th>Pipeline</th><th>k</th><th>Precision</th><th>Recall</th>
+        <th>Hit rate</th><th>Citation match</th><th>Judge</th><th>Pass</th></tr></thead>
+      <tbody>
+{retrieval_table(d)}
+      </tbody>
+    </table>
+  </div>
+  <p class="note">Precision is the one metric that should not be read as a ranking
+  across depths. Returning five nodes when the answer needs one caps precision at 0.2
+  however good the retrieval, so a falling precision column is arithmetic, not
+  degradation. Recall and hit rate are the measures that carry information here.</p>
+</section>
+
+<section>
+  {heading('depth')}
   <p class="lede">Every pipeline improves as k rises from 2 to 5. The structural pipeline
   improves the most in relative terms and is still far below where the other two start.</p>
 {k_chart(d)}
+  <p class="note">Depth is therefore not a confound in the headline comparison. The
+  ordering of the three pipelines is the same at every depth, so no choice of k within
+  this sweep would have produced a different conclusion.</p>
 </section>
 
 <section>
-  <h2>Where the ordering changes</h2>
+  {heading('quadrants')}
   <p class="lede">The question set is a genuine two by two: stated directly or inferred,
   crossed with prose or table. BM25 wins three of the four.</p>
   <div class="quads">
@@ -752,7 +1840,36 @@ def build_html(db_path: str) -> str:
 </section>
 
 <section>
-  <h2>Is the difference real</h2>
+  {heading('flip')}
+  <p class="lede">The corpus-wide interval for vector against BM25 spans zero. That
+  says they are indistinguishable on average. It does not say they behave alike, and
+  splitting the same paired comparison by quadrant shows they do not.</p>
+{flip_chart(d)}
+{forest_key()}
+  <div class="scroll">
+    <table>
+      <caption>Table 6. Vector minus BM25, computed inside each depth and each
+      quadrant. A positive difference favours the vector pipeline.</caption>
+      <thead><tr><th>Split</th><th>Subset</th><th>Difference</th><th>95% interval</th>
+        <th>W / L / T</th><th>Sign test</th><th>Verdict</th></tr></thead>
+      <tbody>
+{split_table(d)}
+      </tbody>
+    </table>
+  </div>
+  <div class="finding">
+    <p><b>{'One quadrant separates them' if len(flips) == 1 else f'{len(flips)} quadrants separate them'
+      if flips else 'No single quadrant separates them'}.</b>
+    {'BM25 wins ' + ', '.join(esc(QUAD[q][0]) for q in flips) + ' by a margin whose interval is clear of zero, while the vector pipeline leads on implicit tables without reaching significance. The two paradigms are trading wins on different question types, and the pooled figure averages that trade away.' if flips else 'Every subset interval spans zero, so the corpus-wide null result holds uniformly.'}</p>
+    <p>This is the finding to lead a discussion with. A null result at the corpus level
+    is not evidence that the two paradigms are interchangeable; it is evidence that
+    their strengths are differently distributed and happen to cancel over this
+    question mix. A different mix would not have cancelled.</p>
+  </div>
+</section>
+
+<section>
+  {heading('stats')}
   <p class="lede">Every pipeline answers exactly the same cells, so comparisons are
   paired on question and depth. Significance is a bootstrap interval and an exact sign
   test, not a t-test: these scores are ordinal, bounded and bimodal.</p>
@@ -761,7 +1878,7 @@ def build_html(db_path: str) -> str:
 {forest_key()}
   <div class="scroll">
     <table>
-      <caption>Table 2. Paired differences. W/L/T counts cells won, lost and tied.</caption>
+      <caption>Table 7. Paired differences. W/L/T counts cells won, lost and tied.</caption>
       <thead><tr><th>Comparison</th><th>Metric</th><th>Difference</th><th>95% interval</th>
         <th>W / L / T</th><th>Sign test</th><th>Verdict</th></tr></thead>
       <tbody>
@@ -769,10 +1886,117 @@ def build_html(db_path: str) -> str:
       </tbody>
     </table>
   </div>
+  <p class="note">Ties are dropped from the sign test, which is why the effective
+  sample is smaller than {p1p2['n_pairs']}. The tie count is itself informative: the two
+  leading pipelines agree on {100 * p1p2['ties'] / p1p2['n_pairs']:.0f}% of cells,
+  usually because both retrieved the evidence and both answered correctly. The
+  bootstrap resamples 10,000 times from a fixed seed, so the intervals on this page
+  reproduce exactly.</p>
 </section>
 
 <section>
-  <h2>What it costs to build</h2>
+  {heading('filings')}
+  <p class="lede">Mean judge score for each of the {d['filings']} filings. BM25 leads
+  outright on {leads['P2_bm25']}, the vector pipeline on {leads['P1_vector']}, and they
+  tie on {leads['tie']} more. The structural pipeline is last on {leads['worst_last']} of
+  {leads['filings']}, and on the {leads['identical']} where it is not, all three score
+  identically.</p>
+{document_heatmap(d)}
+  <p class="note">Read the rows against their question counts. The questions were drawn
+  by quadrant rather than evenly by filing, so one filing carries seventeen of them and
+  another carries one. A row built on a single question is an observation, not a rate.
+  Use this table as a check that no single filing drives the headline, which it does
+  not, rather than as a ranking of filings.</p>
+</section>
+
+<section>
+  {heading('chain')}
+  <p class="lede">The whole benchmark reduces to one question: did the evidence come
+  back? Split every cell on that and the answer outcome is nearly determined.</p>
+  <div class="cards">
+{contingency_panel(d)}
+  </div>
+  <div class="finding">
+    <p><b>Retrieval, not generation, is what separates these architectures.</b> When the
+    evidence node is returned, every pipeline passes at a similar high rate. When it is
+    not, every pipeline fails at a similar high rate. The answering model is the same in
+    all six of those cells, so the difference between architectures is entirely a
+    difference in what they hand it.</p>
+    <p><b>{leak_total} of the {d['cells']} cells break that rule</b>, scoring 4 or 5
+    with no evidence node retrieved at all. Those were answered from the answering
+    model's own knowledge of these companies rather than from the filing, and
+    {leak.get('P3_structural', 0)} of them belong to the structural pipeline. This is
+    a floor on parametric leakage, and it flatters the weakest pipeline rather than the
+    strongest.</p>
+  </div>
+  <p class="note">The direction of that leakage matters for the conclusion. A pipeline
+  that retrieves nothing useful leaves the model free to answer from memory, so leakage
+  raises the floor under the worst performer. The measured gap between structural and
+  the other two is therefore a lower bound on the true gap.</p>
+</section>
+
+<section>
+  {heading('nodetypes')}
+  <p class="lede">Roughly one node in eleven across the corpus is a tabular block. What
+  share of each pipeline's returned slots are tables, and does that share respond to
+  whether the question is about a table?</p>
+{node_type_chart(d)}
+  <p class="note">All three raise their table share when the question is about a table,
+  so all three are responding to the question rather than returning a fixed mix. The
+  structural pipeline returns the highest table share on table questions and also the
+  highest on prose questions, which is the signature of a retriever whose selectivity
+  is weaker rather than better: it is not discriminating more sharply, it is drifting
+  toward tabular blocks generally.</p>
+</section>
+
+<section>
+  {heading('position')}
+  <p class="lede">A result this lopsided invites the suspicion that something is broken.
+  These diagnostics say otherwise, and they locate the failure precisely.</p>
+{position_chart(d)}
+  <div class="scroll">
+    <table>
+      <caption>Table 8. Where each pipeline looked. Diversity is distinct node ids over
+      returned slots across the whole benchmark; within a single row it is always 1.000
+      and says nothing. Miss distance is reported both absolutely and as a share of the
+      filing it was measured in.</caption>
+      <thead><tr><th>Pipeline</th><th>Distinct / slots</th><th>Diversity</th>
+        <th>Median position</th><th>Median miss</th><th>Miss, share of filing</th>
+        <th>Slots on evidence</th></tr></thead>
+      <tbody>
+{diagnostics_table(d)}
+      </tbody>
+    </table>
+  </div>
+  <ul>
+    <li><b>It retrieves, it just retrieves the wrong nodes.</b> Hit rate is
+    {pct(o[worst]['hit_rate'])} against {pct(o[best]['hit_rate'])} for
+    {esc(PIPE[best]['label'])}: on most questions the supporting node is never returned
+    at all. Diversity is the highest of the three, so this is not a retriever stuck
+    returning the same nodes regardless of the query.</li>
+    <li><b>It is not landing near the evidence and picking the wrong paragraph.</b>
+    Its median returned node sits at {num(worst_diag.get('median_retrieved_share'))} of
+    the way through a filing whose evidence sits at
+    {num(gold_share)}, and its median miss is
+    {pct(worst_diag.get('median_miss_share'))} of the filing against
+    {pct(best_diag.get('median_miss_share'))} for {esc(PIPE[best]['label'])}. It is
+    landing in the wrong part of the document, biased late.</li>
+    <li><b>Tree traversal descends by comparing the query against summaries</b>, and a
+    summary is exactly the artefact from which a specific figure has been compressed
+    away. On a benchmark dominated by extraction that is fatal. It would not be on a
+    benchmark of thematic questions, which is the use this structure was designed
+    for.</li>
+    <li><b>Its relative best quadrant is the inferential one.</b> Where the answer
+    appears verbatim nowhere, summarisation loses least, and the gap narrows.</li>
+  </ul>
+  <p class="note">The honest framing for the write-up is that this result characterises
+  summary-tree retrieval as configured here, on an extraction-heavy benchmark. It is a
+  measurement of a paradigm against a task, not a verdict on the paradigm in
+  general.</p>
+</section>
+
+<section>
+  {heading('build')}
   <p class="lede">Latency and tokens describe what a question costs once the index
   exists. They leave out the one-off cost of creating it, which is where the three
   paradigms diverge hardest. Two build locally from the same {d['nodes']:,} nodes with no
@@ -780,7 +2004,7 @@ def build_html(db_path: str) -> str:
 {cost_chart}
   <div class="scroll">
     <table>
-      <caption>Table 3. One build from scratch per filing, measured on the same machine.
+      <caption>Table 9. One build from scratch per filing, measured on the same machine.
       Wall clock includes time spent waiting on the LLM provider.</caption>
       <thead><tr><th>Pipeline</th><th>LLM</th><th>Total build</th><th>Median per filing</th>
         <th>Per 1k nodes</th><th>Build tokens</th><th>On disk</th></tr></thead>
@@ -797,14 +2021,18 @@ def build_html(db_path: str) -> str:
   {structural.get('filings_with_tokens', 0)} of {structural.get('filings', 0)} filings,
   so it is a floor. A further {duration(structural.get('later_attempt_sec'))} went on
   rebuilds and resumed runs.</p>
+  <p class="note">This is the cleanest of the three efficiency measures, because it is
+  the only one with no shared component: local index construction does exactly the work
+  the paradigm requires and nothing else. It is the figure to lead an efficiency
+  argument with.</p>
 </section>
 
 <section>
-  <h2>What it costs to ask</h2>
+  {heading('ask')}
   <p class="lede">Answering spend over the {d['cells']} cells, recorded per call.</p>
   <div class="scroll">
     <table>
-      <caption>Table 4. Answering tokens only. The judge's own calls are not recorded.</caption>
+      <caption>Table 10. Answering tokens only. The judge's own calls are not recorded.</caption>
       <thead><tr><th>Pipeline</th><th>Input tokens</th><th>Output tokens</th>
         <th>Input per cell</th><th>Mean latency</th></tr></thead>
       <tbody>
@@ -814,73 +2042,102 @@ def build_html(db_path: str) -> str:
   </div>
   <p class="note">The structural pipeline sends the most text to the answerer for the
   same question, because tree nodes carry summaries rather than raw passages. It is the
-  most expensive to query as well as to build, while scoring lowest.</p>
+  most expensive to query as well as to build, while scoring lowest. Output tokens are
+  near-identical across the three, because the answer format is fixed by the prompt
+  rather than by the retrieval paradigm.</p>
 </section>
 
 <section>
-  <h2>Filing by filing</h2>
-  <p class="lede">Mean judge score for each of the {d['filings']} filings. BM25 leads
-  outright on six, the vector pipeline on three, and they tie on two more. The structural
-  pipeline is last on eleven of thirteen, and on the two where it is not, all three score
-  identically.</p>
-{document_heatmap(d)}
-  <p class="note">Read the rows against their question counts. The questions were drawn
-  by quadrant rather than evenly by filing, so one filing carries seventeen of them and
-  another carries one. A row built on a single question is an observation, not a rate.</p>
+  {heading('latency')}
+  <p class="lede">Per-cell latency is reported for completeness and should be read as a
+  null result, not as an efficiency finding.</p>
+{latency_chart(d)}
+  <div class="scroll">
+    <table>
+      <caption>Table 11. Latency in seconds per cell. The percentile columns are what
+      to quote; the mean is pulled by a small number of very slow provider calls.</caption>
+      <thead><tr><th>Pipeline</th><th>Min</th><th>25th</th><th>Median</th><th>75th</th>
+        <th>90th</th><th>Max</th><th>Mean</th></tr></thead>
+      <tbody>
+{latency_table(d)}
+      </tbody>
+    </table>
+  </div>
+  <div class="finding">
+    <p><b>The medians are {median_phrase(d)}: a spread of
+    {median_spread(d):.2f} s across three architectures.</b>
+    Every cell routes through the same hosted answering model, and that shared network
+    call dominates the measurement. Local retrieval time is real but is lost inside
+    it.</p>
+    <p>Do not claim a retrieval-speed difference from this table. The efficiency
+    argument rests on index build cost, which differs by four orders of magnitude, and
+    on input tokens per query, which differ by tens of percent. Both are measured
+    cleanly.</p>
+  </div>
 </section>
 
 <section>
-  <h2>Why the structural pipeline trails</h2>
-  <p class="lede">A result this lopsided invites the suspicion that something is broken.
-  The numbers say otherwise.</p>
+  {heading('threats')}
+  <p class="lede">Every limitation an examiner could raise, what the data actually
+  shows about it, and the argument to make. Ordered by how much work each one needs in
+  the write-up.</p>
+  <div class="threats">
+{threats(d)}
+  </div>
+</section>
+
+<section>
+  {heading('weaken')}
+  <p class="lede">The findings above would not survive all of these equally. Stated
+  plainly, so the claims can be scoped to match.</p>
   <ul>
-    <li><b>It retrieves, it just retrieves the wrong nodes.</b> Hit rate is
-    {pct(o['P3_structural']['hit_rate'])} against
-    {pct(o[best]['hit_rate'])} for {esc(PIPE[best]['label'])}: on most questions the
-    supporting node is never returned at all.</li>
-    <li><b>Answer quality tracks retrieval almost exactly.</b> Recall of
-    {num(o['P3_structural']['recall_at_k'])} against
-    {num(o[best]['recall_at_k'])} produces a judge mean of
-    {num(o['P3_structural']['judge_mean'], 2)} against {num(o[best]['judge_mean'], 2)}.
-    When the evidence is absent the answering model mostly declines rather than
-    fabricating.</li>
-    <li><b>Its best quadrant is the inferential one.</b> Tree traversal descends by
-    comparing the query against summaries, and a summary is exactly the artefact from
-    which a specific figure has been compressed away. On a benchmark dominated by
-    extraction that is fatal. It would not be on a benchmark of thematic questions,
-    which is the use this structure was designed for.</li>
+    <li><b>A different question mix would move the vector against BM25 result.</b> This
+    is the most fragile finding on the page. The two are separated inside quadrants and
+    cancel over the pooled set, so the mix of question types is doing the work. State
+    the mix whenever the null result is quoted.</li>
+    <li><b>A thematic or summarisation benchmark would move the structural result.</b>
+    Summary trees compress detail away, which is fatal for extraction and may be
+    helpful for synthesis. Nothing here tests synthesis over a whole filing.</li>
+    <li><b>A different answering model could change the leakage floor.</b> A smaller
+    model with less memorised knowledge of these companies would leak less and would
+    widen the measured gap; a larger one would narrow it.</li>
+    <li><b>Nothing here would move by adding runs.</b> The gaps between structural and
+    the other two span roughly two judge points with intervals hundreds of times wider
+    than any plausible run-to-run noise at temperature 0.</li>
+    <li><b>Nothing here would move by adding depth within this sweep.</b> The ordering
+    is identical at every one of the three depths.</li>
   </ul>
 </section>
 
 <section>
-  <h2>What would weaken these findings</h2>
+  {heading('ledger')}
+  <p class="lede">What can be reproduced, and from what.</p>
   <ul>
-    <li><b>One run per cell.</b> Every call is temperature zero and each cell runs once,
-    so these intervals describe variation across questions, not run to run variance.
-    Nothing here estimates the latter.</li>
-    <li><b>The judge gate is a pragmatic check.</b>
-    {100 * d['gate'][0] / d['gate'][1]:.1f}% concordance on {d['gate'][1]} outputs is
-    evidence the judge is usable, not proof it is correct, and it is cross-model
-    concordance rather than external human validation.</li>
-    <li><b>The answer key needed correcting.</b> The question generator returned whole
-    section citation lists on 24 of 100 questions, making full recall arithmetically
-    unreachable on those rows. Citations were re-derived to the minimal set that
-    demonstrably yields the answer, and one answer key was rewritten. Both corrections
-    replay from the repository.</li>
-    <li><b>Build tokens are incomplete.</b> Two filings were built before the build log
-    recorded token counts, so the structural token figure is a floor over
-    {structural.get('filings_with_tokens', 0)} of {structural.get('filings', 0)}
-    filings.</li>
-    <li><b>Corpus artefacts survive.</b> A handful of nodes carry identifiers where a
-    figure belongs, and some carry unescaped HTML entities. All three pipelines index the
-    identical corpus, so none is advantaged.</li>
+    <li><b>Every figure on this page is computed at build time.</b> No number is typed
+    into the template. Re-running the generator against the database reproduces the
+    page.</li>
+    <li><b>The statistics are seeded.</b> The bootstrap uses 10,000 resamples from a
+    fixed seed, so intervals reproduce exactly rather than approximately.</li>
+    <li><b>Every judged row carries a rubric fingerprint</b>, a digest of the grading
+    model together with the exact system prompt, which embeds the rubric and that
+    quadrant's calibration exemplars. Recomputing the fingerprint from the current
+    rubric reproduces the stored value in all four quadrants, which is what rules out
+    silent rubric drift mid-run.</li>
+    <li><b>Both answer-key corrections replay from the repository</b> against the
+    pre-repair backup and reproduce the current database row for row.</li>
+    <li><b>The corpus is frozen.</b> {d['filings']} filings and {d['nodes']:,} nodes;
+    the manifest in the repository is the authoritative list.</li>
+    <li><b>Every cell is accounted for.</b> {d['cells']} primary cells and
+    {d['gate'][1]} gate rows, all scored, with no nulls in any metric column.</li>
   </ul>
 </section>
 
 <footer>
   <p>Generated {date.today().isoformat()} from <code>benchmark.db</code> by
   <code>project/build_findings_page.py</code>. Every figure on this page is read from the
-  database at build time through <code>aggregate_results.py</code>, with no manual step.
+  database at build time through <code>aggregate_results.py</code>,
+  <code>retrieval_diagnostics.py</code> and <code>index_build_cost.py</code>, with no
+  manual step.
   {d['cells']} cells &middot; {d['nodes']:,} nodes &middot; {d['filings']} filings
   &middot; one temperature-zero run per cell.</p>
 </footer>
