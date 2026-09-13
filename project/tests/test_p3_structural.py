@@ -71,7 +71,7 @@ async def test_retrieve_respects_k(tmp_path, monkeypatch):
     assert len(retriever.retrieve("What were total net sales?", document_id="AAPL_2025", k=1)) == 1
     # k exceeding the filing's node count is a normal case: return what exists,
     # never more than k.
-    assert len(retriever.retrieve("What were total net sales?", document_id="AAPL_2025", k=10)) <= 10
+    assert len(retriever.retrieve("What were total net sales?", document_id="AAPL_2025", k=5)) <= 5
 
 
 @pytest.mark.asyncio

@@ -1,6 +1,13 @@
 """Writes golden_queries_to_label.md so a researcher can hand-write the
 'why this answer is good' note and 0-100 score for each of the 20 golden
-queries."""
+queries.
+
+write_gq_labels.py is the authority for the current calibration set. The
+markdown template this module writes has no example_output field, so
+re-importing a stale golden_queries_to_label.md would overwrite
+human_score, human_reasoning and is_good with old values while leaving
+example_output exactly as write_gq_labels.py left it, silently mismatching
+the two halves of the calibration."""
 import asyncio
 
 import database_manager as dbm

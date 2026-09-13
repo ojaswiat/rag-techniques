@@ -17,7 +17,7 @@ from loop_template import apply_throttle
 from pipelines.answerer import Answerer
 from pipelines.base import Retriever
 
-K_VALUES: tuple[int, ...] = (3, 5, 10)
+K_VALUES: tuple[int, ...] = (2, 3, 5)
 PIPELINES: tuple[str, ...] = ("P1_vector", "P2_bm25", "P3_structural")
 
 logger = logging.getLogger(__name__)

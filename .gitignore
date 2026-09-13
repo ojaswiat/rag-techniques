@@ -14,3 +14,5 @@ graphify-out/.graphify_python
 # are unaffected. The live graph in graphify-out/ stays tracked.
 graphify-out/20[0-9][0-9]-[0-9][0-9]-[0-9][0-9]/
 *.mov
+# Playwright MCP scratch output
+.playwright-mcp/

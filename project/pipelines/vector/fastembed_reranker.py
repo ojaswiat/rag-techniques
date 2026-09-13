@@ -8,6 +8,7 @@ from fastembed.rerank.cross_encoder import TextCrossEncoder
 from llama_index.core.bridge.pydantic import PrivateAttr
 from llama_index.core.postprocessor.types import BaseNodePostprocessor
 from llama_index.core.schema import MetadataMode, NodeWithScore, QueryBundle
+from model_cache import model_cache_dir
 
 
 class FastEmbedReranker(BaseNodePostprocessor):
@@ -18,7 +19,7 @@ class FastEmbedReranker(BaseNodePostprocessor):
 
     def __init__(self, model_name: str = "BAAI/bge-reranker-base", top_n: int | None = None, **kwargs):
         super().__init__(model_name=model_name, top_n=top_n, **kwargs)
-        self._model = TextCrossEncoder(model_name=model_name)
+        self._model = TextCrossEncoder(model_name=model_name, cache_dir=model_cache_dir())
 
     @classmethod
     def class_name(cls) -> str:

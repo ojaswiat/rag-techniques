@@ -239,7 +239,7 @@ CREATE TABLE results (
     source_set            TEXT NOT NULL CHECK (source_set IN ('PQ','JEQ')),
     query_id              TEXT NOT NULL,   -- FK -> queries.query_id (PQ) or judge_validation.query_id (JEQ)
     pipeline               TEXT NOT NULL CHECK (pipeline IN ('P1_vector','P2_bm25','P3_structural')),
-    k_value                 INTEGER NOT NULL CHECK (k_value IN (3,5,10)),
+    k_value                 INTEGER NOT NULL CHECK (k_value IN (2,3,5)),
     retrieved_node_ids       TEXT NOT NULL,   -- JSON array of node_id
     pipeline_output           TEXT,
     cited_node_ids             TEXT,         -- JSON array of node_id
@@ -249,8 +249,9 @@ CREATE TABLE results (
     citation_match                 INTEGER CHECK (citation_match IN (0,1)),
     token_f1                         REAL,
     exact_match                       INTEGER CHECK (exact_match IN (0,1)),   -- NULL for Q2/Q4
-    judge_score                        INTEGER CHECK (judge_score BETWEEN 1 AND 10),
-    human_score                         INTEGER CHECK (human_score BETWEEN 1 AND 10),  -- only for source_set='JEQ'
+    judge_score                        INTEGER CHECK (judge_score BETWEEN 1 AND 5),
+    judge_fingerprint                  TEXT,   -- digest of the rubric+exemplars+model that produced judge_score
+    human_score                         INTEGER CHECK (human_score BETWEEN 1 AND 5),  -- only for source_set='JEQ'
     latency_sec                          REAL,
     input_tokens                          INTEGER,
     output_tokens                          INTEGER,
@@ -297,7 +298,7 @@ Real corpus (expanded from the original illustrative 9-filing example to 13):
 
 **`results`** — one PQ row, one Q2/Q4-style row showing `exact_match = NULL`, and two JEQ-gate rows for the same validation query across two pipelines (demonstrating how 60 gate outputs fit into one table):
 
-| result_id | source_set | query_id | pipeline | k_value | retrieved_node_ids | pipeline_output | cited_node_ids | precision_at_k | recall_at_k | evidence_hit | citation_match | token_f1 | exact_match | judge_score | human_score | latency_sec | input_tokens | output_tokens |
+| result_id | source_set | query_id | pipeline | k_value | retrieved_node_ids | pipeline_output | cited_node_ids | precision_at_k | recall_at_k | evidence_hit | citation_match | token_f1 | exact_match | judge_score | judge_fingerprint | human_score | latency_sec | input_tokens | output_tokens |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | `R_000457` | PQ | `QT3_PQ_017` | P1_vector | 5 | `["AAPL_2025_n0421","AAPL_2025_n0420"]` | "Apple's FY2025 net sales were $394.3B. [[node:AAPL_2025_n0421]]" | `["AAPL_2025_n0421"]` | 0.20 | 1.0 | 1 | 1 | 0.95 | 1 | 9 | NULL | 1.84 | 2100 | 40 |
 | `R_000312` | PQ | `QT2_PQ_044` | P3_structural | 10 | `["TSLA_2023_n0299", "TSLA_2023_n0301"]` | "Management cited higher production at the Texas and Berlin gigafactories. [[node:TSLA_2023_n0299]]" | `["TSLA_2023_n0299"]` | 0.30 | 1.0 | 1 | 1 | 0.58 | NULL | 7 | NULL | 2.40 | 3100 | 85 |
@@ -442,7 +443,7 @@ async_generator.py        search_tool.py          async_critic.py       cross_ch
 * **`aiosqlite` for the async write path** over the `sqlite3`-defined schema in §3.2 — commits never block the event loop.
 * **`LOCAL_TEST_THROTTLE` stays hardcoded per script**, never centralized — `Guardrails.md` §7 requires it be consciously toggled in each file individually.
 * **Filing manifest instead of a discovery package** — `data/filings_manifest.json` lists the ~6–9 known filings; `requests` downloads them. No `sec-edgar-downloader`-style package is needed for a fixed, small, known list.
-* **P3 retrieval stays local** — `TreeIndex.as_retriever(retriever_mode="select_leaf_embedding")` scores summary nodes by embedding similarity (reusing `bge-small-en-v1.5`), never calling Groq at query time, per `Guardrails.md` §1 ("P3 retrieval at query time is local"). This is also how K∈{3,5,10} applies to P3, matching `Project_Idea.md` §7's requirement that all three pipelines are tested at all three K values.
+* **P3 retrieval stays local** — `TreeIndex.as_retriever(retriever_mode="select_leaf_embedding")` scores summary nodes by embedding similarity (reusing `bge-small-en-v1.5`), never calling Groq at query time, per `Guardrails.md` §1 ("P3 retrieval at query time is local"). This is also how K∈{2,3,5} applies to P3, matching `Project_Idea.md` §7's requirement that all three pipelines are tested at all three K values.
 * **The Critic's search tool is self-contained** — a standalone `rank_bm25` instance scoped to one document, not a forward import of Phase 5's P2 module (Phase 4 runs before Phase 5 per the week numbers in §8).
 
 ---

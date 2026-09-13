@@ -4,8 +4,12 @@ This is the only module that touches raw JSON strings for node-id list
 columns; everything else works with list[str].
 """
 import json
+import logging
+import re
 
 import aiosqlite
+
+logger = logging.getLogger(__name__)
 
 _SCHEMA = """
 CREATE TABLE IF NOT EXISTS nodes (
@@ -60,7 +64,7 @@ CREATE TABLE IF NOT EXISTS results (
     source_set          TEXT NOT NULL CHECK (source_set IN ('PQ','JEQ')),
     query_id            TEXT NOT NULL,
     pipeline            TEXT NOT NULL CHECK (pipeline IN ('P1_vector','P2_bm25','P3_structural')),
-    k_value             INTEGER NOT NULL CHECK (k_value IN (3,5,10)),
+    k_value             INTEGER NOT NULL CHECK (k_value IN (2,3,5)),
     retrieved_node_ids  TEXT NOT NULL,
     pipeline_output     TEXT,
     cited_node_ids      TEXT,
@@ -70,8 +74,9 @@ CREATE TABLE IF NOT EXISTS results (
     citation_match      INTEGER CHECK (citation_match IN (0,1)),
     token_f1            REAL,
     exact_match         INTEGER CHECK (exact_match IN (0,1)),
-    judge_score         INTEGER CHECK (judge_score BETWEEN 1 AND 10),
-    human_score         INTEGER CHECK (human_score BETWEEN 1 AND 10),
+    judge_score         INTEGER CHECK (judge_score BETWEEN 1 AND 5),
+    judge_fingerprint   TEXT,
+    human_score         INTEGER CHECK (human_score BETWEEN 1 AND 5),
     latency_sec         REAL,
     input_tokens        INTEGER,
     output_tokens        INTEGER,
@@ -87,7 +92,25 @@ async def init_db(db_path: str) -> None:
         await conn.execute("PRAGMA journal_mode=WAL;")
         await conn.executescript(_SCHEMA)
         await _migrate_golden_queries_schema(conn)
+        await _migrate_results_score_checks(conn)
+        await _migrate_results_add_judge_fingerprint(conn)
         await conn.commit()
+
+
+async def _migrate_results_add_judge_fingerprint(conn: aiosqlite.Connection) -> None:
+    """Adds results.judge_fingerprint to a database built before it existed.
+
+    Unlike a CHECK constraint, a new nullable column can be added in place, so
+    this is an ALTER rather than a table rebuild. Existing rows are left NULL,
+    which is the correct reading: a score written before fingerprints were
+    recorded cannot be shown to have come from the current rubric, so resume
+    treats it as stale and re-judges it.
+    """
+    cursor = await conn.execute("PRAGMA table_info(results)")
+    columns = {row[1] for row in await cursor.fetchall()}
+    if "judge_fingerprint" in columns:
+        return
+    await conn.execute("ALTER TABLE results ADD COLUMN judge_fingerprint TEXT")
 
 
 async def _migrate_golden_queries_schema(conn: aiosqlite.Connection) -> None:
@@ -115,6 +138,74 @@ async def _migrate_golden_queries_schema(conn: aiosqlite.Connection) -> None:
 
     await conn.execute("DROP TABLE golden_queries")
     await conn.executescript(_SCHEMA)
+
+
+_RESULTS_DDL_RE = re.compile(
+    r"CREATE TABLE IF NOT EXISTS results \(.*?\n\);", re.DOTALL
+)
+
+
+async def _migrate_results_score_checks(conn: aiosqlite.Connection) -> None:
+    """Tightens results' judge_score/human_score CHECKs from 1-10 to 1-5.
+
+    The scoring scale was collapsed to 1-5 (deviations entry 33), but SQLite
+    cannot alter a CHECK constraint and CREATE TABLE IF NOT EXISTS never
+    touches an existing table, so a database built under the old schema keeps
+    a constraint two bands wider than the scale. Unlike
+    _migrate_golden_queries_schema this preserves the rows: 1-5 is a subset of
+    1-10, so every stored score is already valid. A row that is not (a
+    leftover 6-10 from before the collapse) aborts the migration rather than
+    being silently dropped by the rebuild.
+    """
+    cursor = await conn.execute(
+        "SELECT sql FROM sqlite_master WHERE type='table' AND name='results'"
+    )
+    row = await cursor.fetchone()
+    if row is None or "BETWEEN 1 AND 10" not in row[0]:
+        return
+
+    cursor = await conn.execute(
+        "SELECT COUNT(*) FROM results WHERE judge_score > 5 OR human_score > 5"
+    )
+    (stale,) = await cursor.fetchone()
+    if stale:
+        raise RuntimeError(
+            f"results holds {stale} row(s) scored above 5 on the retired 1-10 "
+            "scale; rescore or clear them before tightening the CHECK constraint."
+        )
+
+    match = _RESULTS_DDL_RE.search(_SCHEMA)
+    if match is None:  # pragma: no cover - guards a future edit to _SCHEMA
+        raise RuntimeError("could not extract the results DDL from _SCHEMA")
+    new_ddl = match.group(0).replace(
+        "CREATE TABLE IF NOT EXISTS results (", "CREATE TABLE results_new ("
+    )
+
+    cursor = await conn.execute("SELECT COUNT(*) FROM results")
+    (before,) = await cursor.fetchone()
+
+    await conn.execute(new_ddl)
+    await conn.execute(
+        "INSERT INTO results_new SELECT "
+        + ", ".join(
+            col[1] for col in await (await conn.execute("PRAGMA table_info(results)")).fetchall()
+        )
+        + " FROM results"
+    )
+    cursor = await conn.execute("SELECT COUNT(*) FROM results_new")
+    (after,) = await cursor.fetchone()
+    if after != before:
+        raise RuntimeError(f"results migration would lose rows: {before} -> {after}")
+
+    await conn.execute("DROP TABLE results")
+    await conn.execute("ALTER TABLE results_new RENAME TO results")
+    await conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_results_query_id   ON results(query_id)"
+    )
+    await conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_results_pipeline_k ON results(pipeline, k_value)"
+    )
+    logger.info("migrated results score CHECK constraints from 1-10 to 1-5 (%s rows)", after)
 
 
 async def insert_node(db_path: str, node: dict) -> None:
@@ -310,6 +401,27 @@ async def update_golden_query_labels(
             raise ValueError(f"No golden_query found with query_id={query_id!r} -- check for a typo")
 
 
+async def update_golden_query_example_output(db_path: str, query_id: str, example_output: str) -> None:
+    """Replace one exemplar's candidate answer.
+
+    Separate from update_golden_query_labels because the two are written at
+    different times and for different reasons: the labels are a judgement
+    about a candidate, while this rewrites the candidate itself when the
+    calibration set needs a deliberately imperfect example.
+    """
+    if not example_output or not example_output.strip():
+        raise ValueError(f"{query_id}: example_output must be a non-empty string")
+
+    async with aiosqlite.connect(db_path) as conn:
+        cursor = await conn.execute(
+            "UPDATE golden_queries SET example_output = ? WHERE query_id = ?",
+            (example_output, query_id),
+        )
+        await conn.commit()
+        if cursor.rowcount == 0:
+            raise ValueError(f"No golden_query found with query_id={query_id!r} -- check for a typo")
+
+
 async def get_results(db_path: str, source_set: str) -> list[dict]:
     """Every results row for one source_set, JSON node-id columns decoded.
 
@@ -332,8 +444,15 @@ async def get_results(db_path: str, source_set: str) -> list[dict]:
     return result
 
 
-async def get_jeq_judging_rows(db_path: str) -> list[dict]:
-    """The 60 gate rows, each joined to its judge_validation ground truth.
+# Each source set draws its ground truth from a different table. The join is
+# keyed on this rather than on a parameter so a caller cannot pair the JEQ
+# results with the PQ answer keys, which would score rows against the wrong
+# ground truth and fail silently rather than loudly.
+_GROUND_TRUTH_TABLES = {"JEQ": "judge_validation", "PQ": "queries"}
+
+
+async def get_judging_rows(db_path: str, source_set: str) -> list[dict]:
+    """One source set's results rows, each joined to its own ground truth.
 
     async_judge.py scores one results row at a time but needs that row's
     quadrant, ground-truth answer, and gt_citations, none of which live in
@@ -341,15 +460,21 @@ async def get_jeq_judging_rows(db_path: str) -> list[dict]:
     tables itself; JSON list columns from both tables are decoded to
     list[str].
     """
+    if source_set not in _GROUND_TRUTH_TABLES:
+        raise ValueError(
+            f"source_set must be one of {sorted(_GROUND_TRUTH_TABLES)}; got {source_set!r}"
+        )
+    table = _GROUND_TRUTH_TABLES[source_set]
     async with aiosqlite.connect(db_path) as conn:
         conn.row_factory = aiosqlite.Row
         cursor = await conn.execute(
-            """SELECT r.*, jv.quadrant, jv.query_text, jv.ground_truth_answer,
-                      jv.gt_citations, jv.document_id
-               FROM results r
-               JOIN judge_validation jv ON jv.query_id = r.query_id
-               WHERE r.source_set = 'JEQ'
-               ORDER BY r.result_id"""
+            f"""SELECT r.*, gt.quadrant, gt.query_text, gt.ground_truth_answer,
+                       gt.gt_citations, gt.document_id
+                FROM results r
+                JOIN {table} gt ON gt.query_id = r.query_id
+                WHERE r.source_set = ?
+                ORDER BY r.result_id""",
+            (source_set,),
         )
         rows = await cursor.fetchall()
     result = []
@@ -360,6 +485,11 @@ async def get_jeq_judging_rows(db_path: str) -> list[dict]:
         d["gt_citations"] = _loads(d["gt_citations"])
         result.append(d)
     return result
+
+
+async def get_jeq_judging_rows(db_path: str) -> list[dict]:
+    """The 60 gate rows, joined to their judge_validation ground truth."""
+    return await get_judging_rows(db_path, "JEQ")
 
 
 async def get_golden_queries_by_quadrant(db_path: str, quadrant: str) -> list[dict]:
@@ -396,6 +526,10 @@ _UPDATABLE_SCORE_COLUMNS = frozenset(
         "token_f1",
         "exact_match",
         "judge_score",
+        # Written in the same UPDATE as judge_score, never separately: a score
+        # and the fingerprint of the rubric that produced it must land
+        # together or resume cannot trust either.
+        "judge_fingerprint",
     }
 )
 
@@ -427,9 +561,9 @@ async def update_result_scores(db_path: str, result_id: str, scores: dict) -> No
 
 
 async def update_result_human_score(db_path: str, result_id: str, human_score: int) -> None:
-    """Record the researcher's hand-score for one JEQ gate row (1-10)."""
-    if not isinstance(human_score, int) or isinstance(human_score, bool) or not (1 <= human_score <= 10):
-        raise ValueError(f"human_score {human_score!r} must be an integer in 1-10")
+    """Record the researcher's hand-score for one JEQ gate row (1-5)."""
+    if not isinstance(human_score, int) or isinstance(human_score, bool) or not (1 <= human_score <= 5):
+        raise ValueError(f"human_score {human_score!r} must be an integer in 1-5")
     async with aiosqlite.connect(db_path) as conn:
         cursor = await conn.execute(
             "UPDATE results SET human_score = ? WHERE result_id = ?",

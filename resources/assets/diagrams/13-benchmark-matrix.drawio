@@ -13,13 +13,13 @@
         <mxCell id="t3" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontColor=#64748b;fontSize=12;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;shadow=0;fontStyle=1;" value="RETRIEVAL DEPTH" vertex="1">
           <mxGeometry height="26" width="1080" x="260" y="150" as="geometry" />
         </mxCell>
-        <mxCell id="t4" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontColor=#64748b;fontSize=14;fontFamily=JetBrains Mono;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DJetBrains%2BMono;shadow=0;fontStyle=1;" value="K = 3" vertex="1">
+        <mxCell id="t4" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontColor=#64748b;fontSize=14;fontFamily=JetBrains Mono;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DJetBrains%2BMono;shadow=0;fontStyle=1;" value="K = 2" vertex="1">
           <mxGeometry height="32" width="340" x="280" y="182" as="geometry" />
         </mxCell>
-        <mxCell id="t5" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontColor=#64748b;fontSize=14;fontFamily=JetBrains Mono;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DJetBrains%2BMono;shadow=0;fontStyle=1;" value="K = 5" vertex="1">
+        <mxCell id="t5" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontColor=#64748b;fontSize=14;fontFamily=JetBrains Mono;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DJetBrains%2BMono;shadow=0;fontStyle=1;" value="K = 3" vertex="1">
           <mxGeometry height="32" width="340" x="640" y="182" as="geometry" />
         </mxCell>
-        <mxCell id="t6" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontColor=#64748b;fontSize=14;fontFamily=JetBrains Mono;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DJetBrains%2BMono;shadow=0;fontStyle=1;" value="K = 10" vertex="1">
+        <mxCell id="t6" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontColor=#64748b;fontSize=14;fontFamily=JetBrains Mono;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DJetBrains%2BMono;shadow=0;fontStyle=1;" value="K = 5" vertex="1">
           <mxGeometry height="32" width="340" x="1000" y="182" as="geometry" />
         </mxCell>
         <mxCell id="c7" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#0ea5e9;strokeColor=none;fontColor=#FFFFFF;fontSize=13;fontFamily=JetBrains Mono;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DJetBrains%2BMono;verticalAlign=middle;align=center;shadow=0;glass=0;spacingLeft=8;spacingRight=8;spacingTop=6;spacingBottom=6;arcSize=0;fontStyle=1;" value="P1_vector" vertex="1">
@@ -97,7 +97,7 @@
         <mxCell id="t31" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontColor=#64748b;fontSize=12;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;shadow=0;fontStyle=1;" value="WHY THREE VALUES OF K" vertex="1">
           <mxGeometry height="24" width="620" x="760" y="770" as="geometry" />
         </mxCell>
-        <mxCell id="c32" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#6366f1;strokeColor=none;fontColor=#FFFFFF;fontSize=12;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;verticalAlign=middle;align=left;shadow=0;glass=0;spacingLeft=16;spacingRight=16;spacingTop=6;spacingBottom=6;arcSize=0;" value="Retrieval depth interacts with paradigm. BM25 may be sharply precise at K=3 and gain nothing from K=10, while the vector arm may need depth before recall becomes usable." vertex="1">
+        <mxCell id="c32" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#6366f1;strokeColor=none;fontColor=#FFFFFF;fontSize=12;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;verticalAlign=middle;align=left;shadow=0;glass=0;spacingLeft=16;spacingRight=16;spacingTop=6;spacingBottom=6;arcSize=0;" value="Retrieval depth interacts with paradigm. BM25 may be sharply precise at K=2 and gain nothing from K=5, while the vector arm may need depth before recall becomes usable." vertex="1">
           <mxGeometry height="78" width="580" x="760" y="802" as="geometry" />
         </mxCell>
         <mxCell id="c33" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ef4444;strokeColor=none;fontColor=#FFFFFF;fontSize=12;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;verticalAlign=middle;align=left;shadow=0;glass=0;spacingLeft=16;spacingRight=16;spacingTop=6;spacingBottom=6;arcSize=0;" value="A single K would silently pick a winner by choosing a favourable operating point. K sensitivity is part of the result." vertex="1">

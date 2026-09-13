@@ -30,8 +30,8 @@ All LLM calls run on the free tiers of **Groq, NVIDIA NIM, and OpenRouter** (ope
 |  Dataset generation           nvidia/nemotron-3-super-120b-a12b:free  OpenRouter     |
 |  Dataset critique (+ search)  openai/gpt-oss-20b:free                 OpenRouter     |
 |  P3 tree-index build (1x)     nvidia/nemotron-3-super-120b-a12b       NIM free       |
-|  Pipeline answers (P1/P2/P3)  llama-3.3-70b-versatile  (SHARED)       Groq free      |
-|  Judge / scoring (no search)  qwen/qwen3.6-27b                        Groq free      |
+|  Pipeline answers (P1/P2/P3)  meta-llama/llama-3.3-70b-instruct       OpenRouter     |
+|  Judge / scoring (no search)  qwen/qwen3.6-27b                        OpenRouter     |
 |  ---------------------------  --------------------------------------  -------------  |
 |  Embeddings (P1)              BAAI/bge-small-en-v1.5                  Local CPU $0   |
 |  Re-ranker (P1)               BAAI/bge-reranker-base                  Local CPU $0   |

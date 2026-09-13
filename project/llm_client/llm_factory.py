@@ -19,6 +19,7 @@ class LLMFactory:
         provider: str,
         model: str,
         callback_manager: Optional[CallbackManager] = None,
+        extra_body: Optional[dict] = None,
     ) -> Any:
         """Return a LlamaIndex LLM instance for the given provider and model.
 
@@ -27,6 +28,9 @@ class LLMFactory:
             callback_manager: Attached to the returned LLM so events from
                 llama_index's `llm_chat_callback()` decorator land on the
                 caller's bus instead of a default empty one.
+            extra_body: For OpenRouter, additional request fields not typed
+                in the OpenAI SDK (e.g. "reasoning" for capability models or
+                "provider" pinning for benchmark stages).
         """
         match provider:
             case "groq":
@@ -73,6 +77,10 @@ class LLMFactory:
                 raw_client = openrouter_mod.get_openrouter_client(model)
 
                 api_base = getattr(config, "OPENROUTER_API_ENDPOINT", "https://openrouter.ai/api/v1")
+                # extra_body is per-stage (config.MODEL_ROUTING) rather than
+                # fixed here: reasoning-tuned models need a reasoning cap,
+                # non-reasoning ones reject the parameter, and only the
+                # benchmark stages need single-provider pinning.
                 llm = OpenAILike(
                     model=model,
                     api_base=api_base,
@@ -80,17 +88,8 @@ class LLMFactory:
                     is_chat_model=True,
                     callback_manager=callback_manager,
                     temperature=0,
-                    # These OpenRouter-routed models (nemotron, gpt-oss) are
-                    # reasoning-tuned: without a cap, reasoning tokens can
-                    # exhaust the completion-token budget and leave
-                    # message.content=None, crashing the caller's json.loads().
-                    # effort="none" is rejected by some endpoints (gpt-oss-20b:free
-                    # requires reasoning to stay on); "low" is accepted everywhere
-                    # tested and still bounds the spend. The openai SDK has no
-                    # typed reasoning kwarg, so it travels via extra_body.
-                    additional_kwargs={"extra_body": {"reasoning": {"effort": "low"}}},
+                    additional_kwargs=({"extra_body": extra_body} if extra_body else {}),
                 )
-                # Same reason as the groq branch above.
                 llm._aclient = raw_client
                 return llm
 
@@ -109,7 +108,12 @@ class LLMFactory:
             raise KeyError(f"Stage {stage!r} not found in MODEL_ROUTING") from exc
         model = entry["model"]
         provider = entry["provider"]
-        return LLMFactory.get_client(provider, model, callback_manager=callback_manager)
+        return LLMFactory.get_client(
+            provider,
+            model,
+            callback_manager=callback_manager,
+            extra_body=entry.get("extra_body"),
+        )
 
 
 __all__ = ["LLMFactory"]

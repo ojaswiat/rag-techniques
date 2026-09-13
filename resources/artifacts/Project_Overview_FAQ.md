@@ -58,7 +58,7 @@
 ## How do we test them fairly?
 
 - Every pipeline gets the exact same 100 test questions.
-- Each pipeline runs at three retrieval depths, K = 3, 5, 10 (how many chunks it retrieves).
+- Each pipeline runs at three retrieval depths, K = 2, 3, 5 (how many chunks it retrieves).
 - Pipelines never see the correct answer, only the question and their own retrieved text.
 - Total: 3 pipelines times 3 depths times 100 questions equals 900 test runs.
 
@@ -86,7 +86,7 @@
 
 ## How do we grade the pipeline answers?
 
-- An AI judge scores each answer from 1 to 10 against the correct answer.
+- An AI judge scores each answer from 1 to 5 against the correct answer.
 - We also run automatic checks: did it retrieve the right passages, did it cite the right source.
 - A human manually scores a small sample first, to confirm the AI judge is trustworthy.
 - The AI judge must agree with the human over 80% of the time before it is trusted for the full test.

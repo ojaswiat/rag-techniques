@@ -99,8 +99,8 @@ def test_build_cells_is_query_major_across_pipelines():
 
 def test_build_cells_skips_completed_keys():
     queries = [_query("Q_A")]
-    completed = {("Q_A", "P1_vector", 3), ("Q_A", "P2_bm25", 10)}
-    cells = loop_executor.build_cells(queries, ("P1_vector", "P2_bm25"), (3, 5, 10), completed)
+    completed = {("Q_A", "P1_vector", 3), ("Q_A", "P2_bm25", 2)}
+    cells = loop_executor.build_cells(queries, ("P1_vector", "P2_bm25"), (2, 3, 5), completed)
 
     assert ("Q_A", "P1_vector", 3) not in {(c["query"]["query_id"], c["pipeline"], c["k_value"]) for c in cells}
     assert len(cells) == 4
@@ -306,8 +306,10 @@ async def test_a_failing_cell_does_not_abort_the_run(db_path):
     assert summary["completed"] == 2
     assert len(summary["failures"]) == 1
     assert summary["failures"][0]["exception_type"] == "RuntimeError"
-    # The failed key was never written, so a later run retries it.
-    assert ("QT1_PQ_001", "P2_bm25", 3) not in await dbm.get_completed_keys(db_path, "PQ")
+    # The failed key was never written, so a later run retries it. The failing
+    # cell is the first one built, which is the lowest K in K_VALUES.
+    failed_k = loop_executor.K_VALUES[0]
+    assert ("QT1_PQ_001", "P2_bm25", failed_k) not in await dbm.get_completed_keys(db_path, "PQ")
 
 
 # --- guards ---

@@ -89,7 +89,7 @@ Produce the 140-query benchmark via cross-family generation and critique, then s
 2. **Critic (`Qwen3.6-27B`) — a different family — with a search tool over *all* nodes of the filing:** blind verification (answer + citations redacted), independently locating and citing evidence.
 3. **Automated code cross-check:** compare Critic's cited nodes + value against the Generator's ground truth → Auto-Verify or discard-and-regenerate.
 4. Split the verified pool into three **disjoint** sets: **PQ 100 / GQ 20 / JEQ 20**, 25/5/5 per quadrant.
-5. **Human-label the 20 GQ** with "why this answer is good" notes and example 1–10 scores (the few-shot teaching material).
+5. **Human-label the 20 GQ** with "why this answer is good" notes and example scores (the few-shot teaching material). Labels are stored on a native 0-100 scale and rescaled to the Judge's 1-5 bands at prompt-build time; see deviations entry 33.
 
 ## Evaluations
 1. Generator never injects a full filing in one call; per-section context stays in-window.
@@ -157,7 +157,7 @@ Run the 900-cell matrix and score every output. Kicks off the instant the gate p
 **Weeks 7–9 onward (background, ~2–3 weeks)**
 
 ## Goals
-1. Execute **PQ (100) × {P1, P2, P3} × K∈{3, 5, 10} = 900 runs**, each once at `temperature = 0`.
+1. Execute **PQ (100) × {P1, P2, P3} × K∈{2, 3, 5} = 900 runs**, each once at `temperature = 0`.
 2. Score every run with the validated Judge + deterministic code metrics; flag coincidental correctness via the Citation Audit.
 3. Pace the token-heavy answering phase across days; **commit to `results` after each run and resume from the last written row** on restart.
 4. Hold the strict-$0 path by default; invoke the paid Developer tier only if the schedule demands compression.
@@ -178,7 +178,7 @@ Turn the raw `results` table into the analysis artefacts the dissertation will d
 **Weeks 8–10 (overlapping the write-up reservation)**
 
 ## Goals
-1. Aggregate `results` across the **tri-pillar** framework: retrieval (Precision/Recall/Hit Rate), answer quality (Judge 1–10 primary; F1/EM secondary), efficiency (latency, tokens, index-build cost).
+1. Aggregate `results` across the **tri-pillar** framework: retrieval (Precision/Recall/Hit Rate), answer quality (Judge 1-5 primary, reported as both mean and pass rate because the distribution is bimodal; F1/EM secondary), efficiency (latency, tokens, index-build cost).
 2. Break results down **per quadrant** to expose where each paradigm wins and fails (esp. the semantic-vs-statistical contrast and P3's expected Q3/Q4 degradation).
 3. Generate the comparison tables and charts the write-up will reference.
 

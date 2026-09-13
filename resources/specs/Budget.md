@@ -69,7 +69,7 @@ Groq's per-day token ceilings were the reason for the split: the Generator could
 
 The two heavy phases are token-bound, not request-bound:
 
-* **Answer generation (`Llama 3.3 70B`, ~100K TPD).** ~960 calls, each ~1–3K tokens (query + K retrieved nodes; larger at K=10), averaging ~2K → on the order of **~2M tokens**. Against ~100K TPD that is **roughly two-to-three weeks** of free-tier days, *not* 1–2. This is the project's true bottleneck.
+* **Answer generation (`Llama 3.3 70B`, ~100K TPD).** ~960 calls, each ~1–3K tokens (query + K retrieved nodes; larger at K=5), averaging ~2K → on the order of **~2M tokens**. Against ~100K TPD that is **roughly two-to-three weeks** of free-tier days, *not* 1–2. This is the project's true bottleneck.
 * **Judging (`qwen/qwen3.6-27b`).** ~960 calls. With the rubric + 5 quadrant-matched few-shot exemplars **prompt-cached** (a static prefix that does not count toward limits), the uncached payload per call is small (~1K tokens), but Qwen's ~8K **TPM** (per `project/groq_limits.md`) still paces throughput. Spread across days, it fits comfortably.
 * **Generation + critique.** ~180 calls each, and both now run on OpenRouter, so they consume no Groq tokens at all. They are paced by OpenRouter's 1,000 requests/day cap instead, which ~360 calls sits comfortably inside. Dataset generation is complete: 100 PQ, 20 GQ and 20 JEQ are in the database.
 

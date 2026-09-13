@@ -17,6 +17,7 @@ from llama_index.vector_stores.chroma import ChromaVectorStore
 import database_manager as dbm
 import loop_template
 from pipelines.structural.node_convert import nodes_to_llama_nodes
+from model_cache import model_cache_dir
 
 STORAGE_ROOT = Path("storage/chroma")
 COLLECTION_NAME = "p1_vector"
@@ -96,7 +97,7 @@ async def build_index_for_document(
     collection = get_collection(storage_root)
     vector_store = ChromaVectorStore(chroma_collection=collection)
     storage_context = StorageContext.from_defaults(vector_store=vector_store)
-    embed_model = FastEmbedEmbedding(model_name=EMBED_MODEL_NAME)
+    embed_model = FastEmbedEmbedding(model_name=EMBED_MODEL_NAME, cache_dir=model_cache_dir())
 
     VectorStoreIndex(
         nodes=llama_nodes,

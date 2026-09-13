@@ -1,0 +1,2297 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Three Ways to Read a 10-K</title>
+<style>
+:root {
+  --ink:#0f172a; --body:#1e293b; --muted:#475569; --faint:#64748b;
+  --rule:#e2e8f0; --hair:#f1f5f9; --paper:#ffffff; --wash:#f8fafc;
+  --p1:#3b82f6; --p2:#10b981; --p3:#f43f5e;
+  --amber:#f59e0b; --violet:#8b5cf6; --cyan:#06b6d4;
+  --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+  --sans:"Inter","Segoe UI",system-ui,-apple-system,"Helvetica Neue",sans-serif;
+  --mono:"SF Mono",Consolas,Menlo,monospace;
+}
+* { box-sizing:border-box; }
+body { margin:0; background:var(--paper); color:var(--body);
+       font-family:var(--serif); font-size:17.5px; line-height:1.68;
+       -webkit-font-smoothing:antialiased; }
+.wrap { max-width:1180px; margin:0 auto; padding-inline:26px; }
+.narrow { max-width:74ch; }
+h1,h2,h3,h4,h5 { font-family:var(--sans); color:var(--ink); text-wrap:balance; margin:0;
+                 letter-spacing:-.015em; }
+h1 { font-size:clamp(2.3rem,6vw,4.2rem); font-weight:800; line-height:1.03;
+     letter-spacing:-.035em; }
+h2 { font-size:clamp(1.5rem,3.4vw,2.3rem); font-weight:800; }
+h3 { font-size:1.28rem; font-weight:700; }
+h4 { font-size:1.04rem; font-weight:700; }
+p { margin:0 0 1.05rem; max-width:74ch; }
+a { color:var(--p1); }
+b, strong { color:var(--ink); font-weight:700; }
+ul, ol { padding-left:1.3rem; max-width:74ch; }
+li { margin-bottom:.5rem; }
+li::marker { color:var(--faint); }
+code { font-family:var(--mono); font-size:.86em; background:var(--wash);
+       padding:.1em .38em; border-radius:0; color:var(--ink); }
+
+/* masthead */
+header { background:linear-gradient(135deg,#8b5cf6 0%,#3b82f6 42%,
+          #06b6d4 78%,#10b981 100%); color:#fff; padding-block:4.4rem 3.4rem;
+          margin-bottom:0; }
+header h1 { color:#fff; max-width:20ch; }
+header .eyebrow { color:rgba(255,255,255,.86); }
+header .stand { color:rgba(255,255,255,.94); font-size:1.28rem; max-width:62ch;
+                margin-top:1.3rem; }
+.eyebrow { font-family:var(--sans); font-size:.76rem; font-weight:800;
+           text-transform:uppercase; letter-spacing:.18em; margin:0 0 1rem; }
+.byline { font-family:var(--sans); font-size:.82rem; color:rgba(255,255,255,.8);
+          margin-top:2rem; display:flex; gap:1.4rem; flex-wrap:wrap; }
+.byline span { display:inline-flex; gap:.42rem; align-items:center; }
+.byline i { width:8px; height:8px; border-radius:0; background:#fff; opacity:.72; }
+
+/* facts strip */
+.facts { display:grid; grid-template-columns:repeat(6,1fr); gap:1px;
+         background:var(--rule); border-bottom:1px solid var(--rule); }
+.fact { background:var(--paper); padding:1.3rem .8rem; text-align:center;
+        border-top:4px solid var(--hue); }
+.fact b { display:block; font-family:var(--sans); font-size:1.72rem; font-weight:800;
+          color:var(--ink); line-height:1.1; }
+.fact span { display:block; font-family:var(--sans); font-size:.71rem; color:var(--faint);
+             text-transform:uppercase; letter-spacing:.07em; margin-top:.3rem; }
+
+/* contents */
+.toc { padding-block:2.2rem; border-bottom:1px solid var(--rule); }
+.toc ol { margin:0; padding:0; list-style:none; columns:3; column-gap:2.4rem; }
+.toc li { margin:0 0 .44rem; font-family:var(--sans); font-size:.86rem; break-inside:avoid; }
+.toc a { color:var(--body); text-decoration:none; }
+.toc a:hover { color:var(--p1); }
+.toc .act { font-weight:800; text-transform:uppercase; letter-spacing:.1em;
+            font-size:.7rem; color:var(--hue); margin-top:1rem; display:block; }
+.toc li:first-child .act { margin-top:0; }
+
+/* act dividers */
+.act-open { margin-top:4.5rem; padding-block:2.6rem 1.4rem;
+            border-top:5px solid var(--hue); }
+.act-num { font-family:var(--sans); font-size:.78rem; font-weight:800;
+           text-transform:uppercase; letter-spacing:.2em; color:var(--hue); }
+.act-open h2 { font-size:clamp(1.9rem,4.4vw,3rem); margin-top:.5rem; }
+.act-open .stand { font-size:1.16rem; color:var(--muted); max-width:66ch; margin-top:.9rem; }
+
+section { padding-block:2.2rem; }
+section + section { border-top:1px solid var(--hair); }
+.lede { color:var(--muted); font-size:1.06rem; margin-bottom:1.5rem; }
+
+/* pull quote / key finding */
+.finding { border-left:6px solid var(--hue,var(--amber)); background:var(--wash);
+           padding:1.5rem 1.7rem; border-radius:0; margin-block:1.6rem; }
+.finding p { margin:0; max-width:none; }
+.finding p + p { margin-top:.8rem; }
+.pull { font-family:var(--sans); font-size:clamp(1.15rem,2.3vw,1.6rem); font-weight:700;
+        color:var(--ink); line-height:1.35; border-left:6px solid var(--hue,var(--p1));
+        padding:.3rem 0 .3rem 1.5rem; margin-block:2.2rem; max-width:60ch;
+        letter-spacing:-.015em; }
+
+/* verdict cards */
+.verdict { display:grid; grid-template-columns:repeat(3,1fr); gap:1.1rem; margin-top:1.6rem; }
+.vcard { border:1px solid var(--rule); border-top:5px solid var(--hue);
+         border-radius:0; padding:1.4rem; background:var(--wash); position:relative; }
+.vrank { position:absolute; top:1.1rem; right:1.2rem; font-family:var(--sans);
+         font-size:2.6rem; font-weight:800; color:var(--hue); opacity:.22; line-height:1; }
+.vcard h3 { color:var(--hue); }
+.one { font-size:.94rem; color:var(--muted); margin:.3rem 0 1rem; }
+.vnums { display:grid; grid-template-columns:repeat(3,1fr); gap:.6rem;
+         border-top:1px solid var(--rule); padding-top:.9rem; }
+.vnums b { display:block; font-family:var(--sans); font-size:1.42rem; font-weight:800;
+           color:var(--ink); }
+.vnums span { display:block; font-family:var(--sans); font-size:.66rem; color:var(--faint);
+              text-transform:uppercase; letter-spacing:.06em; }
+
+/* tables */
+.scroll { overflow-x:auto; margin-block:1.5rem; border-radius:0; }
+table { border-collapse:collapse; width:100%; font-family:var(--sans); font-size:.87rem; }
+caption { text-align:left; font-size:.82rem; color:var(--muted); padding-bottom:.7rem;
+          max-width:80ch; }
+th, td { padding:.62rem .8rem; text-align:right; border-bottom:1px solid var(--hair);
+         white-space:nowrap; font-variant-numeric:tabular-nums; }
+thead th { background:var(--ink); color:#fff; font-size:.71rem; text-transform:uppercase;
+           letter-spacing:.06em; font-weight:700; border:0; }
+thead th:first-child, tbody th { text-align:left; }
+tbody th { font-weight:700; color:var(--ink); }
+tbody tr:hover { background:var(--wash); }
+td.num { font-weight:800; color:var(--faint); }
+td:not([class]) { color:var(--body); }
+.total th, .total td { border-top:2px solid var(--ink); font-weight:800; color:var(--ink); }
+.grp td, .grp th { border-top:1px solid var(--rule); }
+.grp-l { text-align:left; color:var(--faint); font-size:.76rem; }
+.warn { color:#f97316; font-weight:700; }
+.mono { font-family:var(--mono); font-size:.8rem; }
+.dot { display:inline-block; width:9px; height:9px; border-radius:0; margin-right:.5rem; }
+.pill { display:inline-block; font-size:.68rem; font-weight:800; padding:.22em .7em;
+        border-radius:0; font-family:var(--sans); text-transform:uppercase;
+        letter-spacing:.04em; }
+.pill.yes { background:#f59e0b; color:#422006; }
+.pill.no { background:var(--hair); color:var(--muted); }
+.sev { display:inline-block; font-size:.68rem; font-weight:800; padding:.22em .7em;
+       border-radius:0; background:var(--hue); color:#fff; font-family:var(--sans);
+       text-transform:uppercase; letter-spacing:.04em; }
+
+/* bars */
+.bars { margin-top:1.3rem; }
+.pair { display:grid; grid-template-columns:1fr 1fr; gap:2.6rem; margin-top:1.3rem; }
+.bar { display:grid; grid-template-columns:7.4rem 1fr 4.4rem; align-items:center;
+       gap:.85rem; margin-bottom:.5rem; font-family:var(--sans); font-size:.83rem; }
+.bar-l { color:var(--muted); }
+.bar-t { background:var(--hair); height:19px; border-radius:0; overflow:hidden; }
+.bar-f { display:block; height:100%; border-radius:0; }
+.bar-sub { display:block; height:100%; float:right; background:#fbbf24; }
+.bar-v { text-align:right; font-weight:800; color:var(--ink); font-variant-numeric:tabular-nums; }
+
+/* charts */
+.chart { margin-block:1.5rem; }
+.chart svg { width:100%; height:auto; display:block; overflow:visible; }
+.cap { font-family:var(--sans); font-size:.79rem; color:var(--faint); margin-top:.9rem;
+       max-width:84ch; }
+.sw { display:inline-block; width:11px; height:11px; border-radius:0; vertical-align:-1px; }
+.lbl { font-family:var(--sans); font-size:14.5px; font-weight:700; fill:#0f172a; }
+.big-lbl { font-family:var(--sans); font-size:17px; font-weight:800; fill:#0f172a; }
+.ax { font-family:var(--sans); font-size:12.5px; fill:#64748b; }
+.tiny { font-family:var(--sans); font-size:11.5px; font-weight:700; fill:#475569; }
+.mono-lbl { font-family:var(--mono); font-size:11.5px; fill:#0f172a; }
+.tbl-head { font-family:var(--sans); font-size:14px; font-weight:800; }
+.tbl-count { font-family:var(--sans); font-size:11px; font-weight:700; opacity:.85; }
+
+/* distribution */
+.dist-wrap { margin-top:1.3rem; }
+.dist { display:grid; grid-template-columns:7.4rem 1fr; align-items:center; gap:.85rem;
+        margin-bottom:.55rem; font-family:var(--sans); font-size:.83rem; }
+.dist-l { color:var(--muted); }
+.dist-t { display:flex; height:34px; border-radius:0; overflow:hidden; }
+.seg { display:grid; place-items:center; color:#fff; font-size:.74rem; font-weight:800; }
+.key { display:flex; flex-wrap:wrap; align-items:center; gap:.8rem; margin-top:1rem;
+       font-family:var(--sans); font-size:.76rem; color:var(--faint); }
+.key span { display:inline-flex; align-items:center; gap:.36rem; }
+.key i { width:13px; height:13px; border-radius:0; display:inline-block; }
+.key em { font-style:normal; }
+
+/* matrix */
+.matrix { margin-top:1.5rem; font-family:var(--sans); }
+.mx-row { display:grid; grid-template-columns:8rem 1fr 1fr; gap:1px; background:var(--rule); }
+.mx-head { background:none; }
+.mx-h { font-size:.72rem; font-weight:800; text-transform:uppercase; letter-spacing:.09em;
+        color:var(--muted); padding:.5rem 1rem; }
+.mx-lab { display:flex; align-items:center; font-size:.72rem; font-weight:800;
+          text-transform:uppercase; letter-spacing:.09em; color:var(--muted);
+          background:var(--paper); padding-right:1rem; }
+.mx-cell { background:var(--paper); padding:1.3rem; border-top:4px solid var(--hue); }
+.mx-cell b { display:block; font-size:2.4rem; font-weight:800; color:var(--hue);
+             line-height:1; margin:.15rem 0 .45rem; }
+.mx-cell h4 { color:var(--ink); margin-bottom:.3rem; }
+.tag { font-family:var(--sans); font-size:.68rem; font-weight:800; text-transform:uppercase;
+       letter-spacing:.1em; color:var(--faint); margin:0; }
+.blurb { font-size:.88rem; color:var(--faint); margin:0 0 .9rem; }
+
+/* quadrant + story + threat cards */
+.quads { display:grid; grid-template-columns:1fr 1fr; gap:1.1rem; margin-top:1.5rem; }
+.quad { border:1px solid var(--rule); border-top:4px solid var(--hue);
+        border-radius:0; padding:1.3rem; }
+.quad h4 { margin-bottom:.25rem; }
+.flip { display:inline-block; margin-top:.6rem; font-family:var(--sans); font-size:.7rem;
+        font-weight:800; text-transform:uppercase; letter-spacing:.06em;
+        background:#f59e0b; color:#422006; padding:.28em .75em; border-radius:0; }
+.stories { display:grid; grid-template-columns:repeat(3,1fr); gap:1.1rem; margin-top:1.5rem; }
+.story { border:1px solid var(--rule); border-left:5px solid var(--hue); border-radius:0;
+         padding:1.2rem 1.3rem; background:var(--wash); }
+.story h4 { color:var(--hue); margin-bottom:.5rem; }
+.story p { font-size:.9rem; margin:0; }
+
+.threats { display:grid; gap:1rem; margin-top:1.5rem; }
+.threat { border:1px solid var(--rule); border-left:6px solid var(--rule);
+          border-radius:0; padding:1.4rem 1.6rem; }
+.threat.material { border-left-color:#f43f5e; background:#fff5f6; }
+.threat.moderate { border-left-color:#f59e0b; background:#fffbeb; }
+.threat.minor { border-left-color:#64748b; background:var(--wash); }
+.threat.material .tag { color:#f43f5e; }
+.threat.moderate .tag { color:#f97316; }
+.threat h4 { margin:.3rem 0 .7rem; }
+.threat p { font-size:.93rem; margin-bottom:.65rem; max-width:82ch; }
+.threat p:last-child { margin-bottom:0; }
+.defence { border-top:1px dashed var(--rule); padding-top:.75rem; }
+
+/* judge bands */
+.bands { display:grid; gap:.6rem; margin-top:1.4rem; }
+.band { display:grid; grid-template-columns:3.2rem 1fr; align-items:center; gap:1rem;
+        border:1px solid var(--rule); border-left:5px solid var(--hue);
+        border-radius:0; padding:.85rem 1.2rem; }
+.bnum { font-family:var(--sans); font-size:1.9rem; font-weight:800; color:var(--hue);
+        text-align:center; line-height:1; }
+.band h4 { font-size:.98rem; }
+.band .blurb { margin:.15rem 0 0; }
+
+/* heatmaps */
+.heat { margin-top:1.3rem; font-family:var(--sans); font-size:.82rem; }
+.hm-row { display:grid; grid-template-columns:7.6rem 5.6rem repeat(3,1fr); gap:3px;
+          margin-bottom:3px; }
+.heat5 .hm-row { grid-template-columns:7.6rem repeat(5,1fr); }
+.hm-head .hm-h, .hm-head .hm-n { font-size:.68rem; text-transform:uppercase;
+        letter-spacing:.06em; color:var(--faint); display:grid; place-items:center;
+        padding-bottom:.35rem; font-weight:800; }
+.hm-r { display:flex; align-items:center; color:var(--muted); }
+.hm-n { display:grid; place-items:center; color:var(--faint); font-size:.74rem;
+        font-weight:700; }
+.hm-c { display:grid; place-items:center; padding:.55rem 0; font-weight:800;
+        border-radius:0; font-variant-numeric:tabular-nums; }
+.hm-c.empty { background:var(--wash); color:var(--faint); font-weight:400; }
+.sm { display:none; }
+.hm-head b { font-weight:800; }
+
+/* contingency */
+.cards3 { display:grid; grid-template-columns:repeat(3,1fr); gap:1.1rem; margin-top:1.5rem; }
+.ccard { border:1px solid var(--rule); border-top:4px solid var(--hue); border-radius:0;
+         padding:1.3rem; }
+.ccard h4 { color:var(--hue); margin-bottom:.3rem; }
+.csplit { display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:1rem 0 .7rem; }
+.csplit b { display:block; font-family:var(--sans); font-size:1.85rem; font-weight:800;
+            line-height:1.1; }
+.csplit b.good { color:#10b981; }
+.csplit b.bad { color:#f43f5e; }
+.csplit span { display:block; font-family:var(--sans); font-size:.7rem; color:var(--faint); }
+
+/* timeline list */
+.tl { border-left:3px solid var(--rule); margin-top:1.5rem; padding-left:0; list-style:none; }
+.tl li { position:relative; padding:0 0 1.5rem 2rem; margin:0; }
+/* The marker box is 15px plus a 3px border each side, so -12px centres its
+   21px width on the 3px rail rather than sitting 3px right of it. */
+.tl li::before { content:""; position:absolute; left:-12px; top:.45rem; width:15px;
+                 height:15px; border-radius:0; background:var(--hue,var(--p1));
+                 border:3px solid var(--paper); }
+.tl h4 { margin-bottom:.25rem; }
+.tl .when { font-family:var(--mono); font-size:.76rem; color:var(--faint);
+            display:block; margin-bottom:.2rem; }
+.tl p { font-size:.93rem; margin:0; }
+
+footer { background:var(--ink); color:rgba(255,255,255,.76); margin-top:4rem;
+         padding-block:2.6rem 3.4rem; font-family:var(--sans); font-size:.84rem; }
+footer b { color:#fff; }
+footer code { background:rgba(255,255,255,.1); color:#fff; }
+footer p { max-width:82ch; }
+
+@media (max-width:960px) {
+  .facts { grid-template-columns:repeat(3,1fr); }
+  .verdict, .quads, .pair, .stories, .cards3 { grid-template-columns:1fr; }
+  .toc ol { columns:2; }
+}
+@media (max-width:600px) {
+  body { font-size:16.5px; }
+  .facts { grid-template-columns:repeat(2,1fr); }
+  .bar, .dist { grid-template-columns:5.4rem 1fr 3.4rem; }
+  .dist { grid-template-columns:5.4rem 1fr; }
+  .hm-row { grid-template-columns:4.6rem 2.6rem repeat(3,1fr); }
+  .heat5 .hm-row { grid-template-columns:4.6rem repeat(5,1fr); }
+  .hm-r, .hm-c { font-size:.74rem; }
+  .lg { display:none; }
+  .sm { display:inline; }
+  .toc ol { columns:1; }
+  .mx-row { grid-template-columns:1fr; }
+  .mx-lab { padding:.7rem 0 0; }
+  .csplit { grid-template-columns:1fr; }
+  .band { grid-template-columns:2.4rem 1fr; }
+}
+@media print { section, .chart, .threat { break-inside:avoid; } header { color:#000; } }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <p class="eyebrow">COMP702 M.Sc. Dissertation &middot; the complete record</p>
+    <h1>Three ways to read a 10&#8209;K</h1>
+    <p class="stand">A semantic retriever, a statistical one and a structural one answer
+    the same 100 questions over 13 annual reports. This is the
+    whole story: the design, the build, everything that broke, and what the numbers
+    finally said.</p>
+    <div class="byline">
+      <span><i></i>900 scored cells</span>
+      <span><i></i>271 commits over twelve weeks</span>
+      <span><i></i>15 bugs, 38 deviations</span>
+      <span><i></i>554 tests</span>
+    </div>
+  </div>
+</header>
+
+    <div class="facts">
+      <div class="fact" style="--hue:#8b5cf6"><b>13</b><span>SEC 10-K filings</span></div>
+      <div class="fact" style="--hue:#3b82f6"><b>18,297</b><span>indexed nodes</span></div>
+      <div class="fact" style="--hue:#06b6d4"><b>100</b><span>benchmark questions</span></div>
+      <div class="fact" style="--hue:#14b8a6"><b>900</b><span>scored cells</span></div>
+      <div class="fact" style="--hue:#10b981"><b>271</b><span>commits</span></div>
+      <div class="fact" style="--hue:#f59e0b"><b>86.7%</b><span>judge concordance</span></div>
+    </div>
+
+<div class="wrap">
+    <nav class="toc" aria-label="Contents">
+      <ol>
+        <li><span class="act" style="--hue:#8b5cf6">Act 0 &middot; Prologue</span></li>
+        <li><a href="#question">A reflex on trial</a></li>
+        <li><span class="act" style="--hue:#3b82f6">Act I &middot; The Design</span></li>
+        <li><a href="#design">Building a fair fight</a></li>
+        <li><a href="#apparatus">The apparatus</a></li>
+        <li><a href="#corpus">The corpus</a></li>
+        <li><a href="#questions">The question set</a></li>
+        <li><span class="act" style="--hue:#06b6d4">Act II &middot; The Build</span></li>
+        <li><a href="#schedule">Ten weeks, eight phases</a></li>
+        <li><span class="act" style="--hue:#f43f5e">Act III &middot; The Trials</span></li>
+        <li><a href="#bugs">Fifteen bugs, thirty-eight deviations</a></li>
+        <li><a href="#providers">The provider exodus</a></li>
+        <li><span class="act" style="--hue:#10b981">Act IV &middot; The Instrument</span></li>
+        <li><a href="#judge">Proving the ruler</a></li>
+        <li><span class="act" style="--hue:#f59e0b">Act V &middot; The Run</span></li>
+        <li><a href="#crisis">Nine hundred cells, one near-disaster</a></li>
+        <li><a href="#headline">What the 900 cells said</a></li>
+        <li><a href="#bimodal">Almost nothing scores a 3</a></li>
+        <li><a href="#retrieval">Retrieval quality</a></li>
+        <li><a href="#depth">Depth helps, never rescues</a></li>
+        <li><a href="#quadrants">Where each paradigm wins</a></li>
+        <li><a href="#flip">The average hides a split</a></li>
+        <li><a href="#stats">Is the difference real</a></li>
+        <li><a href="#filings">Filing by filing</a></li>
+        <li><a href="#chain">Retrieval decides the answer</a></li>
+        <li><a href="#nodetypes">What each pipeline hands the model</a></li>
+        <li><a href="#why">Why structure lost</a></li>
+        <li><a href="#cost">What it costs to build</a></li>
+        <li><a href="#ask">What it costs to ask</a></li>
+        <li><a href="#latency">Latency is not the discriminator</a></li>
+        <li><span class="act" style="--hue:#6366f1">Act VI &middot; The Verdict</span></li>
+        <li><a href="#threats">What this licenses you to claim</a></li>
+        <li><a href="#weaken">What would weaken these findings</a></li>
+        <li><a href="#ledger">Reproducibility ledger</a></li>
+        <li><a href="#close">Closing</a></li>
+      </ol>
+    </nav>
+
+<section id="question">
+    <div class="act-open" style="--hue:#8b5cf6">
+    <p class="act-num">Act 0 &middot; Prologue</p>
+    <h2>A reflex on trial</h2>
+    <p class="stand">Vector search is the default answer to almost every retrieval question. This study asked whether that reflex is earned.</p>
+  </div>
+  <div class="narrow">
+    <p>Ask a room of engineers how to search a document. Most will say embeddings.</p>
+    <p>Dense vector retrieval has become the reflex answer. It is what the tutorials
+    teach and what the vendors sell.</p>
+    <p>But a 1994 statistical ranking function called BM25 still sits in every search
+    engine built. It has no model, no training and no embedding.</p>
+    <p>And a third idea exists. Build a summary tree over the document, then walk down
+    it. Structure instead of similarity.</p>
+    <p><b>This study put all three on the same 900 questions and measured what
+    happened.</b></p>
+  </div>
+
+  <p class="pull" style="--hue:#8b5cf6">Three retrieval paradigms. One corpus.
+  One answering model. One judge. Nine hundred scored cells, and no place to hide.</p>
+
+  <h3>The verdict, before the evidence</h3>
+  <p class="lede">Publishable work states its finding first, then earns it. Here is the
+  finding.</p>
+  <div class="verdict">
+        <div class="vcard" style="--hue:#10b981;--wash:#ecfdf5">
+          <span class="vrank">1</span>
+          <h3>P2 BM25</h3>
+          <p class="one">Matches on terms and their rarity.</p>
+          <div class="vnums">
+            <div><b>4.02</b><span>judge mean</span></div>
+            <div><b>74%</b><span>pass rate</span></div>
+            <div><b>0.706</b><span>recall</span></div>
+          </div>
+        </div>
+        <div class="vcard" style="--hue:#3b82f6;--wash:#eff6ff">
+          <span class="vrank">2</span>
+          <h3>P1 Vector</h3>
+          <p class="one">Matches on meaning.</p>
+          <div class="vnums">
+            <div><b>3.86</b><span>judge mean</span></div>
+            <div><b>69%</b><span>pass rate</span></div>
+            <div><b>0.668</b><span>recall</span></div>
+          </div>
+        </div>
+        <div class="vcard" style="--hue:#f43f5e;--wash:#fff1f2">
+          <span class="vrank">3</span>
+          <h3>P3 Structural</h3>
+          <p class="one">Matches on position in a hierarchy.</p>
+          <div class="vnums">
+            <div><b>1.88</b><span>judge mean</span></div>
+            <div><b>21%</b><span>pass rate</span></div>
+            <div><b>0.181</b><span>recall</span></div>
+          </div>
+        </div>
+  </div>
+
+  <div class="finding" style="--hue:#f59e0b">
+    <p><b>1. The reflex is not earned, but it is not wrong either.</b>
+    Semantic and statistical retrieval are statistically indistinguishable here. The
+    paired difference is -0.160, interval
+    [-0.340, +0.013]. It spans zero.</p>
+    <p><b>2. The average hides a real split.</b> BM25 wins the implicit-text quadrant
+    outright. The vector pipeline leads on implicit tables. Pooled, they cancel.</p>
+    <p><b>3. Structure lost, and lost expensively.</b> The summary tree trails by about
+    two judge points. It also took 10.6 hours and 2.5 million tokens to build.</p>
+  </div>
+
+  <p>A 32-year-old algorithm with no model matched a modern embedding stack. It also
+  built its index in under one second.</p>
+  <p>The rest of this document is how that result was produced.
+  It covers what nearly broke it, and what it lets you claim.</p>
+</section>
+
+<section id="design">
+    <div class="act-open" style="--hue:#3b82f6">
+    <p class="act-num">Act I &middot; The Design</p>
+    <h2>Building a fair fight</h2>
+    <p class="stand">A comparison is only worth running if the thing being compared is the only thing allowed to vary. Most of the design is about holding everything else still.</p>
+  </div>
+  <div class="narrow">
+    <p>The research question is narrow on purpose.</p>
+    <p><b>Does the way a retriever is built change how well a language model answers
+    questions about an annual report?</b></p>
+    <p>To answer it, three paradigms index the identical corpus. They answer the
+    identical questions through the identical model. They are graded by the identical
+    judge.</p>
+    <p>Anything that differs between them is the paradigm. Nothing else is permitted to
+    move.</p>
+  </div>
+
+  <h3>The three contenders</h3>
+  <div class="verdict">
+    <div class="vcard" style="--hue:#3b82f6;--wash:#eff6ff">
+      <h3>P1 Vector</h3><p class="one">Matches on meaning.</p>
+      <p class="blurb">Dense embeddings in ChromaDB, reranked by a local cross-encoder.</p></div>    <div class="vcard" style="--hue:#10b981;--wash:#ecfdf5">
+      <h3>P2 BM25</h3><p class="one">Matches on terms and their rarity.</p>
+      <p class="blurb">rank_bm25 over the same nodes. No model of any kind.</p></div>    <div class="vcard" style="--hue:#f43f5e;--wash:#fff1f2">
+      <h3>P3 Structural</h3><p class="one">Matches on position in a hierarchy.</p>
+      <p class="blurb">A LlamaIndex summary tree per filing, traversed by embedding.</p></div>
+  </div>
+
+  <h3>What is held constant</h3>
+  <ol>
+    <li><b>The corpus.</b> All three index the same 18,297 nodes from the same
+    13 filings.</li>
+    <li><b>The questions.</b> All three answer the same 100 questions at
+    three depths. That gives 900 cells.</li>
+    <li><b>The answering model.</b> One model writes every answer. Differences trace
+    back to retrieval alone.</li>
+    <li><b>The grader.</b> One judge, one rubric, with a fingerprint stored per row.</li>
+    <li><b>What a pipeline never sees.</b> Only the question and its own retrieved
+    nodes. No ground truth, no hints, no metadata filter.</li>
+  </ol>
+
+  <h3>How one question becomes one scored row</h3>
+      <div class="chart">
+        <svg viewBox="0 0 1180 300" role="img" aria-label="How one question becomes one scored row">
+          <defs>
+  <marker id="tip" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6"
+          markerHeight="6" orient="auto-start-reverse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#64748b"/>
+  </marker>
+</defs>
+          <rect x="1.0" y="108" width="186" height="84" rx="0" fill="#8b5cf6" opacity="0.15"/><rect x="1.0" y="108" width="186" height="84" rx="0" fill="none" stroke="#8b5cf6" stroke-width="2"/><text x="94.0" y="142" class="big-lbl" text-anchor="middle" style="fill:#8b5cf6">Question</text><text x="94.0" y="166" class="ax" text-anchor="middle">from queries</text><line x1="195.0" y1="150" x2="239.0" y2="150" stroke="#8b5cf6" stroke-width="2" marker-end="url(#tip)"/><rect x="249.0" y="108" width="186" height="84" rx="0" fill="#06b6d4" opacity="0.15"/><rect x="249.0" y="108" width="186" height="84" rx="0" fill="none" stroke="#06b6d4" stroke-width="2"/><text x="342.0" y="142" class="big-lbl" text-anchor="middle" style="fill:#06b6d4">Retrieve</text><text x="342.0" y="166" class="ax" text-anchor="middle">k nodes</text><line x1="443.0" y1="150" x2="487.0" y2="150" stroke="#06b6d4" stroke-width="2" marker-end="url(#tip)"/><rect x="497.0" y="108" width="186" height="84" rx="0" fill="#10b981" opacity="0.15"/><rect x="497.0" y="108" width="186" height="84" rx="0" fill="none" stroke="#10b981" stroke-width="2"/><text x="590.0" y="142" class="big-lbl" text-anchor="middle" style="fill:#10b981">Answer</text><text x="590.0" y="166" class="ax" text-anchor="middle">one shared model</text><line x1="691.0" y1="150" x2="735.0" y2="150" stroke="#10b981" stroke-width="2" marker-end="url(#tip)"/><rect x="745.0" y="108" width="186" height="84" rx="0" fill="#f59e0b" opacity="0.15"/><rect x="745.0" y="108" width="186" height="84" rx="0" fill="none" stroke="#f59e0b" stroke-width="2"/><text x="838.0" y="142" class="big-lbl" text-anchor="middle" style="fill:#f59e0b">Score</text><text x="838.0" y="166" class="ax" text-anchor="middle">judge, 1 to 5</text><line x1="939.0" y1="150" x2="983.0" y2="150" stroke="#f59e0b" stroke-width="2" marker-end="url(#tip)"/><rect x="993.0" y="108" width="186" height="84" rx="0" fill="#f97316" opacity="0.15"/><rect x="993.0" y="108" width="186" height="84" rx="0" fill="none" stroke="#f97316" stroke-width="2"/><text x="1086.0" y="142" class="big-lbl" text-anchor="middle" style="fill:#f97316">Record</text><text x="1086.0" y="166" class="ax" text-anchor="middle">one results row</text><rect x="249.0" y="223" width="186" height="17" rx="0" fill="#3b82f6" opacity="0.18"/><text x="342.0" y="236" class="tiny" text-anchor="middle" style="fill:#3b82f6">P1 Vector</text><rect x="249.0" y="245" width="186" height="17" rx="0" fill="#10b981" opacity="0.18"/><text x="342.0" y="258" class="tiny" text-anchor="middle" style="fill:#10b981">P2 BM25</text><rect x="249.0" y="267" width="186" height="17" rx="0" fill="#f43f5e" opacity="0.18"/><text x="342.0" y="280" class="tiny" text-anchor="middle" style="fill:#f43f5e">P3 Structural</text><text x="342.0" y="216" class="ax" text-anchor="middle">run three times, once per paradigm</text><text x="94.0" y="78" class="ax" text-anchor="middle">100 questions</text><text x="590.0" y="78" class="ax" text-anchor="middle">3 depths: k = 2, 3, 5</text><text x="1086.0" y="78" class="ax" text-anchor="middle">900 cells</text>
+        </svg>
+        <p class="cap">The only thing that changes between the three runs is the retriever. Everything downstream is held identical.</p>
+      </div>
+
+  <h3>The system that does it</h3>
+  <p>Nine layers, twenty-nine source modules. Each layer only talks to its neighbours.</p>
+      <div class="chart">
+        <svg viewBox="0 0 1180 720" role="img" aria-label="System architecture by layer">
+          <defs>
+  <marker id="tip" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6"
+          markerHeight="6" orient="auto-start-reverse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#64748b"/>
+  </marker>
+</defs>
+          <rect x="12" y="24" width="142" height="48" rx="0" fill="#64748b" opacity="0.16"/><rect x="12" y="24" width="5" height="48" rx="0" fill="#64748b"/><text x="30" y="53" class="lbl" text-anchor="start" style="fill:#64748b">Sources</text><rect x="173.0" y="26" width="478.0" height="44" rx="0" fill="#64748b" opacity="0.13"/><rect x="173.0" y="26" width="478.0" height="44" rx="0" fill="none" stroke="#64748b" stroke-width="1.5"/><text x="412.0" y="52" class="mono-lbl" text-anchor="middle">SEC EDGAR</text><rect x="663.0" y="26" width="478.0" height="44" rx="0" fill="#64748b" opacity="0.13"/><rect x="663.0" y="26" width="478.0" height="44" rx="0" fill="none" stroke="#64748b" stroke-width="1.5"/><text x="902.0" y="52" class="mono-lbl" text-anchor="middle">LlamaParse</text><line x1="84" y1="72" x2="84" y2="96" stroke="#64748b" stroke-width="2" marker-end="url(#tip)"/><rect x="12" y="98" width="142" height="48" rx="0" fill="#8b5cf6" opacity="0.16"/><rect x="12" y="98" width="5" height="48" rx="0" fill="#8b5cf6"/><text x="30" y="127" class="lbl" text-anchor="start" style="fill:#8b5cf6">Ingestion</text><rect x="173.0" y="100" width="233.0" height="44" rx="0" fill="#8b5cf6" opacity="0.13"/><rect x="173.0" y="100" width="233.0" height="44" rx="0" fill="none" stroke="#8b5cf6" stroke-width="1.5"/><text x="289.5" y="126" class="mono-lbl" text-anchor="middle">fetch_filings</text><rect x="418.0" y="100" width="233.0" height="44" rx="0" fill="#8b5cf6" opacity="0.13"/><rect x="418.0" y="100" width="233.0" height="44" rx="0" fill="none" stroke="#8b5cf6" stroke-width="1.5"/><text x="534.5" y="126" class="mono-lbl" text-anchor="middle">parse_filing</text><rect x="663.0" y="100" width="233.0" height="44" rx="0" fill="#8b5cf6" opacity="0.13"/><rect x="663.0" y="100" width="233.0" height="44" rx="0" fill="none" stroke="#8b5cf6" stroke-width="1.5"/><text x="779.5" y="126" class="mono-lbl" text-anchor="middle">node_builder</text><rect x="908.0" y="100" width="233.0" height="44" rx="0" fill="#8b5cf6" opacity="0.13"/><rect x="908.0" y="100" width="233.0" height="44" rx="0" fill="none" stroke="#8b5cf6" stroke-width="1.5"/><text x="1024.5" y="126" class="mono-lbl" text-anchor="middle">parsing_audit</text><line x1="84" y1="146" x2="84" y2="170" stroke="#8b5cf6" stroke-width="2" marker-end="url(#tip)"/><rect x="12" y="172" width="142" height="48" rx="0" fill="#6366f1" opacity="0.16"/><rect x="12" y="172" width="5" height="48" rx="0" fill="#6366f1"/><text x="30" y="201" class="lbl" text-anchor="start" style="fill:#6366f1">State</text><rect x="173.0" y="174" width="478.0" height="44" rx="0" fill="#6366f1" opacity="0.13"/><rect x="173.0" y="174" width="478.0" height="44" rx="0" fill="none" stroke="#6366f1" stroke-width="1.5"/><text x="412.0" y="200" class="mono-lbl" text-anchor="middle">database_manager</text><rect x="663.0" y="174" width="478.0" height="44" rx="0" fill="#6366f1" opacity="0.13"/><rect x="663.0" y="174" width="478.0" height="44" rx="0" fill="none" stroke="#6366f1" stroke-width="1.5"/><text x="902.0" y="200" class="mono-lbl" text-anchor="middle">benchmark.db</text><line x1="84" y1="220" x2="84" y2="244" stroke="#6366f1" stroke-width="2" marker-end="url(#tip)"/><rect x="12" y="246" width="142" height="48" rx="0" fill="#3b82f6" opacity="0.16"/><rect x="12" y="246" width="5" height="48" rx="0" fill="#3b82f6"/><text x="30" y="275" class="lbl" text-anchor="start" style="fill:#3b82f6">Dataset</text><rect x="173.0" y="248" width="233.0" height="44" rx="0" fill="#3b82f6" opacity="0.13"/><rect x="173.0" y="248" width="233.0" height="44" rx="0" fill="none" stroke="#3b82f6" stroke-width="1.5"/><text x="289.5" y="274" class="mono-lbl" text-anchor="middle">async_generator</text><rect x="418.0" y="248" width="233.0" height="44" rx="0" fill="#3b82f6" opacity="0.13"/><rect x="418.0" y="248" width="233.0" height="44" rx="0" fill="none" stroke="#3b82f6" stroke-width="1.5"/><text x="534.5" y="274" class="mono-lbl" text-anchor="middle">async_critic</text><rect x="663.0" y="248" width="233.0" height="44" rx="0" fill="#3b82f6" opacity="0.13"/><rect x="663.0" y="248" width="233.0" height="44" rx="0" fill="none" stroke="#3b82f6" stroke-width="1.5"/><text x="779.5" y="274" class="mono-lbl" text-anchor="middle">search_tool</text><rect x="908.0" y="248" width="233.0" height="44" rx="0" fill="#3b82f6" opacity="0.13"/><rect x="908.0" y="248" width="233.0" height="44" rx="0" fill="none" stroke="#3b82f6" stroke-width="1.5"/><text x="1024.5" y="274" class="mono-lbl" text-anchor="middle">cross_check</text><line x1="84" y1="294" x2="84" y2="318" stroke="#3b82f6" stroke-width="2" marker-end="url(#tip)"/><rect x="12" y="320" width="142" height="48" rx="0" fill="#06b6d4" opacity="0.16"/><rect x="12" y="320" width="5" height="48" rx="0" fill="#06b6d4"/><text x="30" y="349" class="lbl" text-anchor="start" style="fill:#06b6d4">Indexes</text><rect x="173.0" y="322" width="314.6666666666667" height="44" rx="0" fill="#06b6d4" opacity="0.13"/><rect x="173.0" y="322" width="314.6666666666667" height="44" rx="0" fill="none" stroke="#06b6d4" stroke-width="1.5"/><text x="330.33333333333337" y="348" class="mono-lbl" text-anchor="middle">build_vector_index</text><rect x="499.6666666666667" y="322" width="314.6666666666667" height="44" rx="0" fill="#06b6d4" opacity="0.13"/><rect x="499.6666666666667" y="322" width="314.6666666666667" height="44" rx="0" fill="none" stroke="#06b6d4" stroke-width="1.5"/><text x="657.0" y="348" class="mono-lbl" text-anchor="middle">build_bm25_index</text><rect x="826.3333333333334" y="322" width="314.6666666666667" height="44" rx="0" fill="#06b6d4" opacity="0.13"/><rect x="826.3333333333334" y="322" width="314.6666666666667" height="44" rx="0" fill="none" stroke="#06b6d4" stroke-width="1.5"/><text x="983.6666666666667" y="348" class="mono-lbl" text-anchor="middle">build_summary_index</text><line x1="84" y1="368" x2="84" y2="392" stroke="#06b6d4" stroke-width="2" marker-end="url(#tip)"/><rect x="12" y="394" width="142" height="48" rx="0" fill="#14b8a6" opacity="0.16"/><rect x="12" y="394" width="5" height="48" rx="0" fill="#14b8a6"/><text x="30" y="423" class="lbl" text-anchor="start" style="fill:#14b8a6">Retrieval</text><rect x="173.0" y="396" width="314.6666666666667" height="44" rx="0" fill="#14b8a6" opacity="0.13"/><rect x="173.0" y="396" width="314.6666666666667" height="44" rx="0" fill="none" stroke="#14b8a6" stroke-width="1.5"/><text x="330.33333333333337" y="422" class="mono-lbl" text-anchor="middle">p1_vector</text><rect x="499.6666666666667" y="396" width="314.6666666666667" height="44" rx="0" fill="#14b8a6" opacity="0.13"/><rect x="499.6666666666667" y="396" width="314.6666666666667" height="44" rx="0" fill="none" stroke="#14b8a6" stroke-width="1.5"/><text x="657.0" y="422" class="mono-lbl" text-anchor="middle">p2_bm25</text><rect x="826.3333333333334" y="396" width="314.6666666666667" height="44" rx="0" fill="#14b8a6" opacity="0.13"/><rect x="826.3333333333334" y="396" width="314.6666666666667" height="44" rx="0" fill="none" stroke="#14b8a6" stroke-width="1.5"/><text x="983.6666666666667" y="422" class="mono-lbl" text-anchor="middle">p3_structural</text><line x1="84" y1="442" x2="84" y2="466" stroke="#14b8a6" stroke-width="2" marker-end="url(#tip)"/><rect x="12" y="468" width="142" height="48" rx="0" fill="#10b981" opacity="0.16"/><rect x="12" y="468" width="5" height="48" rx="0" fill="#10b981"/><text x="30" y="497" class="lbl" text-anchor="start" style="fill:#10b981">Answering</text><rect x="173.0" y="470" width="478.0" height="44" rx="0" fill="#10b981" opacity="0.13"/><rect x="173.0" y="470" width="478.0" height="44" rx="0" fill="none" stroke="#10b981" stroke-width="1.5"/><text x="412.0" y="496" class="mono-lbl" text-anchor="middle">answerer</text><rect x="663.0" y="470" width="478.0" height="44" rx="0" fill="#10b981" opacity="0.13"/><rect x="663.0" y="470" width="478.0" height="44" rx="0" fill="none" stroke="#10b981" stroke-width="1.5"/><text x="902.0" y="496" class="mono-lbl" text-anchor="middle">loop_executor</text><line x1="84" y1="516" x2="84" y2="540" stroke="#10b981" stroke-width="2" marker-end="url(#tip)"/><rect x="12" y="542" width="142" height="48" rx="0" fill="#f59e0b" opacity="0.16"/><rect x="12" y="542" width="5" height="48" rx="0" fill="#f59e0b"/><text x="30" y="571" class="lbl" text-anchor="start" style="fill:#f59e0b">Judging</text><rect x="173.0" y="544" width="314.6666666666667" height="44" rx="0" fill="#f59e0b" opacity="0.13"/><rect x="173.0" y="544" width="314.6666666666667" height="44" rx="0" fill="none" stroke="#f59e0b" stroke-width="1.5"/><text x="330.33333333333337" y="570" class="mono-lbl" text-anchor="middle">async_judge</text><rect x="499.6666666666667" y="544" width="314.6666666666667" height="44" rx="0" fill="#f59e0b" opacity="0.13"/><rect x="499.6666666666667" y="544" width="314.6666666666667" height="44" rx="0" fill="none" stroke="#f59e0b" stroke-width="1.5"/><text x="657.0" y="570" class="mono-lbl" text-anchor="middle">metrics</text><rect x="826.3333333333334" y="544" width="314.6666666666667" height="44" rx="0" fill="#f59e0b" opacity="0.13"/><rect x="826.3333333333334" y="544" width="314.6666666666667" height="44" rx="0" fill="none" stroke="#f59e0b" stroke-width="1.5"/><text x="983.6666666666667" y="570" class="mono-lbl" text-anchor="middle">validation_gate</text><line x1="84" y1="590" x2="84" y2="614" stroke="#f59e0b" stroke-width="2" marker-end="url(#tip)"/><rect x="12" y="616" width="142" height="48" rx="0" fill="#f97316" opacity="0.16"/><rect x="12" y="616" width="5" height="48" rx="0" fill="#f97316"/><text x="30" y="645" class="lbl" text-anchor="start" style="fill:#f97316">Analysis</text><rect x="173.0" y="618" width="233.0" height="44" rx="0" fill="#f97316" opacity="0.13"/><rect x="173.0" y="618" width="233.0" height="44" rx="0" fill="none" stroke="#f97316" stroke-width="1.5"/><text x="289.5" y="644" class="mono-lbl" text-anchor="middle">aggregate_results</text><rect x="418.0" y="618" width="233.0" height="44" rx="0" fill="#f97316" opacity="0.13"/><rect x="418.0" y="618" width="233.0" height="44" rx="0" fill="none" stroke="#f97316" stroke-width="1.5"/><text x="534.5" y="644" class="mono-lbl" text-anchor="middle">build_figures</text><rect x="663.0" y="618" width="233.0" height="44" rx="0" fill="#f97316" opacity="0.13"/><rect x="663.0" y="618" width="233.0" height="44" rx="0" fill="none" stroke="#f97316" stroke-width="1.5"/><text x="779.5" y="644" class="mono-lbl" text-anchor="middle">index_build_cost</text><rect x="908.0" y="618" width="233.0" height="44" rx="0" fill="#f97316" opacity="0.13"/><rect x="908.0" y="618" width="233.0" height="44" rx="0" fill="none" stroke="#f97316" stroke-width="1.5"/><text x="1024.5" y="644" class="mono-lbl" text-anchor="middle">build_report</text>
+        </svg>
+        <p class="cap">Nine layers. These are the modules on the main path, not every file in the repository. Arrows show the direction data moves, not the order the code was written.</p>
+      </div>
+
+  <h3>Where everything is kept</h3>
+  <p>Five SQLite tables. The three question tables are disjoint by construction.</p>
+      <div class="chart">
+        <svg viewBox="0 0 1250 460" role="img" aria-label="The five-table schema">
+          <defs>
+  <marker id="tip" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6"
+          markerHeight="6" orient="auto-start-reverse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#64748b"/>
+  </marker>
+</defs>
+          <rect x="20" y="40" width="280" height="145" rx="0" fill="#ffffff" opacity="1.0" stroke="#8b5cf6" stroke-width="2"/><rect x="20" y="40" width="280" height="30" rx="0" fill="#8b5cf6"/><rect x="20" y="58" width="280" height="12" fill="#8b5cf6"/><text x="34" y="60" class="tbl-head" text-anchor="start" style="fill:#ffffff">nodes</text><text x="286" y="60" class="tbl-count" text-anchor="end" style="fill:#ffffff">18,297 rows</text><text x="34" y="90" class="mono-lbl" text-anchor="start">node_id PK</text><text x="34" y="111" class="mono-lbl" text-anchor="start">document_id</text><text x="34" y="132" class="mono-lbl" text-anchor="start">node_type</text><text x="34" y="153" class="mono-lbl" text-anchor="start">content</text><text x="34" y="174" class="mono-lbl" text-anchor="start">token_count</text><rect x="330" y="40" width="280" height="145" rx="0" fill="#ffffff" opacity="1.0" stroke="#3b82f6" stroke-width="2"/><rect x="330" y="40" width="280" height="30" rx="0" fill="#3b82f6"/><rect x="330" y="58" width="280" height="12" fill="#3b82f6"/><text x="344" y="60" class="tbl-head" text-anchor="start" style="fill:#ffffff">queries</text><text x="596" y="60" class="tbl-count" text-anchor="end" style="fill:#ffffff">100 rows</text><text x="344" y="90" class="mono-lbl" text-anchor="start">query_id PK</text><text x="344" y="111" class="mono-lbl" text-anchor="start">quadrant</text><text x="344" y="132" class="mono-lbl" text-anchor="start">query_text</text><text x="344" y="153" class="mono-lbl" text-anchor="start">ground_truth_answer</text><text x="344" y="174" class="mono-lbl" text-anchor="start">gt_citations</text><rect x="640" y="40" width="280" height="124" rx="0" fill="#ffffff" opacity="1.0" stroke="#14b8a6" stroke-width="2"/><rect x="640" y="40" width="280" height="30" rx="0" fill="#14b8a6"/><rect x="640" y="58" width="280" height="12" fill="#14b8a6"/><text x="654" y="60" class="tbl-head" text-anchor="start" style="fill:#ffffff">golden_queries</text><text x="906" y="60" class="tbl-count" text-anchor="end" style="fill:#ffffff">20 rows</text><text x="654" y="90" class="mono-lbl" text-anchor="start">query_id PK</text><text x="654" y="111" class="mono-lbl" text-anchor="start">example_output</text><text x="654" y="132" class="mono-lbl" text-anchor="start">human_score</text><text x="654" y="153" class="mono-lbl" text-anchor="start">is_good</text><rect x="950" y="40" width="280" height="103" rx="0" fill="#ffffff" opacity="1.0" stroke="#10b981" stroke-width="2"/><rect x="950" y="40" width="280" height="30" rx="0" fill="#10b981"/><rect x="950" y="58" width="280" height="12" fill="#10b981"/><text x="964" y="60" class="tbl-head" text-anchor="start" style="fill:#ffffff">judge_validation</text><text x="1216" y="60" class="tbl-count" text-anchor="end" style="fill:#ffffff">20 rows</text><text x="964" y="90" class="mono-lbl" text-anchor="start">query_id PK</text><text x="964" y="111" class="mono-lbl" text-anchor="start">quadrant</text><text x="964" y="132" class="mono-lbl" text-anchor="start">ground_truth_answer</text><rect x="330" y="250" width="280" height="208" rx="0" fill="#ffffff" opacity="1.0" stroke="#f97316" stroke-width="2"/><rect x="330" y="250" width="280" height="30" rx="0" fill="#f97316"/><rect x="330" y="268" width="280" height="12" fill="#f97316"/><text x="344" y="270" class="tbl-head" text-anchor="start" style="fill:#ffffff">results</text><text x="596" y="270" class="tbl-count" text-anchor="end" style="fill:#ffffff">960 rows</text><text x="344" y="300" class="mono-lbl" text-anchor="start">result_id PK</text><text x="344" y="321" class="mono-lbl" text-anchor="start">source_set</text><text x="344" y="342" class="mono-lbl" text-anchor="start">query_id FK</text><text x="344" y="363" class="mono-lbl" text-anchor="start">pipeline</text><text x="344" y="384" class="mono-lbl" text-anchor="start">k_value</text><text x="344" y="405" class="mono-lbl" text-anchor="start">retrieved_node_ids</text><text x="344" y="426" class="mono-lbl" text-anchor="start">judge_score</text><text x="344" y="447" class="mono-lbl" text-anchor="start">judge_fingerprint</text><line x1="160" y1="190" x2="392" y2="246" stroke="#8b5cf6" stroke-width="2" marker-end="url(#tip)" stroke-dasharray="5 4"/><line x1="470" y1="182" x2="470" y2="244" stroke="#3b82f6" stroke-width="2" marker-end="url(#tip)"/><line x1="1020" y1="145" x2="628" y2="246" stroke="#10b981" stroke-width="2" marker-end="url(#tip)" stroke-dasharray="5 4"/><text x="96" y="214" class="tiny" text-anchor="start" style="fill:#8b5cf6">cited by node id</text><text x="486" y="212" class="tiny" text-anchor="start" style="fill:#3b82f6">one row per cell</text><text x="1044" y="176" class="tiny" text-anchor="start" style="fill:#10b981">60 gate rows</text><rect x="660" y="286" width="300" height="46" rx="0" fill="#14b8a6" opacity="0.12"/><text x="810" y="306" class="tiny" text-anchor="middle" style="fill:#14b8a6">calibration exemplars only,</text><text x="810" y="323" class="tiny" text-anchor="middle" style="fill:#14b8a6">never scored as results</text>
+        </svg>
+        <p class="cap">One results row exists per question, pipeline and depth. The three question tables are disjoint by construction: no query_id appears in more than one, so the judge is never calibrated on a row used to test it.</p>
+      </div>
+
+  <h3>What gets measured</h3>
+  <p>Three pillars, because a paradigm can win one and lose another.</p>
+      <div class="chart">
+        <svg viewBox="0 0 1180 296" role="img" aria-label="The tri-pillar measurement frame">
+          <defs>
+  <marker id="tip" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6"
+          markerHeight="6" orient="auto-start-reverse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#64748b"/>
+  </marker>
+</defs>
+          <rect x="30.0" y="40" width="340" height="226" rx="0" fill="#06b6d4" opacity="0.1"/><rect x="30.0" y="40" width="340" height="6" rx="0" fill="#06b6d4"/><text x="200.0" y="82" class="big-lbl" text-anchor="middle" style="fill:#06b6d4">Retrieval quality</text><text x="200.0" y="106" class="ax" text-anchor="middle">Did the supporting node come back?</text><rect x="56.0" y="132.0" width="8.0" height="8.0" fill="#06b6d4"/><text x="76.0" y="141" class="lbl" text-anchor="start">Precision at k</text><rect x="56.0" y="162.0" width="8.0" height="8.0" fill="#06b6d4"/><text x="76.0" y="171" class="lbl" text-anchor="start">Recall at k</text><rect x="56.0" y="192.0" width="8.0" height="8.0" fill="#06b6d4"/><text x="76.0" y="201" class="lbl" text-anchor="start">Evidence hit rate</text><rect x="56.0" y="222.0" width="8.0" height="8.0" fill="#06b6d4"/><text x="76.0" y="231" class="lbl" text-anchor="start">Citation match</text><rect x="420.0" y="40" width="340" height="226" rx="0" fill="#10b981" opacity="0.1"/><rect x="420.0" y="40" width="340" height="6" rx="0" fill="#10b981"/><text x="590.0" y="82" class="big-lbl" text-anchor="middle" style="fill:#10b981">Answer quality</text><text x="590.0" y="106" class="ax" text-anchor="middle">Was the answer right?</text><rect x="446.0" y="132.0" width="8.0" height="8.0" fill="#10b981"/><text x="466.0" y="141" class="lbl" text-anchor="start">Judge score, 1 to 5</text><rect x="446.0" y="162.0" width="8.0" height="8.0" fill="#10b981"/><text x="466.0" y="171" class="lbl" text-anchor="start">Pass rate</text><rect x="446.0" y="192.0" width="8.0" height="8.0" fill="#10b981"/><text x="466.0" y="201" class="lbl" text-anchor="start">Token F1</text><rect x="446.0" y="222.0" width="8.0" height="8.0" fill="#10b981"/><text x="466.0" y="231" class="lbl" text-anchor="start">Exact match</text><rect x="810.0" y="40" width="340" height="226" rx="0" fill="#f59e0b" opacity="0.1"/><rect x="810.0" y="40" width="340" height="6" rx="0" fill="#f59e0b"/><text x="980.0" y="82" class="big-lbl" text-anchor="middle" style="fill:#f59e0b">Efficiency</text><text x="980.0" y="106" class="ax" text-anchor="middle">What did it cost?</text><rect x="836.0" y="132.0" width="8.0" height="8.0" fill="#f59e0b"/><text x="856.0" y="141" class="lbl" text-anchor="start">Index build cost</text><rect x="836.0" y="162.0" width="8.0" height="8.0" fill="#f59e0b"/><text x="856.0" y="171" class="lbl" text-anchor="start">Tokens per query</text><rect x="836.0" y="192.0" width="8.0" height="8.0" fill="#f59e0b"/><text x="856.0" y="201" class="lbl" text-anchor="start">Latency per cell</text><rect x="836.0" y="222.0" width="8.0" height="8.0" fill="#f59e0b"/><text x="856.0" y="231" class="lbl" text-anchor="start">Bytes on disk</text>
+        </svg>
+        <p class="cap">A paradigm can win one pillar and lose another. Reporting all three is what stops a single favourable metric standing in for the result.</p>
+      </div>
+</section>
+
+<section id="apparatus">
+  <h2>The apparatus</h2>
+  <p class="lede">Which model did which job, and why no model ever grades its own work.</p>
+      <div class="scroll">
+        <table>
+          <caption><b>Table 1.</b> Model routing. The answerer and the judge are deliberately from different families, so a model is never asked to mark its own output.</caption>
+          <thead><tr><th>Role</th><th>Model</th><th>Host</th><th>Job</th></tr></thead>
+          <tbody>
+        <tr>
+          <th scope="row">Dataset generator</th><td class="mono">nvidia/nemotron-3-super-120b-a12b:free</td>
+          <td>OpenRouter</td><td style="text-align:left">Proposes each question, its answer and its evidence nodes.</td>
+        </tr>
+        <tr>
+          <th scope="row">Dataset critic</th><td class="mono">openai/gpt-oss-20b:free</td>
+          <td>OpenRouter</td><td style="text-align:left">Accepts or rejects the proposal. A different family from the generator.</td>
+        </tr>
+        <tr>
+          <th scope="row">P3 index build</th><td class="mono">nvidia/nemotron-3-super-120b-a12b</td>
+          <td>NVIDIA NIM</td><td style="text-align:left">Summarises every node of every filing. The only indexing model.</td>
+        </tr>
+        <tr>
+          <th scope="row">Pipeline answerer</th><td class="mono">meta-llama/llama-3.3-70b-instruct</td>
+          <td>OpenRouter</td><td style="text-align:left">Writes the answer from retrieved nodes. Identical for all three.</td>
+        </tr>
+        <tr>
+          <th scope="row">Judge</th><td class="mono">qwen/qwen3.6-27b</td>
+          <td>OpenRouter</td><td style="text-align:left">Scores the answer 1 to 5. A different family from the answerer.</td>
+        </tr>
+          </tbody>
+        </table>
+      </div>
+  <p>Two invariants hold across that table.</p>
+  <ul>
+    <li>The generator that proposes a question is never the critic that accepts it.</li>
+    <li>The answerer that writes an answer is never the judge that scores it.</li>
+  </ul>
+  <p>Every call runs at temperature zero. The answerer and judge are each pinned to one
+  upstream host.</p>
+  <p>That pinning matters. OpenRouter otherwise load-balances across backends with
+  different quantisation. Two calls could land on numerically different models.</p>
+</section>
+
+<section id="corpus">
+  <h2>The corpus</h2>
+  <p class="lede">Thirteen annual reports from five companies, at uneven fiscal depth.</p>
+  <p>The filings were deliberately chosen at different sizes. The largest holds
+  3,647 nodes. The smallest holds 682.</p>
+  <p>That spread is why every distance measured inside a document is normalised later.</p>
+      <div class="bars"><div class="bar">
+      <span class="bar-l">AAPL_2023</span>
+      <span class="bar-t"><span class="bar-f" style="width:19.6%;background:#6366f1"><span class="bar-sub" style="width:8.8%"></span></span></span>
+      <span class="bar-v">715</span>
+    </div><div class="bar">
+      <span class="bar-l">AAPL_2024</span>
+      <span class="bar-t"><span class="bar-f" style="width:18.8%;background:#6366f1"><span class="bar-sub" style="width:8.3%"></span></span></span>
+      <span class="bar-v">684</span>
+    </div><div class="bar">
+      <span class="bar-l">AAPL_2025</span>
+      <span class="bar-t"><span class="bar-f" style="width:18.7%;background:#6366f1"><span class="bar-sub" style="width:8.5%"></span></span></span>
+      <span class="bar-v">682</span>
+    </div><div class="bar">
+      <span class="bar-l">JNJ_2023</span>
+      <span class="bar-t"><span class="bar-f" style="width:33.5%;background:#6366f1"><span class="bar-sub" style="width:8.8%"></span></span></span>
+      <span class="bar-v">1,221</span>
+    </div><div class="bar">
+      <span class="bar-l">JNJ_2024</span>
+      <span class="bar-t"><span class="bar-f" style="width:34.2%;background:#6366f1"><span class="bar-sub" style="width:8.8%"></span></span></span>
+      <span class="bar-v">1,249</span>
+    </div><div class="bar">
+      <span class="bar-l">JPM_2023</span>
+      <span class="bar-t"><span class="bar-f" style="width:99.7%;background:#6366f1"><span class="bar-sub" style="width:9.0%"></span></span></span>
+      <span class="bar-v">3,637</span>
+    </div><div class="bar">
+      <span class="bar-l">JPM_2024</span>
+      <span class="bar-t"><span class="bar-f" style="width:100.0%;background:#6366f1"><span class="bar-sub" style="width:9.2%"></span></span></span>
+      <span class="bar-v">3,647</span>
+    </div><div class="bar">
+      <span class="bar-l">MSFT_2023</span>
+      <span class="bar-t"><span class="bar-f" style="width:30.2%;background:#6366f1"><span class="bar-sub" style="width:7.8%"></span></span></span>
+      <span class="bar-v">1,103</span>
+    </div><div class="bar">
+      <span class="bar-l">MSFT_2024</span>
+      <span class="bar-t"><span class="bar-f" style="width:33.8%;background:#6366f1"><span class="bar-sub" style="width:7.5%"></span></span></span>
+      <span class="bar-v">1,234</span>
+    </div><div class="bar">
+      <span class="bar-l">MSFT_2025</span>
+      <span class="bar-t"><span class="bar-f" style="width:28.1%;background:#6366f1"><span class="bar-sub" style="width:8.2%"></span></span></span>
+      <span class="bar-v">1,025</span>
+    </div><div class="bar">
+      <span class="bar-l">TSLA_2023</span>
+      <span class="bar-t"><span class="bar-f" style="width:28.0%;background:#6366f1"><span class="bar-sub" style="width:10.0%"></span></span></span>
+      <span class="bar-v">1,020</span>
+    </div><div class="bar">
+      <span class="bar-l">TSLA_2024</span>
+      <span class="bar-t"><span class="bar-f" style="width:28.2%;background:#6366f1"><span class="bar-sub" style="width:9.6%"></span></span></span>
+      <span class="bar-v">1,028</span>
+    </div><div class="bar">
+      <span class="bar-l">TSLA_2025</span>
+      <span class="bar-t"><span class="bar-f" style="width:28.8%;background:#6366f1"><span class="bar-sub" style="width:8.4%"></span></span></span>
+      <span class="bar-v">1,052</span>
+    </div>
+        <p class="cap"><span class="sw" style="background:#6366f1"></span> text nodes
+        &nbsp; <span class="sw" style="background:#fbbf24"></span> table nodes.
+        The largest filing holds more than five times the nodes of the smallest.</p>
+      </div>
+      <div class="scroll">
+        <table>
+          <caption><b>Table 2.</b> The indexed corpus. A node is one retrievable unit: a passage of prose, or a tabular block kept intact.</caption>
+          <thead><tr><th>Filing</th><th>Nodes</th><th>Text</th><th>Table</th><th>Table share</th><th>Tokens</th><th>Tokens per node</th></tr></thead>
+          <tbody>
+        <tr>
+          <th scope="row" class="mono">AAPL_2023</th>
+          <td>715</td><td>652</td><td>63</td>
+          <td>8.8%</td>
+          <td>33,386</td><td>47</td>
+        </tr>
+        <tr>
+          <th scope="row" class="mono">AAPL_2024</th>
+          <td>684</td><td>627</td><td>57</td>
+          <td>8.3%</td>
+          <td>34,152</td><td>50</td>
+        </tr>
+        <tr>
+          <th scope="row" class="mono">AAPL_2025</th>
+          <td>682</td><td>624</td><td>58</td>
+          <td>8.5%</td>
+          <td>34,332</td><td>50</td>
+        </tr>
+        <tr>
+          <th scope="row" class="mono">JNJ_2023</th>
+          <td>1,221</td><td>1,114</td><td>107</td>
+          <td>8.8%</td>
+          <td>70,060</td><td>57</td>
+        </tr>
+        <tr>
+          <th scope="row" class="mono">JNJ_2024</th>
+          <td>1,249</td><td>1,139</td><td>110</td>
+          <td>8.8%</td>
+          <td>70,503</td><td>56</td>
+        </tr>
+        <tr>
+          <th scope="row" class="mono">JPM_2023</th>
+          <td>3,637</td><td>3,309</td><td>328</td>
+          <td>9.0%</td>
+          <td>180,626</td><td>50</td>
+        </tr>
+        <tr>
+          <th scope="row" class="mono">JPM_2024</th>
+          <td>3,647</td><td>3,310</td><td>337</td>
+          <td>9.2%</td>
+          <td>182,177</td><td>50</td>
+        </tr>
+        <tr>
+          <th scope="row" class="mono">MSFT_2023</th>
+          <td>1,103</td><td>1,017</td><td>86</td>
+          <td>7.8%</td>
+          <td>56,068</td><td>51</td>
+        </tr>
+        <tr>
+          <th scope="row" class="mono">MSFT_2024</th>
+          <td>1,234</td><td>1,141</td><td>93</td>
+          <td>7.5%</td>
+          <td>59,038</td><td>48</td>
+        </tr>
+        <tr>
+          <th scope="row" class="mono">MSFT_2025</th>
+          <td>1,025</td><td>941</td><td>84</td>
+          <td>8.2%</td>
+          <td>51,988</td><td>51</td>
+        </tr>
+        <tr>
+          <th scope="row" class="mono">TSLA_2023</th>
+          <td>1,020</td><td>918</td><td>102</td>
+          <td>10.0%</td>
+          <td>67,115</td><td>66</td>
+        </tr>
+        <tr>
+          <th scope="row" class="mono">TSLA_2024</th>
+          <td>1,028</td><td>929</td><td>99</td>
+          <td>9.6%</td>
+          <td>65,228</td><td>63</td>
+        </tr>
+        <tr>
+          <th scope="row" class="mono">TSLA_2025</th>
+          <td>1,052</td><td>964</td><td>88</td>
+          <td>8.4%</td>
+          <td>65,460</td><td>62</td>
+        </tr>
+        <tr class="total">
+          <th scope="row">All 13 filings</th>
+          <td>18,297</td><td>16,685</td><td>1,612</td>
+          <td>8.8%</td><td>970,133</td>
+          <td>53</td>
+        </tr>
+          </tbody>
+        </table>
+      </div>
+</section>
+
+<section id="questions">
+  <h2>The question set</h2>
+  <p class="lede">One hundred questions on a two-by-two of difficulty, twenty-five per
+  cell, every one verified against its filing.</p>
+  <p>The taxonomy crosses two axes. Is the answer stated or must it be inferred? Does it
+  live in prose or in a table?</p>
+      <div class="matrix">
+        <div class="mx-row mx-head"><div class="mx-lab"></div>
+          <div class="mx-h">In continuous prose</div><div class="mx-h">In a table</div></div>
+        <div class="mx-row"><div class="mx-lab">Stated<br>directly</div><div class="mx-cell" style="--hue:#3b82f6">
+              <p class="tag">Q1</p>
+              <b>25</b>
+              <h4>Direct, text</h4>
+              <p class="blurb">One explicit statement in continuous prose.</p>
+            </div><div class="mx-cell" style="--hue:#14b8a6">
+              <p class="tag">Q3</p>
+              <b>25</b>
+              <h4>Direct, table</h4>
+              <p class="blurb">Exact extraction of a single table cell.</p>
+            </div></div><div class="mx-row"><div class="mx-lab">Must be<br>inferred</div><div class="mx-cell" style="--hue:#8b5cf6">
+              <p class="tag">Q2</p>
+              <b>25</b>
+              <h4>Implicit, text</h4>
+              <p class="blurb">Synthesis across several narrative passages.</p>
+            </div><div class="mx-cell" style="--hue:#f59e0b">
+              <p class="tag">Q4</p>
+              <b>25</b>
+              <h4>Implicit, table</h4>
+              <p class="blurb">A calculation or inference over a table.</p>
+            </div></div>
+      </div>
+  <p style="margin-top:1.5rem">Two further sets exist and never overlap with these.</p>
+  <ul>
+    <li><b>20 golden queries</b> carry hand-written scores. They are the judge's
+    calibration exemplars.</li>
+    <li><b>20 judge-validation queries</b> are held out entirely. The gate is
+    measured on these.</li>
+  </ul>
+  <p>A question in one set is never in another. The judge is never calibrated on a row
+  used to test it.</p>
+
+  <h3>How much evidence each question has</h3>
+  <p>The answer key names the nodes that support the answer. Its size decides whether
+  recall is even reachable.</p>
+      <div class="bars"><div class="bar">
+      <span class="bar-l">1 node</span>
+      <span class="bar-t"><span class="bar-f" style="width:100.0%;background:#f59e0b"></span></span>
+      <span class="bar-v">66</span>
+    </div><div class="bar">
+      <span class="bar-l">2 nodes</span>
+      <span class="bar-t"><span class="bar-f" style="width:22.7%;background:#f59e0b"></span></span>
+      <span class="bar-v">15</span>
+    </div><div class="bar">
+      <span class="bar-l">3 nodes</span>
+      <span class="bar-t"><span class="bar-f" style="width:16.7%;background:#f59e0b"></span></span>
+      <span class="bar-v">11</span>
+    </div><div class="bar">
+      <span class="bar-l">4 nodes</span>
+      <span class="bar-t"><span class="bar-f" style="width:4.5%;background:#f59e0b"></span></span>
+      <span class="bar-v">3</span>
+    </div><div class="bar">
+      <span class="bar-l">5 nodes</span>
+      <span class="bar-t"><span class="bar-f" style="width:7.6%;background:#f59e0b"></span></span>
+      <span class="bar-v">5</span>
+    </div>
+        <p class="cap">Bar length is the number of questions whose answer key names that
+        many nodes. The largest names 5, at or below the deepest retrieval
+        setting, so recall of 1.000 stays reachable everywhere.</p>
+      </div>
+</section>
+
+<section id="schedule">
+    <div class="act-open" style="--hue:#06b6d4">
+    <p class="act-num">Act II &middot; The Build</p>
+    <h2>Ten weeks, eight phases, 270 commits</h2>
+    <p class="stand">The schedule was written before any code existed. It held, but not in the shape it was drawn.</p>
+  </div>
+  <div class="narrow">
+    <p>The budget was a solo ten-week build, with the tail reserved for writing.</p>
+    <p>Two constraints shaped everything. The project had to cost nothing, and it had
+    to survive being interrupted.</p>
+    <p>Free tiers are rate-limited, so long jobs get throttled. Throttled jobs get
+    killed. Killed jobs must resume without re-spending quota.</p>
+    <p>That single requirement is why the database has a uniqueness constraint on every
+    benchmark cell.</p>
+  </div>
+
+      <div class="chart">
+        <svg viewBox="0 0 1180 572" role="img" aria-label="The eight-phase build schedule">
+          <defs>
+  <marker id="tip" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6"
+          markerHeight="6" orient="auto-start-reverse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#64748b"/>
+  </marker>
+</defs>
+          <line x1="372.0" y1="58" x2="372.0" y2="554" stroke="#f1f5f9" stroke-width="1"/><text x="404.4166666666667" y="48" class="ax" text-anchor="middle">W1</text><line x1="436.8" y1="58" x2="436.8" y2="554" stroke="#f1f5f9" stroke-width="1"/><text x="469.25" y="48" class="ax" text-anchor="middle">W2</text><line x1="501.7" y1="58" x2="501.7" y2="554" stroke="#f1f5f9" stroke-width="1"/><text x="534.0833333333333" y="48" class="ax" text-anchor="middle">W3</text><line x1="566.5" y1="58" x2="566.5" y2="554" stroke="#f1f5f9" stroke-width="1"/><text x="598.9166666666666" y="48" class="ax" text-anchor="middle">W4</text><line x1="631.3" y1="58" x2="631.3" y2="554" stroke="#f1f5f9" stroke-width="1"/><text x="663.7499999999999" y="48" class="ax" text-anchor="middle">W5</text><line x1="696.2" y1="58" x2="696.2" y2="554" stroke="#f1f5f9" stroke-width="1"/><text x="728.5833333333333" y="48" class="ax" text-anchor="middle">W6</text><line x1="761.0" y1="58" x2="761.0" y2="554" stroke="#f1f5f9" stroke-width="1"/><text x="793.4166666666666" y="48" class="ax" text-anchor="middle">W7</text><line x1="825.8" y1="58" x2="825.8" y2="554" stroke="#f1f5f9" stroke-width="1"/><text x="858.2499999999999" y="48" class="ax" text-anchor="middle">W8</text><line x1="890.7" y1="58" x2="890.7" y2="554" stroke="#f1f5f9" stroke-width="1"/><text x="923.0833333333333" y="48" class="ax" text-anchor="middle">W9</text><line x1="955.5" y1="58" x2="955.5" y2="554" stroke="#f1f5f9" stroke-width="1"/><text x="987.9166666666666" y="48" class="ax" text-anchor="middle">W10</text><line x1="1020.3" y1="58" x2="1020.3" y2="554" stroke="#f1f5f9" stroke-width="1"/><text x="1052.75" y="48" class="ax" text-anchor="middle">W11</text><line x1="1085.2" y1="58" x2="1085.2" y2="554" stroke="#f1f5f9" stroke-width="1"/><text x="1117.5833333333333" y="48" class="ax" text-anchor="middle">W12</text><line x1="1150.0" y1="58" x2="1150.0" y2="554" stroke="#f1f5f9" stroke-width="1"/><rect x="955.5" y="58" width="194.5" height="420" fill="#f43f5e" opacity="0.07"/><text x="1052.75" y="30" class="ax" text-anchor="middle" style="fill:#f43f5e">write-up reserved</text><rect x="15.0" y="61.0" width="30.0" height="30.0" fill="#8b5cf6"/><text x="30" y="82" class="big-lbl" text-anchor="middle" style="fill:#ffffff">1</text><text x="56" y="81" class="lbl" text-anchor="start">Environment and guardrails</text><rect x="372.0" y="61" width="64.8" height="30" rx="0" fill="#8b5cf6" opacity="0.9"/><text x="404.4166666666667" y="81" class="tiny" text-anchor="middle" style="fill:#ffffff">week 1</text><text x="56" y="101" class="tiny" text-anchor="start" style="fill:#64748b">Repo, SQLite layer, throttles, retry wrappers.</text><rect x="15.0" y="123.0" width="30.0" height="30.0" fill="#6366f1"/><text x="30" y="144" class="big-lbl" text-anchor="middle" style="fill:#ffffff">2</text><text x="56" y="143" class="lbl" text-anchor="start">Ingestion and parsing</text><rect x="372.0" y="123" width="194.5" height="30" rx="0" fill="#6366f1" opacity="0.9"/><text x="469.25" y="143" class="tiny" text-anchor="middle" style="fill:#ffffff">weeks 1 to 3</text><text x="56" y="163" class="tiny" text-anchor="start" style="fill:#64748b">13 filings to 18,297 nodes through LlamaParse.</text><rect x="15.0" y="185.0" width="30.0" height="30.0" fill="#3b82f6"/><text x="30" y="206" class="big-lbl" text-anchor="middle" style="fill:#ffffff">3</text><text x="56" y="205" class="lbl" text-anchor="start">P3 summary-tree build</text><rect x="501.7" y="185" width="129.7" height="30" rx="0" fill="#3b82f6" opacity="0.9"/><text x="566.5" y="205" class="tiny" text-anchor="middle" style="fill:#ffffff">weeks 3 to 4</text><text x="56" y="225" class="tiny" text-anchor="start" style="fill:#64748b">The one index allowed an LLM. 10.6 hours.</text><rect x="15.0" y="247.0" width="30.0" height="30.0" fill="#06b6d4"/><text x="30" y="268" class="big-lbl" text-anchor="middle" style="fill:#ffffff">4</text><text x="56" y="267" class="lbl" text-anchor="start">Dataset generation</text><rect x="566.5" y="247" width="194.5" height="30" rx="0" fill="#06b6d4" opacity="0.9"/><text x="663.75" y="267" class="tiny" text-anchor="middle" style="fill:#ffffff">weeks 4 to 6</text><text x="56" y="287" class="tiny" text-anchor="start" style="fill:#64748b">Generator and critic, different families, 140 questions.</text><rect x="15.0" y="309.0" width="30.0" height="30.0" fill="#14b8a6"/><text x="30" y="330" class="big-lbl" text-anchor="middle" style="fill:#ffffff">5</text><text x="56" y="329" class="lbl" text-anchor="start">Pipeline implementation</text><rect x="631.3" y="309" width="194.5" height="30" rx="0" fill="#14b8a6" opacity="0.9"/><text x="728.5833333333333" y="329" class="tiny" text-anchor="middle" style="fill:#ffffff">weeks 5 to 7</text><text x="56" y="349" class="tiny" text-anchor="start" style="fill:#64748b">Three retrievers behind one shared interface.</text><rect x="15.0" y="371.0" width="30.0" height="30.0" fill="#10b981"/><text x="30" y="392" class="big-lbl" text-anchor="middle" style="fill:#ffffff">6</text><text x="56" y="391" class="lbl" text-anchor="start">Judge build and gate</text><rect x="696.2" y="371" width="194.5" height="30" rx="0" fill="#10b981" opacity="0.9"/><text x="793.4166666666666" y="391" class="tiny" text-anchor="middle" style="fill:#ffffff">weeks 6 to 8</text><text x="56" y="411" class="tiny" text-anchor="start" style="fill:#64748b">Hard gate. No full run until concordance clears 80%.</text><rect x="15.0" y="433.0" width="30.0" height="30.0" fill="#f59e0b"/><text x="30" y="454" class="big-lbl" text-anchor="middle" style="fill:#ffffff">7</text><text x="56" y="453" class="lbl" text-anchor="start">Full benchmark execution</text><rect x="761.0" y="433" width="259.3" height="30" rx="0" fill="#f59e0b" opacity="0.9"/><text x="890.6666666666666" y="453" class="tiny" text-anchor="middle" style="fill:#ffffff">weeks 7 to 10</text><text x="56" y="473" class="tiny" text-anchor="start" style="fill:#64748b">900 cells, resumable, one pass at temperature zero.</text><rect x="15.0" y="495.0" width="30.0" height="30.0" fill="#f97316"/><text x="30" y="516" class="big-lbl" text-anchor="middle" style="fill:#ffffff">8</text><text x="56" y="515" class="lbl" text-anchor="start">Analysis and reporting</text><rect x="825.8" y="495" width="324.2" height="30" rx="0" fill="#f97316" opacity="0.9"/><text x="987.9166666666665" y="515" class="tiny" text-anchor="middle" style="fill:#ffffff">weeks 8 to 12</text><text x="56" y="535" class="tiny" text-anchor="start" style="fill:#64748b">Aggregation, figures, cost, the report itself.</text>
+        </svg>
+        <p class="cap">Phases overlap deliberately. The 900-cell run was designed to start the moment the judge gate passed, and to keep running in the background while analysis was written.</p>
+      </div>
+
+      <div class="scroll">
+        <table>
+          <caption><b>Table 3.</b> The eight phases, with the weeks each occupied.</caption>
+          <thead><tr><th>#</th><th>Phase</th><th>Weeks</th><th>What it delivered</th></tr></thead>
+          <tbody>
+        <tr>
+          <td class="num">1</td>
+          <th scope="row" style="white-space:normal">Environment and guardrails</th>
+          <td>1 to 1</td>
+          <td style="text-align:left;white-space:normal">Repo, SQLite layer, throttles, retry wrappers.</td>
+        </tr>
+        <tr>
+          <td class="num">2</td>
+          <th scope="row" style="white-space:normal">Ingestion and parsing</th>
+          <td>1 to 3</td>
+          <td style="text-align:left;white-space:normal">13 filings to 18,297 nodes through LlamaParse.</td>
+        </tr>
+        <tr>
+          <td class="num">3</td>
+          <th scope="row" style="white-space:normal">P3 summary-tree build</th>
+          <td>3 to 4</td>
+          <td style="text-align:left;white-space:normal">The one index allowed an LLM. 10.6 hours.</td>
+        </tr>
+        <tr>
+          <td class="num">4</td>
+          <th scope="row" style="white-space:normal">Dataset generation</th>
+          <td>4 to 6</td>
+          <td style="text-align:left;white-space:normal">Generator and critic, different families, 140 questions.</td>
+        </tr>
+        <tr>
+          <td class="num">5</td>
+          <th scope="row" style="white-space:normal">Pipeline implementation</th>
+          <td>5 to 7</td>
+          <td style="text-align:left;white-space:normal">Three retrievers behind one shared interface.</td>
+        </tr>
+        <tr>
+          <td class="num">6</td>
+          <th scope="row" style="white-space:normal">Judge build and gate</th>
+          <td>6 to 8</td>
+          <td style="text-align:left;white-space:normal">Hard gate. No full run until concordance clears 80%.</td>
+        </tr>
+        <tr>
+          <td class="num">7</td>
+          <th scope="row" style="white-space:normal">Full benchmark execution</th>
+          <td>7 to 10</td>
+          <td style="text-align:left;white-space:normal">900 cells, resumable, one pass at temperature zero.</td>
+        </tr>
+        <tr>
+          <td class="num">8</td>
+          <th scope="row" style="white-space:normal">Analysis and reporting</th>
+          <td>8 to 12</td>
+          <td style="text-align:left;white-space:normal">Aggregation, figures, cost, the report itself.</td>
+        </tr>
+          </tbody>
+        </table>
+      </div>
+
+  <h3>How the work actually landed</h3>
+  <p>Twenty-seven active days produced 271 commits across
+  17 branches.</p>
+  <p>The work came in bursts. Each spike is a phase going from nothing to merged.</p>
+      <div class="chart">
+        <svg viewBox="0 0 1180 292" role="img" aria-label="Commits per active day">
+          <defs>
+  <marker id="tip" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6"
+          markerHeight="6" orient="auto-start-reverse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#64748b"/>
+  </marker>
+</defs>
+          <line x1="60" y1="250.0" x2="1156" y2="250.0" stroke="#f1f5f9" stroke-width="1"/><text x="50" y="254.0" class="ax" text-anchor="end">0</text><line x1="60" y1="207.0" x2="1156" y2="207.0" stroke="#f1f5f9" stroke-width="1"/><text x="50" y="211.0" class="ax" text-anchor="end">10</text><line x1="60" y1="164.0" x2="1156" y2="164.0" stroke="#f1f5f9" stroke-width="1"/><text x="50" y="168.0" class="ax" text-anchor="end">20</text><line x1="60" y1="121.0" x2="1156" y2="121.0" stroke="#f1f5f9" stroke-width="1"/><text x="50" y="125.0" class="ax" text-anchor="end">30</text><line x1="60" y1="78.0" x2="1156" y2="78.0" stroke="#f1f5f9" stroke-width="1"/><text x="50" y="82.0" class="ax" text-anchor="end">40</text><rect x="62.0" y="224.2" width="35.1" height="25.8" rx="0" fill="#8b5cf6"/><rect x="101.1" y="215.6" width="35.1" height="34.4" rx="0" fill="#8b5cf6"/><rect x="140.3" y="228.5" width="35.1" height="21.5" rx="0" fill="#8b5cf6"/><rect x="179.4" y="245.7" width="35.1" height="4.3" rx="0" fill="#8b5cf6"/><rect x="218.6" y="232.8" width="35.1" height="17.2" rx="0" fill="#6366f1"/><rect x="257.7" y="78.0" width="35.1" height="172.0" rx="0" fill="#6366f1"/><text x="275.2857142857143" y="71.0" class="tiny" text-anchor="middle" style="fill:#6366f1">40</text><rect x="296.9" y="142.5" width="35.1" height="107.5" rx="0" fill="#6366f1"/><text x="314.42857142857144" y="135.5" class="tiny" text-anchor="middle" style="fill:#6366f1">25</text><rect x="336.0" y="245.7" width="35.1" height="4.3" rx="0" fill="#6366f1"/><rect x="375.1" y="245.7" width="35.1" height="4.3" rx="0" fill="#6366f1"/><rect x="414.3" y="241.4" width="35.1" height="8.6" rx="0" fill="#6366f1"/><rect x="453.4" y="125.3" width="35.1" height="124.7" rx="0" fill="#6366f1"/><text x="471.0" y="118.3" class="tiny" text-anchor="middle" style="fill:#6366f1">29</text><rect x="492.6" y="185.5" width="35.1" height="64.5" rx="0" fill="#6366f1"/><rect x="531.7" y="198.4" width="35.1" height="51.6" rx="0" fill="#6366f1"/><rect x="570.9" y="185.5" width="35.1" height="64.5" rx="0" fill="#3b82f6"/><rect x="610.0" y="245.7" width="35.1" height="4.3" rx="0" fill="#3b82f6"/><rect x="649.1" y="172.6" width="35.1" height="77.4" rx="0" fill="#3b82f6"/><rect x="688.3" y="202.7" width="35.1" height="47.3" rx="0" fill="#3b82f6"/><rect x="727.4" y="228.5" width="35.1" height="21.5" rx="0" fill="#3b82f6"/><rect x="766.6" y="237.1" width="35.1" height="12.9" rx="0" fill="#3b82f6"/><rect x="805.7" y="219.9" width="35.1" height="30.1" rx="0" fill="#3b82f6"/><rect x="844.9" y="159.7" width="35.1" height="90.3" rx="0" fill="#3b82f6"/><text x="862.4285714285714" y="152.7" class="tiny" text-anchor="middle" style="fill:#3b82f6">21</text><rect x="884.0" y="241.4" width="35.1" height="8.6" rx="0" fill="#3b82f6"/><rect x="923.1" y="232.8" width="35.1" height="17.2" rx="0" fill="#3b82f6"/><rect x="962.3" y="181.2" width="35.1" height="68.8" rx="0" fill="#06b6d4"/><rect x="1001.4" y="189.8" width="35.1" height="60.2" rx="0" fill="#06b6d4"/><rect x="1040.6" y="237.1" width="35.1" height="12.9" rx="0" fill="#06b6d4"/><rect x="1079.7" y="245.7" width="35.1" height="4.3" rx="0" fill="#06b6d4"/><rect x="1118.9" y="245.7" width="35.1" height="4.3" rx="0" fill="#06b6d4"/><text x="138.28571428571428" y="274" class="ax" text-anchor="middle">Jun</text><text x="392.7142857142857" y="274" class="ax" text-anchor="middle">Jul</text><text x="764.5714285714287" y="274" class="ax" text-anchor="middle">Aug</text><text x="1058.1428571428573" y="274" class="ax" text-anchor="middle">Sep</text><line x1="60" y1="250" x2="1156" y2="250" stroke="#e2e8f0" stroke-width="2"/>
+        </svg>
+        <p class="cap">Twenty-seven active days across roughly twelve weeks. The work came in bursts, each one a phase being taken from nothing to merged.</p>
+      </div>
+
+  <h3>What was written</h3>
+      <div class="chart">
+        <svg viewBox="0 0 1180 160" role="img" aria-label="Source against test volume">
+          <defs>
+  <marker id="tip" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6"
+          markerHeight="6" orient="auto-start-reverse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#64748b"/>
+  </marker>
+</defs>
+          <rect x="65" y="70" width="547.8" height="66" rx="0" fill="#6366f1"/><rect x="612.8" y="70" width="502.2" height="66" rx="0" fill="#10b981"/><text x="338.89411114183025" y="100" class="big-lbl" text-anchor="middle" style="fill:#ffffff">9,435 lines</text><text x="338.89411114183025" y="122" class="tiny" text-anchor="middle" style="fill:#ffffff">source, 55 modules</text><text x="863.8941111418303" y="100" class="big-lbl" text-anchor="middle" style="fill:#ffffff">8,650 lines</text><text x="863.8941111418303" y="122" class="tiny" text-anchor="middle" style="fill:#ffffff">tests, 51 files</text><text x="65" y="52" class="lbl" text-anchor="start" style="fill:#475569">Nearly a line of test for every line of source</text>
+        </svg>
+        <p class="cap">A ratio near one to one is not a virtue on its own. It matters here because four of the fifteen bugs below would have invalidated the comparison, and tests are what caught them.</p>
+      </div>
+
+  <h3>The suite grew faster than the code</h3>
+  <p>Most of that growth followed a bug. Every bug in the next act has a test standing
+  where it was.</p>
+      <div class="chart">
+        <svg viewBox="0 0 1180 280" role="img" aria-label="Test count at each recorded milestone">
+          <defs>
+  <marker id="tip" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6"
+          markerHeight="6" orient="auto-start-reverse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#64748b"/>
+  </marker>
+</defs>
+          <line x1="110" y1="236.0" x2="1040" y2="236.0" stroke="#f1f5f9" stroke-width="1"/><text x="98" y="240.0" class="ax" text-anchor="end">0</text><line x1="110" y1="192.0" x2="1040" y2="192.0" stroke="#f1f5f9" stroke-width="1"/><text x="98" y="196.00180505415162" class="ax" text-anchor="end">150</text><line x1="110" y1="148.0" x2="1040" y2="148.0" stroke="#f1f5f9" stroke-width="1"/><text x="98" y="152.00361010830323" class="ax" text-anchor="end">300</text><line x1="110" y1="104.0" x2="1040" y2="104.0" stroke="#f1f5f9" stroke-width="1"/><text x="98" y="108.00541516245488" class="ax" text-anchor="end">450</text><line x1="110" y1="60.0" x2="1040" y2="60.0" stroke="#f1f5f9" stroke-width="1"/><text x="98" y="64.0072202166065" class="ax" text-anchor="end">600</text><path d="M110.0,221.6 L342.5,136.6 L575.0,112.8 L807.5,91.1 L1040.0,73.5" fill="none" stroke="#10b981" stroke-width="3.5" stroke-linejoin="miter" stroke-linecap="butt"/><rect x="103.0" y="214.6" width="14.0" height="14.0" fill="#10b981"/><text x="110.0" y="204.62725631768953" class="lbl" text-anchor="middle" style="fill:#10b981">49</text><text x="110.0" y="260" class="ax" text-anchor="middle">Phase 2</text><rect x="335.5" y="129.6" width="14.0" height="14.0" fill="#10b981"/><text x="342.5" y="119.56407942238269" class="lbl" text-anchor="middle" style="fill:#10b981">339</text><text x="342.5" y="260" class="ax" text-anchor="middle">Deviation 28</text><rect x="568.0" y="105.8" width="14.0" height="14.0" fill="#10b981"/><text x="575.0" y="95.80505415162456" class="lbl" text-anchor="middle" style="fill:#10b981">420</text><text x="575.0" y="260" class="ax" text-anchor="middle">Deviation 37</text><rect x="800.5" y="84.1" width="14.0" height="14.0" fill="#10b981"/><text x="807.5" y="74.09927797833936" class="lbl" text-anchor="middle" style="fill:#10b981">494</text><text x="807.5" y="260" class="ax" text-anchor="middle">Phase 8 start</text><rect x="1033.0" y="66.5" width="14.0" height="14.0" fill="#10b981"/><text x="1040.0" y="56.5" class="lbl" text-anchor="middle" style="fill:#10b981">554</text><text x="1040.0" y="260" class="ax" text-anchor="middle">Today</text><line x1="110" y1="236" x2="1040" y2="236" stroke="#e2e8f0" stroke-width="2"/>
+        </svg>
+        <p class="cap">The suite grew faster than the source. Most of that growth followed a bug, because every bug on this page has a test standing where it was.</p>
+      </div>
+
+  <h3>The phases, told quickly</h3>
+  <ul class="tl">
+    <li style="--hue:#8b5cf6"><span class="when">Week 1</span>
+      <h4>Phase 1 &middot; The rails</h4>
+      <p>Five SQLite tables, three provider clients, one factory. Retry with backoff,
+      a semaphore capped at five workers, and a throttle flag on every loop.</p>
+      <p>Nothing here calls a model in anger. It builds the things that keep the
+      project at zero cost and crash-resilient.</p></li>
+    <li style="--hue:#6366f1"><span class="when">Weeks 1 to 3</span>
+      <h4>Phase 2 &middot; Turning filings into nodes</h4>
+      <p>Thirteen 10-K filings pulled from SEC EDGAR. Parsed by LlamaParse in
+      atomic-table mode, so no table is ever bisected.</p>
+      <p>Result: 18,297 nodes, each with a stable id. Every downstream metric
+      keys off that id, so correctness here is load-bearing.</p></li>
+    <li style="--hue:#3b82f6"><span class="when">Weeks 3 to 4</span>
+      <h4>Phase 3 &middot; The expensive index</h4>
+      <p>The only index allowed to call a model. One summary tree per filing, built
+      once and cached forever.</p>
+      <p>It took 10.6 hours and roughly 2.5 million tokens. It became the longest phase
+      in the project by wall clock.</p></li>
+    <li style="--hue:#06b6d4"><span class="when">Weeks 4 to 6</span>
+      <h4>Phase 4 &middot; Making the questions</h4>
+      <p>A generator proposes a question, an answer and its evidence. A critic from a
+      different family tries to verify it, blind.</p>
+      <p>The critic gets a search tool over the whole filing. It never sees the
+      proposed answer. A deterministic code check compares what both found.</p></li>
+    <li style="--hue:#14b8a6"><span class="when">Weeks 5 to 7</span>
+      <h4>Phase 5 &middot; Three retrievers, one interface</h4>
+      <p>All three implement the same abstract class. That is what makes the swap
+      clean, and the comparison fair.</p>
+      <p>P2 was held to pure statistics deliberately. LlamaIndex offers a keyword index
+      that calls an LLM, which would have destroyed the contrast.</p></li>
+    <li style="--hue:#10b981"><span class="when">Weeks 6 to 8</span>
+      <h4>Phase 6 &middot; The gate</h4>
+      <p>A hard stop. No full run was permitted until the judge proved itself on sixty
+      held-out outputs.</p></li>
+    <li style="--hue:#f59e0b"><span class="when">Weeks 7 to 10</span>
+      <h4>Phase 7 &middot; The run</h4>
+      <p>Nine hundred cells, once each, at temperature zero. Resumable after every
+      committed row.</p></li>
+    <li style="--hue:#f97316"><span class="when">Weeks 8 to 12</span>
+      <h4>Phase 8 &middot; Making sense of it</h4>
+      <p>Aggregation, bootstrap intervals, figures, index build cost, and the reports
+      you are reading.</p></li>
+  </ul>
+</section>
+
+<section id="bugs">
+    <div class="act-open" style="--hue:#f43f5e">
+    <p class="act-num">Act III &middot; The Trials</p>
+    <h2>Fifteen bugs, thirty-eight deviations</h2>
+    <p class="stand">Nothing in this project went to plan. That is not a confession, it is the methodology chapter. Every departure is logged with what was proposed, what changed, and why.</p>
+  </div>
+  <div class="narrow">
+    <p>Research code fails in a specific way. It does not crash. It produces a number.</p>
+    <p>The number looks plausible. It goes into a table. Nobody checks it again.</p>
+    <p>Four of the fifteen bugs below were exactly that shape. Each would have
+    invalidated the comparison while leaving every test green.</p>
+    <p><b>These fifteen are not every bug.</b> The defect log records only
+    major or load-bearing failures, not the routine nits caught in review.</p>
+    <p>Ordinary fixes went to the operations log instead. What follows is the
+    subset that changed a decision, a metric, or the design.</p>
+  </div>
+
+  <h3>The four that would have sunk the study</h3>
+  <div class="stories">
+        <div class="story" style="--hue:#f43f5e">
+          <h4>Chroma ate the corpus</h4>
+          <p>Duplicate node ids made Chroma silently drop real filing data. No error, no warning. The vector index would have been quietly incomplete.</p>
+        </div>
+        <div class="story" style="--hue:#f43f5e">
+          <h4>Chroma renamed our field</h4>
+          <p>A reserved metadata key overwrote <code>document_id</code>. P1's per-document retrieval isolation would have broken without anything failing.</p>
+        </div>
+        <div class="story" style="--hue:#f97316">
+          <h4>P1 was reading cheat notes</h4>
+          <p>Structural metadata leaked into the text P1 embedded and reranked. One pipeline was seeing section headers the others were not.</p>
+        </div>
+  </div>
+  <div class="stories" style="grid-template-columns:1fr">
+        <div class="story" style="--hue:#f97316">
+          <h4>The dataset was two companies short</h4>
+          <p>The generator only ever saw 9 of 13 filings. The benchmark would have shipped missing two companies entirely.</p>
+        </div>
+  </div>
+
+  <p class="pull" style="--hue:#f43f5e">None of these threw an exception. All four
+  were caught by a test written after someone asked a suspicious question.</p>
+
+  <h3>Every bug, on the calendar</h3>
+      <div class="chart">
+        <svg viewBox="0 0 1180 274" role="img" aria-label="Fifteen bugs on the calendar">
+          <defs>
+  <marker id="tip" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6"
+          markerHeight="6" orient="auto-start-reverse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#64748b"/>
+  </marker>
+</defs>
+          <rect x="81.0" y="60" width="166.7" height="34" rx="0" fill="#f97316"/><text x="164.33333333333331" y="82" class="tiny" text-anchor="middle" style="fill:#ffffff">#9</text><text x="164.33333333333331" y="44" class="ax" text-anchor="middle">29 Jul</text><rect x="261.7" y="60" width="166.7" height="34" rx="0" fill="#f97316"/><text x="345.0" y="82" class="tiny" text-anchor="middle" style="fill:#ffffff">#12</text><rect x="261.7" y="100" width="166.7" height="34" rx="0" fill="#f97316"/><text x="345.0" y="122" class="tiny" text-anchor="middle" style="fill:#ffffff">#13</text><rect x="261.7" y="140" width="166.7" height="34" rx="0" fill="#f59e0b"/><text x="345.0" y="162" class="tiny" text-anchor="middle" style="fill:#ffffff">#10</text><rect x="261.7" y="180" width="166.7" height="34" rx="0" fill="#f59e0b"/><text x="345.0" y="202" class="tiny" text-anchor="middle" style="fill:#ffffff">#11</text><text x="345.0" y="44" class="ax" text-anchor="middle">4 Aug</text><rect x="442.3" y="60" width="166.7" height="34" rx="0" fill="#f43f5e"/><text x="525.6666666666666" y="82" class="tiny" text-anchor="middle" style="fill:#ffffff">#5</text><rect x="442.3" y="100" width="166.7" height="34" rx="0" fill="#f43f5e"/><text x="525.6666666666666" y="122" class="tiny" text-anchor="middle" style="fill:#ffffff">#6</text><rect x="442.3" y="140" width="166.7" height="34" rx="0" fill="#f97316"/><text x="525.6666666666666" y="162" class="tiny" text-anchor="middle" style="fill:#ffffff">#7</text><rect x="442.3" y="180" width="166.7" height="34" rx="0" fill="#f59e0b"/><text x="525.6666666666666" y="202" class="tiny" text-anchor="middle" style="fill:#ffffff">#8</text><text x="525.6666666666666" y="44" class="ax" text-anchor="middle">10 Aug</text><rect x="623.0" y="60" width="166.7" height="34" rx="0" fill="#f97316"/><text x="706.3333333333334" y="82" class="tiny" text-anchor="middle" style="fill:#ffffff">#2</text><rect x="623.0" y="100" width="166.7" height="34" rx="0" fill="#f97316"/><text x="706.3333333333334" y="122" class="tiny" text-anchor="middle" style="fill:#ffffff">#3</text><rect x="623.0" y="140" width="166.7" height="34" rx="0" fill="#f97316"/><text x="706.3333333333334" y="162" class="tiny" text-anchor="middle" style="fill:#ffffff">#4</text><text x="706.3333333333334" y="44" class="ax" text-anchor="middle">11 Aug</text><rect x="803.7" y="60" width="166.7" height="34" rx="0" fill="#f97316"/><text x="887.0" y="82" class="tiny" text-anchor="middle" style="fill:#ffffff">#1</text><text x="887.0" y="44" class="ax" text-anchor="middle">12 Aug</text><rect x="984.3" y="60" width="166.7" height="34" rx="0" fill="#f97316"/><text x="1067.6666666666665" y="82" class="tiny" text-anchor="middle" style="fill:#ffffff">#14</text><rect x="984.3" y="100" width="166.7" height="34" rx="0" fill="#64748b"/><text x="1067.6666666666665" y="122" class="tiny" text-anchor="middle" style="fill:#ffffff">#15</text><text x="1067.6666666666665" y="44" class="ax" text-anchor="middle">12 Sep</text><line x1="74" y1="230" x2="1158" y2="230" stroke="#e2e8f0" stroke-width="2"/><rect x="74" y="244" width="13" height="13" rx="0" fill="#f43f5e"/><text x="94" y="255" class="ax" text-anchor="start">Critical (2)</text><rect x="224" y="244" width="13" height="13" rx="0" fill="#f97316"/><text x="244" y="255" class="ax" text-anchor="start">High (9)</text><rect x="374" y="244" width="13" height="13" rx="0" fill="#f59e0b"/><text x="394" y="255" class="ax" text-anchor="start">Medium (3)</text><rect x="524" y="244" width="13" height="13" rx="0" fill="#64748b"/><text x="544" y="255" class="ax" text-anchor="start">Low (1)</text>
+        </svg>
+        <p class="cap">One column per day a bug was found. The mid-August stack is the week three pipelines and a dataset generator were all live at once.</p>
+      </div>
+  <h4>By severity</h4>
+      <div class="bars"><div class="bar">
+      <span class="bar-l">Critical</span>
+      <span class="bar-t"><span class="bar-f" style="width:22.2%;background:#f43f5e"></span></span>
+      <span class="bar-v">2</span>
+    </div><div class="bar">
+      <span class="bar-l">High</span>
+      <span class="bar-t"><span class="bar-f" style="width:100.0%;background:#f97316"></span></span>
+      <span class="bar-v">9</span>
+    </div><div class="bar">
+      <span class="bar-l">Medium</span>
+      <span class="bar-t"><span class="bar-f" style="width:33.3%;background:#f59e0b"></span></span>
+      <span class="bar-v">3</span>
+    </div><div class="bar">
+      <span class="bar-l">Low</span>
+      <span class="bar-t"><span class="bar-f" style="width:11.1%;background:#64748b"></span></span>
+      <span class="bar-v">1</span>
+    </div></div>
+      <div class="scroll">
+        <table>
+          <caption><b>Table 4.</b> The major bug log: two critical, eight high, three medium, two low. Minor defects caught in review are deliberately excluded, so this is a record of consequence rather than a count of everything that broke.</caption>
+          <thead><tr><th>#</th><th>Found</th><th>Severity</th><th>What it was</th></tr></thead>
+          <tbody>
+        <tr>
+          <td class="num">1</td>
+          <td class="mono">2026-08-12</td>
+          <td><span class="sev" style="--hue:#f97316">High</span></td>
+          <td>Reasoning models returned content=None, crashing the JSON parse</td>
+        </tr>
+        <tr>
+          <td class="num">2</td>
+          <td class="mono">2026-08-11</td>
+          <td><span class="sev" style="--hue:#f97316">High</span></td>
+          <td>The generator only ever saw 9 of 13 filings</td>
+        </tr>
+        <tr>
+          <td class="num">3</td>
+          <td class="mono">2026-08-11</td>
+          <td><span class="sev" style="--hue:#f97316">High</span></td>
+          <td>Live API failures crashed the whole run instead of retrying</td>
+        </tr>
+        <tr>
+          <td class="num">4</td>
+          <td class="mono">2026-08-11</td>
+          <td><span class="sev" style="--hue:#f97316">High</span></td>
+          <td>LLMFactory&#x27;s retry wrapper was silently never applied</td>
+        </tr>
+        <tr>
+          <td class="num">5</td>
+          <td class="mono">2026-08-10</td>
+          <td><span class="sev" style="--hue:#f43f5e">Critical</span></td>
+          <td>Chroma silently dropped real filing data on duplicate ids</td>
+        </tr>
+        <tr>
+          <td class="num">6</td>
+          <td class="mono">2026-08-10</td>
+          <td><span class="sev" style="--hue:#f43f5e">Critical</span></td>
+          <td>Chroma&#x27;s reserved key overwrote our own document_id</td>
+        </tr>
+        <tr>
+          <td class="num">7</td>
+          <td class="mono">2026-08-10</td>
+          <td><span class="sev" style="--hue:#f97316">High</span></td>
+          <td>Structural metadata leaked into P1&#x27;s embedded text</td>
+        </tr>
+        <tr>
+          <td class="num">8</td>
+          <td class="mono">2026-08-10</td>
+          <td><span class="sev" style="--hue:#f59e0b">Medium</span></td>
+          <td>storage_root late-binding let tests write production paths</td>
+        </tr>
+        <tr>
+          <td class="num">9</td>
+          <td class="mono">2026-07-29</td>
+          <td><span class="sev" style="--hue:#f97316">High</span></td>
+          <td>Hand-labelling accepted invalid scores and no-op&#x27;d on typos</td>
+        </tr>
+        <tr>
+          <td class="num">10</td>
+          <td class="mono">2026-08-04</td>
+          <td><span class="sev" style="--hue:#f59e0b">Medium</span></td>
+          <td>P3 logged zero token cost despite real summaries</td>
+        </tr>
+        <tr>
+          <td class="num">11</td>
+          <td class="mono">2026-08-04</td>
+          <td><span class="sev" style="--hue:#f59e0b">Medium</span></td>
+          <td>Temperature silently fell back to 0.1, not the mandated 0</td>
+        </tr>
+        <tr>
+          <td class="num">12</td>
+          <td class="mono">2026-08-04</td>
+          <td><span class="sev" style="--hue:#f97316">High</span></td>
+          <td>An empty filing list ran against the entire corpus</td>
+        </tr>
+        <tr>
+          <td class="num">13</td>
+          <td class="mono">2026-08-04</td>
+          <td><span class="sev" style="--hue:#f97316">High</span></td>
+          <td>No duplicate check let near-identical questions in</td>
+        </tr>
+        <tr>
+          <td class="num">14</td>
+          <td class="mono">2026-09-12</td>
+          <td><span class="sev" style="--hue:#f97316">High</span></td>
+          <td>Hardcoded report figures, one supporting a false conclusion</td>
+        </tr>
+        <tr>
+          <td class="num">15</td>
+          <td class="mono">2026-09-12</td>
+          <td><span class="sev" style="--hue:#64748b">Low</span></td>
+          <td>A typed tie count in the findings page was wrong</td>
+        </tr>
+          </tbody>
+        </table>
+      </div>
+
+  <h3>Thirty-eight deviations from the original design</h3>
+  <p class="lede">A deviation is not a mistake. It is a documented departure from what
+  the specification said, with a reason.</p>
+      <div class="chart">
+        <svg viewBox="0 0 1180 348" role="img" aria-label="Deviations by cause">
+          <defs>
+  <marker id="tip" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6"
+          markerHeight="6" orient="auto-start-reverse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#64748b"/>
+  </marker>
+</defs>
+          <text x="306" y="63" class="lbl" text-anchor="end">Provider or model forced</text><rect x="322" y="43" width="760.0" height="30" rx="0" fill="#f43f5e"/><text x="1096.0" y="63" class="lbl" text-anchor="start" style="fill:#f43f5e">10</text><text x="340.0" y="63" class="tiny" text-anchor="middle" style="fill:#ffffff">7</text><text x="413.0" y="63" class="tiny" text-anchor="middle" style="fill:#ffffff">9</text><text x="486.0" y="63" class="tiny" text-anchor="middle" style="fill:#ffffff">13</text><text x="559.0" y="63" class="tiny" text-anchor="middle" style="fill:#ffffff">15</text><text x="632.0" y="63" class="tiny" text-anchor="middle" style="fill:#ffffff">23</text><text x="705.0" y="63" class="tiny" text-anchor="middle" style="fill:#ffffff">24</text><text x="778.0" y="63" class="tiny" text-anchor="middle" style="fill:#ffffff">25</text><text x="851.0" y="63" class="tiny" text-anchor="middle" style="fill:#ffffff">26</text><text x="924.0" y="63" class="tiny" text-anchor="middle" style="fill:#ffffff">29</text><text x="997.0" y="63" class="tiny" text-anchor="middle" style="fill:#ffffff">34</text><text x="306" y="121" class="lbl" text-anchor="end">Correctness of the instrument</text><rect x="322" y="101" width="760.0" height="30" rx="0" fill="#f97316"/><text x="1096.0" y="121" class="lbl" text-anchor="start" style="fill:#f97316">10</text><text x="340.0" y="121" class="tiny" text-anchor="middle" style="fill:#ffffff">5</text><text x="413.0" y="121" class="tiny" text-anchor="middle" style="fill:#ffffff">6</text><text x="486.0" y="121" class="tiny" text-anchor="middle" style="fill:#ffffff">16</text><text x="559.0" y="121" class="tiny" text-anchor="middle" style="fill:#ffffff">30</text><text x="632.0" y="121" class="tiny" text-anchor="middle" style="fill:#ffffff">31</text><text x="705.0" y="121" class="tiny" text-anchor="middle" style="fill:#ffffff">32</text><text x="778.0" y="121" class="tiny" text-anchor="middle" style="fill:#ffffff">33</text><text x="851.0" y="121" class="tiny" text-anchor="middle" style="fill:#ffffff">35</text><text x="924.0" y="121" class="tiny" text-anchor="middle" style="fill:#ffffff">36</text><text x="997.0" y="121" class="tiny" text-anchor="middle" style="fill:#ffffff">37</text><text x="306" y="179" class="lbl" text-anchor="end">Scope or design change</text><rect x="322" y="159" width="608.0" height="30" rx="0" fill="#f59e0b"/><text x="944.0" y="179" class="lbl" text-anchor="start" style="fill:#f59e0b">8</text><text x="340.0" y="179" class="tiny" text-anchor="middle" style="fill:#ffffff">4</text><text x="412.25" y="179" class="tiny" text-anchor="middle" style="fill:#ffffff">17</text><text x="484.5" y="179" class="tiny" text-anchor="middle" style="fill:#ffffff">19</text><text x="556.75" y="179" class="tiny" text-anchor="middle" style="fill:#ffffff">20</text><text x="629.0" y="179" class="tiny" text-anchor="middle" style="fill:#ffffff">22</text><text x="701.25" y="179" class="tiny" text-anchor="middle" style="fill:#ffffff">27</text><text x="773.5" y="179" class="tiny" text-anchor="middle" style="fill:#ffffff">28</text><text x="845.75" y="179" class="tiny" text-anchor="middle" style="fill:#ffffff">38</text><text x="306" y="237" class="lbl" text-anchor="end">Robustness and guards</text><rect x="322" y="217" width="608.0" height="30" rx="0" fill="#10b981"/><text x="944.0" y="237" class="lbl" text-anchor="start" style="fill:#10b981">8</text><text x="340.0" y="237" class="tiny" text-anchor="middle" style="fill:#ffffff">1</text><text x="412.25" y="237" class="tiny" text-anchor="middle" style="fill:#ffffff">2</text><text x="484.5" y="237" class="tiny" text-anchor="middle" style="fill:#ffffff">3</text><text x="556.75" y="237" class="tiny" text-anchor="middle" style="fill:#ffffff">8</text><text x="629.0" y="237" class="tiny" text-anchor="middle" style="fill:#ffffff">12</text><text x="701.25" y="237" class="tiny" text-anchor="middle" style="fill:#ffffff">14</text><text x="773.5" y="237" class="tiny" text-anchor="middle" style="fill:#ffffff">18</text><text x="845.75" y="237" class="tiny" text-anchor="middle" style="fill:#ffffff">21</text><text x="306" y="295" class="lbl" text-anchor="end">Upstream defect absorbed</text><rect x="322" y="275" width="152.0" height="30" rx="0" fill="#64748b"/><text x="488.0" y="295" class="lbl" text-anchor="start" style="fill:#64748b">2</text><text x="340.0" y="295" class="tiny" text-anchor="middle" style="fill:#ffffff">10</text><text x="401.0" y="295" class="tiny" text-anchor="middle" style="fill:#ffffff">11</text>
+        </svg>
+        <p class="cap">Thirty-eight departures from the original design, every one logged with what was proposed, what changed, and why.</p>
+      </div>
+  <p>The largest group is provider or model changes. Ten of thirty-eight.</p>
+  <p><b>These thirty-eight are the departures worth recording.</b> Small
+  refinements made during normal implementation are not among them.</p>
+  <p>A deviation earns an entry when it changes the design, the instrument or a
+  reported number. Everything smaller stayed in the commit history.</p>
+  <p>That is what a zero-cost constraint does to a project. Free tiers move, models get
+  retired, and limits bite.</p>
+</section>
+
+<section id="providers">
+  <h2>The provider exodus</h2>
+  <p class="lede">Three migrations in eight weeks, each forced by a different wall.</p>
+      <div class="chart">
+        <svg viewBox="0 0 1180 330" role="img" aria-label="Three provider migrations">
+          <defs>
+  <marker id="tip" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6"
+          markerHeight="6" orient="auto-start-reverse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#64748b"/>
+  </marker>
+</defs>
+          <rect x="12.0" y="70" width="296" height="210" rx="0" fill="#f97316" opacity="0.12"/><rect x="12.0" y="70" width="296" height="6" rx="0" fill="#f97316"/><text x="160.0" y="110" class="big-lbl" text-anchor="middle" style="fill:#f97316">Groq free tier</text><text x="160.0" y="132" class="ax" text-anchor="middle">where everything started</text><rect x="38.0" y="150" width="244" height="20" rx="0" fill="#f97316" opacity="0.22"/><text x="160.0" y="164" class="tiny" text-anchor="middle" style="fill:#0f172a">Generator</text><rect x="38.0" y="175" width="244" height="20" rx="0" fill="#f97316" opacity="0.22"/><text x="160.0" y="189" class="tiny" text-anchor="middle" style="fill:#0f172a">Critic</text><rect x="38.0" y="200" width="244" height="20" rx="0" fill="#f97316" opacity="0.22"/><text x="160.0" y="214" class="tiny" text-anchor="middle" style="fill:#0f172a">P3 build</text><rect x="38.0" y="225" width="244" height="20" rx="0" fill="#f97316" opacity="0.22"/><text x="160.0" y="239" class="tiny" text-anchor="middle" style="fill:#0f172a">Answerer</text><rect x="38.0" y="250" width="244" height="20" rx="0" fill="#f97316" opacity="0.22"/><text x="160.0" y="264" class="tiny" text-anchor="middle" style="fill:#0f172a">Judge</text><line x1="318.0" y1="170" x2="430.0" y2="170" stroke="#f97316" stroke-width="2" marker-end="url(#tip)"/><rect x="442.0" y="70" width="296" height="210" rx="0" fill="#8b5cf6" opacity="0.12"/><rect x="442.0" y="70" width="296" height="6" rx="0" fill="#8b5cf6"/><text x="590.0" y="110" class="big-lbl" text-anchor="middle" style="fill:#8b5cf6">NVIDIA NIM</text><text x="590.0" y="132" class="ax" text-anchor="middle">request-bound, not token-bound</text><rect x="468.0" y="150" width="244" height="20" rx="0" fill="#8b5cf6" opacity="0.22"/><text x="590.0" y="164" class="tiny" text-anchor="middle" style="fill:#0f172a">P3 build</text><rect x="468.0" y="175" width="244" height="20" rx="0" fill="#8b5cf6" opacity="0.22"/><text x="590.0" y="189" class="tiny" text-anchor="middle" style="fill:#0f172a">Generator</text><line x1="748.0" y1="170" x2="860.0" y2="170" stroke="#8b5cf6" stroke-width="2" marker-end="url(#tip)"/><rect x="872.0" y="70" width="296" height="210" rx="0" fill="#3b82f6" opacity="0.12"/><rect x="872.0" y="70" width="296" height="6" rx="0" fill="#3b82f6"/><text x="1020.0" y="110" class="big-lbl" text-anchor="middle" style="fill:#3b82f6">OpenRouter</text><text x="1020.0" y="132" class="ax" text-anchor="middle">free tier, then paid at about $1.55</text><rect x="898.0" y="150" width="244" height="20" rx="0" fill="#3b82f6" opacity="0.22"/><text x="1020.0" y="164" class="tiny" text-anchor="middle" style="fill:#0f172a">Generator</text><rect x="898.0" y="175" width="244" height="20" rx="0" fill="#3b82f6" opacity="0.22"/><text x="1020.0" y="189" class="tiny" text-anchor="middle" style="fill:#0f172a">Critic</text><rect x="898.0" y="200" width="244" height="20" rx="0" fill="#3b82f6" opacity="0.22"/><text x="1020.0" y="214" class="tiny" text-anchor="middle" style="fill:#0f172a">Answerer</text><rect x="898.0" y="225" width="244" height="20" rx="0" fill="#3b82f6" opacity="0.22"/><text x="1020.0" y="239" class="tiny" text-anchor="middle" style="fill:#0f172a">Judge</text><text x="375.0" y="148" class="tiny" text-anchor="middle" style="fill:#f43f5e">token wall</text><text x="805.0" y="148" class="tiny" text-anchor="middle" style="fill:#f43f5e">throughput wall</text><text x="590.0" y="44" class="ax" text-anchor="middle">Every move kept the anti-self-grading rule: answerer never the judge&#x27;s family</text><text x="590.0" y="308" class="lbl" text-anchor="middle" style="fill:#10b981">One-time $10 cap lift, plus about $1.55 for the run itself</text>
+        </svg>
+        <p class="cap">Deviations 7, 23, 24 and 29. Each move was forced by a hard limit, not a preference, and each is logged with the wall that caused it.</p>
+      </div>
+  <ol>
+    <li><b>Groq could not sustain the P3 build.</b> Its free tier is token-bound. Daily
+    limits were exhausted mid-build, repeatedly.</li>
+    <li><b>NVIDIA NIM gave headroom, then throttled too.</b> It is request-bound rather
+    than token-bound, which suited a bulk job. Its own limits still bit.</li>
+    <li><b>OpenRouter took the generator, then everything.</b> A structural tokens-per-
+    minute wall on NIM made generation impossible at volume.</li>
+    <li><b>Finally, a paid tier for the run itself.</b> The 900-cell matrix on Groq's
+    free tier needed two to three weeks of supervised, interrupted running.</li>
+  </ol>
+  <p>That last move cost about $1.55 and completed the matrix in roughly ninety-five
+  minutes.</p>
+  <p>Two real costs exist. A one-time $10 account top-up, taken to lift a daily
+  request cap, and roughly $1 to $1.55 for the run.</p>
+  <p>Everything else ran on free tiers or local hardware. Both charges are one-off,
+  so the ban on per-hour infrastructure held throughout.</p>
+
+  <h3>Two challenges that were absorbed, not solved</h3>
+  <div class="stories" style="grid-template-columns:1fr 1fr">
+        <div class="story" style="--hue:#f59e0b">
+          <h4>NIM still throttles P3</h4>
+          <p>Even after the move, the summary build hits rate limits on long runs. Retry, backoff and 40 requests per minute absorb it. Builds just take longer.</p>
+        </div>
+        <div class="story" style="--hue:#10b981">
+          <h4>Per-filing resumability saved it</h4>
+          <p>Each filing writes to a temp directory, then renames atomically. A throttled eleven-hour build is safe to interrupt and restart.</p>
+        </div>
+  </div>
+</section>
+
+<section id="judge">
+    <div class="act-open" style="--hue:#10b981">
+    <p class="act-num">Act IV &middot; The Instrument</p>
+    <h2>Proving the ruler before measuring</h2>
+    <p class="stand">A benchmark graded by a language model is only as good as that model. So the judge had to pass a hard gate before it touched a single benchmark cell.</p>
+  </div>
+  <div class="narrow">
+    <p>Nine hundred answers cannot be marked by hand. A model has to do it.</p>
+    <p>That creates an obvious problem. If the judge is unreliable, every number in
+    this document is noise.</p>
+    <p>The design answer was a gate. No full run was permitted until the judge proved
+    itself on held-out data.</p>
+  </div>
+
+  <h3>The rubric</h3>
+  <p>Five bands. The judge scores content only, against the ground-truth answer.</p>
+  <div class="bands">
+        <div class="band" style="--hue:#10b981">
+          <span class="bnum">5</span>
+          <div><h4>Fully correct</h4><p class="blurb">Matches the ground truth, complete and precise.</p></div>
+        </div>
+        <div class="band" style="--hue:#a3e635">
+          <span class="bnum">4</span>
+          <div><h4>Right value, short of complete</h4><p class="blurb">Correct value, falling short on framing.</p></div>
+        </div>
+        <div class="band" style="--hue:#f59e0b">
+          <span class="bnum">3</span>
+          <div><h4>Half an answer</h4><p class="blurb">One half of a two-part answer, other half absent.</p></div>
+        </div>
+        <div class="band" style="--hue:#f97316">
+          <span class="bnum">2</span>
+          <div><h4>Right area, wrong figure</h4><p class="blurb">Reaches the right part, reports the wrong value.</p></div>
+        </div>
+        <div class="band" style="--hue:#f43f5e">
+          <span class="bnum">1</span>
+          <div><h4>Wrong</h4><p class="blurb">Unsupported, fabricated, or a refusal to answer.</p></div>
+        </div>
+  </div>
+  <p style="margin-top:1.2rem">Citation validity is deliberately absent from that list.</p>
+  <p>It is checked in code instead. Asking the judge as well would let a model's guess
+  override a deterministic check.</p>
+
+  <div class="finding" style="--hue:#f97316">
+    <p><b>The scale was collapsed mid-project, from 1 to 10 down to 1 to 5.</b>
+    Ten bands asked for distinctions the rubric could not define. The judge could not
+    apply them consistently.</p>
+    <p>That collapse created its own hazard. Fifteen gate rows kept scores written
+    under the retired rubric. Seven held values between 1 and 5, indistinguishable from
+    valid new scores.</p>
+    <p>A resume keyed on "has a score" would have silently mixed two rubrics. Nothing
+    would have failed. Nothing would have looked wrong.</p>
+  </div>
+
+  <h3>The fix: fingerprint every score</h3>
+  <p>Each judged row stores a digest of the grading model plus the exact system prompt.</p>
+  <p>That prompt embeds the rubric text and the quadrant's five calibration exemplars.
+  Change any of them and the fingerprint changes.</p>
+  <p>Resume now skips a row only if it has a score <b>and</b> its fingerprint matches
+  the rubric currently in force.</p>
+  <div class="finding" style="--hue:#10b981">
+    <p>All 900 benchmark rows carry a fingerprint. There are exactly four
+    distinct values, 225
+    rows each, one per quadrant.</p>
+    <p>Recomputing from the current rubric reproduces the stored value in all four.
+    That is what rules out silent rubric drift mid-run.</p>
+  </div>
+
+  <h3>The gate itself</h3>
+  <p>The judge scored 60 held-out outputs: 20 questions across three
+  pipelines at a single depth.</p>
+  <p>The same 60 were scored independently a second time, under a blinding
+  protocol. Pipeline identity and citation evidence were withheld from the reference
+  scorer.</p>
+      <div class="heat heat5">
+        <div class="hm-row hm-head"><span class="hm-r"></span><span class="hm-h">judge 1</span><span class="hm-h">judge 2</span><span class="hm-h">judge 3</span><span class="hm-h">judge 4</span><span class="hm-h">judge 5</span></div>
+        <div class="hm-row"><span class="hm-r">reference 1</span><span class="hm-c" style="background:rgba(16,185,129,0.41);color:#0f172a">9</span><span class="hm-c" style="background:rgba(244,63,94,0.24);color:#0f172a">1</span><span class="hm-c empty">&middot;</span><span class="hm-c empty">&middot;</span><span class="hm-c empty">&middot;</span></div><div class="hm-row"><span class="hm-r">reference 2</span><span class="hm-c empty">&middot;</span><span class="hm-c" style="background:rgba(16,185,129,0.30);color:#0f172a">4</span><span class="hm-c empty">&middot;</span><span class="hm-c empty">&middot;</span><span class="hm-c empty">&middot;</span></div><div class="hm-row"><span class="hm-r">reference 3</span><span class="hm-c empty">&middot;</span><span class="hm-c empty">&middot;</span><span class="hm-c" style="background:rgba(16,185,129,0.26);color:#0f172a">2</span><span class="hm-c empty">&middot;</span><span class="hm-c empty">&middot;</span></div><div class="hm-row"><span class="hm-r">reference 4</span><span class="hm-c empty">&middot;</span><span class="hm-c empty">&middot;</span><span class="hm-c empty">&middot;</span><span class="hm-c empty">&middot;</span><span class="hm-c" style="background:rgba(244,63,94,0.30);color:#0f172a">4</span></div><div class="hm-row"><span class="hm-r">reference 5</span><span class="hm-c empty">&middot;</span><span class="hm-c empty">&middot;</span><span class="hm-c empty">&middot;</span><span class="hm-c" style="background:rgba(244,63,94,0.28);color:#0f172a">3</span><span class="hm-c" style="background:rgba(16,185,129,1.00);color:#fff">37</span></div>
+        <p class="cap"><span class="sw" style="background:#10b981"></span> agreement,
+        on the diagonal &nbsp; <span class="sw" style="background:#f43f5e"></span>
+        disagreement. 52 of 60 on the diagonal
+        (86.7%), 60 of 60 within one band.
+        Every disagreement is a single band. The judge never missed by two.</p>
+      </div>
+      <div class="scroll">
+        <table>
+          <caption><b>Table 5.</b> Gate agreement by pipeline. Drift is the column to read for bias: a judge favouring one architecture would show a positive drift on one row and a negative drift on another.</caption>
+          <thead><tr><th>Pipeline</th><th>Outputs</th><th>Exact agreement</th><th>Rate</th><th>Judge mean</th><th>Reference mean</th><th>Drift</th></tr></thead>
+          <tbody>
+        <tr>
+          <th scope="row"><span class="dot" style="background:#3b82f6"></span>P1 Vector</th>
+          <td>20</td><td>18</td><td>90.0%</td>
+          <td>4.30</td><td>4.30</td>
+          <td class="">+0.00</td>
+        </tr>
+        <tr>
+          <th scope="row"><span class="dot" style="background:#10b981"></span>P2 BM25</th>
+          <td>20</td><td>17</td><td>85.0%</td>
+          <td>4.10</td><td>4.05</td>
+          <td class="">+0.05</td>
+        </tr>
+        <tr>
+          <th scope="row"><span class="dot" style="background:#f43f5e"></span>P3 Structural</th>
+          <td>20</td><td>17</td><td>85.0%</td>
+          <td>3.70</td><td>3.65</td>
+          <td class="">+0.05</td>
+        </tr>
+          </tbody>
+        </table>
+      </div>
+  <p><b>The gate cleared at 86.7%.</b> The threshold was 80%.</p>
+  <p>Every single disagreement is one band wide. The judge never missed by two or more.</p>
+  <p>Call this cross-scorer concordance, never human validation. It shows the rubric is
+  applied consistently by two independent passes.</p>
+</section>
+
+<section id="crisis">
+    <div class="act-open" style="--hue:#f59e0b">
+    <p class="act-num">Act V &middot; The Run</p>
+    <h2>Nine hundred cells, and one near-disaster</h2>
+    <p class="stand">The matrix ran in a single pass. Then a routine check found that the ruler itself was wrong.</p>
+  </div>
+  <div class="narrow">
+    <p>The benchmark executed cleanly. Nine hundred cells, one pass, ninety-five
+    minutes.</p>
+    <p>Then a check on the recall metric produced something impossible. One question
+    had a maximum achievable recall of 0.012.</p>
+    <p>It asked for a single figure. Its answer key cited 423 nodes.</p>
+  </div>
+
+  <h3>The ruler was broken</h3>
+      <div class="chart">
+        <svg viewBox="0 0 1120 300" role="img" aria-label="The answer-key repair">
+          <defs>
+  <marker id="tip" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6"
+          markerHeight="6" orient="auto-start-reverse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#64748b"/>
+  </marker>
+</defs>
+          <text x="560.0" y="38" class="lbl" text-anchor="middle" style="fill:#475569">One question, QT3_PQ_014, asking for a single figure</text><rect x="70" y="74" width="460" height="170" rx="0" fill="#f43f5e" opacity="0.12"/><text x="300" y="108" class="big-lbl" text-anchor="middle" style="fill:#f43f5e">Before the repair</text><rect x="92" y="140" width="16" height="16" rx="0" fill="#f43f5e" opacity="0.55"/><rect x="113" y="140" width="16" height="16" rx="0" fill="#f43f5e" opacity="0.55"/><rect x="134" y="140" width="16" height="16" rx="0" fill="#f43f5e" opacity="0.55"/><rect x="155" y="140" width="16" height="16" rx="0" fill="#f43f5e" opacity="0.55"/><rect x="176" y="140" width="16" height="16" rx="0" fill="#f43f5e" opacity="0.55"/><rect x="197" y="140" width="16" height="16" rx="0" fill="#f43f5e" opacity="0.55"/><rect x="218" y="140" width="16" height="16" rx="0" fill="#f43f5e" opacity="0.55"/><rect x="239" y="140" width="16" height="16" rx="0" fill="#f43f5e" opacity="0.55"/><rect x="260" y="140" width="16" height="16" rx="0" fill="#f43f5e" opacity="0.55"/><rect x="281" y="140" width="16" height="16" rx="0" fill="#f43f5e" opacity="0.55"/><rect x="302" y="140" width="16" height="16" rx="0" fill="#f43f5e" opacity="0.55"/><rect x="323" y="140" width="16" height="16" rx="0" fill="#f43f5e" opacity="0.55"/><rect x="344" y="140" width="16" height="16" rx="0" fill="#f43f5e" opacity="0.55"/><rect x="365" y="140" width="16" height="16" rx="0" fill="#f43f5e" opacity="0.55"/><rect x="386" y="140" width="16" height="16" rx="0" fill="#f43f5e" opacity="0.55"/><rect x="407" y="140" width="16" height="16" rx="0" fill="#f43f5e" opacity="0.55"/><rect x="428" y="140" width="16" height="16" rx="0" fill="#f43f5e" opacity="0.55"/><rect x="449" y="140" width="16" height="16" rx="0" fill="#f43f5e" opacity="0.55"/><rect x="470" y="140" width="16" height="16" rx="0" fill="#f43f5e" opacity="0.55"/><rect x="491" y="140" width="16" height="16" rx="0" fill="#f43f5e" opacity="0.55"/><rect x="92" y="161" width="16" height="16" rx="0" fill="#f43f5e" opacity="0.55"/><rect x="113" y="161" width="16" height="16" rx="0" fill="#f43f5e" opacity="0.55"/><rect x="134" y="161" width="16" height="16" rx="0" fill="#f43f5e" opacity="0.55"/><rect x="155" y="161" width="16" height="16" rx="0" fill="#f43f5e" opacity="0.55"/><rect x="176" y="161" width="16" height="16" rx="0" fill="#f43f5e" opacity="0.55"/><rect x="197" y="161" width="16" height="16" rx="0" fill="#f43f5e" opacity="0.55"/><rect x="218" y="161" width="16" height="16" rx="0" fill="#f43f5e" opacity="0.55"/><rect x="239" y="161" width="16" height="16" rx="0" fill="#f43f5e" opacity="0.55"/><rect x="260" y="161" width="16" height="16" rx="0" fill="#f43f5e" opacity="0.55"/><rect x="281" y="161" width="16" height="16" rx="0" fill="#f43f5e" opacity="0.55"/><rect x="302" y="161" width="16" height="16" rx="0" fill="#f43f5e" opacity="0.55"/><rect x="323" y="161" width="16" height="16" rx="0" fill="#f43f5e" opacity="0.55"/><rect x="344" y="161" width="16" height="16" rx="0" fill="#f43f5e" opacity="0.55"/><rect x="365" y="161" width="16" height="16" rx="0" fill="#f43f5e" opacity="0.55"/><rect x="386" y="161" width="16" height="16" rx="0" fill="#f43f5e" opacity="0.55"/><rect x="407" y="161" width="16" height="16" rx="0" fill="#f43f5e" opacity="0.55"/><rect x="428" y="161" width="16" height="16" rx="0" fill="#f43f5e" opacity="0.55"/><rect x="449" y="161" width="16" height="16" rx="0" fill="#f43f5e" opacity="0.55"/><rect x="470" y="161" width="16" height="16" rx="0" fill="#f43f5e" opacity="0.55"/><rect x="491" y="161" width="16" height="16" rx="0" fill="#f43f5e" opacity="0.55"/><rect x="92" y="182" width="16" height="16" rx="0" fill="#f43f5e" opacity="0.55"/><rect x="113" y="182" width="16" height="16" rx="0" fill="#f43f5e" opacity="0.55"/><rect x="134" y="182" width="16" height="16" rx="0" fill="#f43f5e" opacity="0.55"/><rect x="155" y="182" width="16" height="16" rx="0" fill="#f43f5e" opacity="0.55"/><rect x="176" y="182" width="16" height="16" rx="0" fill="#f43f5e" opacity="0.55"/><rect x="197" y="182" width="16" height="16" rx="0" fill="#f43f5e" opacity="0.55"/><rect x="218" y="182" width="16" height="16" rx="0" fill="#f43f5e" opacity="0.55"/><rect x="239" y="182" width="16" height="16" rx="0" fill="#f43f5e" opacity="0.55"/><rect x="260" y="182" width="16" height="16" rx="0" fill="#f43f5e" opacity="0.55"/><rect x="281" y="182" width="16" height="16" rx="0" fill="#f43f5e" opacity="0.55"/><rect x="302" y="182" width="16" height="16" rx="0" fill="#f43f5e" opacity="0.55"/><rect x="323" y="182" width="16" height="16" rx="0" fill="#f43f5e" opacity="0.55"/><rect x="344" y="182" width="16" height="16" rx="0" fill="#f43f5e" opacity="0.55"/><rect x="365" y="182" width="16" height="16" rx="0" fill="#f43f5e" opacity="0.55"/><rect x="386" y="182" width="16" height="16" rx="0" fill="#f43f5e" opacity="0.55"/><rect x="407" y="182" width="16" height="16" rx="0" fill="#f43f5e" opacity="0.55"/><rect x="428" y="182" width="16" height="16" rx="0" fill="#f43f5e" opacity="0.55"/><rect x="449" y="182" width="16" height="16" rx="0" fill="#f43f5e" opacity="0.55"/><rect x="470" y="182" width="16" height="16" rx="0" fill="#f43f5e" opacity="0.55"/><rect x="491" y="182" width="16" height="16" rx="0" fill="#f43f5e" opacity="0.55"/><text x="300" y="220" class="tiny" text-anchor="middle" style="fill:#0f172a">423 nodes cited · max recall at 5 was 0.012</text><rect x="590" y="74" width="460" height="170" rx="0" fill="#10b981" opacity="0.12"/><text x="820" y="108" class="big-lbl" text-anchor="middle" style="fill:#10b981">After the repair</text><rect x="758" y="140" width="20" height="20" rx="0" fill="#10b981"/><rect x="784" y="140" width="20" height="20" rx="0" fill="#10b981"/><rect x="810" y="140" width="20" height="20" rx="0" fill="#10b981"/><rect x="836" y="140" width="20" height="20" rx="0" fill="#10b981"/><rect x="862" y="140" width="20" height="20" rx="0" fill="#10b981"/><text x="820" y="220" class="tiny" text-anchor="middle" style="fill:#0f172a">5 nodes cited · every one contains the answer</text><line x1="542" y1="160" x2="578" y2="160" stroke="#64748b" stroke-width="2" marker-end="url(#tip)"/><text x="560.0" y="276" class="ax" text-anchor="middle">24 of 100 questions carried a recall ceiling below 1.0. The mean ceiling was 0.869.</text>
+        </svg>
+        <p class="cap">Only 60 of the 423 squares are drawn. Drawing all of them would not fit the figure, which is rather the point.</p>
+      </div>
+  <p>The generator was told to cite evidence from the section it was shown. It was
+  never told the list had to be minimal.</p>
+  <p>On twenty of one hundred questions it simply returned the whole section.</p>
+  <ul>
+    <li>Recall divides by the size of the gold set, with no cap.</li>
+    <li>A gold set larger than the deepest retrieval setting makes full recall
+    unreachable.</li>
+    <li>Twenty-four rows carried a ceiling below 1.0. The mean ceiling was 0.869.</li>
+    <li>Precision breaks the other way: almost any in-section node counts as a hit.</li>
+  </ul>
+
+  <div class="finding" style="--hue:#f43f5e">
+    <p><b>This is the moment the study nearly failed quietly.</b> The obvious remedy
+    was to leave the data alone and report a different metric.</p>
+    <p>That fails on inspection. Capped recall would score a pipeline retrieving any
+    five nodes from a 423-node section at a perfect 1.000.</p>
+    <p>Worse, the defect was not common-mode. Repairing it <b>inverted the vector
+    against BM25 ranking on precision</b>. A defect that can reorder two of three
+    pipelines cannot be disclosed and left in place.</p>
+  </div>
+
+  <h3>How it was repaired without touching the result</h3>
+  <ol>
+    <li>The retention rule is mechanical and applied uniformly.</li>
+    <li>It is blind to every pipeline's output. No retrieval result was consulted.</li>
+    <li>A node is kept only if it demonstrably contains or produces the answer.</li>
+    <li>The applier refuses to write if any row fails to verify. It fired once.</li>
+    <li>Replaying it against the pre-repair backup reproduces the database exactly.</li>
+  </ol>
+  <p>Twenty-four rows fell from 1,412 citations to 34. The mean recall ceiling is now
+  1.000.</p>
+</section>
+
+<section id="headline">
+  <h2>What the 900 cells said</h2>
+  <div class="finding" style="--hue:#3b82f6">
+    <p><b>Semantic and statistical retrieval are indistinguishable.</b> BM25 leads on
+    every point estimate. The paired difference is -0.160,
+    interval [-0.340, +0.013].</p>
+    <p>They tie on 231 of 300 cells. That is
+    77% agreement.</p>
+    <p><b>The structural pipeline trails both by roughly two judge points</b>, with
+    intervals nowhere near zero.</p>
+  </div>
+      <div class="scroll">
+        <table>
+          <caption><b>Table 6.</b> Every metric, 300 cells per pipeline. Pass counts 4 and 5. Fail counts 1.</caption>
+          <thead><tr><th>Pipeline</th><th>Judge</th><th>Pass</th><th>Fail</th><th>Recall</th><th>Precision</th><th>Hit rate</th><th>Citations</th><th>Token F1</th><th>Latency</th></tr></thead>
+          <tbody>
+        <tr>
+          <th scope="row"><span class="dot" style="background:#10b981"></span>P2 BM25</th>
+          <td>4.02</td><td>74.3%</td>
+          <td>20.7%</td><td>0.706</td>
+          <td>0.326</td><td>84.0%</td>
+          <td>77.3%</td><td>0.295</td>
+          <td>6.18 s</td>
+        </tr>
+        <tr>
+          <th scope="row"><span class="dot" style="background:#3b82f6"></span>P1 Vector</th>
+          <td>3.86</td><td>69.0%</td>
+          <td>23.3%</td><td>0.668</td>
+          <td>0.314</td><td>80.7%</td>
+          <td>71.7%</td><td>0.270</td>
+          <td>6.40 s</td>
+        </tr>
+        <tr>
+          <th scope="row"><span class="dot" style="background:#f43f5e"></span>P3 Structural</th>
+          <td>1.88</td><td>21.3%</td>
+          <td>75.7%</td><td>0.181</td>
+          <td>0.070</td><td>20.7%</td>
+          <td>35.7%</td><td>0.138</td>
+          <td>6.87 s</td>
+        </tr>
+          </tbody>
+        </table>
+      </div>
+</section>
+
+<section id="bimodal">
+  <h2>Almost nothing scores a 3</h2>
+  <p class="lede">Answers are right or they are wrong. The middle of the scale is
+  nearly empty.</p>
+      <div class="dist-wrap">
+        <div class="dist">
+          <span class="dist-l">P2 BM25</span>
+          <span class="dist-t"><span class="seg" style="width:20.67%;background:#f43f5e" title="score 1: 62 cells">62</span><span class="seg" style="width:2.67%;background:#f97316" title="score 2: 8 cells"></span><span class="seg" style="width:2.33%;background:#f59e0b" title="score 3: 7 cells"></span><span class="seg" style="width:3.00%;background:#a3e635" title="score 4: 9 cells"></span><span class="seg" style="width:71.33%;background:#10b981" title="score 5: 214 cells">214</span></span>
+        </div>
+        <div class="dist">
+          <span class="dist-l">P1 Vector</span>
+          <span class="dist-t"><span class="seg" style="width:23.33%;background:#f43f5e" title="score 1: 70 cells">70</span><span class="seg" style="width:3.67%;background:#f97316" title="score 2: 11 cells"></span><span class="seg" style="width:4.00%;background:#f59e0b" title="score 3: 12 cells"></span><span class="seg" style="width:2.00%;background:#a3e635" title="score 4: 6 cells"></span><span class="seg" style="width:67.00%;background:#10b981" title="score 5: 201 cells">201</span></span>
+        </div>
+        <div class="dist">
+          <span class="dist-l">P3 Structural</span>
+          <span class="dist-t"><span class="seg" style="width:75.67%;background:#f43f5e" title="score 1: 227 cells">227</span><span class="seg" style="width:2.33%;background:#f97316" title="score 2: 7 cells"></span><span class="seg" style="width:0.67%;background:#f59e0b" title="score 3: 2 cells"></span><span class="seg" style="width:1.00%;background:#a3e635" title="score 4: 3 cells"></span><span class="seg" style="width:20.33%;background:#10b981" title="score 5: 61 cells">61</span></span>
+        </div>
+        <div class="key"><span><i style="background:#f43f5e"></i>1</span><span><i style="background:#f97316"></i>2</span><span><i style="background:#f59e0b"></i>3</span><span><i style="background:#a3e635"></i>4</span><span><i style="background:#10b981"></i>5</span><em>judge score, 1 wrong to 5 correct</em></div>
+      </div>
+  <p>A mean of 3.0 over this shape describes no answer any pipeline gave.</p>
+  <p>That is why a pass rate sits beside every mean in this document.</p>
+  <p>It is also why the statistics here are rank-based. A bootstrap interval and an
+  exact sign test assume nothing about the distribution.</p>
+</section>
+
+<section id="retrieval">
+  <h2>Retrieval quality in its own right</h2>
+  <p class="lede">Answer quality is downstream of retrieval, so retrieval is measured
+  separately.</p>
+      <div class="scroll">
+        <table>
+          <caption><b>Table 7.</b> Retrieval and answer quality at each depth.</caption>
+          <thead><tr><th>Pipeline</th><th>k</th><th>Precision</th><th>Recall</th><th>Hit rate</th><th>Citation match</th><th>Judge</th><th>Pass</th></tr></thead>
+          <tbody>
+        <tr class="grp">
+          <th scope="row" rowspan="3"><span class="dot" style="background:#3b82f6"></span>P1 Vector</th><td>2</td><td>0.420</td><td>0.603</td>
+          <td>76.0%</td><td>71.0%</td>
+          <td>3.79</td><td>67.0%</td>
+        </tr>
+        <tr>
+          <td>3</td><td>0.313</td><td>0.664</td>
+          <td>80.0%</td><td>71.0%</td>
+          <td>3.80</td><td>67.0%</td>
+        </tr>
+        <tr>
+          <td>5</td><td>0.210</td><td>0.738</td>
+          <td>86.0%</td><td>73.0%</td>
+          <td>3.98</td><td>73.0%</td>
+        </tr>
+        <tr class="grp">
+          <th scope="row" rowspan="3"><span class="dot" style="background:#10b981"></span>P2 BM25</th><td>2</td><td>0.445</td><td>0.659</td>
+          <td>80.0%</td><td>75.0%</td>
+          <td>3.86</td><td>70.0%</td>
+        </tr>
+        <tr>
+          <td>3</td><td>0.323</td><td>0.710</td>
+          <td>85.0%</td><td>77.0%</td>
+          <td>3.96</td><td>73.0%</td>
+        </tr>
+        <tr>
+          <td>5</td><td>0.210</td><td>0.749</td>
+          <td>87.0%</td><td>80.0%</td>
+          <td>4.23</td><td>80.0%</td>
+        </tr>
+        <tr class="grp">
+          <th scope="row" rowspan="3"><span class="dot" style="background:#f43f5e"></span>P3 Structural</th><td>2</td><td>0.070</td><td>0.111</td>
+          <td>13.0%</td><td>30.0%</td>
+          <td>1.63</td><td>15.0%</td>
+        </tr>
+        <tr>
+          <td>3</td><td>0.077</td><td>0.175</td>
+          <td>20.0%</td><td>38.0%</td>
+          <td>1.85</td><td>21.0%</td>
+        </tr>
+        <tr>
+          <td>5</td><td>0.064</td><td>0.258</td>
+          <td>29.0%</td><td>39.0%</td>
+          <td>2.16</td><td>28.0%</td>
+        </tr>
+          </tbody>
+        </table>
+      </div>
+  <p>Precision is the one column not to read as a ranking.</p>
+  <p>Returning five nodes when the answer needs one caps precision at 0.2, however good
+  the retrieval. A falling precision column is arithmetic, not decay.</p>
+</section>
+
+<section id="depth">
+  <h2>Depth helps, but never rescues</h2>
+      <div class="chart">
+        <svg viewBox="0 0 1100 306" role="img" aria-label="Judge score against retrieval depth">
+          <defs>
+  <marker id="tip" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6"
+          markerHeight="6" orient="auto-start-reverse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#64748b"/>
+  </marker>
+</defs>
+          <line x1="90" y1="262.0" x2="900" y2="262.0" stroke="#f1f5f9" stroke-width="1"/><text x="76" y="266.0" class="ax" text-anchor="end">0</text><line x1="90" y1="217.6" x2="900" y2="217.6" stroke="#f1f5f9" stroke-width="1"/><text x="76" y="221.6" class="ax" text-anchor="end">1</text><line x1="90" y1="173.2" x2="900" y2="173.2" stroke="#f1f5f9" stroke-width="1"/><text x="76" y="177.2" class="ax" text-anchor="end">2</text><line x1="90" y1="128.8" x2="900" y2="128.8" stroke="#f1f5f9" stroke-width="1"/><text x="76" y="132.8" class="ax" text-anchor="end">3</text><line x1="90" y1="84.4" x2="900" y2="84.4" stroke="#f1f5f9" stroke-width="1"/><text x="76" y="88.39999999999998" class="ax" text-anchor="end">4</text><line x1="90" y1="40.0" x2="900" y2="40.0" stroke="#f1f5f9" stroke-width="1"/><text x="76" y="44.0" class="ax" text-anchor="end">5</text><text x="90.0" y="290" class="ax" text-anchor="middle">k = 2</text><text x="495.0" y="290" class="ax" text-anchor="middle">k = 3</text><text x="900.0" y="290" class="ax" text-anchor="middle">k = 5</text><path d="M90.0,93.7 L495.0,93.3 L900.0,85.3" fill="none" stroke="#3b82f6" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter"/><rect x="84.0" y="87.7" width="12.0" height="12.0" fill="#3b82f6"/><rect x="489.0" y="87.3" width="12.0" height="12.0" fill="#3b82f6"/><rect x="894.0" y="79.3" width="12.0" height="12.0" fill="#3b82f6"/><line x1="907.0" y1="85.3" x2="914.0" y2="94.2" stroke="#3b82f6" stroke-width="1.5"/><text x="920.0" y="99.18799999999999" class="lbl" text-anchor="start" style="fill:#3b82f6">P1 Vector</text><path d="M90.0,90.6 L495.0,86.2 L900.0,74.2" fill="none" stroke="#10b981" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter"/><rect x="84.0" y="84.6" width="12.0" height="12.0" fill="#10b981"/><rect x="489.0" y="80.2" width="12.0" height="12.0" fill="#10b981"/><rect x="894.0" y="68.2" width="12.0" height="12.0" fill="#10b981"/><text x="920.0" y="79.18799999999999" class="lbl" text-anchor="start" style="fill:#10b981">P2 BM25</text><path d="M90.0,189.6 L495.0,179.9 L900.0,166.1" fill="none" stroke="#f43f5e" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter"/><rect x="84.0" y="183.6" width="12.0" height="12.0" fill="#f43f5e"/><rect x="489.0" y="173.9" width="12.0" height="12.0" fill="#f43f5e"/><rect x="894.0" y="160.1" width="12.0" height="12.0" fill="#f43f5e"/><text x="920.0" y="171.096" class="lbl" text-anchor="start" style="fill:#f43f5e">P3 Structural</text><line x1="90" y1="40" x2="90" y2="262" stroke="#e2e8f0" stroke-width="2"/><line x1="90" y1="262" x2="900" y2="262" stroke="#e2e8f0" stroke-width="2"/>
+        </svg>
+        <p class="cap">All three improve with depth. The ordering never changes, so no choice of k inside this sweep would have told a different story.</p>
+      </div>
+  <p>All three improve as k rises from 2 to 5. The structural pipeline improves most in
+  relative terms.</p>
+  <p>It still finishes far below where the other two start.</p>
+  <p>The ordering is identical at every depth. No choice of k inside this sweep would
+  have changed the conclusion.</p>
+</section>
+
+<section id="quadrants">
+  <h2>Where each paradigm wins</h2>
+  <p class="lede">BM25 takes three of the four quadrants.</p>
+  <div class="quads">
+        <div class="quad" style="--hue:#3b82f6">
+          <p class="tag">Q1</p>
+          <h4>Direct, text</h4><p class="blurb">One explicit statement in continuous prose.</p>
+          <div class="bar">
+      <span class="bar-l">P2 BM25</span>
+      <span class="bar-t"><span class="bar-f" style="width:96.0%;background:#10b981"></span></span>
+      <span class="bar-v">4.80</span>
+    </div><div class="bar">
+      <span class="bar-l">P1 Vector</span>
+      <span class="bar-t"><span class="bar-f" style="width:89.3%;background:#3b82f6"></span></span>
+      <span class="bar-v">4.47</span>
+    </div><div class="bar">
+      <span class="bar-l">P3 Structural</span>
+      <span class="bar-t"><span class="bar-f" style="width:38.9%;background:#f43f5e"></span></span>
+      <span class="bar-v">1.95</span>
+    </div>
+        </div>
+        <div class="quad" style="--hue:#8b5cf6">
+          <p class="tag">Q2</p>
+          <h4>Implicit, text</h4><p class="blurb">Synthesis across several narrative passages.</p>
+          <div class="bar">
+      <span class="bar-l">P2 BM25</span>
+      <span class="bar-t"><span class="bar-f" style="width:78.4%;background:#10b981"></span></span>
+      <span class="bar-v">3.92</span>
+    </div><div class="bar">
+      <span class="bar-l">P1 Vector</span>
+      <span class="bar-t"><span class="bar-f" style="width:68.3%;background:#3b82f6"></span></span>
+      <span class="bar-v">3.41</span>
+    </div><div class="bar">
+      <span class="bar-l">P3 Structural</span>
+      <span class="bar-t"><span class="bar-f" style="width:34.1%;background:#f43f5e"></span></span>
+      <span class="bar-v">1.71</span>
+    </div>
+        </div>
+        <div class="quad" style="--hue:#14b8a6">
+          <p class="tag">Q3</p>
+          <h4>Direct, table</h4><p class="blurb">Exact extraction of a single table cell.</p>
+          <div class="bar">
+      <span class="bar-l">P2 BM25</span>
+      <span class="bar-t"><span class="bar-f" style="width:86.9%;background:#10b981"></span></span>
+      <span class="bar-v">4.35</span>
+    </div><div class="bar">
+      <span class="bar-l">P1 Vector</span>
+      <span class="bar-t"><span class="bar-f" style="width:86.1%;background:#3b82f6"></span></span>
+      <span class="bar-v">4.31</span>
+    </div><div class="bar">
+      <span class="bar-l">P3 Structural</span>
+      <span class="bar-t"><span class="bar-f" style="width:38.9%;background:#f43f5e"></span></span>
+      <span class="bar-v">1.95</span>
+    </div>
+        </div>
+        <div class="quad" style="--hue:#f59e0b">
+          <p class="tag">Q4</p>
+          <h4>Implicit, table</h4><p class="blurb">A calculation or inference over a table.</p>
+          <div class="bar">
+      <span class="bar-l">P1 Vector</span>
+      <span class="bar-t"><span class="bar-f" style="width:64.8%;background:#3b82f6"></span></span>
+      <span class="bar-v">3.24</span>
+    </div><div class="bar">
+      <span class="bar-l">P2 BM25</span>
+      <span class="bar-t"><span class="bar-f" style="width:60.0%;background:#10b981"></span></span>
+      <span class="bar-v">3.00</span>
+    </div><div class="bar">
+      <span class="bar-l">P3 Structural</span>
+      <span class="bar-t"><span class="bar-f" style="width:38.4%;background:#f43f5e"></span></span>
+      <span class="bar-v">1.92</span>
+    </div><span class="flip">P1 Vector leads here</span>
+        </div>
+  </div>
+  <p style="margin-top:1.5rem">The exception is the implicit-table quadrant. There the
+  answer appears verbatim nowhere in the filing.</p>
+  <p>P1 Vector leads at 3.24 against
+  3.00 for BM25.</p>
+  <p>That is what you would expect once exact term matching has nothing exact to match.</p>
+</section>
+
+<section id="flip">
+  <h2>The average hides a split</h2>
+  <p class="lede">A null result at the corpus level is not evidence that two paradigms
+  are interchangeable.</p>
+      <div class="chart">
+        <svg viewBox="0 0 1120 366" role="img" aria-label="Vector minus BM25 by quadrant">
+          <defs>
+  <marker id="tip" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6"
+          markerHeight="6" orient="auto-start-reverse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#64748b"/>
+  </marker>
+</defs>
+          <text x="16" y="60" class="lbl" text-anchor="start">Direct, text</text><text x="16" y="79" class="tiny" text-anchor="start" style="fill:#64748b">P2 BM25 ahead by 0.333</text><line x1="347.7" y1="64" x2="702.0" y2="64" stroke="#64748b" stroke-width="4" stroke-linecap="butt"/><rect x="523.7" y="56.0" width="16.0" height="16.0" fill="#64748b"/><text x="16" y="140" class="lbl" text-anchor="start">Implicit, text</text><text x="16" y="159" class="tiny" text-anchor="start" style="fill:#f59e0b">P2 BM25 ahead by 0.507</text><line x1="300.0" y1="144" x2="579.4" y2="144" stroke="#f59e0b" stroke-width="4" stroke-linecap="butt"/><rect x="435.1" y="136.0" width="16.0" height="16.0" fill="#f59e0b"/><text x="16" y="220" class="lbl" text-anchor="start">Direct, table</text><text x="16" y="239" class="tiny" text-anchor="start" style="fill:#64748b">P2 BM25 ahead by 0.040</text><line x1="497.6" y1="224" x2="879.2" y2="224" stroke="#64748b" stroke-width="4" stroke-linecap="butt"/><rect x="673.6" y="216.0" width="16.0" height="16.0" fill="#64748b"/><text x="16" y="300" class="lbl" text-anchor="start">Implicit, table</text><text x="16" y="319" class="tiny" text-anchor="start" style="fill:#64748b">P1 Vector ahead by 0.240</text><line x1="633.9" y1="304" x2="1015.4" y2="304" stroke="#64748b" stroke-width="4" stroke-linecap="butt"/><rect x="816.6" y="296.0" width="16.0" height="16.0" fill="#64748b"/><line x1="702.0" y1="30" x2="702.0" y2="336" stroke="#64748b" stroke-width="2" stroke-dasharray="5 4"/><text x="702.0" y="22" class="ax" text-anchor="middle">no difference</text><text x="512.0" y="358" class="ax" text-anchor="middle" style="fill:#10b981">BM25 better</text><text x="892.0" y="358" class="ax" text-anchor="middle" style="fill:#3b82f6">Vector better</text>
+        </svg>
+        <p class="cap">The pooled interval spans zero. These four do not all behave the same way, and that is the finding the average hides.</p>
+      </div>
+      <div class="scroll">
+        <table>
+          <caption><b>Table 8.</b> Vector minus BM25, computed inside each depth and each quadrant. A positive difference favours the vector pipeline.</caption>
+          <thead><tr><th>Split</th><th>Subset</th><th>Difference</th><th>95% interval</th><th>W / L / T</th><th>Sign test</th><th>Verdict</th></tr></thead>
+          <tbody>
+        <tr>
+          <td class="grp-l">Depth</td><th scope="row">k = 2</th>
+          <td>-0.070</td>
+          <td class="mono">[-0.390, +0.260]</td>
+          <td>11 / 13 / 76</td>
+          <td class="mono">0.8388</td>
+          <td><span class="pill no">indistinguishable</span></td>
+        </tr>
+        <tr>
+          <td class="grp-l">Depth</td><th scope="row">k = 3</th>
+          <td>-0.160</td>
+          <td class="mono">[-0.480, +0.160]</td>
+          <td>10 / 15 / 75</td>
+          <td class="mono">0.4244</td>
+          <td><span class="pill no">indistinguishable</span></td>
+        </tr>
+        <tr>
+          <td class="grp-l">Depth</td><th scope="row">k = 5</th>
+          <td>-0.250</td>
+          <td class="mono">[-0.510, +0.000]</td>
+          <td>6 / 14 / 80</td>
+          <td class="mono">0.1153</td>
+          <td><span class="pill no">indistinguishable</span></td>
+        </tr>
+        <tr>
+          <td class="grp-l">Quadrant</td><th scope="row">Direct, text</th>
+          <td>-0.333</td>
+          <td class="mono">[-0.693, +0.000]</td>
+          <td>3 / 9 / 63</td>
+          <td class="mono">0.1460</td>
+          <td><span class="pill no">indistinguishable</span></td>
+        </tr>
+        <tr>
+          <td class="grp-l">Quadrant</td><th scope="row">Implicit, text</th>
+          <td>-0.507</td>
+          <td class="mono">[-0.787, -0.240]</td>
+          <td>2 / 15 / 58</td>
+          <td class="mono">0.0023</td>
+          <td><span class="pill yes">difference</span></td>
+        </tr>
+        <tr>
+          <td class="grp-l">Quadrant</td><th scope="row">Direct, table</th>
+          <td>-0.040</td>
+          <td class="mono">[-0.400, +0.347]</td>
+          <td>8 / 9 / 58</td>
+          <td class="mono">1.0000</td>
+          <td><span class="pill no">indistinguishable</span></td>
+        </tr>
+        <tr>
+          <td class="grp-l">Quadrant</td><th scope="row">Implicit, table</th>
+          <td>+0.240</td>
+          <td class="mono">[-0.133, +0.613]</td>
+          <td>14 / 9 / 52</td>
+          <td class="mono">0.4049</td>
+          <td><span class="pill no">indistinguishable</span></td>
+        </tr>
+          </tbody>
+        </table>
+      </div>
+  <div class="finding" style="--hue:#f59e0b">
+    <p><b>One quadrant separates them.</b>
+    BM25 wins Implicit, text by a margin whose interval clears zero. The vector pipeline leads on implicit tables without reaching significance.</p>
+    <p>The two paradigms trade wins on different question types. The pooled figure
+    averages that trade away.</p>
+    <p>This is the finding to lead a discussion with. Their strengths are differently
+    distributed, and they happen to cancel over this question mix.</p>
+  </div>
+</section>
+
+<section id="stats">
+  <h2>Is the difference real</h2>
+  <p class="lede">Every pipeline answers the same cells, so comparisons are paired on
+  question and depth.</p>
+      <div class="chart">
+        <svg viewBox="0 0 1120 250" role="img" aria-label="Paired differences in Judge score, 1 to 5">
+          <defs>
+  <marker id="tip" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6"
+          markerHeight="6" orient="auto-start-reverse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#64748b"/>
+  </marker>
+</defs>
+          <text x="14" y="69" class="lbl" text-anchor="start">P1 Vector vs P2 BM25</text><line x1="418.7" y1="64" x2="482.8" y2="64" stroke="#64748b" stroke-width="4" stroke-linecap="butt"/><rect x="443.4" y="56.0" width="16.0" height="16.0" fill="#64748b"/><text x="1014" y="69" class="lbl" text-anchor="start" style="fill:#64748b">-0.160</text><text x="14" y="123" class="lbl" text-anchor="start">P1 Vector vs P3 Structural</text><line x1="796.9" y1="118" x2="882.3" y2="118" stroke="#f59e0b" stroke-width="4" stroke-linecap="butt"/><rect x="831.3" y="110.0" width="16.0" height="16.0" fill="#f59e0b"/><text x="1014" y="123" class="lbl" text-anchor="start" style="fill:#f59e0b">+1.977</text><text x="14" y="177" class="lbl" text-anchor="start">P2 BM25 vs P3 Structural</text><line x1="824.8" y1="172" x2="911.3" y2="172" stroke="#f59e0b" stroke-width="4" stroke-linecap="butt"/><rect x="860.4" y="164.0" width="16.0" height="16.0" fill="#f59e0b"/><text x="1014" y="177" class="lbl" text-anchor="start" style="fill:#f59e0b">+2.137</text><line x1="480.4" y1="34" x2="480.4" y2="216" stroke="#64748b" stroke-width="2" stroke-dasharray="5 4"/><text x="480.408657320422" y="24" class="ax" text-anchor="middle">no difference</text><text x="330" y="240" class="ax" text-anchor="start">-0.83</text><text x="1000" y="240" class="ax" text-anchor="end">+2.86</text>
+        </svg>
+        <p class="cap">Judge score, 1 to 5. Amber means the interval clears zero.</p>
+      </div>
+      <div class="chart">
+        <svg viewBox="0 0 1120 250" role="img" aria-label="Paired differences in Recall at k, 0 to 1">
+          <defs>
+  <marker id="tip" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6"
+          markerHeight="6" orient="auto-start-reverse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#64748b"/>
+  </marker>
+</defs>
+          <text x="14" y="69" class="lbl" text-anchor="start">P1 Vector vs P2 BM25</text><line x1="418.7" y1="64" x2="481.9" y2="64" stroke="#64748b" stroke-width="4" stroke-linecap="butt"/><rect x="442.6" y="56.0" width="16.0" height="16.0" fill="#64748b"/><text x="1014" y="69" class="lbl" text-anchor="start" style="fill:#64748b">-0.038</text><text x="14" y="123" class="lbl" text-anchor="start">P1 Vector vs P3 Structural</text><line x1="797.0" y1="118" x2="881.7" y2="118" stroke="#f59e0b" stroke-width="4" stroke-linecap="butt"/><rect x="831.2" y="110.0" width="16.0" height="16.0" fill="#f59e0b"/><text x="1014" y="123" class="lbl" text-anchor="start" style="fill:#f59e0b">+0.487</text><text x="14" y="177" class="lbl" text-anchor="start">P2 BM25 vs P3 Structural</text><line x1="824.1" y1="172" x2="911.3" y2="172" stroke="#f59e0b" stroke-width="4" stroke-linecap="butt"/><rect x="859.2" y="164.0" width="16.0" height="16.0" fill="#f59e0b"/><text x="1014" y="177" class="lbl" text-anchor="start" style="fill:#f59e0b">+0.525</text><line x1="478.5" y1="34" x2="478.5" y2="216" stroke="#64748b" stroke-width="2" stroke-dasharray="5 4"/><text x="478.5284779018559" y="24" class="ax" text-anchor="middle">no difference</text><text x="330" y="240" class="ax" text-anchor="start">-0.20</text><text x="1000" y="240" class="ax" text-anchor="end">+0.70</text>
+        </svg>
+        <p class="cap">Recall at k, 0 to 1. Amber means the interval clears zero.</p>
+      </div>
+      <div class="scroll">
+        <table>
+          <caption><b>Table 9.</b> Paired differences. W/L/T counts cells won, lost and tied.</caption>
+          <thead><tr><th>Comparison</th><th>Metric</th><th>Difference</th><th>95% interval</th><th>W / L / T</th><th>Sign test</th><th>Verdict</th></tr></thead>
+          <tbody>
+        <tr>
+          <th scope="row">P1 Vector vs P2 BM25</th>
+          <td>Judge score</td><td>-0.160</td>
+          <td class="mono">[-0.340, +0.013]</td>
+          <td>27 / 42 / 231</td>
+          <td class="mono">9.1e-02</td>
+          <td><span class="pill no">indistinguishable</span></td>
+        </tr>
+        <tr>
+          <th scope="row">P1 Vector vs P3 Structural</th>
+          <td>Judge score</td><td>+1.977</td>
+          <td class="mono">[+1.743, +2.213]</td>
+          <td>169 / 11 / 120</td>
+          <td class="mono">1.6e-37</td>
+          <td><span class="pill yes">difference</span></td>
+        </tr>
+        <tr>
+          <th scope="row">P2 BM25 vs P3 Structural</th>
+          <td>Judge score</td><td>+2.137</td>
+          <td class="mono">[+1.897, +2.373]</td>
+          <td>180 / 12 / 108</td>
+          <td class="mono">1.3e-39</td>
+          <td><span class="pill yes">difference</span></td>
+        </tr>
+        <tr>
+          <th scope="row">P1 Vector vs P2 BM25</th>
+          <td>Recall</td><td>-0.038</td>
+          <td class="mono">[-0.081, +0.004]</td>
+          <td>32 / 42 / 226</td>
+          <td class="mono">3.0e-01</td>
+          <td><span class="pill no">indistinguishable</span></td>
+        </tr>
+        <tr>
+          <th scope="row">P1 Vector vs P3 Structural</th>
+          <td>Recall</td><td>+0.487</td>
+          <td class="mono">[+0.430, +0.544]</td>
+          <td>187 / 8 / 105</td>
+          <td class="mono">1.9e-45</td>
+          <td><span class="pill yes">difference</span></td>
+        </tr>
+        <tr>
+          <th scope="row">P2 BM25 vs P3 Structural</th>
+          <td>Recall</td><td>+0.525</td>
+          <td class="mono">[+0.466, +0.584]</td>
+          <td>202 / 13 / 85</td>
+          <td class="mono">9.4e-45</td>
+          <td><span class="pill yes">difference</span></td>
+        </tr>
+          </tbody>
+        </table>
+      </div>
+  <p>Ties are dropped from the sign test, so the effective sample is smaller than
+  300.</p>
+  <p>The bootstrap resamples ten thousand times from a fixed seed. These intervals
+  reproduce exactly, not approximately.</p>
+</section>
+
+<section id="filings">
+  <h2>Filing by filing</h2>
+  <p class="lede">A check that no single filing drives the headline. It does not.</p>
+  <p>BM25 leads outright on 6, the vector pipeline on
+  3, and they tie on 4.</p>
+  <p>The structural pipeline is last on 11 of 13.
+  On the 2 where it is not, all three score identically.</p>
+      <div class="heat">
+        <div class="hm-row hm-head"><span class="hm-r"></span><span class="hm-n"><b class="lg">questions</b><b class="sm">n</b></span><span class="hm-h"><b class="lg">P1 Vector</b><b class="sm">Vector</b></span><span class="hm-h"><b class="lg">P2 BM25</b><b class="sm">BM25</b></span><span class="hm-h"><b class="lg">P3 Structural</b><b class="sm">Structural</b></span></div>
+        <div class="hm-row"><span class="hm-r mono">AAPL_2023</span><span class="hm-n">11</span><span class="hm-c" style="background:#a3e635;color:#0f172a">3.97</span><span class="hm-c" style="background:#a3e635;color:#0f172a">4.48</span><span class="hm-c" style="background:#f97316;color:#0f172a">2.33</span></div><div class="hm-row"><span class="hm-r mono">AAPL_2024</span><span class="hm-n">2</span><span class="hm-c" style="background:#10b981;color:#fff">5.00</span><span class="hm-c" style="background:#10b981;color:#fff">5.00</span><span class="hm-c" style="background:#f97316;color:#0f172a">2.50</span></div><div class="hm-row"><span class="hm-r mono">AAPL_2025</span><span class="hm-n">1</span><span class="hm-c" style="background:#f43f5e;color:#fff">1.00</span><span class="hm-c" style="background:#f43f5e;color:#fff">1.00</span><span class="hm-c" style="background:#f43f5e;color:#fff">1.00</span></div><div class="hm-row"><span class="hm-r mono">JNJ_2023</span><span class="hm-n">13</span><span class="hm-c" style="background:#a3e635;color:#0f172a">3.56</span><span class="hm-c" style="background:#a3e635;color:#0f172a">3.79</span><span class="hm-c" style="background:#f97316;color:#0f172a">1.62</span></div><div class="hm-row"><span class="hm-r mono">JNJ_2024</span><span class="hm-n">5</span><span class="hm-c" style="background:#f59e0b;color:#0f172a">3.00</span><span class="hm-c" style="background:#a3e635;color:#0f172a">4.20</span><span class="hm-c" style="background:#f97316;color:#0f172a">1.53</span></div><div class="hm-row"><span class="hm-r mono">JPM_2023</span><span class="hm-n">17</span><span class="hm-c" style="background:#a3e635;color:#0f172a">4.12</span><span class="hm-c" style="background:#a3e635;color:#0f172a">4.35</span><span class="hm-c" style="background:#f97316;color:#0f172a">1.61</span></div><div class="hm-row"><span class="hm-r mono">JPM_2024</span><span class="hm-n">5</span><span class="hm-c" style="background:#f59e0b;color:#0f172a">3.07</span><span class="hm-c" style="background:#f59e0b;color:#0f172a">3.07</span><span class="hm-c" style="background:#f43f5e;color:#fff">1.00</span></div><div class="hm-row"><span class="hm-r mono">MSFT_2023</span><span class="hm-n">16</span><span class="hm-c" style="background:#a3e635;color:#0f172a">4.46</span><span class="hm-c" style="background:#10b981;color:#fff">4.73</span><span class="hm-c" style="background:#f43f5e;color:#fff">1.38</span></div><div class="hm-row"><span class="hm-r mono">MSFT_2024</span><span class="hm-n">7</span><span class="hm-c" style="background:#f59e0b;color:#0f172a">3.05</span><span class="hm-c" style="background:#f59e0b;color:#0f172a">2.81</span><span class="hm-c" style="background:#f59e0b;color:#0f172a">2.62</span></div><div class="hm-row"><span class="hm-r mono">MSFT_2025</span><span class="hm-n">5</span><span class="hm-c" style="background:#a3e635;color:#0f172a">3.67</span><span class="hm-c" style="background:#f97316;color:#0f172a">2.07</span><span class="hm-c" style="background:#f97316;color:#0f172a">1.80</span></div><div class="hm-row"><span class="hm-r mono">TSLA_2023</span><span class="hm-n">13</span><span class="hm-c" style="background:#a3e635;color:#0f172a">4.41</span><span class="hm-c" style="background:#10b981;color:#fff">4.64</span><span class="hm-c" style="background:#f59e0b;color:#0f172a">2.54</span></div><div class="hm-row"><span class="hm-r mono">TSLA_2024</span><span class="hm-n">3</span><span class="hm-c" style="background:#f59e0b;color:#0f172a">3.33</span><span class="hm-c" style="background:#f59e0b;color:#0f172a">3.22</span><span class="hm-c" style="background:#f97316;color:#0f172a">2.33</span></div><div class="hm-row"><span class="hm-r mono">TSLA_2025</span><span class="hm-n">2</span><span class="hm-c" style="background:#f59e0b;color:#0f172a">3.00</span><span class="hm-c" style="background:#f59e0b;color:#0f172a">3.00</span><span class="hm-c" style="background:#f59e0b;color:#0f172a">3.00</span></div>
+        <div class="key"><span><i style="background:#f43f5e"></i>1</span><span><i style="background:#f97316"></i>2</span><span><i style="background:#f59e0b"></i>3</span><span><i style="background:#a3e635"></i>4</span><span><i style="background:#10b981"></i>5</span><em>mean judge score for that filing</em></div>
+      </div>
+  <p>Read the rows against their question counts. Questions were drawn by quadrant, not
+  evenly by filing.</p>
+  <p>One filing carries seventeen questions. Another carries one. A row built on one
+  question is an observation, not a rate.</p>
+</section>
+
+<section id="chain">
+  <h2>Retrieval decides the answer</h2>
+  <p class="lede">The whole benchmark reduces to one question. Did the evidence come
+  back?</p>
+  <div class="cards3">
+        <div class="ccard" style="--hue:#3b82f6">
+          <h4>P1 Vector</h4>
+          <div class="csplit">
+            <div><p class="tag">Evidence retrieved</p><b class="good">85%</b><span>over 242 cells</span></div>
+            <div><p class="tag">Evidence missed</p><b class="bad">2%</b><span>over 58 cells</span></div>
+          </div>
+          <p class="blurb">Judge mean 4.51 with it,
+          1.14 without.</p>
+        </div>
+        <div class="ccard" style="--hue:#10b981">
+          <h4>P2 BM25</h4>
+          <div class="csplit">
+            <div><p class="tag">Evidence retrieved</p><b class="good">88%</b><span>over 252 cells</span></div>
+            <div><p class="tag">Evidence missed</p><b class="bad">4%</b><span>over 48 cells</span></div>
+          </div>
+          <p class="blurb">Judge mean 4.54 with it,
+          1.29 without.</p>
+        </div>
+        <div class="ccard" style="--hue:#f43f5e">
+          <h4>P3 Structural</h4>
+          <div class="csplit">
+            <div><p class="tag">Evidence retrieved</p><b class="good">77%</b><span>over 62 cells</span></div>
+            <div><p class="tag">Evidence missed</p><b class="bad">7%</b><span>over 238 cells</span></div>
+          </div>
+          <p class="blurb">Judge mean 4.24 with it,
+          1.26 without.</p>
+        </div>
+  </div>
+  <div class="finding" style="--hue:#10b981">
+    <p><b>Retrieval, not generation, separates these architectures.</b> With the
+    evidence, every pipeline passes at a similar high rate. Without it, every pipeline
+    fails at a similar high rate.</p>
+    <p>The answering model is identical in all six of those cells. The difference
+    between architectures is entirely what they hand it.</p>
+    <p><b>19 cells break the rule.</b> They scored 4 or 5 with no evidence
+    node retrieved, 16 of them in the structural pipeline.</p>
+  </div>
+  <p>Those answers came from the model's own knowledge of these companies. That is a
+  floor on parametric leakage.</p>
+  <p>The direction matters. Leakage raises the floor under the worst performer, so the
+  measured gap is a lower bound.</p>
+</section>
+
+<section id="nodetypes">
+  <h2>What each pipeline hands the model</h2>
+  <p class="lede">Roughly one node in eleven is a tabular block. Does that share respond
+  to the question type?</p>
+      <div class="pair"><div><h4>Questions about a table</h4><p class="blurb">Q3 and Q4. The answer sits in or comes from a tabular block.</p><div class="bar">
+      <span class="bar-l">P1 Vector</span>
+      <span class="bar-t"><span class="bar-f" style="width:36.0%;background:#3b82f6"></span></span>
+      <span class="bar-v">36.0%</span>
+    </div><div class="bar">
+      <span class="bar-l">P2 BM25</span>
+      <span class="bar-t"><span class="bar-f" style="width:26.2%;background:#10b981"></span></span>
+      <span class="bar-v">26.2%</span>
+    </div><div class="bar">
+      <span class="bar-l">P3 Structural</span>
+      <span class="bar-t"><span class="bar-f" style="width:42.8%;background:#f43f5e"></span></span>
+      <span class="bar-v">42.8%</span>
+    </div></div><div><h4>Questions about prose</h4><p class="blurb">Q1 and Q2. A table node here is a retrieval mistake.</p><div class="bar">
+      <span class="bar-l">P1 Vector</span>
+      <span class="bar-t"><span class="bar-f" style="width:4.0%;background:#3b82f6"></span></span>
+      <span class="bar-v">4.0%</span>
+    </div><div class="bar">
+      <span class="bar-l">P2 BM25</span>
+      <span class="bar-t"><span class="bar-f" style="width:2.2%;background:#10b981"></span></span>
+      <span class="bar-v">2.2%</span>
+    </div><div class="bar">
+      <span class="bar-l">P3 Structural</span>
+      <span class="bar-t"><span class="bar-f" style="width:14.6%;background:#f43f5e"></span></span>
+      <span class="bar-v">14.6%</span>
+    </div></div></div>
+  <p>All three raise their table share on table questions. All three are responding to
+  the query, not returning a fixed mix.</p>
+  <p>The structural pipeline returns the highest table share on both. That is weaker
+  selectivity, not sharper discrimination.</p>
+</section>
+
+<section id="why">
+  <h2>Why structure lost</h2>
+  <p class="lede">A result this lopsided invites suspicion that something is broken.
+  These diagnostics say otherwise.</p>
+      <div class="chart">
+        <svg viewBox="0 0 1120 342" role="img" aria-label="Median returned node position within its filing">
+          <defs>
+  <marker id="tip" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6"
+          markerHeight="6" orient="auto-start-reverse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#64748b"/>
+  </marker>
+</defs>
+          <text x="16" y="105" class="lbl" text-anchor="start" style="fill:#3b82f6">P1 Vector</text><line x1="220" y1="100" x2="1000" y2="100" stroke="#f1f5f9" stroke-width="4"/><rect x="556.5" y="90.0" width="20.0" height="20.0" fill="#3b82f6"/><text x="566.5369169478714" y="80" class="tiny" text-anchor="middle" style="fill:#3b82f6">0.444</text><text x="16" y="171" class="lbl" text-anchor="start" style="fill:#10b981">P2 BM25</text><line x1="220" y1="166" x2="1000" y2="166" stroke="#f1f5f9" stroke-width="4"/><rect x="581.6" y="156.0" width="20.0" height="20.0" fill="#10b981"/><text x="591.6470588235294" y="146" class="tiny" text-anchor="middle" style="fill:#10b981">0.476</text><text x="16" y="237" class="lbl" text-anchor="start" style="fill:#f43f5e">P3 Structural</text><line x1="220" y1="232" x2="1000" y2="232" stroke="#f1f5f9" stroke-width="4"/><rect x="675.0" y="222.0" width="20.0" height="20.0" fill="#f43f5e"/><text x="684.9546329392356" y="212" class="tiny" text-anchor="middle" style="fill:#f43f5e">0.596</text><line x1="496.1" y1="58" x2="496.1" y2="298" stroke="#f59e0b" stroke-width="3" stroke-dasharray="6 4"/><text x="496.14687216681773" y="48" class="lbl" text-anchor="middle" style="fill:#f59e0b">evidence sits at 0.354</text><text x="220" y="326" class="ax" text-anchor="start">start of filing</text><text x="1000" y="326" class="ax" text-anchor="end">end of filing</text>
+        </svg>
+        <p class="cap">Positions are shares of a filing, not node counts. The corpus spans 682 to 3,647 nodes, so a raw index is not comparable across two filings.</p>
+      </div>
+      <div class="scroll">
+        <table>
+          <caption><b>Table 10.</b> Where each pipeline looked. Diversity is distinct node ids over returned slots across the whole benchmark. Miss distance is normalised by the filing it was measured in.</caption>
+          <thead><tr><th>Pipeline</th><th>Distinct / slots</th><th>Diversity</th><th>Median position</th><th>Median miss</th><th>Miss, share of filing</th><th>Slots on evidence</th></tr></thead>
+          <tbody>
+        <tr>
+          <th scope="row"><span class="dot" style="background:#3b82f6"></span>P1 Vector</th>
+          <td>430 / 1,000</td><td>0.430</td>
+          <td>0.444</td>
+          <td>76</td>
+          <td>6.1%</td><td>28.3%</td>
+        </tr>
+        <tr>
+          <th scope="row"><span class="dot" style="background:#10b981"></span>P2 BM25</th>
+          <td>424 / 1,000</td><td>0.424</td>
+          <td>0.476</td>
+          <td>38</td>
+          <td>3.0%</td><td>29.1%</td>
+        </tr>
+        <tr>
+          <th scope="row"><span class="dot" style="background:#f43f5e"></span>P3 Structural</th>
+          <td>506 / 1,000</td><td>0.506</td>
+          <td>0.596</td>
+          <td>324</td>
+          <td>29.2%</td><td>6.9%</td>
+        </tr>
+          </tbody>
+        </table>
+      </div>
+  <ol>
+    <li><b>It retrieves. It retrieves the wrong nodes.</b> Hit rate is
+    20.7% against 84.0%.</li>
+    <li><b>Its diversity is the highest of the three.</b> So it is not stuck returning
+    the same nodes regardless of query.</li>
+    <li><b>It is not landing near the evidence and picking wrong.</b> Its median node
+    sits at 0.596 through a filing whose evidence
+    sits at 0.354.</li>
+    <li><b>Its median miss is 29.2% of the filing</b>,
+    against 3.0% for P2 BM25. It
+    lands in the wrong part of the document, biased late.</li>
+  </ol>
+  <div class="finding" style="--hue:#8b5cf6">
+    <p><b>The mechanism is the design, working as designed.</b> Tree traversal descends
+    by comparing the query against summaries.</p>
+    <p>A summary is exactly the artefact from which a specific figure has been
+    compressed away.</p>
+    <p>On an extraction-heavy benchmark that is fatal. On a benchmark of thematic
+    questions it would not be. This measures a paradigm against a task, not a paradigm
+    in general.</p>
+  </div>
+</section>
+
+<section id="cost">
+  <h2>What it costs to build</h2>
+  <p class="lede">Latency and tokens describe a question once the index exists. They
+  leave out the cost of creating it.</p>
+      <div class="chart">
+        <svg viewBox="0 0 1120 332" role="img" aria-label="Index build cost">
+          <defs>
+  <marker id="tip" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6"
+          markerHeight="6" orient="auto-start-reverse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#64748b"/>
+  </marker>
+</defs>
+          <text x="16" y="90" class="lbl" text-anchor="start" style="fill:#3b82f6">P1 Vector</text><text x="16" y="112" class="tiny" text-anchor="start" style="fill:#64748b">local, no model</text><rect x="230" y="66" width="539.3" height="40" rx="0" fill="#3b82f6"/><text x="783.3369726371761" y="91" class="lbl" text-anchor="start" style="fill:#3b82f6">22.3 min</text><text x="16" y="172" class="lbl" text-anchor="start" style="fill:#10b981">P2 BM25</text><text x="16" y="194" class="tiny" text-anchor="start" style="fill:#64748b">local, no model</text><rect x="230" y="148" width="48.3" height="40" rx="0" fill="#10b981"/><text x="292.33116545311475" y="173" class="lbl" text-anchor="start" style="fill:#10b981">0.9 s</text><text x="16" y="254" class="lbl" text-anchor="start" style="fill:#f43f5e">P3 Structural</text><text x="16" y="276" class="tiny" text-anchor="start" style="fill:#64748b">LLM build</text><rect x="230" y="230" width="790.0" height="40" rx="0" fill="#f43f5e"/><text x="1034.0" y="255" class="lbl" text-anchor="start" style="fill:#f43f5e">10.6 hours</text><text x="16" y="46" class="ax" text-anchor="start">Log scale. A linear axis would render the two local builds invisible.</text>
+        </svg>
+        <p class="cap">This is the cleanest efficiency measure in the study. It has no shared component, so it measures only what each paradigm actually requires.</p>
+      </div>
+      <div class="scroll">
+        <table>
+          <caption><b>Table 11.</b> One build from scratch per filing, measured on the same machine. Wall clock includes time spent waiting on the provider.</caption>
+          <thead><tr><th>Pipeline</th><th>LLM</th><th>Total build</th><th>Median per filing</th><th>Per 1k nodes</th><th>Build tokens</th><th>On disk</th></tr></thead>
+          <tbody>
+        <tr>
+          <th scope="row"><span class="dot" style="background:#3b82f6"></span>P1 Vector</th>
+          <td>no</td>
+          <td>22.3 min</td><td>1.2 min</td>
+          <td>73.2 s</td><td>none</td>
+          <td>129 MB</td>
+        </tr>
+        <tr>
+          <th scope="row"><span class="dot" style="background:#10b981"></span>P2 BM25</th>
+          <td>no</td>
+          <td>0.91 s</td><td>0.06 s</td>
+          <td>0.05 s</td><td>none</td>
+          <td>7 MB</td>
+        </tr>
+        <tr>
+          <th scope="row"><span class="dot" style="background:#f43f5e"></span>P3 Structural</th>
+          <td>yes</td>
+          <td>10.6 h</td><td>35.0 min</td>
+          <td>2,080 s</td><td>1,602,673 in / 892,034 out</td>
+          <td>27 MB</td>
+        </tr>
+          </tbody>
+        </table>
+      </div>
+  <p>The structural index took 10.6 h against
+  0.91 s for the cheapest
+  local index.</p>
+  <p>That is a factor of 41,985. It consumed
+  2,494,707 tokens
+  where the other two consumed none.</p>
+  <p>That token figure covers 11 of
+  13 filings, so it is a floor.</p>
+  <p><b>This is the cleanest efficiency measure in the study.</b> It has no shared
+  component. Lead an efficiency argument with it.</p>
+</section>
+
+<section id="ask">
+  <h2>What it costs to ask</h2>
+      <div class="scroll">
+        <table>
+          <caption><b>Table 12.</b> Answering tokens only. The judge&rsquo;s own calls were never recorded.</caption>
+          <thead><tr><th>Pipeline</th><th>Input tokens</th><th>Output tokens</th><th>Input per cell</th><th>Mean latency</th></tr></thead>
+          <tbody>
+        <tr>
+          <th scope="row"><span class="dot" style="background:#3b82f6"></span>P1 Vector</th>
+          <td>164,498</td><td>16,139</td>
+          <td>548</td><td>6.40 s</td>
+        </tr>
+        <tr>
+          <th scope="row"><span class="dot" style="background:#10b981"></span>P2 BM25</th>
+          <td>158,621</td><td>16,352</td>
+          <td>529</td><td>6.18 s</td>
+        </tr>
+        <tr>
+          <th scope="row"><span class="dot" style="background:#f43f5e"></span>P3 Structural</th>
+          <td>227,074</td><td>15,715</td>
+          <td>757</td><td>6.87 s</td>
+        </tr>
+          </tbody>
+        </table>
+      </div>
+  <p>The structural pipeline sends the most text for the same question. Tree nodes
+  carry summaries, which are longer than raw passages.</p>
+  <p>It is the most expensive to query as well as to build, while scoring lowest.</p>
+  <p>Output tokens are near-identical across all three. The answer format is fixed by
+  the prompt, not by the paradigm.</p>
+</section>
+
+<section id="latency">
+  <h2>Latency is not the discriminator</h2>
+  <p class="lede">Reported for completeness. Read it as a null result.</p>
+      <div class="chart">
+        <svg viewBox="0 0 1120 348" role="img" aria-label="Latency spread per pipeline">
+          <defs>
+  <marker id="tip" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6"
+          markerHeight="6" orient="auto-start-reverse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#64748b"/>
+  </marker>
+</defs>
+          <text x="16" y="46" class="ax" text-anchor="start">box is the middle half, thick line the median, whisker to the 90th percentile</text><text x="16" y="101" class="lbl" text-anchor="start" style="fill:#3b82f6">P1 Vector</text><line x1="255.1" y1="96" x2="872.0" y2="96" stroke="#3b82f6" stroke-width="2"/><rect x="332.2" y="79" width="223.7" height="34" rx="0" fill="#3b82f6" opacity="0.30"/><line x1="388.5" y1="76" x2="388.5" y2="116" stroke="#3b82f6" stroke-width="5"/><text x="388.4742069348487" y="69" class="tiny" text-anchor="middle" style="fill:#3b82f6">3.54s</text><text x="16" y="175" class="lbl" text-anchor="start" style="fill:#10b981">P2 BM25</text><line x1="260.2" y1="170" x2="764.8" y2="170" stroke="#10b981" stroke-width="2"/><rect x="351.6" y="153" width="148.6" height="34" rx="0" fill="#10b981" opacity="0.30"/><line x1="396.4" y1="150" x2="396.4" y2="190" stroke="#10b981" stroke-width="5"/><text x="396.4412628193253" y="143" class="tiny" text-anchor="middle" style="fill:#10b981">3.71s</text><text x="16" y="249" class="lbl" text-anchor="start" style="fill:#f43f5e">P3 Structural</text><line x1="246.0" y1="244" x2="1030.0" y2="244" stroke="#f43f5e" stroke-width="2"/><rect x="320.3" y="227" width="247.1" height="34" rx="0" fill="#f43f5e" opacity="0.30"/><line x1="387.9" y1="224" x2="387.9" y2="264" stroke="#f43f5e" stroke-width="5"/><text x="387.9092617103395" y="217" class="tiny" text-anchor="middle" style="fill:#f43f5e">3.53s</text><text x="220.0" y="338" class="ax" text-anchor="middle">0s</text><text x="315.24363229188594" y="338" class="ax" text-anchor="middle">2s</text><text x="410.4872645837719" y="338" class="ax" text-anchor="middle">4s</text><text x="505.73089687565783" y="338" class="ax" text-anchor="middle">6s</text><text x="600.9745291675438" y="338" class="ax" text-anchor="middle">8s</text><text x="696.2181614594297" y="338" class="ax" text-anchor="middle">10s</text><text x="791.4617937513157" y="338" class="ax" text-anchor="middle">12s</text><text x="886.7054260432017" y="338" class="ax" text-anchor="middle">14s</text><text x="981.9490583350876" y="338" class="ax" text-anchor="middle">16s</text>
+        </svg>
+        <p class="cap">The medians sit within a fifth of a second of one another. Read this as a null result, not an efficiency finding.</p>
+      </div>
+      <div class="scroll">
+        <table>
+          <caption><b>Table 13.</b> Latency in seconds per cell. Quote the percentiles, not the mean.</caption>
+          <thead><tr><th>Pipeline</th><th>Min</th><th>25th</th><th>Median</th><th>75th</th><th>90th</th><th>Max</th><th>Mean</th></tr></thead>
+          <tbody>
+        <tr>
+          <th scope="row"><span class="dot" style="background:#3b82f6"></span>P1 Vector</th>
+          <td>0.74</td><td>2.36</td><td>3.54</td>
+          <td>7.05</td><td>13.69</td><td>58.72</td>
+          <td>6.40</td>
+        </tr>
+        <tr>
+          <th scope="row"><span class="dot" style="background:#10b981"></span>P2 BM25</th>
+          <td>0.84</td><td>2.76</td><td>3.71</td>
+          <td>5.88</td><td>11.44</td><td>75.72</td>
+          <td>6.18</td>
+        </tr>
+        <tr>
+          <th scope="row"><span class="dot" style="background:#f43f5e"></span>P3 Structural</th>
+          <td>0.55</td><td>2.11</td><td>3.53</td>
+          <td>7.29</td><td>17.01</td><td>71.24</td>
+          <td>6.87</td>
+        </tr>
+          </tbody>
+        </table>
+      </div>
+  <div class="finding" style="--hue:#64748b">
+    <p><b>The medians are 3.54 s for P1 Vector, 3.71 s for P2 BM25, 3.53 s for P3 Structural.</b> That is a spread of 0.18 seconds
+    across three architectures.</p>
+    <p>Every cell routes through the same hosted answering model. That shared network
+    call dominates the measurement.</p>
+    <p>Do not claim a retrieval-speed difference from this table.</p>
+  </div>
+</section>
+
+<section id="threats">
+    <div class="act-open" style="--hue:#6366f1">
+    <p class="act-num">Act VI &middot; The Verdict</p>
+    <h2>What this licenses you to claim</h2>
+    <p class="stand">A result is only as strong as the limitations stated beside it. Every one an examiner could raise is here, with the argument to make.</p>
+  </div>
+  <div class="threats">
+        <div class="threat material">
+          <p class="tag">material</p>
+          <h4>Latency does not separate the three paradigms</h4>
+          <p><b>What the data shows.</b> Median per-cell latency differs by under a fifth of a second across all three. The means differ more, but they are pulled by rare slow calls to a shared hosted provider.</p>
+          <p class="defence"><b>How to defend it.</b> Report query latency as a null result, and say why. Every cell routes through the same answering model, so the shared call dominates. Rest the efficiency claim on index build cost and tokens per query, which are measured cleanly.</p>
+        </div>
+        <div class="threat material">
+          <p class="tag">material</p>
+          <h4>Some answers were correct without any evidence retrieved</h4>
+          <p><b>What the data shows.</b> Nineteen of 900 cells scored 4 or 5 having retrieved no ground-truth node. Sixteen belong to the structural pipeline. Those answers came from the model's own knowledge of these companies.</p>
+          <p class="defence"><b>How to defend it.</b> Disclose it as a floor on parametric leakage, and give the direction. It inflates the weakest pipeline, because a retriever that returns nothing useful leaves the model free to recall. The measured gap is therefore a lower bound.</p>
+        </div>
+        <div class="threat material">
+          <p class="tag">material</p>
+          <h4>One run per cell, so run-to-run variance is unmeasured</h4>
+          <p><b>What the data shows.</b> Every cell executed once at temperature zero, with each model pinned to a single upstream host so quantisation could not vary. The intervals describe variation across questions.</p>
+          <p class="defence"><b>How to defend it.</b> State that the intervals are question-level, not run-level. The design trades repeated sampling for breadth: 900 distinct cells rather than a smaller matrix sampled repeatedly. Temperature zero and host pinning are what make one run defensible. Cite both.</p>
+        </div>
+        <div class="threat material">
+          <p class="tag">material</p>
+          <h4>The gate measures concordance, not human agreement</h4>
+          <p><b>What the data shows.</b> The judge was compared against an independent second scoring of the same sixty outputs, produced under blinding. It is not an external human annotator.</p>
+          <p class="defence"><b>How to defend it.</b> Call it cross-scorer concordance throughout, and never human validation. The defensible claim is that the rubric is applied consistently by two independent passes under blinding. Cite the protocol: pipeline identity and citation evidence were withheld.</p>
+        </div>
+        <div class="threat moderate">
+          <p class="tag">moderate</p>
+          <h4>The answer keys were corrected after the pipelines were built</h4>
+          <p><b>What the data shows.</b> Twenty-four of 100 questions named a whole filing section rather than the supporting nodes. Those were re-derived to the minimal verified evidence set before the final run.</p>
+          <p class="defence"><b>How to defend it.</b> Argue it on mechanism, not on trust. The rule is mechanical, uniform, and was applied blind to every pipeline's output. The repair replays from the backup and reproduces the database exactly. Note that it was not common-mode. It inverted the vector against BM25 ordering on precision, which is why it could not stand.</p>
+        </div>
+        <div class="threat moderate">
+          <p class="tag">moderate</p>
+          <h4>Questions are not evenly spread across the filings</h4>
+          <p><b>What the data shows.</b> The most-sampled filing carries seventeen questions. The least carries one. Per-filing means rest on very different sample sizes.</p>
+          <p class="defence"><b>How to defend it.</b> Use the per-filing table as a spread check, never as a ranking, and say so where you present it. Every headline figure is paired within a question, so the imbalance cancels exactly.</p>
+        </div>
+        <div class="threat moderate">
+          <p class="tag">moderate</p>
+          <h4>The structural build cost is a floor, not a total</h4>
+          <p><b>What the data shows.</b> Eleven of thirteen filings recorded their token spend. Two did not, because the logging defect was fixed after those builds had run.</p>
+          <p class="defence"><b>How to defend it.</b> Report it as a measured floor over eleven filings, and name the two missing. The direction is safe: the true cost is higher, so the conclusion that this index is the most expensive to build is strengthened, not threatened.</p>
+        </div>
+        <div class="threat moderate">
+          <p class="tag">moderate</p>
+          <h4>A few questions are redundant or self-answering</h4>
+          <p><b>What the data shows.</b> Two pairs ask the same question of the same filing. A third pair splits one fact across two quadrants. Three questions restate most of their own answer. At most six of 100.</p>
+          <p class="defence"><b>How to defend it.</b> Disclose the count and argue common-mode. All three pipelines answer the same six, so the effect is a slight compression of the measured gap, not a shift in ordering. Removing them after retrieval behaviour was known would have been less defensible.</p>
+        </div>
+        <div class="threat moderate">
+          <p class="tag">moderate</p>
+          <h4>One quadrant tests a narrower skill than its definition implies</h4>
+          <p><b>What the data shows.</b> Six of the twenty-five implicit-table questions share two task shapes: counting signatories, and summing page numbers in an index.</p>
+          <p class="defence"><b>How to defend it.</b> Frame it as construct-coverage, not a validity defect in any row. Be specific about why the rows remain valid: counting signatories requires retrieving an intact tabular block, which is exactly the contrast being measured.</p>
+        </div>
+        <div class="threat minor">
+          <p class="tag">minor</p>
+          <h4>The corpus carries parsing artefacts from the source filings</h4>
+          <p><b>What the data shows.</b> 1,089 nodes contain an unescaped HTML entity. Seven contain a raw tag. Four carry a corrupted digit run where a figure belongs. Exactly one question cites a corrupted node.</p>
+          <p class="defence"><b>How to defend it.</b> Argue common-mode, and for that one question, argue it is a feature. All three index the identical corpus. On that row the key records what the node actually says, so it rewards faithful extraction over a plausible figure recalled from training.</p>
+        </div>
+        <div class="threat minor">
+          <p class="tag">minor</p>
+          <h4>The retrieval depths are 2, 3 and 5, not 3, 5 and 10</h4>
+          <p><b>What the data shows.</b> The sweep was narrowed on instruction after the design was written. Three depths are retained, so the 900-cell matrix is unchanged.</p>
+          <p class="defence"><b>How to defend it.</b> Record it as a scope decision with its consequence. The deepest setting is now 5, at or above the largest corrected evidence set, so full recall stays reachable. The token budget written against depth 10 becomes a conservative over-estimate.</p>
+        </div>
+  </div>
+</section>
+
+<section id="weaken">
+  <h2>What would weaken these findings</h2>
+  <p class="lede">Stated plainly, so the claims can be scoped to match.</p>
+  <ol>
+    <li><b>A different question mix would move the vector against BM25 result.</b>
+    This is the most fragile finding here. They separate inside quadrants and cancel
+    when pooled, so the mix does the work. State the mix whenever the null result is
+    quoted.</li>
+    <li><b>A thematic benchmark would move the structural result.</b> Summary trees
+    compress detail away. That is fatal for extraction and may help synthesis. Nothing
+    here tests synthesis over a whole filing.</li>
+    <li><b>A different answering model would move the leakage floor.</b> A smaller
+    model with less memorised knowledge would leak less, widening the measured gap.</li>
+    <li><b>Nothing here would move by adding runs.</b> The structural gaps span roughly
+    two judge points, with intervals far wider than any plausible temperature-zero
+    noise.</li>
+    <li><b>Nothing here would move by adding depth inside this sweep.</b> The ordering
+    is identical at all three.</li>
+  </ol>
+</section>
+
+<section id="ledger">
+  <h2>Reproducibility ledger</h2>
+  <p class="lede">What can be reproduced, and from what.</p>
+  <ol>
+    <li><b>Every figure is computed at build time.</b> No number is typed into a
+    template. Re-running the generator reproduces the page.</li>
+    <li><b>The statistics are seeded.</b> Ten thousand bootstrap resamples from a fixed
+    seed. Intervals reproduce exactly.</li>
+    <li><b>Every judged row carries a rubric fingerprint.</b> Recomputing reproduces the
+    stored value in all four quadrants.</li>
+    <li><b>Both answer-key corrections replay</b> from the pre-repair backup and
+    reproduce the current database row for row.</li>
+    <li><b>Figures regenerate byte-identical.</b> The citation repair is at its fixed
+    point: re-running it performs zero further repairs.</li>
+    <li><b>The corpus is frozen.</b> 13 filings, 18,297 nodes, with
+    a manifest in the repository.</li>
+    <li><b>Every cell is accounted for.</b> 900 benchmark cells and
+    60 gate rows, all scored, no nulls in any metric column.</li>
+    <li><b>The record is deliberately selective.</b> Thirty-eight deviations,
+    fifteen bugs, four issues and two challenges, each logged with its reasoning.</li>
+    <li><b>Those logs hold the consequential entries only.</b> Minor fixes and small
+    implementation refinements live in the commit history, not in the research
+    record. Treat the counts above as a floor, not a total.</li>
+  </ol>
+</section>
+
+<section id="close">
+  <h2>Closing</h2>
+  <div class="narrow">
+    <p>The reflex answer to document retrieval is embeddings. This study could not find
+    evidence that the reflex is earned.</p>
+    <p>On 900 questions over thirteen annual reports, a statistical ranking function
+    from 1994 matched a modern embedding stack with a cross-encoder reranker.</p>
+    <p>It built its index in under a second, against twenty-two minutes. It needed no
+    model, no GPU and no training.</p>
+    <p>That is not an argument against vector search. The two separate inside
+    quadrants, and each wins where you would expect.</p>
+    <p><b>It is an argument against skipping the baseline.</b></p>
+    <p>The structural paradigm lost, and lost expensively. But it lost for a reason the
+    data can name: summaries discard the figures this benchmark asks for.</p>
+    <p>Ask different questions and that result may reverse. Nothing here tests that,
+    and this document does not claim it.</p>
+  </div>
+  <p class="pull" style="--hue:#10b981">Nine hundred cells, fifteen bugs,
+  thirty-eight deviations, and one answer key that had to be rebuilt before any of it
+  could be trusted.</p>
+</section>
+
+</div>
+
+<footer>
+  <div class="wrap">
+    <p><b>Generated 2026-09-13</b> from <code>benchmark.db</code>.
+    Every statistic on this page is read from the database at build time, through the
+    same aggregation the results report uses. No figure is typed into the template.</p>
+    <p>900 benchmark cells &middot; 60 gate rows &middot;
+    18,297 nodes &middot; 13 filings &middot;
+    9,435 lines of source &middot; 8,650 lines of test
+    &middot; one temperature-zero run per cell.</p>
+    <p>Records referenced throughout: <code>deviations.md</code> (38 entries),
+    <code>bugs.md</code> (15), <code>issues.md</code> (4),
+    <code>challenges.md</code> (2), <code>token_usage.md</code>.</p>
+  </div>
+</footer>
+
+</body>
+</html>

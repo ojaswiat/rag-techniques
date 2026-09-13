@@ -90,7 +90,7 @@ This is a hard gate, and it is cheap by design — 60 outputs, run before the ex
 
 ## Scale and honesty
 
-The full matrix is 100 PQ × 3 pipelines × K ∈ {3, 5, 10} = **900 runs**, each judged once, plus the 60-output gate: 960 rows in `results`.
+The full matrix is 100 PQ × 3 pipelines × K ∈ {2, 3, 5} = **900 runs**, each judged once, plus the 60-output gate: 960 rows in `results`.
 
 All calls run at `temperature = 0` and **each cell runs exactly once**. Repeated sampling at temperature 0 would multiply token cost to learn almost nothing. Any robustness repeats are confined to the JEQ subset.
 

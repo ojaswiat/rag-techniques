@@ -16,6 +16,7 @@ from llama_index.embeddings.fastembed import FastEmbedEmbedding
 import pipelines.structural.build_summary_index as bsi
 from pipelines.base import Retriever
 from pipelines.vector.build_vector_index import EMBED_MODEL_NAME
+from model_cache import model_cache_dir
 
 _RETRIEVER_MODE = "select_leaf_embedding"
 
@@ -29,7 +30,7 @@ class P3StructuralRetriever(Retriever):
         if storage_root is None:
             storage_root = bsi.STORAGE_ROOT
         self._storage_root = storage_root
-        self._embed_model = FastEmbedEmbedding(model_name=EMBED_MODEL_NAME)
+        self._embed_model = FastEmbedEmbedding(model_name=EMBED_MODEL_NAME, cache_dir=model_cache_dir())
         self._index_cache: dict[str, TreeIndex] = {}
 
     def _load_index(self, document_id: str) -> TreeIndex:
